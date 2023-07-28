@@ -1,0 +1,31 @@
+
+[tool.towncrier]
+    version = ""
+    package_dir = "goats"
+    filename = "CHANGES.md"
+    directory = "doc/changes"
+    start_string = "<!-- towncrier release notes start -->\n"
+    underlines = ["", "", ""]
+    title_format = "## GOATS {version} ({project_date})"
+    issue_format = "[[#{issue}](https://noirlab.atlassian.net/browse/{issue})]"
+    template = "doc/changes/template.jinja"
+    [[tool.towncrier.type]]
+        directory = "new"
+        name = "New Features"
+        showcontent = true
+    [[tool.towncrier.type]]
+        directory = "change"
+        name = "Changes"
+        showcontent = true
+    [[tool.towncrier.type]]
+        directory = "bugfix"
+        name = "Bug Fixes"
+        showcontent = true
+    [[tool.towncrier.type]]
+        directory = "perf"
+        name = "Enhancements"
+        showcontent = true
+    [[tool.towncrier.type]]
+        directory = "other"
+        name = "Other"
+        showcontent = true
