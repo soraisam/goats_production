@@ -5,7 +5,7 @@ from pathlib import Path
 # Related third party imports.
 
 # Local application/library specific imports.
-from .plugins import Plugin, TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin
+from .plugins import Plugin, TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin, GOATSPlugin
 
 
 # Initialize constants.
@@ -13,7 +13,7 @@ SETTINGS_FILENAME = "settings.py"
 
 
 def modify_settings(file_path: Path | str, add_tom_toolkit: bool = False, add_gemini: bool = False,
-                    add_antares: bool = False) -> None:
+                    add_antares: bool = False, add_goats: bool = False) -> None:
     """Modify Django settings to include additional apps.
 
     Parameters
@@ -26,6 +26,8 @@ def modify_settings(file_path: Path | str, add_tom_toolkit: bool = False, add_ge
         Flag indicating if Gemini GSSelect plugin should be added to settings.
     add_antares : `bool`, optional
         Flag indicating if LSST Antares plugin should be added to settings.
+    add_goats : `bool`, optional
+        Flag indicating if GOATS plugin should be added to settings.
 
     Raises
     ------
@@ -49,12 +51,14 @@ def modify_settings(file_path: Path | str, add_tom_toolkit: bool = False, add_ge
     # Add plugins.
     if add_tom_toolkit:
         lines = _find_and_add(lines, TOMToolkitPlugin())
-    if add_gemini or add_antares:
+    if add_gemini or add_antares or add_goats:
         _verify_tom_setup(lines)
     if add_gemini:
         lines = _find_and_add(lines, GeminiPlugin())
     if add_antares:
         lines = _find_and_add(lines, ANTARESPlugin())
+    if add_goats:
+        lines = _find_and_add(lines, GOATSPlugin())
 
     # Write the file back out
     with open(file_path, "w") as f:

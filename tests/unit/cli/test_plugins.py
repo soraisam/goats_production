@@ -1,4 +1,4 @@
-from goats.cli.plugins import Plugin, TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin
+from goats.cli.plugins import Plugin, TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin, GOATSPlugin
 
 
 def test_plugin():
@@ -35,3 +35,12 @@ def test_antares_plugin():
     assert antares_plugin.look_for == "TOM_ALERT_CLASSES"
     assert antares_plugin.line_to_add == "    'tom_antares.antares.ANTARESBroker',\n"
     assert antares_plugin.line_to_remove == "    'tom_alerts.brokers.antares.ANTARESBroker',\n"
+
+
+def test_goats_plugin():
+    goats_plugin = GOATSPlugin()
+
+    assert goats_plugin.name == "goats"
+    assert goats_plugin.look_for == "INSTALLED_APPS"
+    assert goats_plugin.line_to_add == "    'goats.tom_goats',\n"
+    assert goats_plugin.line_to_remove is None

@@ -1,4 +1,4 @@
-__all__ = ["Plugin", "TOMToolkitPlugin", "GeminiPlugin", "ANTARESPlugin"]
+__all__ = ["Plugin", "TOMToolkitPlugin", "GeminiPlugin", "ANTARESPlugin", "GOATSPlugin"]
 # Standard library imports.
 from dataclasses import dataclass
 
@@ -31,7 +31,7 @@ class Plugin:
 
 @dataclass
 class GeminiPlugin(Plugin):
-    """Gemini settings that Extend the ``Plugin`` class."""
+    """Gemini settings that extend the ``Plugin`` class."""
 
     name: str = "gemini"
     look_for: str = "TOM_FACILITY_CLASSES"
@@ -40,7 +40,7 @@ class GeminiPlugin(Plugin):
 
 @dataclass
 class TOMToolkitPlugin(Plugin):
-    """TOMToolkit settings that Extend the ``Plugin`` class."""
+    """TOMToolkit settings that extend the ``Plugin`` class."""
     name: str = "tom"
     look_for: str = "INSTALLED_APPS"
     line_to_add: str = "    'tom_setup',\n"
@@ -48,9 +48,18 @@ class TOMToolkitPlugin(Plugin):
 
 @dataclass
 class ANTARESPlugin(Plugin):
-    """ANTARES settings that Extend the ``Plugin`` class."""
+    """ANTARES settings that extend the ``Plugin`` class."""
 
     name: str = "antares"
     look_for: str = "TOM_ALERT_CLASSES"
     line_to_add: str = "    'tom_antares.antares.ANTARESBroker',\n"
     line_to_remove: str = "    'tom_alerts.brokers.antares.ANTARESBroker',\n"
+
+
+@dataclass
+class GOATSPlugin(Plugin):
+    """GOATS settings the extend the ``Plugin`` class."""
+
+    name: str = "goats"
+    look_for: str = "INSTALLED_APPS"
+    line_to_add: str = "    'goats.tom_goats',\n"

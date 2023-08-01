@@ -80,7 +80,7 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
         subprocess.run([f"{manage_file}", "tom_setup"], check=True)
 
         # Add the Gemini and ANTARES plugin.
-        modify_settings(settings_file, add_gemini=True, add_antares=True)
+        modify_settings(settings_file, add_gemini=True, add_antares=True, add_goats=True)
 
         # Migrate the webpage.
         subprocess.run([f"{manage_file}", "migrate"], check=True)

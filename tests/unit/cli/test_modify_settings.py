@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 import shutil
 from goats.cli.modify_settings import modify_settings
-from goats.cli.plugins import TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin
+from goats.cli.plugins import TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin, GOATSPlugin
 
 
 @pytest.fixture
@@ -49,3 +49,11 @@ def test_modify_settings_antares(tom_setup_settings_file):
     with open(tom_setup_settings_file, "r") as f:
         lines = f.readlines()
     assert ANTARESPlugin().line_to_add in lines
+
+
+def test_modify_settings_goats(tom_setup_settings_file):
+    # Test adding ANTARES plugin.
+    modify_settings(tom_setup_settings_file, add_goats=True)
+    with open(tom_setup_settings_file, "r") as f:
+        lines = f.readlines()
+    assert GOATSPlugin().line_to_add in lines
