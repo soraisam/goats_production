@@ -1,10 +1,10 @@
-name: run_flake8
+name: Run Flake8
 
 on:
   - push
 
 jobs:
-  test_package:
+  run_flake8:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
