@@ -1,12 +1,11 @@
 __all__ = ["modify_settings"]
 # Standard library imports.
-import argparse
 from pathlib import Path
 
 # Related third party imports.
 
 # Local application/library specific imports.
-from plugins import Plugin, TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin
+from .plugins import Plugin, TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin
 
 
 # Initialize constants.
@@ -41,7 +40,7 @@ def modify_settings(file_path: Path | str, add_tom_toolkit: bool = False, add_ge
 
     # Check if file exists and raise if not.
     if not file_path.is_file():
-        raise FileNotFoundError(f"{settings_file.absolute()} does not exist.")
+        raise FileNotFoundError(f"{file_path.absolute()} does not exist.")
 
     # Read the file.
     with open(file_path, "r") as f:
@@ -133,23 +132,3 @@ def _find_and_add(lines: list[str], plugin: Plugin) -> list[str]:
 
     print(f"Plugin '{plugin.name}' added.")
     return lines
-
-
-if __name__ == "__main__":
-    # Initialize argument parser.
-    parser = argparse.ArgumentParser(
-        description=f"Modify Django {SETTINGS_FILENAME} to include additional plugins.")
-    parser.add_argument("directory", help=f"Path to directory that has Django {SETTINGS_FILENAME} file",
-                        type=Path)
-    parser.add_argument("--add-tom-toolkit", action="store_true",
-                        help=f"Configure {SETTINGS_FILENAME} for TOMToolkit.")
-    parser.add_argument("--add-gemini", action="store_true",
-                        help=f"Configure {SETTINGS_FILENAME} for Gemini GSSelect.")
-    parser.add_argument("--add-antares", action="store_true",
-                        help=f"Configure {SETTINGS_FILENAME} for Antares Alert Broker.")
-    args = parser.parse_args()
-
-    # Build path for settings file.
-    settings_file = args.directory / args.directory.name / SETTINGS_FILENAME
-
-    modify_settings(settings_file, args.add_tom_toolkit, args.add_gemini, args.add_antares)
