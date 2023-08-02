@@ -36,6 +36,7 @@ ALLOWED_HOSTS = []
 TOM_NAME = 'TOM Toolkit'
 
 INSTALLED_APPS = [
+    'tom_goats',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "goats"
 description = "Gemini Observation and Analysis of Targets System."
@@ -31,8 +35,14 @@ test = [
     "pytest-cov",
 ]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project.scripts]
 goats = "goats.cli:cli"
+
+[tool.setuptools.package-data]
+"goats.tom_goats.templates.tom_common" = ["*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
