@@ -21,6 +21,7 @@ dependencies = [
     "tom-gemini-community",
     "tomtoolkit>=2.14",
     "click",
+    "werkzeug",
 ]
 version = "0.0.1"
 
