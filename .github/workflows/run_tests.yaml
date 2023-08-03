@@ -2,8 +2,8 @@ name: Run Tests
 on:
   push:
     paths:
-      - "goats/**"
-      - "tests/**"
+      - "src/goats/**"
+      - "tests/unit/**"
 
 jobs:
   run_tests:

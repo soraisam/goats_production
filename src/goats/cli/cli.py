@@ -23,10 +23,11 @@ def cli(ctx):
         click.echo(ctx.get_help())
 
 
-@click.command()
-@click.option("--project-name", default="GOATS", type=str,
+@click.command(help=("Creates a new Django project with a specified or default name in a"
+                     " specified or default directory."))
+@click.option("-p", "--project-name", default="GOATS", type=str,
               help="Specify a custom project name. Default is 'GOATS'.")
-@click.option("--directory", default=Path.cwd(), type=Path,
+@click.option("-d", "--directory", default=Path.cwd(), type=Path,
               help=("Specify the parent directory where the project will be created. "
                     "Default is the current directory."))
 @click.option("--overwrite", is_flag=True, help="Overwrite the existing project, if it exists.")
@@ -38,7 +39,7 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
     ----------
     project_name : `str`
         The name of the project to be created.
-    directory : `Path` | `str`
+    directory : `Path | str`
         The directory where the project will be created.
     overwrite : `bool`
         Whether to overwrite the existing project if it exists.
@@ -92,13 +93,15 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
         raise click.ClickException(error)
 
 
-@click.command()
-@click.option("--project-name", default="GOATS", type=str,
+@click.command(help=("Starts the Django development server for a specified project in a "
+                     "specified or default directory."))
+@click.option("-p", "--project-name", default="GOATS", type=str,
               help="Specify a custom project name. Default is 'GOATS'.")
-@click.option("--directory", default=Path.cwd(), type=Path,
+@click.option("-d", "--directory", default=Path.cwd(), type=Path,
               help=("Specify the parent directory where the project will be created. "
                     "Default is the current directory."))
-def run(project_name: str, directory: Path | str) -> None:
+@click.option("--reloader", is_flag=True, help="Runs Django with reloader for active development.")
+def run(project_name: str, directory: Path | str, reloader: bool) -> None:
     """Starts the Django development server for a specified project in a
     specified or default directory.
 
@@ -106,8 +109,10 @@ def run(project_name: str, directory: Path | str) -> None:
     ----------
     project_name : `str`
         The name of the project to be started.
-    directory : `Path` | `str`
+    directory : `Path | str`
         The directory where the project is located.
+    reloader : `bool`
+        Runs Django with the reloader option enabled for active development.
 
     Raises
     ------
@@ -123,7 +128,10 @@ def run(project_name: str, directory: Path | str) -> None:
                                    f"does not at exist at '{manage_file.absolute()}'.")
     try:
         # Start the dev server, not meant for production.
-        subprocess.run([f"{manage_file}", "runserver"], check=True)
+        if reloader:
+            subprocess.run([f"{manage_file}", "runserver_plus"], check=True)
+        else:
+            subprocess.run([f"{manage_file}", "runserver"], check=True)
     except subprocess.CalledProcessError as error:
         raise click.ClickException(error)
 
