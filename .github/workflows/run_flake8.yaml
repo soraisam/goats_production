@@ -1,7 +1,9 @@
 name: Run Flake8
 
 on:
-  - push
+  push:
+    paths:
+      - "**/*.py"
 
 jobs:
   run_flake8:
