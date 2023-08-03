@@ -1,0 +1,25 @@
+name: Run StyleLint
+
+on:
+  push:
+    paths:
+      - "src/goats/tom_goats/**/*.css"
+
+jobs:
+  run_stylelint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - name: Install stylelint
+        run: |
+          npm install --save-dev stylelint stylelint-config-standard
+
+      - name: Run stylelint
+        run: npx stylelint "**/*.css"

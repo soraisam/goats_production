@@ -1,0 +1,1 @@
+CSS linting added to GitHub Actions: Used stylelint to ensure CSS code quality.
