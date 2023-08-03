@@ -1,0 +1,23 @@
+name: Run HTMLHint
+
+on:
+  push:
+    paths:
+      - "src/goats/tom_goats/templates/**/*.html"
+
+jobs:
+  run_htmlhint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - name: Install HTMLHint
+      run: npm install htmlhint -g
+
+    - name: Run HTMLHint
+      run: htmlhint src/goats/tom_goats/templates/**/*.html
