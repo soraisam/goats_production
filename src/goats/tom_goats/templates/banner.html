@@ -1,0 +1,19 @@
+{% load static bootstrap4 %}
+
+{% comment %}
+This is the site banner, which includes the site logo on the left and sponsor logos on the right.
+{% endcomment %}
+
+<nav class="goats-banner">
+  <a href="/">
+    <img class="img-fluid" src="{% static 'img/favicon-black.png' %}" alt="">
+  </a>
+  <div class="d-flex">
+    <a href="https://www.gemini.edu/" target="_blank">
+      <img class="img-fluid" src="{% static 'img/gemini.png' %}" alt="">
+    </a>
+    <a  href="https://noirlab.edu/public/" target="_blank">
+      <img class="img-fluid" src="{% static 'img/nsf-noirlab.png' %}" alt="">
+    </a>
+  </div>
+</nav>

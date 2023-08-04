@@ -1,0 +1,1 @@
+Created v1 of GOATS banner: A new banner has been added to display site logo and affiliates.
