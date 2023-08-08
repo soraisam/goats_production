@@ -1,4 +1,4 @@
-{% load static bootstrap4 tom_common_extras %}
+{% load static bootstrap4 tom_common_extras custom_filters %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -11,45 +11,17 @@
     <link rel="stylesheet" href="{% static 'tom_common/css/main.css' %}">
     {% block additional_css %}
     {% endblock %}
-    <link rel="icon" type="image/x-icon" href="{% static 'tom_common/img/favicon-32.ico' %}" sizes="32x32" />
-    <link rel="icon" type="image/x-icon" href="{% static 'tom_common/img/favicon-16.ico' %}" sizes="16x16" />
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon-white.png' %}" sizes="32x32" />
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon-white.png' %}" sizes="16x16" />
 
     {% bootstrap_javascript jquery='True' %}
 
-    <title>{% tom_name %} | {% block title %}{% endblock %}</title>
+    <title>GOATS | {% block title %}{% endblock %}</title>
   </head>
   <body class="d-flex flex-column min-vh-100">
     {% include 'banner.html' %}
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-      <a class="navbar-brand" href="/"><img src="{% static 'tom_common/img/logo-color-cropped.png' %}" class="img-fluid"> {% tom_name %}</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
 
-      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-        <ul class="navbar-nav mr-auto">
-          {% comment "Navbar Content Template" %}
-          The navbar_content.html template defines the list (li) of nav-items that appear
-          in the navbar-nav (ul).
-
-          To customize your navbar-nav in your TOM:
-          1. Create a templates/tom_common directory at the project level.
-          2. Copy tom_common/templates/tom_common/navbar_content.html to your project's
-             templates/tom_common directory.
-          3. Customize your navbar content by editing your navbar_content.html.
-
-          For more information,
-          see the Django tutorial, "Writing your first Django app",
-          Part 7, Section "Customize the admin look and feel"
-          {% endcomment %}
-          {% include 'tom_common/navbar_content.html' %}
-
-        </ul>
-        <ul class="navbar-nav ml-auto" id="login-buttons">
-        {% navbar_login %}
-        </ul>
-      </div>
-    </nav>
+    {% include 'navbar.html' %}
 
     <main role="main" class="container">
       {% bootstrap_messages %}

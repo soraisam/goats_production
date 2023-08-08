@@ -7,7 +7,7 @@ from goats.cli.plugins import TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin, GOA
 
 @pytest.fixture
 def settings_file(tmp_path):
-    settings_file = Path(__file__).parent.parent / "data" / "settings.py"
+    settings_file = Path(__file__).parent.parent.parent / "data" / "settings.py"
     copied_settings_file = tmp_path / "settings.py"
 
     shutil.copyfile(settings_file, copied_settings_file)
@@ -16,7 +16,7 @@ def settings_file(tmp_path):
 
 @pytest.fixture
 def tom_setup_settings_file(tmp_path):
-    tom_setup_settings_file = Path(__file__).parent.parent / "data" / "tom_setup_settings.py"
+    tom_setup_settings_file = Path(__file__).parent.parent.parent / "data" / "tom_setup_settings.py"
     copied_tom_setup_settings_file = tmp_path / "tom_setup_settings.py"
 
     shutil.copyfile(tom_setup_settings_file, copied_tom_setup_settings_file)
