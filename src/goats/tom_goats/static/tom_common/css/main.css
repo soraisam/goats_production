@@ -12,10 +12,6 @@
   --black: #000;
 }
 
-.content {
-  padding: 3rem 1.5rem;
-}
-
 .navbar-brand > img {
   max-height: 25px;
 }
@@ -28,13 +24,9 @@
   cursor: pointer;
 }
 
-#login-buttons > li {
-  margin: 0 2px;
-}
-
-/* * {
+* {
   border: 1px solid red;
-} */
+}
 
 .goats-footer {
   position: relative;
