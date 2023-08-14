@@ -1,0 +1,143 @@
+:root {
+  --white: #fff;
+  --gray-50: #FAFAFA;
+	--gray-100: #F5F5F5;
+	--gray-200: #EEE;
+	--gray-300: #E0E0E0;
+	--gray-400: #BDBDBD;
+	--gray-500: #9E9E9E;
+	--gray-600: #757575;
+	--gray-700: #616161;
+	--gray-800: #424242;
+	--gray-900: #212121;
+  --black: #000;
+  --primary-50: #fefce6;
+  --primary-100: #fcf6c3;
+  --primary-200: #faef9b;
+  --primary-300: #f9e975;
+  --primary-400: #f7e457;
+  --primary-500: #f4df3a;
+  --primary-600: #f4ce37;
+  --primary-700: #f1b730;
+  --primary-800: #eea029;
+  --primary-900: #e8781c;
+  --primary: #f1b730;
+  --primary-variant: #e8781c;
+  --secondary-50: #dff8fd;
+  --secondary-100: #afedfa;
+  --secondary-200: #78e1f6;
+  --secondary-300: #30d4f1;
+  --secondary-400: #00cbec;
+  --secondary-500: #00c1e7;
+  --secondary-600: #00b1d3;
+  --secondary-700: #009cb8;
+  --secondary-800: #00889e;
+  --secondary-900: #006571;
+  --secondary: #009cb8;
+  --secondary-variant: #30d4f1;
+  --accent-50: #fbe0f2;
+  --accent-100: #f5b1de;
+  --accent-200: #f27ac6;
+  --accent-300: #f130ad;
+  --accent-400: #f30097;
+  --accent-500: #f0007d;
+  --accent-600: #de007a;
+  --accent-700: #c70074;
+  --accent-800: #af006f;
+  --accent-900: #850068;
+  --accent: #f130ad;
+
+  font-size: 14px;
+  font-family: arial, sans-serif;
+}
+
+.input-group-text {
+  font-family: monospace;
+}
+
+.nav-item {
+  cursor: pointer;
+}
+
+/* * {
+  border: 1px solid red;
+} */
+
+.goats-footer {
+  background-color: var(--black);
+  color: var(--gray-400);
+  padding: .25rem 1rem;
+}
+
+.goats-footer img {
+  height: 40px;
+  width: auto;
+  object-fit: scale-down;
+}
+
+.goats-navbar {
+  background-color: var(--black);
+  padding: .25rem 1rem;
+  box-shadow: 0 1px 3px hsla(0deg 0% 0% / 20%);
+}
+
+main.container {
+  padding: 3rem 0;
+}
+
+input {
+  accent-color: var(--primary);
+}
+
+.accent-bar {
+  background-color: var(--primary-800);
+  height: 5px;
+}
+
+.dropdown-menu {
+  box-shadow: 0 5px 15px hsla(0deg 0% 0% / 20%);
+}
+
+.hero {
+  background-image: url("../img/hero.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.goats-subtitle {
+  color: var(--gray-50);
+}
+
+.goats-title {
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 1rem;
+}
+
+.goats-slogan {
+  color: var(--gray-200);
+  font-weight: 400;
+}
+
+.goats-emoji {
+  cursor: default;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
+nav {
+  grid-row: 1;
+}
+
+main {
+  grid-row: 2;
+}
+
+footer {
+  grid-row: 3;
+}

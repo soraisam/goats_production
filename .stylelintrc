@@ -1,3 +1,9 @@
 {
+  "ignoreFiles": [
+    "**/_variables.scss",
+    "**/bootstrap.min.css",
+    "**/bootstrap.css",
+    "**/custom.sass"
+  ],
   "extends": "stylelint-config-standard"
 }
