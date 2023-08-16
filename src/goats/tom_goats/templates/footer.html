@@ -1,11 +1,20 @@
-{% load bootstrap4 %}
+{% load static bootstrap4 %}
 {% comment %}
 The footer section for the GOATS application. It is sticky, always staying at the bottom of the page due to 'mt-auto'. The link redirects to TOM Toolkit's documentation.
 {% endcomment %}
-<footer class="goats-footer mt-auto">
-  <div class="container-fluid">
-    <div class="row justify-content-center">
-      <span>GOATS powered by the <a href="https://tom-toolkit.readthedocs.io/en/latest/index.html" target="_blank" class="text-reset">TOM Toolkit</a></span>
+<footer class="goats-footer">
+  <!-- <div class="container-fluid d-flex justify-content-between"> -->
+  <div class="row">
+    <div class="col-sm text-sm-left text-center">
+      <p>⚡️ Powered by the <a href="https://tom-toolkit.readthedocs.io/en/latest/index.html" target="_blank" class="text-reset">TOM Toolkit</a></p>
+    </div>
+    <div class="col-sm text-sm-right text-center">
+      <a href="https://www.gemini.edu/" target="_blank">
+        <img class="img-fluid" src="{% static 'img/gemini.png' %}" alt="">
+      </a>
+      <a href="https://noirlab.edu/public/" target="_blank">
+        <img class="img-fluid" src="{% static 'img/nsf-noirlab.png' %}" alt="">
+      </a>
     </div>
   </div>
 </footer>
