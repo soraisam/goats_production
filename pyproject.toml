@@ -43,7 +43,8 @@ where = ["src"]
 goats = "goats.cli:cli"
 
 [tool.setuptools.package-data]
-"goats.tom_goats.templates.tom_common" = ["*.html"]
+"goats.tom_goats.templates" = ["**/*.html"]
+"goats.tom_goats.static" = ["**/*.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
