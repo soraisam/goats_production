@@ -8,5 +8,5 @@ from tom_alerts.views import BrokerQueryListView
 # app_name = "brokers"
 
 urlpatterns = [
-    path('brokers/list/', BrokerQueryListView.as_view(), name='list')
+    path("brokers/list/", BrokerQueryListView.as_view(), name="list"),
 ]

@@ -33,7 +33,7 @@ def test_antares_plugin():
 
     assert antares_plugin.name == "antares"
     assert antares_plugin.look_for == "TOM_ALERT_CLASSES"
-    assert antares_plugin.line_to_add == "    'tom_antares.antares.ANTARESBroker',\n"
+    assert antares_plugin.line_to_add == "    'goats.tom_goats.antares.GOATSANTARESBroker',\n"
     assert antares_plugin.line_to_remove == "    'tom_alerts.brokers.antares.ANTARESBroker',\n"
 
 
