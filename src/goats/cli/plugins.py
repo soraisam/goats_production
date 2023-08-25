@@ -52,7 +52,7 @@ class ANTARESPlugin(Plugin):
 
     name: str = "antares"
     look_for: str = "TOM_ALERT_CLASSES"
-    line_to_add: str = "    'tom_antares.antares.ANTARESBroker',\n"
+    line_to_add: str = "    'goats.tom_goats.antares.GOATSANTARESBroker',\n"
     line_to_remove: str = "    'tom_alerts.brokers.antares.ANTARESBroker',\n"
 
 
