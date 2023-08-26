@@ -1,1 +1,0 @@
-Added v1 of GOATS navbar: A custom navbar was developed for the GOATS platform.

@@ -23,7 +23,7 @@ dependencies = [
     "click",
     "werkzeug",
 ]
-version = "0.0.1"
+version = "23.08.0"
 
 [project.urls]
 "Homepage" = "https://github.com/gemini-hlsw/goats"
