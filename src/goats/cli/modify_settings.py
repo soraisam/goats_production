@@ -5,36 +5,32 @@ from pathlib import Path
 # Related third party imports.
 
 # Local application/library specific imports.
-from .plugins import Plugin, TOMToolkitPlugin, GeminiPlugin, ANTARESPlugin, GOATSPlugin
-
+from .plugins import Plugin, GOATSPlugin
 
 # Initialize constants.
 SETTINGS_FILENAME = "settings.py"
 
 
-def modify_settings(file_path: Path | str, add_tom_toolkit: bool = False, add_gemini: bool = False,
-                    add_antares: bool = False, add_goats: bool = False) -> None:
+def modify_settings(file_path: Path | str, add_goats: bool | None = False, verbose: bool | None = False
+                    ) -> None:
     """Modify Django settings to include additional apps.
 
     Parameters
     ----------
     file_path : `Path | str`
         The path to the settings file that needs to be modified.
-    add_tom_toolkit : `bool`, optional
-        Flag indicating if TOMToolkit plugin should be added to settings.
-    add_gemini : `bool`, optional
-        Flag indicating if Gemini GSSelect plugin should be added to settings.
-    add_antares : `bool`, optional
-        Flag indicating if LSST Antares plugin should be added to settings.
     add_goats : `bool`, optional
         Flag indicating if GOATS plugin should be added to settings.
+    verbose : `bool | None`, optional
+        If `True`, prints extra information.
 
     Raises
     ------
     FileNotFoundError
         Raised if the settings file does not exist.
     """
-    print(f"Modifying {file_path.absolute()}...")
+    if verbose:
+        print(f"Modifying {file_path.absolute()}...")
 
     # Convert to path object if it isn't.
     if not isinstance(file_path, Path):
@@ -49,41 +45,15 @@ def modify_settings(file_path: Path | str, add_tom_toolkit: bool = False, add_ge
         lines = f.readlines()
 
     # Add plugins.
-    if add_tom_toolkit:
-        lines = _find_and_add(lines, TOMToolkitPlugin())
-    if add_gemini or add_antares or add_goats:
-        _verify_tom_setup(lines)
-    if add_gemini:
-        lines = _find_and_add(lines, GeminiPlugin())
-    if add_antares:
-        lines = _find_and_add(lines, ANTARESPlugin())
     if add_goats:
-        lines = _find_and_add(lines, GOATSPlugin())
+        lines = _find_and_add(lines, GOATSPlugin(), verbose=verbose)
 
     # Write the file back out
     with open(file_path, "w") as f:
         f.writelines(lines)
 
 
-def _verify_tom_setup(lines: list[str]) -> None:
-    """Verifies that the TOMToolkit was finished successfully.
-
-    Parameters
-    ----------
-    lines : `list[str]`
-        The lines from the settings file.
-
-    Raises
-    ------
-    ValueError
-        Raised if the TOMToolkit setup was not completed.
-    """
-    tom_plugin = TOMToolkitPlugin()
-    if tom_plugin.line_to_add.strip() in (line.strip() for line in lines):
-        raise ValueError("TOMToolkit setup not completed, please finish TOM setup.")
-
-
-def _find_and_add(lines: list[str], plugin: Plugin) -> list[str]:
+def _find_and_add(lines: list[str], plugin: Plugin, verbose: bool | None = False) -> list[str]:
     """Utility function to add a plugin to the lines from a settings file.
 
     Parameters
@@ -92,6 +62,8 @@ def _find_and_add(lines: list[str], plugin: Plugin) -> list[str]:
         The lines from the settings file.
     plugin: `Plugin`
         Class instance of the specific plugin to install.
+    verbose : `bool | None`, optional
+        If `True`, prints extra information.
 
     Returns
     -------
@@ -107,13 +79,15 @@ def _find_and_add(lines: list[str], plugin: Plugin) -> list[str]:
 
     # Don't change anything if already exists.
     if plugin.line_to_add.strip() in (line.strip() for line in lines):
-        print(f"Plugin '{plugin.name}' already added...")
+        if verbose:
+            print(f"Plugin '{plugin.name}' already added...")
         return lines
 
     # Remove line if specified and exists
     if plugin.line_to_remove and plugin.line_to_remove.strip() in (line.strip() for line in lines):
         lines.remove(plugin.line_to_remove)
-        print(f"Line removed for plugin '{plugin.name}'.")
+        if verbose:
+            print(f"Line removed for plugin '{plugin.name}'.")
 
     # Find line number for matching string.
     for index, line in enumerate(lines):
@@ -134,5 +108,6 @@ def _find_and_add(lines: list[str], plugin: Plugin) -> list[str]:
     # Insert just after the opening bracket.
     lines.insert(pointer + 1, plugin.line_to_add)
 
-    print(f"Plugin '{plugin.name}' added.")
+    if verbose:
+        print(f"Plugin '{plugin.name}' added.")
     return lines

@@ -1,4 +1,4 @@
-__all__ = ["Plugin", "TOMToolkitPlugin", "GeminiPlugin", "ANTARESPlugin", "GOATSPlugin"]
+__all__ = ["Plugin", "GOATSPlugin"]
 # Standard library imports.
 from dataclasses import dataclass
 
@@ -30,36 +30,8 @@ class Plugin:
 
 
 @dataclass
-class GeminiPlugin(Plugin):
-    """Gemini settings that extend the ``Plugin`` class."""
-
-    name: str = "gemini"
-    look_for: str = "TOM_FACILITY_CLASSES"
-    line_to_add: str = "    'tom_gemini_community.gemini_gsselect.GEMFacility',\n"
-
-
-@dataclass
-class TOMToolkitPlugin(Plugin):
-    """TOMToolkit settings that extend the ``Plugin`` class."""
-    name: str = "tom"
-    look_for: str = "INSTALLED_APPS"
-    line_to_add: str = "    'tom_setup',\n"
-
-
-@dataclass
-class ANTARESPlugin(Plugin):
-    """ANTARES settings that extend the ``Plugin`` class."""
-
-    name: str = "antares"
-    look_for: str = "TOM_ALERT_CLASSES"
-    line_to_add: str = "    'goats.tom_goats.antares.GOATSANTARESBroker',\n"
-    line_to_remove: str = "    'tom_alerts.brokers.antares.ANTARESBroker',\n"
-
-
-@dataclass
 class GOATSPlugin(Plugin):
-    """GOATS settings the extend the ``Plugin`` class."""
-
-    name: str = "goats"
+    """Plugin to install GOATS."""
+    name: str = "goats_setup"
     look_for: str = "INSTALLED_APPS"
-    line_to_add: str = "    'goats.tom_goats',\n"
+    line_to_add: str = "    'goats.goats_setup',\n"

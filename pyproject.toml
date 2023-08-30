@@ -45,6 +45,7 @@ goats = "goats.cli:cli"
 [tool.setuptools.package-data]
 "goats.tom_goats.templates" = ["**/*.html"]
 "goats.tom_goats.static" = ["**/*.*"]
+"goats.goats_setup.templates" = ["**/*.tmpl"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
