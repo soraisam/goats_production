@@ -3,6 +3,7 @@ __all__ = ["cli"]
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 
 # Related third party imports.
 import click
@@ -23,17 +24,17 @@ def cli(ctx):
         click.echo(ctx.get_help())
 
 
-@click.command(help=("Creates a new Django project with a specified or default name in a"
-                     " specified or default directory."))
+@click.command(help=("Installs GOATS."))
 @click.option("-p", "--project-name", default="GOATS", type=str,
               help="Specify a custom project name. Default is 'GOATS'.")
 @click.option("-d", "--directory", default=Path.cwd(), type=Path,
-              help=("Specify the parent directory where the project will be created. "
+              help=("Specify the parent directory where GOATS will be installed. "
                     "Default is the current directory."))
-@click.option("--overwrite", is_flag=True, help="Overwrite the existing project, if it exists.")
+@click.option("--overwrite", is_flag=True,
+              help="Overwrite the existing project, if it exists. Default is False.")
 def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
-    """Creates a new Django project with a specified or default name in a
-    specified or default directory.
+    """Installs GOATS with a specified or default name in a specified or
+    default directory.
 
     Parameters
     ----------
@@ -42,7 +43,8 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
     directory : `Path | str`
         The directory where the project will be created.
     overwrite : `bool`
-        Whether to overwrite the existing project if it exists.
+        Whether to overwrite the existing project if it exists, default is
+        `False`.
 
     Raises
     ------
@@ -50,15 +52,15 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
         Raised if the project already exists and the `overwrite` option is not
         set.
         Raised if the 'subprocess' calls fail.
-        Raised if the TOM Toolkit installation is not completed.
     """
     project_path = directory / project_name
 
     # If directory and project exist, ask to remove.
     if (project_path).is_dir():
         if not overwrite:
-            raise click.ClickException(f"'{project_path.absolute()}' already exists.\nUse the "
-                                       "'--overwrite' option to overwrite it.")
+            click.echo(click.style(f"🐐 '{project_path.absolute()}' already exists. Use the "
+                                   "'--overwrite' option to overwrite it.", fg="red", bold=True))
+            sys.exit(1)
         shutil.rmtree(project_path)
 
     # If directory is provided, make sure it exists.
@@ -72,47 +74,50 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
         settings_file = project_path / project_name / "settings.py"
 
         # Add the TOM Toolkit plugin.
-        modify_settings(settings_file, add_tom_toolkit=True)
+        modify_settings(settings_file, add_goats=True)
 
         # Get the path for the 'manage.py' file.
         manage_file = project_path / "manage.py"
 
         # Setup the TOM Toolkit.
-        subprocess.run([f"{manage_file}", "tom_setup"], check=True)
-
-        # Add the Gemini and ANTARES plugin.
-        modify_settings(settings_file, add_gemini=True, add_antares=True, add_goats=True)
+        subprocess.run([f"{manage_file}", "goats_setup"], check=True)
 
         # Migrate the webpage.
-        subprocess.run([f"{manage_file}", "migrate"], check=True)
+        click.echo(click.style("Wrapping up:", fg="cyan", bold=True))
+        click.echo("  Running final migrations... ", nl=False)
+        subprocess.run([f"{manage_file}", "migrate"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       check=True)
+        click.echo(click.style("OK", fg="green", bold=True))
+
+        click.echo(click.style("🐐 GOATS installed!", fg="green", bold=True))
+        click.echo(click.style("🐐 Run 'goats run' to start GOATS.", fg="cyan", bold=True))
 
     except subprocess.CalledProcessError as error:
-        raise click.ClickException(error)
-    except ValueError as error:
-        # Raised if the TOM Toolkit wasn't finished installing.
-        raise click.ClickException(error)
+        cmd_str = " ".join(error.cmd)
+        click.echo(click.style(f"🐐 An error occurred while running the command: '{cmd_str}'. Exit status: "
+                               f"{error.returncode}.", fg="red", bold=True))
+        sys.exit(1)
 
 
-@click.command(help=("Starts the Django development server for a specified project in a "
-                     "specified or default directory."))
+@click.command(help=("Starts the server for GOATS."))
 @click.option("-p", "--project-name", default="GOATS", type=str,
               help="Specify a custom project name. Default is 'GOATS'.")
 @click.option("-d", "--directory", default=Path.cwd(), type=Path,
-              help=("Specify the parent directory where the project will be created. "
+              help=("Specify the parent directory where GOATS is installed. "
                     "Default is the current directory."))
-@click.option("--reloader", is_flag=True, help="Runs Django with reloader for active development.")
+@click.option("--reloader", is_flag=True, help="Runs the server with reloader for active development.")
 def run(project_name: str, directory: Path | str, reloader: bool) -> None:
-    """Starts the Django development server for a specified project in a
-    specified or default directory.
+    """Starts the server for GOATS.
 
     Parameters
     ----------
     project_name : `str`
         The name of the project to be started.
     directory : `Path | str`
-        The directory where the project is located.
+        The directory where the project is installed.
     reloader : `bool`
-        Runs Django with the reloader option enabled for active development.
+        Runs the server with the reloader option enabled for active
+        development.
 
     Raises
     ------
@@ -120,12 +125,15 @@ def run(project_name: str, directory: Path | str, reloader: bool) -> None:
         Raised if the 'manage.py' file for the project does not exist.
         Raised if the 'subprocess' calls fail.
     """
+    click.echo(click.style("🐐 Serving GOATS.", fg="cyan", bold=True))
     project_path = directory / project_name
     # Get the path for the 'manage.py' file.
     manage_file = project_path / "manage.py"
     if not manage_file.is_file():
-        raise click.ClickException(f"The 'manage.py' file for the project '{project_name}' "
-                                   f"does not at exist at '{manage_file.absolute()}'.")
+        click.echo(click.style(f"🐐 The 'manage.py' file for the project '{project_name}' "
+                               f"does not at exist at '{manage_file.absolute()}'.",
+                               fg="red", bold=True))
+        sys.exit(1)
     try:
         # Start the dev server, not meant for production.
         if reloader:
@@ -133,7 +141,10 @@ def run(project_name: str, directory: Path | str, reloader: bool) -> None:
         else:
             subprocess.run([f"{manage_file}", "runserver"], check=True)
     except subprocess.CalledProcessError as error:
-        raise click.ClickException(error)
+        cmd_str = " ".join(error.cmd)
+        click.style(f"🐐 An error occurred while running the command: '{cmd_str}'. Exit status: "
+                    f"{error.returncode}.", fg="red", bold=True)
+        sys.exit(1)
 
 
 cli.add_command(install)

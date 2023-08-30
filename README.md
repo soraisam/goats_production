@@ -56,7 +56,7 @@ goats install [OPTIONS]
 ##### Options
 - `-p, --project-name TEXT`: Specify a custom GOATS name. Default is 'GOATS'.
 - `-d, --directory PATH`: Specify the parent directory where GOATS will be created. Default is the current directory.
-- `--overwrite`: Overwrite the existing GOATS, if it exists.
+- `--overwrite`: Overwrite the existing GOATS, if it exists. Default is `False`.
 - `--help`: Show this message and exit.
 
 #### `run`
