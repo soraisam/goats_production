@@ -4,17 +4,16 @@
 This is the site banner, which includes the site logo on the left and sponsor logos on the right.
 {% endcomment %}
 
-<nav class="goats-banner">
-  <!-- <a href="/">
-    <img class="img-fluid" src="{% static 'img/favicon-black.png' %}" alt="">
-  </a> -->
-  <p class="h3 goats-emoji">🐐</p>
+<div class="goats-banner d-flex justify-content-between align-items-center">
+  <a href="/">
+    <img class="img-fluid" src="{% static 'img/goats-light.png' %}" style="height: 60px;" alt="">
+  </a>
   <div class="d-flex">
     <a href="https://www.gemini.edu/" target="_blank">
-      <img class="img-fluid" src="{% static 'img/gemini.png' %}" alt="">
+      <img class="img-fluid" src="{% static 'img/gemini-light.png' %}" style="height: 45px;" alt="">
     </a>
-    <a  href="https://noirlab.edu/public/" target="_blank">
-      <img class="img-fluid" src="{% static 'img/nsf-noirlab.png' %}" alt="">
+    <a href="https://noirlab.edu/public/" target="_blank">
+      <img class="img-fluid" src="{% static 'img/nsf-noirlab-light.png' %}" style="height: 45px;" alt="">
     </a>
   </div>
-</nav>
+</div>
