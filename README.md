@@ -24,54 +24,55 @@ cd goats
 pip install .
 ```
 
-## Command Line Interface
+# GOATS CLI Guide
 
-The GOATS Command Line Interface (CLI) allows for easy management of your GOATS.
+The **Gemini Observation and Analysis of Targets System (GOATS)** CLI provides an efficient way to install and manage the GOATS project along with the Antares2GOATS browser extension. You can get detailed help on each command using the `--help` option. Below, find the breakdown of the primary commands and options:
 
-### Usage
+## Getting Started
 
-```shell
-goats [OPTIONS] COMMAND [ARGS]...
-```
+Use the following command to get an overview of available options and commands:
 
-### Global Options
+`goats --help`
 
-`--help`  : Show this message and exit.
+### Available Commands
 
-### Commands
+1. `install`: Installs GOATS along with the optional Antares2GOATS browser extension.
 
-1. `install`: Creates a new GOATS instance with a specified or default name in a specified or default directory.
-2. `run`: Starts the Django development server for a specified GOATS in a specified or default directory.
+   `goats install [OPTIONS]`
 
-### Subcommands
+   #### Options
+   - `-p, --project-name TEXT`: Specify a custom project name (default: 'GOATS').
+   - `-d, --directory PATH`: Specify the parent directory where GOATS will be installed (default: current directory).
+   - `--overwrite`: Overwrite the existing project, if it exists (default: False).
+   - `--browser [chrome|safari|firefox]`: Specify the browser for which to install the extension.
 
-#### `install`
+   Get more information with:
 
-Use this command to create a new GOATS instance.
+   `goats install --help`
 
-```shell
-goats install [OPTIONS]
-```
+2. `install-extension`: Installs the Antares2GOATS browser extension for a specified browser.
 
-##### Options
-- `-p, --project-name TEXT`: Specify a custom GOATS name. Default is 'GOATS'.
-- `-d, --directory PATH`: Specify the parent directory where GOATS will be created. Default is the current directory.
-- `--overwrite`: Overwrite the existing GOATS, if it exists. Default is `False`.
-- `--help`: Show this message and exit.
+   `goats install-extension [OPTIONS] {chrome|safari|firefox}`
 
-#### `run`
+   #### Options
+   - `--help`: Show the help message and exit.
 
-Use this command to start the Django development server for a GOATS instance.
+   Get more information with:
 
-```shell
-goats run [OPTIONS]
-```
+   `goats install-extension --help`
 
-##### Options
-- `-p, --project-name TEXT`: Specify a custom project name to look for. Default is 'GOATS'.
-- `-d, --directory PATH`: Specify the parent directory where the GOATS instance is. Default is the current directory.
-- `--reloader`: Runs Django with reloader for active development.
-- `--help`: Show this message and exit.
+3. `run`: Starts the server for the GOATS project.
+
+   `goats run [OPTIONS]`
+
+   #### Options
+   - `-p, --project-name TEXT`: Specify a custom project name (default: 'GOATS').
+   - `-d, --directory PATH`: Specify the parent directory where GOATS is installed (default: current directory).
+   - `--reloader`: Runs the server with a reloader for active development.
+
+   Get more information with:
+
+   `goats run --help`
 
 ## References and Documentation
 
