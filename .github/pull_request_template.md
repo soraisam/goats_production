@@ -1,4 +1,4 @@
-[Jira Ticket](https://noirlab.atlassian.net/browse/GOATS-N)
+[Jira Ticket: GOATS-N](https://noirlab.atlassian.net/browse/GOATS-N)
 
 ## Checklist
 
