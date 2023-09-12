@@ -6,6 +6,7 @@ const COLORS = {
   YELLOW: [255, 255, 0, 255],
   GREEN: [0, 255, 0, 255],
   RED: [255, 0, 0, 255],
+  WHITE: [255, 255, 255, 255],
   DEFAULT: [128, 128, 128, 255]
 };
 
@@ -22,7 +23,7 @@ const ANTARES_URL = "https://antares.noirlab.edu/loci";
  */
 const resetBadgeColor = (tab) => {
   const isTrustedHost = tab.url.startsWith(ANTARES_URL);
-  const badgeColor = isTrustedHost ? COLORS.YELLOW : COLORS.DEFAULT;
+  const badgeColor = isTrustedHost ? COLORS.WHITE : COLORS.DEFAULT;
   const badgeText = isTrustedHost ? "→" : "✗";
 
   chrome.action.setBadgeBackgroundColor({ color: badgeColor, tabId: tab.id });
@@ -103,8 +104,6 @@ chrome.action.onClicked.addListener(async (tab) => {
       dataToSend.locusid = objectName;
     }
 
-    console.log(JSON.stringify(dataToSend))
-
     chrome.storage.local.get(["url", "port"], async (items) => {
       try {
         if (chrome.runtime.lastError) {
@@ -113,7 +112,6 @@ chrome.action.onClicked.addListener(async (tab) => {
 
         // Construct the URL using the retrieved items.
         const baseUrl = `http://${items.url}:${items.port}/receive_query/`;
-        console.log(baseUrl);
 
         // Send data to app.
         const response = await fetch(baseUrl, {
@@ -121,6 +119,7 @@ chrome.action.onClicked.addListener(async (tab) => {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify(dataToSend),
         });
 
@@ -129,8 +128,20 @@ chrome.action.onClicked.addListener(async (tab) => {
           chrome.action.setBadgeBackgroundColor({ color: COLORS.GREEN, tabId: tab.id });
           chrome.action.setBadgeText({ text: "✓", tabId: tab.id });
         } else {
-          // If the response status is not in the 2xx range, throw an error.
-          throw new Error(`${response.statusText}`);
+          if (response.status === 401) {
+            // Change badge to red and key icon.
+            chrome.action.setBadgeBackgroundColor({ color: COLORS.RED, tabId: tab.id });
+            chrome.action.setBadgeText({ text: "N/A", tabId: tab.id });
+          }
+          else if (response.status === 409) {
+            // Change badge to yellow and key icon.
+            chrome.action.setBadgeBackgroundColor({ color: COLORS.YELLOW, tabId: tab.id });
+            chrome.action.setBadgeText({ text: "DUP", tabId: tab.id });
+          }
+          else {
+            // If the response status is not in the 2xx range, throw an error.
+            throw new Error(`${response.statusText}`);
+          }
         }
       } catch (error) {
         // Log any errors that occur during the operation.

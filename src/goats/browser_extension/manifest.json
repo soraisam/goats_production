@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "Antares2GOATS",
   "version": "1.0.0",
-  "permissions": ["activeTab", "tabs", "contextMenus", "storage"],
+  "permissions": ["activeTab", "tabs", "contextMenus", "storage", "cookies"],
+  "host_permissions": ["http://localhost:8000/"],
   "action": {
     "default_icon": {
       "16": "img/favicon-16.png",
