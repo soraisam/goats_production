@@ -1,6 +1,7 @@
 
 from django.urls import path
 from tom_alerts.views import BrokerQueryListView
+from . import views
 
 # from tom_common.api_router import SharedAPIRootRouter
 # router = SharedAPIRootRouter()
@@ -9,4 +10,5 @@ from tom_alerts.views import BrokerQueryListView
 
 urlpatterns = [
     path("brokers/list/", BrokerQueryListView.as_view(), name="list"),
+    path('receive_query/', views.receive_query, name='receive_query'),
 ]

@@ -22,7 +22,9 @@ dependencies = [
     "tomtoolkit>=2.14",
     "click",
     "werkzeug",
+    "django-cors-headers",
 ]
+
 version = "23.08.0"
 
 [project.urls]
@@ -46,6 +48,7 @@ goats = "goats.cli:cli"
 "goats.tom_goats.templates" = ["**/*.html"]
 "goats.tom_goats.static" = ["**/*.*"]
 "goats.goats_setup.templates" = ["**/*.tmpl"]
+"goats.browser_extension" = ["**/*.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]

@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Antares2GOATS",
+  "version": "1.0.0",
+  "permissions": ["activeTab", "tabs", "contextMenus", "storage"],
+  "action": {
+    "default_icon": {
+      "16": "img/favicon-16.png",
+      "32": "img/favicon-32.png",
+      "48": "img/favicon-48.png",
+      "128": "img/favicon-48.png"
+    },
+    "default_title": "Parse and send object or query to GOATS.",
+    "default_badge": ""
+  },
+  "description": "",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "img/favicon-16.png",
+    "32": "img/favicon-32.png",
+    "48": "img/favicon-48.png",
+    "128": "img/favicon-48.png"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  }
+}
