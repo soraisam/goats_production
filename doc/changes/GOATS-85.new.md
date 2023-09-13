@@ -1,0 +1,1 @@
+Single-Target Creation via Extension: Enhanced the extension to directly create individual targets within ANTARES, eliminating the need for query generation.
