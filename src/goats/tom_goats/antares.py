@@ -1,18 +1,26 @@
+# Standard library imports.
+from typing import Any
+
+# Related third party imports.
+import antares_client
+from crispy_forms.layout import Div, Fieldset, Layout, HTML
 from django import forms
 from django.forms.widgets import Textarea
 from django.templatetags.static import static
-from tom_antares.antares import ANTARESBrokerForm, ANTARESBroker
 import marshmallow
-import antares_client
+from tom_alerts.alerts import GenericQueryForm
+from tom_antares.antares import ANTARESBroker
+
+# Local application/library specific imports.
 
 
-class GOATSANTARESBrokerForm(ANTARESBrokerForm):
+class GOATSANTARESBrokerForm(GenericQueryForm):
     """A Django form class that extends ``ANTARESBrokerForm``.
 
     Attributes
     ----------
     esquery : `JSONField`
-        A JSON field, required for receiving Elastic Search queries.
+        A JSON field required for receiving Elastic Search queries.
     """
 
     esquery = forms.JSONField(
@@ -22,117 +30,149 @@ class GOATSANTARESBrokerForm(ANTARESBrokerForm):
             "rows": 10,
             "id": "esquery"
         }),
-        initial=None
+        initial={}
     )
 
     class Media:
+        # Incorporating additional JavaScript file.
         js = (static("js/esquery.js"), )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Defining layout and helper configurations along with initializing
+        # URLs for images.
+        self.common_layout = Layout('broker')
+        antares_img_url = static('img/antares.png')
+        chrome_img_url = static('img/chrome.png')
+        safari_img_url = static('img/safari.png')
+        firefox_img_url = static('img/firefox.png')
+        install_extension_url = static('img/install-extension.png')
+        self.helper.layout = Layout(
+            self.common_layout,
+            HTML('''
+                <p>
+                Users can query objects in the ANTARES database using one of the following
+                two methods: <br><br>1. Using the Antares2GOATS Browser Extension (recommended).<br>2.
+                An advanced
+                query with Elastic Search syntax.
+            </p>
+            '''),
+            HTML('<hr/><p style="font-size: 1.5rem;">Using Antares2GOATS and ANTARES</p>'),
+            Div(
+                Div(
+                    HTML(f'''
+                         <p>Click the image to open ANTARES in a new tab.</p>
+                         <a href="https://antares.noirlab.edu/" target="_blank">
+                         <img src="{antares_img_url}" alt="ANTARES Portal" class="img-fluid shadow-sm">
+                         </a>
+                    '''),
+                    css_class='col-md-7'
+                ),
+                Div(
+                    HTML(f'''
+                        <p>Install Antares2GOATS from the command line:</p>
+                        <img src={install_extension_url} class="shadow-sm img-fluid mb-4">
+                        <p>Install Antares2GOATS from browser extension store:</p>
+                        <a href="https://chrome.google.com/webstore/" target="_blank"><img
+                        src="{chrome_img_url}" alt="Chrome Extension Store" class="img-fluid"
+                        style="display: inline-block; max-height: 50px; margin-right: 1.5%;"/></a>
+                        <a href="https://safari-extensions.apple.com/" target="_blank"><img
+                        src="{safari_img_url}" alt="Safari Extension Store" class="img-fluid"
+                        style="display: inline-block; max-height: 50px; margin-right: 1.5%;"/></a>
+                        <a href="https://addons.mozilla.org/" target="_blank">
+                        <img src="{firefox_img_url}" alt="Firefox Extension Store" class="img-fluid"
+                        style="display: inline-block; max-height: 50px;"/></a>
+                    '''),
+                    css_class='col-md-5'
+                ),
+                css_class="row"
+            ),
+            HTML('<hr>'),
+            Div(
+                Fieldset(
+                    'Elastic Search Query',
+                    'query_name',
+                    'esquery'
+                ),
+                HTML('''
+                    <p>
+                    Please see <a href="https://noao.gitlab.io/antares/client/tutorial/searching.html">ANTARES
+                    Documentation</a> for a detailed description of advanced searches.
+                    </p>
+                '''),
+                css_class='col'
+            ),
+        )
+
+    def clean(self):
+        """Cleans the data of the "esquery" field and validates it.
+
+        Returns
+        -------
+        `dict`
+            The cleaned data of the form.
+
+        Raises
+        ------
+        forms.ValidationError
+            Raised if the "esquery" field is empty.
+        """
+        cleaned_data = super().clean()
+        if not cleaned_data.get('esquery'):
+            raise forms.ValidationError(
+                'Invalid entry for Elastic Search query form.'
+            )
+
+        return cleaned_data
 
 
 class GOATSANTARESBroker(ANTARESBroker):
-    """Extends ``ANTARESBroker`` to use GOATS Broker form."""
+    """Extends the ANTARESBroker.
+
+    Attributes
+    ----------
+    form : `GOATSANTARESBrokerForm`
+        The form class to be used within the broker.
+    """
 
     form = GOATSANTARESBrokerForm
 
-    def fetch_alerts(self, parameters: dict) -> iter:
-        tags = parameters.get('tag')
-        nobs_gt = parameters.get('nobs__gt')
-        nobs_lt = parameters.get('nobs__lt')
-        sra = parameters.get('ra')
-        sdec = parameters.get('dec')
-        ssr = parameters.get('sr')
-        mjd_gt = parameters.get('mjd__gt')
-        mjd_lt = parameters.get('mjd__lt')
-        mag_min = parameters.get('mag__min')
-        mag_max = parameters.get('mag__max')
-        elsquery = parameters.get('esquery')
-        ztfid = parameters.get('ztfid')
-        max_alerts = parameters.get('max_alerts', 20)
+    def fetch_alerts(self, parameters: dict[str, Any]) -> iter:
+        """Fetches alerts from user input.
+
+        Parameters
+        ----------
+        parameters : `dict[str, Any]`
+            The parameters to use to query.
+
+        Returns
+        -------
+        `iter`
+            An iterator of alerts.
+        """
+        esquery = parameters.get('esquery')
         locusid = parameters.get('locusid')
-        if ztfid:
-            query = {
-                "query": {
-                    "bool": {
-                        "must": [
-                            {
-                                "match": {
-                                    "properties.ztf_object_id": ztfid
-                                }
-                            }
-                        ]
-                    }
-                }
-            }
-        elif locusid:
-            query = {
-                "query": {
-                    "bool": {
-                        "must": [
-                            {
-                                "match": {
-                                    "locus_id": locusid
-                                }
-                            }
-                        ]
-                    }
-                }
-            }
-        elif elsquery:
-            query = elsquery
-        else:
-            filters = []
-
-            if nobs_gt or nobs_lt:
-                nobs_range = {'range': {'properties.num_mag_values': {}}}
-                if nobs_gt:
-                    nobs_range['range']['properties.num_mag_values']['gte'] = nobs_gt
-                if nobs_lt:
-                    nobs_range['range']['properties.num_mag_values']['lte'] = nobs_lt
-                filters.append(nobs_range)
-
-            if mjd_lt:
-                mjd_lt_range = {'range': {'properties.newest_alert_observation_time': {'lte': mjd_lt}}}
-                filters.append(mjd_lt_range)
-
-            if mjd_gt:
-                mjd_gt_range = {'range': {'properties.oldest_alert_observation_time': {'gte': mjd_gt}}}
-                filters.append(mjd_gt_range)
-
-            if mag_min or mag_max:
-                mag_range = {'range': {'properties.newest_alert_magnitude': {}}}
-                if mag_min:
-                    mag_range['range']['properties.newest_alert_magnitude']['gte'] = mag_min
-                if mag_max:
-                    mag_range['range']['properties.newest_alert_magnitude']['lte'] = mag_max
-                filters.append(mag_range)
-
-            if sra and ssr:  # TODO: add cross-field validation
-                ra_range = {'range': {'ra': {'gte': sra-ssr, 'lte': sra+ssr}}}
-                filters.append(ra_range)
-
-            if sdec and ssr:  # TODO: add cross-field validation
-                dec_range = {'range': {'dec': {'gte': sdec-ssr, 'lte': sdec+ssr}}}
-                filters.append(dec_range)
-
-            if tags:
-                filters.append({'terms': {'tags': tags}})
-
-            query = {
-                "query": {
-                    "bool": {
-                        "filter": filters
-                    }
-                }
-            }
-
-        loci = antares_client.search.search(query)
-#        if ztfid:
-#            loci = get_by_ztf_object_id(ztfid)
+        # TODO: Determine max alerts.
+        max_alerts = 20
         alerts = []
-        while len(alerts) < max_alerts:
-            try:
-                locus = next(loci)
-            except (marshmallow.exceptions.ValidationError, StopIteration):
-                break
+        if locusid:
+            # Fetch alert by locus ID.
+            locus = antares_client.search.get_by_id(locusid)
             alerts.append(self.alert_to_dict(locus))
+
+        elif esquery:
+            # Set query parameter.
+            query = esquery
+            # Initiate search with the given query.
+            loci = antares_client.search.search(query)
+
+            while len(alerts) < max_alerts:
+                try:
+                    locus = next(loci)
+                except (marshmallow.exceptions.ValidationError, StopIteration):
+                    # Break the loop if there is a validation error
+                    # or no more items in the iterator.
+                    break
+                alerts.append(self.alert_to_dict(locus))
+
         return iter(alerts)
