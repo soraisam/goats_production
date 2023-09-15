@@ -1,0 +1,13 @@
+{% extends 'tom_common/base.html' %}
+{% load bootstrap4 crispy_forms_tags %}
+{% block title %}Query a Broker{% endblock %}
+{% block content %}
+<h2>
+  {% if form.broker.value == "ANTARES" %}
+  Select targets using the ANTARES alert-broker
+  {% else %}
+  {{ form.broker.value }} Query Form
+  {% endif %}
+</h2>
+{% crispy form %}
+{% endblock %}

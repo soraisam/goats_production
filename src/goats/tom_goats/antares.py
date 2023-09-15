@@ -52,12 +52,12 @@ class GOATSANTARESBrokerForm(GenericQueryForm):
             HTML('''
                 <p>
                 Users can query objects in the ANTARES database using one of the following
-                two methods: <br><br>1. Using the Antares2GOATS Browser Extension (recommended).<br>2.
+                two methods: <br><br>1. Using the antares2GOATS Browser Extension (recommended).<br>2.
                 An advanced
                 query with Elastic Search syntax.
             </p>
             '''),
-            HTML('<hr/><p style="font-size: 1.5rem;">Using Antares2GOATS and ANTARES</p>'),
+            HTML('<hr/><p style="font-size: 1.5rem;">Using the ANTARES portal with antares2GOATS</p>'),
             Div(
                 Div(
                     HTML(f'''
@@ -70,9 +70,9 @@ class GOATSANTARESBrokerForm(GenericQueryForm):
                 ),
                 Div(
                     HTML(f'''
-                        <p>Install Antares2GOATS from the command line:</p>
-                        <img src={install_extension_url} class="shadow-sm img-fluid mb-4">
-                        <p>Install Antares2GOATS from browser extension store:</p>
+                        <p>Install antares2GOATS from the command line:</p>
+                        <img src={install_extension_url} class="shadow-md img-fluid mb-4">
+                        <p>Install antares2GOATS from browser extension store:</p>
                         <a href="https://chrome.google.com/webstore/" target="_blank"><img
                         src="{chrome_img_url}" alt="Chrome Extension Store" class="img-fluid"
                         style="display: inline-block; max-height: 50px; margin-right: 1.5%;"/></a>
