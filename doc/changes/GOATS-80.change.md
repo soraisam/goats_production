@@ -1,0 +1,1 @@
+GOATS ANTARES Broker webpage v1: Enhanced integration with GOATS, leveraging the Antares2GOATS extension for streamlined performance and alignment.
