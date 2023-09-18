@@ -26,7 +26,7 @@ pip install .
 
 # GOATS CLI Guide
 
-The **Gemini Observation and Analysis of Targets System (GOATS)** CLI provides an efficient way to install and manage the GOATS project along with the Antares2GOATS browser extension. You can get detailed help on each command using the `--help` option. Below, find the breakdown of the primary commands and options:
+The **Gemini Observation and Analysis of Targets System (GOATS)** CLI provides an efficient way to install and manage the GOATS project along with the antares2goats browser extension. You can get detailed help on each command using the `--help` option. Below, find the breakdown of the primary commands and options:
 
 ## Getting Started
 
@@ -36,7 +36,7 @@ Use the following command to get an overview of available options and commands:
 
 ### Available Commands
 
-1. `install`: Installs GOATS along with the optional Antares2GOATS browser extension.
+1. `install`: Installs GOATS along with the optional antares2goats browser extension.
 
    `goats install [OPTIONS]`
 
@@ -50,7 +50,7 @@ Use the following command to get an overview of available options and commands:
 
    `goats install --help`
 
-2. `install-extension`: Installs the Antares2GOATS browser extension for a specified browser.
+2. `install-extension`: Installs the antares2goats browser extension for a specified browser.
 
    `goats install-extension [OPTIONS] {chrome|safari|firefox}`
 

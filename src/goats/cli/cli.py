@@ -73,7 +73,7 @@ def cli(ctx):
         click.echo(ctx.get_help())
 
 
-@click.command(help=("Installs GOATS and antares2GOATS browser extension if specified."))
+@click.command(help=("Installs GOATS and antares2goats browser extension if specified."))
 @click.option("-p", "--project-name", default="GOATS", type=str,
               help="Specify a custom project name. Default is 'GOATS'.")
 @click.option("-d", "--directory", default=Path.cwd(), type=Path,
@@ -97,7 +97,7 @@ def install(project_name: str, directory: Path | str, overwrite: bool, browser: 
         Whether to overwrite the existing project if it exists, default is
         `False`.
     browser : `str`
-        The browser to install the antares2GOATS extension for.
+        The browser to install the antares2goats extension for.
 
     Raises
     ------
@@ -233,13 +233,13 @@ def _install_extension(browser: str) -> None:
             _install_firefox_extension()
         case None:
             display_warning("No browser specified. For an enhanced GOATS experience, installing the "
-                            "antares2GOATS extension is highly recommended.")
+                            "antares2goats extension is highly recommended.")
 
 
-@click.command(help="Installs the antares2GOATS extension.")
+@click.command(help="Installs the antares2goats extension.")
 @click.argument("browser", type=click.Choice(BROWSERS, case_sensitive=False))
 def install_extension(browser: str) -> None:
-    """Command to install the antares2GOATS extension for a specified browser.
+    """Command to install the antares2goats extension for a specified browser.
 
     Parameters
     ----------

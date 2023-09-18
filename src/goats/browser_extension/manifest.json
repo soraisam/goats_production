@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Antares2GOATS",
+  "name": "antares2goats",
   "version": "1.0.0",
   "permissions": ["activeTab", "tabs", "contextMenus", "storage", "cookies"],
   "host_permissions": ["http://localhost:8000/"],
