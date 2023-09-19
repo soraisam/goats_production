@@ -145,20 +145,7 @@ class Command(TOMCommand):
 
     def get_target_type(self) -> None:
         """Gets the target type for the project."""
-        allowed_types = {
-            "1": "SIDEREAL",
-            "2": "NON_SIDEREAL"
-        }
-        options_str = ", ".join(f"{key}) {value}" for key, value in allowed_types.items())
-        prompt = f"Which target type will your project use? {options_str} "
-
-        target_type = input(prompt)
-
-        if target_type in allowed_types:
-            self.context["TARGET_TYPE"] = allowed_types[target_type]
-        else:
-            self.stdout.write(self.style.NOTICE(f"Invalid choice {target_type}. Try again."))
-            self.get_target_type()
+        self.context["TARGET_TYPE"] = "SIDEREAL"
 
     def create_pi(self) -> None:
         """Creates a Principal Investigator (PI) superuser."""
