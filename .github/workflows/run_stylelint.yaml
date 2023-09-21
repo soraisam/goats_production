@@ -3,7 +3,7 @@ name: Run StyleLint
 on:
   push:
     paths:
-      - "src/goats/tom_goats/**/*.css"
+      - "src/goats/**/*.css"
 
 jobs:
   run_stylelint:

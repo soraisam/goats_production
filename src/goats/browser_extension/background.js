@@ -1,3 +1,6 @@
+// Import the default settings.
+import { DEFAULT_SETTINGS } from './defaults.js';
+
 /**
  * An object representing the colors for badge background.
  * @type {Object}
@@ -104,22 +107,26 @@ chrome.action.onClicked.addListener(async (tab) => {
       dataToSend.locusid = objectName;
     }
 
-    chrome.storage.local.get(["url", "port"], async (items) => {
+    chrome.storage.local.get(["url", "port", "token"], async (items) => {
       try {
         if (chrome.runtime.lastError) {
           throw new Error(chrome.runtime.lastError);
         }
 
+        const url = items.url || DEFAULT_SETTINGS.url;
+        const port = items.port || DEFAULT_SETTINGS.port;
+        const token = items.token || DEFAULT_SETTINGS.token;
+
         // Construct the URL using the retrieved items.
-        const baseUrl = `http://${items.url}:${items.port}/receive_query/`;
+        const baseUrl = `http://${url}:${port}/receive_query/`;
 
         // Send data to app.
         const response = await fetch(baseUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Token ${token}`,
           },
-          credentials: "include",
           body: JSON.stringify(dataToSend),
         });
 
@@ -129,12 +136,12 @@ chrome.action.onClicked.addListener(async (tab) => {
           chrome.action.setBadgeText({ text: "✓", tabId: tab.id });
         } else {
           if (response.status === 401) {
-            // Change badge to red and key icon.
+            // Change badge to red and token icon.
             chrome.action.setBadgeBackgroundColor({ color: COLORS.RED, tabId: tab.id });
-            chrome.action.setBadgeText({ text: "N/A", tabId: tab.id });
+            chrome.action.setBadgeText({ text: "TKN", tabId: tab.id });
           }
           else if (response.status === 409) {
-            // Change badge to yellow and key icon.
+            // Change badge to yellow and duplicate icon.
             chrome.action.setBadgeBackgroundColor({ color: COLORS.YELLOW, tabId: tab.id });
             chrome.action.setBadgeText({ text: "DUP", tabId: tab.id });
           }

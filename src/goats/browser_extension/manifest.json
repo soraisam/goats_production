@@ -3,7 +3,7 @@
   "name": "antares2goats",
   "version": "1.0.0",
   "permissions": ["activeTab", "tabs", "contextMenus", "storage", "cookies"],
-  "host_permissions": ["http://localhost:8000/"],
+  "host_permissions": ["http://localhost:*/receive_query/"],
   "action": {
     "default_icon": {
       "16": "img/favicon-16.png",

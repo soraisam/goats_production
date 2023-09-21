@@ -1,9 +1,12 @@
+// Import default settings to use.
+import { DEFAULT_SETTINGS } from './defaults.js';
+
 /**
  * A lookup table for hosts and ports.
  * @type {Object}
  */
 const URL_PORT_LOOKUP = {
-  goats: { url: "localhost", port: "8000" },
+  goats: { url: DEFAULT_SETTINGS.url, port: DEFAULT_SETTINGS.port },
   other: { url: "", port: "" },
 };
 
@@ -22,32 +25,30 @@ function handleRadioChange(event) {
 }
 
 /**
- * Handles the click event for the save button, saving the current URL and
- * port to storage.
+ * Handles the click event for the save button, saving the current token, URL,
+ * and port to storage.
  */
 function handleSaveClick() {
   const url = document.getElementById("url").value;
   const port = document.getElementById("port").value;
-  chrome.storage.local.set({ url, port }, () => {
+  const token = document.getElementById("token").value;
+  chrome.storage.local.set({ url, port, token, }, () => {
     // Display a "Settings Saved" message
     const saveMessage = document.createElement("div");
-    saveMessage.textContent = "Settings Saved. Closing...";
+    saveMessage.textContent = "Settings Saved.";
     document.body.appendChild(saveMessage);
   });
-
-  // Close the options window after a short delay.
-  setTimeout(() => {
-    window.close();
-  }, 1000);
 }
 
 /**
- * Loads the previously saved URL and port when the options page is loaded.
+ * Loads the previously saved URL, port, and token when the options page is
+ * loaded.
  */
 const loadPreviousSettings = () => {
-  chrome.storage.local.get(["url", "port"], (items) => {
-    document.getElementById("url").value = items.url || "";
-    document.getElementById("port").value = items.port || "";
+  chrome.storage.local.get(["url", "port", "token"], (items) => {
+    document.getElementById("url").value = items.url || DEFAULT_SETTINGS.url;
+    document.getElementById("port").value = items.port || DEFAULT_SETTINGS.port;
+    document.getElementById("token").value = items.token || DEFAULT_SETTINGS.token;
   });
 }
 
