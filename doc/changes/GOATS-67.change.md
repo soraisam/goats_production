@@ -1,1 +1,0 @@
-GOATS Prompt Overhaul: Enhanced user experience during GOATS installation and execution with transparent process descriptions and progress updates.
