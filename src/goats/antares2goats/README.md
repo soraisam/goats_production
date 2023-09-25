@@ -1,4 +1,4 @@
-# ANTARES->GOATS Browser Extension: Local Installation Guide
+# `antares2goats` Browser Extension: Local Installation Guide
 
 ## Step 1: Open Chrome and Navigate to Extensions
 1. Open Google Chrome.
