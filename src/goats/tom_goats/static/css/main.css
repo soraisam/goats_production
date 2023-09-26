@@ -99,34 +99,27 @@ input {
 }
 
 .goats-banner {
-  background-color: var(--gray-100);
+  background-color: var(--white);
 }
 
-.goats-hero {
-  max-height: 300px;
-}
-
-/* .hero {
-  background-image: url("../img/hero.jpg");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center center;
-} */
-
-.hero {
+/* .background {
   background: hsl(42deg 87% 57% / 100%);
   background: linear-gradient(180deg, hsl(42deg 87% 57% / 100%) 0%, hsl(0deg 0% 0% / 100%) 100%);
+} */
+
+.background {
+  background-color: var(--white);
 }
 
 .goats-subtitle {
-  color: var(--white);
-  font-size: 3.5rem;
+  color: var(--gray-700);
+  font-size: 3.25rem;
   font-weight: 600;
   line-height: 1;
 }
 
 .goats-slogan {
-  color: var(--gray-200);
+  color: var(--gray-600);
 }
 
 .goats-emoji {
