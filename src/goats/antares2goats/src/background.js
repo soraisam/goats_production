@@ -1,4 +1,3 @@
-// Import the default settings.
 import { DEFAULT_SETTINGS } from './defaults.js';
 
 /**
@@ -54,7 +53,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "options",
     title: "Options",
-    contexts: ["browser_action"],
+    contexts: ["all"],
   });
 });
 
