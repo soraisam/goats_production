@@ -50,18 +50,7 @@ Use the following command to get an overview of available options and commands:
 
    `goats install --help`
 
-2. `install-extension`: Installs the antares2goats browser extension for a specified browser.
-
-   `goats install-extension [OPTIONS] {chrome|safari|firefox}`
-
-   #### Options
-   - `--help`: Show the help message and exit.
-
-   Get more information with:
-
-   `goats install-extension --help`
-
-3. `run`: Starts the server for the GOATS project.
+2. `run`: Starts the server for the GOATS project.
 
    `goats run [OPTIONS]`
 

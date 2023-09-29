@@ -46,7 +46,6 @@ class GOATSANTARESBrokerForm(GenericQueryForm):
         chrome_img_url = static('img/chrome.png')
         safari_img_url = static('img/safari.png')
         firefox_img_url = static('img/firefox.png')
-        install_extension_url = static('img/install-extension.png')
         self.helper.layout = Layout(
             self.common_layout,
             HTML('''
@@ -70,8 +69,6 @@ class GOATSANTARESBrokerForm(GenericQueryForm):
                 ),
                 Div(
                     HTML(f'''
-                        <p>Install antares2goats from the command line:</p>
-                        <img src={install_extension_url} class="shadow-md img-fluid mb-4">
                         <p>Install antares2goats from browser extension store:</p>
                         <a href="https://chrome.google.com/webstore/" target="_blank"><img
                         src="{chrome_img_url}" alt="Chrome Extension Store" class="img-fluid"
