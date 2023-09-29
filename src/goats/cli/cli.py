@@ -3,10 +3,7 @@ __all__ = ["cli"]
 from pathlib import Path
 import shutil
 import subprocess
-import platform
-import json
 from typing import IO, Any
-from enum import Enum
 
 # Related third party imports.
 import click
@@ -14,31 +11,6 @@ from click._compat import get_text_stderr
 
 # Local application/library specific imports.
 from .modify_settings import modify_settings
-
-MAC_PATH = Path.home() / "Library/Application Support/Google/Chrome/External Extensions"
-LINUX_PATHS = [Path("/opt/google/chrome/extensions/"), Path("/usr/share/google-chrome/extensions/")]
-
-
-class Browser(Enum):
-    """A class representing different browsers.
-
-    Attributes
-    ----------
-    CHROME : `str`
-        Represents the Chrome browser.
-    SAFARI : `str`
-        Represents the Safari browser.
-    FIREFOX : `str`
-        Represents the Firefox browser.
-    """
-
-    CHROME = "chrome"
-    SAFARI = "safari"
-    FIREFOX = "firefox"
-
-
-# Build list of all the available browsers.
-BROWSERS = [browser.value for browser in Browser]
 
 
 class GOATSClickException(click.ClickException):
@@ -81,9 +53,7 @@ def cli(ctx):
                     "Default is the current directory."))
 @click.option("--overwrite", is_flag=True,
               help="Overwrite the existing project, if it exists. Default is False.")
-@click.option("--browser", type=click.Choice(BROWSERS, case_sensitive=False),
-              help="Specify the browser extension to install.")
-def install(project_name: str, directory: Path | str, overwrite: bool, browser: str) -> None:
+def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
     """Installs GOATS with a specified or default name in a specified or
     default directory.
 
@@ -96,8 +66,6 @@ def install(project_name: str, directory: Path | str, overwrite: bool, browser: 
     overwrite : `bool`
         Whether to overwrite the existing project if it exists, default is
         `False`.
-    browser : `str`
-        The browser to install the antares2goats extension for.
 
     Raises
     ------
@@ -148,9 +116,6 @@ def install(project_name: str, directory: Path | str, overwrite: bool, browser: 
         raise GOATSClickException(f"An error occurred while running the command: '{cmd_str}'. Exit status:"
                                   f" {error.returncode}.")
 
-    # Install the GOATS extension.
-    _install_extension(browser)
-
 
 @click.command(help=("Starts the server for GOATS."))
 @click.option("-p", "--project-name", default="GOATS", type=str,
@@ -200,95 +165,6 @@ def run(project_name: str, directory: Path | str, reloader: bool) -> None:
         cmd_str = " ".join(error.cmd)
         raise GOATSClickException(f"An error occurred while running the command: '{cmd_str}'. Exit status: "
                                   f"{error.returncode}.")
-
-
-def _install_chrome_extension() -> None:
-    raise GOATSClickException("Not implemented yet.")
-
-
-def _install_safari_extension() -> None:
-    raise GOATSClickException("Not implemented yet.")
-
-
-def _install_firefox_extension() -> None:
-    raise GOATSClickException("Not implemented yet.")
-
-
-def _install_extension(browser: str) -> None:
-    """Determines what browser extension to install.
-
-    Parameters
-    ----------
-    browser : `str`
-        The browser to install the extension for.
-    """
-    # Install the GOATS extension.
-    browser = browser.lower() if browser is not None else None
-    match browser:
-        case Browser.CHROME.value:
-            _install_chrome_extension()
-        case Browser.SAFARI.value:
-            _install_safari_extension()
-        case Browser.FIREFOX.value:
-            _install_firefox_extension()
-        case None:
-            display_warning("No browser specified. For an enhanced GOATS experience, installing the "
-                            "antares2goats extension is highly recommended.")
-
-
-@click.command(help="Installs the antares2goats extension.")
-@click.argument("browser", type=click.Choice(BROWSERS, case_sensitive=False))
-def install_extension(browser: str) -> None:
-    """Command to install the antares2goats extension for a specified browser.
-
-    Parameters
-    ----------
-    browser : `str`
-        The type of browser where the extension will be installed.
-    """
-    _install_extension(browser)
-
-    display_message("Installing GOATS Chrome Extension.")
-
-    if not click.confirm("Do you want to continue with the Chrome extension install?"):
-        raise GOATSClickException("Aborting installation.")
-
-    extension_id = "aapbdbdomjkkjkaonfhkkikfgjllcleb"
-
-    display_message("Checking computer & browser requirements:", show_goats_emoji=False)
-    system = platform.system()
-    display_info("Checking OS system...")
-    if system == "Darwin":  # Mac
-        extension_dir = Path(MAC_PATH)
-
-    elif system == "Linux":
-        extension_dir = next((dir_path for dir_path in LINUX_PATHS if dir_path.exists()), None)
-
-    else:
-        display_failed()
-        raise GOATSClickException("This command is not supported on Windows.")
-    display_ok()
-
-    display_info("Checking Chrome extension directory...")
-    if extension_dir is None or not extension_dir.exists():
-        display_failed()
-        raise GOATSClickException("Chrome extension directory not found.")
-    display_ok()
-
-    display_info("Creating and installing extension preferences file...")
-    # Create the JSON data
-    extension_data = {"external_update_url": "https://clients2.google.com/service/update2/crx"}
-    json_file_name = f"{extension_id}.json"
-    json_file_path = extension_dir / json_file_name
-
-    # Write JSON data to the file
-    with json_file_path.open("w") as json_file:
-        json.dump(extension_data, json_file, indent=2)
-    display_ok()
-
-    display_message("Success! GOATS Chrome extension installed.", color="green")
-    display_message("Restart Google Chrome to complete the installation. Make sure to enable extension when "
-                    "asked.")
 
 
 def display_message(message: str, show_goats_emoji: bool = True, color: str = "cyan") -> None:
@@ -344,6 +220,5 @@ def display_warning(message: str, indent: int = 0) -> None:
     click.echo(click.style(f"🐐 WARNING: {' ' * indent}{message}", fg="yellow", bold=True))
 
 
-cli.add_command(install_extension)
 cli.add_command(install)
 cli.add_command(run)
