@@ -2,7 +2,7 @@ name: Run JS Tests
 on:
   push:
     paths:
-      - "src/tom_goats/static/js/**/*.js"
+      - "src/goats_tom/static/js/**/*.js"
       - "js_tests/**/*.js"
 
 jobs:

@@ -3,7 +3,7 @@ name: Run HTMLHint
 on:
   push:
     paths:
-      - "src/goats/tom_goats/templates/**/*.html"
+      - "src/goats_tom/templates/**/*.html"
 
 jobs:
   run_htmlhint:
@@ -20,4 +20,4 @@ jobs:
       run: npm install htmlhint -g
 
     - name: Run HTMLHint
-      run: htmlhint src/goats
+      run: htmlhint src

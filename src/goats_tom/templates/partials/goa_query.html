@@ -1,0 +1,60 @@
+<div class="mb-5">
+  <h4 class="text-center">Retrieve data from the Gemini Observatory Archive (GOA)</h4>
+  <p class="text-center"><em>This functionality is available once the observation complete, i.e., the status is updated to 'Observed'</em></p>
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+  <form method="post" action="{% url 'goa_query' object.id%}">
+    {% csrf_token %}
+    <div class="form-row justify-content-center">
+      <div class="col-md-5">
+        <div class="row form-group">
+          <label for="{{ form.raw_reduced.id_for_label }}" class="col-sm-4 col-form-label">Raw/Reduced</label>
+          <div class="col-sm-8">
+            {{ form.raw_reduced }}
+            <small class="form-text text-muted">(Select data by processing state)</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="row form-group">
+          <label for="{{ form.qa_state.id_for_label }}" class="col-sm-4 col-form-label">QA State</label>
+          <div class="col-sm-8">
+            {{ form.qa_state }}
+            <small class="form-text text-muted">(Quality of results you wish to access)</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row justify-content-center">
+      <div class="col-md-5">
+        <div class="row form-group">
+          <label for="{{ form.filename_prefix.id_for_label }}" class="col-sm-4 col-form-label">Filename Prefix</label>
+          <div class="col-sm-8">
+            {{ form.filename_prefix }}
+            <small class="form-text text-muted">(Specify the first part of the filename to match by)</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="row form-group">
+          <label for="{{ form.save_to.id_for_label }}" class="col-sm-4 col-form-label">Save To</label>
+          <div class="col-sm-8">
+            {{ form.save_to }}
+            <small class="form-text text-muted">(Path to save data to if default path is not preferred)</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" name="facility" value="{{ object.facility }}">
+    <div class="row">
+      <div class="col text-center">
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
+  </form>
+</div>

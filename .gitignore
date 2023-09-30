@@ -271,5 +271,4 @@ package-lock.json
 # Jest code coverage
 coverage
 
-# Local installation of GOATS
-/GOATS/
+/TESTGOATS/

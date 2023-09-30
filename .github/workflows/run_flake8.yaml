@@ -25,4 +25,4 @@ jobs:
         run: python -m pip install --upgrade pip flake8
 
       - name: Run Flake8
-        run: flake8 src/goats
+        run: flake8 src

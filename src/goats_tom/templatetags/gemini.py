@@ -1,0 +1,46 @@
+# Standard library imports.
+
+# Related third party imports.
+
+# Local application/library specific imports.
+from django import template
+from ..forms import GOAQueryForm
+from typing import Any
+
+register = template.Library()
+
+
+@register.inclusion_tag("partials/goa_query.html", takes_context=True)
+def render_goa_query_form(context: template.context.RequestContext) -> dict[str, Any]:
+    """Render the GOAQueryForm.
+
+    Parameters
+    ----------
+    context : `template.context.RequestContext`
+        Additional context to provide to the view.
+
+    Returns
+    -------
+    `dict`
+        Dictionary containing the form to render.
+    """
+    form = GOAQueryForm()
+    # Need to pass in the context of the object for partial to work.
+    return {"form": form, "object": context.get("object", {})}
+
+
+@register.inclusion_tag("partials/launch_dragons.html", takes_context=True)
+def render_launch_dragons(context: template.context.RequestContext) -> dict[str, Any]:
+    """Render the launch_dragons page.
+
+    Parameters
+    ----------
+    context : `template.context.RequestContext`
+        Additional context to provide to the view.
+
+    Returns
+    -------
+    `dict`
+        Dictionary containing the form to render.
+    """
+    return {"object": context.get("object", {})}

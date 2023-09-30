@@ -1,7 +1,7 @@
 module.exports = {
   moduleDirectories: [
     "node_modules",
-    "src/goats/tom_goats/static/js"
+    "src/goats_tom/static/js"
   ],
   roots: [
     "<rootDir>/js_tests/"
