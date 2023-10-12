@@ -1,0 +1,1 @@
+GOA Proprietary Data Connection and Gemini Update: Introduced GOA connection for proprietary data. Added GOA credential management.

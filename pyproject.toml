@@ -42,13 +42,12 @@ test = [
 where = ["src"]
 
 [project.scripts]
-goats = "goats.cli:cli"
+goats = "goats_cli:cli"
 
 [tool.setuptools.package-data]
-"goats.tom_goats.templates" = ["**/*.html"]
-"goats.tom_goats.static" = ["**/*.*"]
-"goats.goats_setup.templates" = ["**/*.tmpl"]
-"goats.browser_extension" = ["**/*.*"]
+"goats_tom.templates" = ["**/*.html"]
+"goats_tom.static" = ["**/*.*"]
+"goats_setup.templates" = ["**/*.tmpl"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
