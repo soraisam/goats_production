@@ -9,15 +9,10 @@ from django import forms
 
 
 class GOAQueryForm(forms.Form):
-    """Form to query GOA data with specific filters.
+    """Form to query GOA data with specific filters."""
 
-    Parameters
-    ----------
-    data : `dict`
-        Form data as key-value pairs.
-    """
     RAW_REDUCED_CHOICES = [
-        ("ANY", "Any"),
+        ("", "Any"),
         ("RAW", "Raw Only"),
         ("PREPARED", "IRAF Reduced (not Cals)"),
         ("PROCESSED_SCIENCE", "Processed Science Only"),
@@ -32,24 +27,61 @@ class GOAQueryForm(forms.Form):
 
     QA_STATE_CHOICES = [
         ("NotFail", "Not Fail"),
-        ("Any", "Any"),
+        ("AnyQA", "Any"),
         ("Pass", "Pass"),
         ("Lucky", "Pass or Undefined"),
         ("Win", "Pass or Usable"),
         ("Usable", "Usable"),
-        ("Undefined", "Undefined"),
+        ("UndefinedQA", "Undefined"),
         ("Fail", "Fail")
     ]
 
+    OBSERVATION_TYPES = [
+        ("", "Any"),
+        ("OBJECT", "Object"),
+        ("BIAS", "Bias"),
+        ("DARK", "Dark"),
+        ("FLAT", "Flat"),
+        ("ARC", "Arc"),
+        ("PINHOLE", "Pinhole"),
+        ("RONCHI", "Ronchi"),
+        ("CAL", "Calibration"),
+        ("FRINGE", "Fring"),
+        ("MASK", "MOS Mask"),
+        ("BPM", "BPM"),
+    ]
+
+    OBSERVATION_CLASSES = [
+        ("", "Any"),
+        ("science", "Science"),
+        ("acq", "Acquisition"),
+        ("progCal", "Program Calibration"),
+        ("dayCal", "Day Calibration"),
+        ("partnerCal", "Partner Calibration"),
+        ("acqCal", "Acquisition Calibration")
+    ]
+
+    observation_class = forms.ChoiceField(
+        choices=OBSERVATION_CLASSES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
+    observation_type = forms.ChoiceField(
+        choices=OBSERVATION_TYPES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
     raw_reduced = forms.ChoiceField(
         choices=RAW_REDUCED_CHOICES,
         label="Raw/Reduced",
-        widget=forms.Select(attrs={"class": "form-control"})
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=False
     )
     qa_state = forms.ChoiceField(
         choices=QA_STATE_CHOICES,
         label="QA State",
-        widget=forms.Select(attrs={"class": "form-control"})
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=False
     )
     filename_prefix = forms.CharField(
         label="Filename Prefix",
@@ -104,8 +136,19 @@ class GOAQueryForm(forms.Form):
         filename_prefix = cleaned_data.get("filename_prefix", "")
         local_path_to_store = cleaned_data.get("local_path_to_store", "")
 
+        args_list = [cleaned_data["qa_state"]]
+
+        if cleaned_data["observation_class"]:
+            args_list.append(cleaned_data["observation_class"])
+
+        if cleaned_data["observation_type"]:
+            args_list.append(cleaned_data["observation_type"])
+
+        if cleaned_data["raw_reduced"]:
+            args_list.append(cleaned_data["raw_reduced"])
+
         query_params = {
-            "args": (cleaned_data["qa_state"], cleaned_data["raw_reduced"]),
+            "args": tuple(args_list),
             "kwargs": {}
         }
 

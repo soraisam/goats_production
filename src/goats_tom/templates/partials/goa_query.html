@@ -13,6 +13,26 @@
     <div class="form-row justify-content-center">
       <div class="col-md-5">
         <div class="row form-group">
+          <label for="{{ form.observation_class.id_for_label }}" class="col-sm-4 col-form-label">Observation Class</label>
+          <div class="col-sm-8">
+            {{ form.observation_class }}
+            <small class="form-text text-muted"></small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="row form-group">
+          <label for="{{ form.observation_type.id_for_label }}" class="col-sm-4 col-form-label">Observation Type</label>
+          <div class="col-sm-8">
+            {{ form.observation_type }}
+            <small class="form-text text-muted"></small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row justify-content-center">
+      <div class="col-md-5">
+        <div class="row form-group">
           <label for="{{ form.raw_reduced.id_for_label }}" class="col-sm-4 col-form-label">Raw/Reduced</label>
           <div class="col-sm-8">
             {{ form.raw_reduced }}
