@@ -46,7 +46,6 @@ class GOAQueryFormView(View):
         # Check if your GOAQueryForm was submitted.
         form = GOAQueryForm(request.POST)
         observation_record = ObservationRecord.objects.get(pk=kwargs["pk"])
-        user = User.objects.get(pk=self.kwargs["pk"])
         if form.is_valid():
             # Do something with form.cleaned_data
             service_class = tom_facility_get_service_class(form.cleaned_data["facility"])
