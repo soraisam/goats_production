@@ -26,7 +26,7 @@ from rest_framework.permissions import IsAuthenticated
 # Local application/library specific imports.
 from .forms import GOAQueryForm, GOALoginForm
 from .models import GOALogin
-from .astroquery_gemini import GOA
+from .astroquery_gemini import Observations as GOA
 
 
 class GOAQueryFormView(View):

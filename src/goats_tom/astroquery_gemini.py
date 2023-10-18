@@ -1,41 +1,473 @@
-# Standard library imports.
-import io
-from typing import Any
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""
+==================================================
+Gemini Observatory Archive (GOA) Astroquery Module
+==================================================
 
-# Related third party imports.
+Query public and proprietary data from GOA.
+"""
+import bz2
+import os
+from pathlib import Path
+from datetime import date, datetime
+import tarfile
+
 import astropy
-from astropy.utils.console import ProgressBarOrSpinner
+import astropy.units as u
+from astropy.table import Table, MaskedColumn
+import numpy as np
+
 from astroquery import log
-from astroquery.query import BaseQuery
-from astroquery.gemini import ObservationsClass
+from astroquery.query import QueryWithLogin
+from astroquery.utils.class_or_instance import class_or_instance
+from .astroquery_urlhelper import URLHelper
+from .astroquery_conf import conf
 
-# Local application/library specific imports.
+
+__all__ = ['Observations', 'ObservationsClass']  # specifies what to import
 
 
-class BaseQueryExtension(BaseQuery):
-    """Extends astroquery BaseQuery."""
-    def _download_file_content(self, url: str, timeout: int | None = None,
-                               auth: dict[str, Any] | None = None, method: str | None = "GET", **kwargs
-                               ) -> bytes:
+__valid_instruments__ = [
+    'GMOS',
+    'GMOS-N',
+    'GMOS-S',
+    'GNIRS',
+    'GRACES',
+    'NIRI',
+    'NIFS',
+    'GSAOI',
+    'F2',
+    'GPI',
+    'NICI',
+    'MICHELLE',
+    'TRECS',
+    'BHROS',
+    'HRWFS',
+    'OSCIR',
+    'FLAMINGOS',
+    'HOKUPAA+QUIRC',
+    'PHOENIX',
+    'TEXES',
+    'ABU',
+    'CIRPASS'
+]
+
+
+__valid_observation_class__ = [
+    'science',
+    'acq',
+    'progCal',
+    'dayCal',
+    'partnerCal',
+    'acqCal',
+]
+
+__valid_observation_types__ = [
+    'OBJECT',
+    'BIAS',
+    'DARK',
+    'FLAT',
+    'ARC',
+    'PINHOLE',
+    'RONCHI',
+    'CAL',
+    'FRINGE',
+    'MASK'
+]
+
+__valid_modes__ = [
+    'imaging',
+    'spectroscopy',
+    'LS',
+    'MOS',
+    'IFS'
+]
+
+__valid_adaptive_optics__ = [
+    'NOTAO',
+    'AO',
+    'NGS',
+    'LGS'
+]
+
+__valid_raw_reduced__ = [
+    'RAW',
+    'PREPARED',
+    'PROCESSED_BIAS',
+    'PROCESSED_FLAT',
+    'PROCESSED_FRINGE',
+    'PROCESSED_ARC'
+]
+
+
+class ObservationsClass(QueryWithLogin):
+
+    url_helper = URLHelper()
+
+    def __init__(self, *args):
+        """
+        Query class for observations in the Gemini archive.
+
+        This class provides query capabilities against the gemini archive.
+        Queries can be done by cone search, by name, or by a set of criteria.
+        """
+        super().__init__()
+
+    def _login(self, username, password):
+        """
+        Login to the Gemini Archive website.
+
+        This method will authenticate the session as a particular user.  This may give you access
+        to additional information or access based on your credentials
+
+        Parameters
+        ----------
+        username : str
+            The username to login as
+        password : str
+            The password for the given account
+
+        Returns
+        -------
+        bool
+            Returns `True` if login was successful, else `False`.
+        """
+        url = self.url_helper.get_login_url()
+        params = {"username": username, "password": password}
+        r = self._session.request('POST', url, params=params)
+
+        if b'<P>Welcome, you are sucessfully logged in' not in r.content:
+            log.error('Unable to login, please check your credentials')
+            return False
+
+        return True
+
+    @class_or_instance
+    def query_region(self, coordinates, *, radius=None):
+        """
+        search for Gemini observations by target on the sky.
+
+        Given a sky position and radius, returns a `~astropy.table.Table` of Gemini observations.
+
+        Parameters
+        ----------
+        coordinates : str or `~astropy.coordinates` object
+            The target around which to search. It may be specified as a
+            string or as the appropriate `~astropy.coordinates` object.
+        radius : str or `~astropy.units.Quantity` object, optional
+            Default 0.3 degrees.
+            The string must be parsable by `~astropy.coordinates.Angle`. The
+            appropriate `~astropy.units.Quantity` object from
+            `~astropy.units` may also be used. Defaults to 0.3 deg.
+
+        Returns
+        -------
+        response : `~astropy.table.Table`
+        """
+        if radius is None:
+            radius = u.Quantity(conf.GOA_RADIUS)
+        return self.query_criteria(coordinates=coordinates, radius=radius)
+
+    @class_or_instance
+    def query_object(self, objectname, *, radius=None):
+        """
+        search for Gemini observations by target on the sky.
+
+        Given an object name and optional radius, returns a `~astropy.table.Table` of Gemini observations.
+
+        Parameters
+        ----------
+        objectname : str
+            The name of an object to search for.  This attempts to resolve the object
+            by name and do a search on that area of the sky.  This does not handle
+            moving targets.
+        radius : str or `~astropy.units.Quantity` object, optional
+            Default 0.3 degrees.
+            The string must be parsable by `~astropy.coordinates.Angle`. The
+            appropriate `~astropy.units.Quantity` object from
+            `~astropy.units` may also be used. Defaults to 0.3 deg.
+
+        Returns
+        -------
+        response : `~astropy.table.Table`
+        """
+        if radius is None:
+            radius = u.Quantity(conf.GOA_RADIUS)
+        return self.query_criteria(objectname=objectname, radius=radius)
+
+    @class_or_instance
+    def query_criteria(self, *rawqueryargs, coordinates=None, radius=None, pi_name=None, program_id=None, utc_date=None,
+                       instrument=None, observation_class=None, observation_type=None, mode=None,
+                       adaptive_optics=None, program_text=None, objectname=None, raw_reduced=None,
+                       orderby=None, **rawquerykwargs):
+        """
+        search a variety of known parameters against the Gemini observations.
+
+        Given various criteria, search the Gemini archive for matching observations.  Note that
+        ``rawqueryargs`` and ``rawquerykwargs`` will pick up additional positional and key=value
+        arguments and pass then on to the raw query as is.
+
+        Parameters
+        ----------
+        coordinates : str or `~astropy.coordinates` object
+            The target around which to search. It may be specified as a
+            string or as the appropriate `~astropy.coordinates` object.
+        radius : str or `~astropy.units.Quantity` object, optional
+            Default 0.3 degrees if coordinates are set, else None
+            The string must be parsable by `~astropy.coordinates.Angle`. The
+            appropriate `~astropy.units.Quantity` object from
+            `~astropy.units` may also be used. Defaults to 0.3 deg.
+        pi_name : str, optional
+            Default None.
+            Can be used to search for data by the PI's name.
+        program_id : str, optional
+            Default None.
+            Can be used to match on program ID
+        utc_date : date or (date,date) tuple, optional
+            Default None.
+            Can be used to search for observations on a particular day or range of days (inclusive).
+        instrument : str, optional
+            Can be used to search for a particular instrument.  Valid values are:
+                'GMOS',
+                'GMOS-N',
+                'GMOS-S',
+                'GNIRS',
+                'GRACES',
+                'NIRI',
+                'NIFS',
+                'GSAOI',
+                'F2',
+                'GPI',
+                'NICI',
+                'MICHELLE',
+                'TRECS',
+                'BHROS',
+                'HRWFS',
+                'OSCIR',
+                'FLAMINGOS',
+                'HOKUPAA+QUIRC',
+                'PHOENIX',
+                'TEXES',
+                'ABU',
+                'CIRPASS'
+        observation_class : str, optional
+            Specifies the class of observations to search for.  Valid values are:
+                'science',
+                'acq',
+                'progCal',
+                'dayCal',
+                'partnerCal',
+                'acqCal'
+        observation_type : str, optional
+            Search for a particular type of observation.  Valid values are:
+                'OBJECT',
+                'BIAS',
+                'DARK',
+                'FLAT',
+                'ARC',
+                'PINHOLE',
+                'RONCHI',
+                'CAL',
+                'FRINGE',
+                'MASK'
+        mode : str, optional
+            The mode of the observation.  Valid values are:
+                'imaging',
+                'spectroscopy',
+                'LS',
+                'MOS',
+                'IFS'
+        adaptive_optics : str, optional
+            Specify the presence of adaptive optics.  Valid values are:
+                'NOTAO',
+                'AO',
+                'NGS',
+                'LGS'
+        program_text : str, optional
+            Specify text in the information about the program.  This is free form text.
+        objectname : str, optional
+            Give the name of the target.
+        raw_reduced : str, optional
+            Indicate the raw or reduced status of the observations to search for.  Valid values are:
+                'RAW',
+                'PREPARED',
+                'PROCESSED_BIAS',
+                'PROCESSED_FLAT',
+                'PROCESSED_FRINGE',
+                'PROCESSED_ARC'
+        orderby : str, optional
+            Indicates how the results should be sorted.  Values should be like the ones used
+            in the archive website when sorting a column.  For example, ``data_label_desc`` would
+            sort by the data label in descending order.
+        rawqueryargs : list, optional
+            Additional arguments will be passed down to the raw query.  This covers any
+            additional parameters that would end up as '/parametervalue/' in the URL to the archive
+            webservice.
+        rawquerykwargs : dict, optional
+            Additional key/value arguments will also be passed down to the raw query.  This covers
+            any parameters that would end up as '/key=value/' in the URL to the archive webservice.
+
+        Returns
+        -------
+        response : `~astropy.table.Table`
+
+        Raises
+        ------
+        ValueError: passed value is not recognized for the given field, see message for details
+        """
+
+        # Build parameters into raw query
+        #
+        # This consists of a set of unnamed arguments, args, and key/value pairs, kwargs
+
+        # These will hold the passed freeform parameters plus the explicit criteria
+        # for our eventual call to the raw query method
+        args = list()
+        kwargs = dict()
+
+        # Copy the incoming set of free-form arguments
+        if rawqueryargs:
+            for arg in rawqueryargs:
+                args.append(arg)
+        if rawquerykwargs:
+            for (k, v) in rawquerykwargs.items():
+                kwargs[k] = v
+
+        # If coordinates is set but we have no radius, set a default
+        if (coordinates or objectname) and radius is None:
+            radius = u.Quantity(conf.GOA_RADIUS)
+        # Now consider the canned criteria
+        if radius is not None:
+            kwargs["radius"] = radius
+        if coordinates is not None:
+            kwargs["coordinates"] = coordinates
+        if pi_name is not None:
+            kwargs["PIname"] = pi_name
+        if program_id is not None:
+            kwargs["progid"] = program_id.upper()
+        if utc_date is not None:
+            if isinstance(utc_date, date):
+                args.append(utc_date.strftime("YYYYMMdd"))
+            elif isinstance(utc_date, tuple):
+                if len(utc_date) != 2:
+                    raise ValueError("utc_date tuple should have two values")
+                if not isinstance(utc_date[0], date) or not isinstance(utc_date[1], date):
+                    raise ValueError("utc_date tuple should have date values in it")
+                args.append("{:%Y%m%d}-{:%Y%m%d}".format(*utc_date))
+        if instrument is not None:
+            if instrument.upper() not in __valid_instruments__:
+                raise ValueError("Unrecognized instrument: %s" % instrument)
+            args.append(instrument)
+        if observation_class is not None:
+            if observation_class not in __valid_observation_class__:
+                raise ValueError("Unrecognized observation class: %s" % observation_class)
+            args.append(observation_class)
+        if observation_type is not None:
+            if observation_type not in __valid_observation_types__:
+                raise ValueError("Unrecognized observation type: %s" % observation_type)
+            args.append(observation_type)
+        if mode is not None:
+            if mode not in __valid_modes__:
+                raise ValueError("Unrecognized mode: %s" % mode)
+            args.append(mode)
+        if adaptive_optics is not None:
+            if adaptive_optics not in __valid_adaptive_optics__:
+                raise ValueError("Unrecognized adaptive optics: %s" % adaptive_optics)
+            args.append(adaptive_optics)
+        if program_text is not None:
+            kwargs["ProgramText"] = program_text
+        if objectname is not None:
+            kwargs["object"] = objectname
+        if raw_reduced is not None:
+            if raw_reduced not in __valid_raw_reduced__:
+                raise ValueError("Unrecognized raw/reduced setting: %s" % raw_reduced)
+            args.append(raw_reduced)
+        if orderby is not None:
+            kwargs["orderby"] = orderby
+
+        return self.query_raw(*args, **kwargs)
+
+    @class_or_instance
+    def query_raw(self, *args, **kwargs):
+        """
+        perform flexible query against Gemini observations
+
+        This is a more flexible query method.  This method will do special handling for
+        coordinates and radius if present in kwargs.  However, for the remaining arguments
+        it assumes all of args are useable as query path elements.  For kwargs, it assumes
+        all of the elements can be passed as name=value within the query path to Gemini.
+
+        This method does not do any validation checking or attempt to interperet the
+        values being passed, aside from coordinates and radius.
+
+        This method is most useful when the query_criteria and query_region do not
+        meet your needs and you can build the appropriate search in the website.  When
+        you see the URL that is generated by the archive, you can translate that into
+        an equivalent python call with this method.  For example, if the URL in the
+        website is:
+
+        https://archive.gemini.edu/searchform/RAW/cols=CTOWEQ/notengineering/GMOS-N/PIname=Hirst/NotFail
+
+        You can disregard NotFail, cols=x and notengineering.  You would run this query as
+
+        query_raw('GMOS-N', PIname='Hirst')
+
+        Parameters
+        ----------
+        args :
+            The list of parameters to be passed via the query path to the webserver
+        kwargs :
+            The dictionary of parameters to be passed by name=value within the query
+            path to the webserver.  The ``orderby`` key value pair has a special
+            intepretation and is appended as a query parameter like the one used
+            in the archive website for sorting results.
+
+        Returns
+        -------
+        response : `~astropy.table.Table`
+        """
+        url = self.url_helper.get_summary_url(*args, **kwargs)
+
+        response = self._request(method="GET", url=url, data={}, timeout=conf.GOA_TIMEOUT, cache=False)
+
+        js = response.json()
+        return _gemini_json_to_table(js)
+
+    def get_file(self, filename, *, download_dir='.', timeout=None):
+        """
+        Download the requested file to the current directory
+
+        filename : str
+            Name of the file to download
+        download_dir : str, optional
+            Name of the directory to download to
+        timeout : int, optional
+            Timeout of the request in milliseconds
+        """
+        url = self.get_file_url(filename)
+        local_filepath = os.path.join(download_dir, filename)
+        self._download_file(url=url, local_filepath=local_filepath, timeout=timeout)
+
+    def _download_file_content(self, url, timeout=None, auth=None, method="GET", **kwargs):
         """Download content from a URL and return it. Resembles
         `_download_file` but returns the content instead of saving it to a
         local file.
 
         Parameters
         ----------
-        url : `str`
+        url : str
             The URL from where to download the file.
-        timeout : `int | None`
+        timeout : int, optional
             Time in seconds to wait for the server response, by default
-            ``None``.
-        auth : `dict[str, Any] | None`
-            Authentication details, by default ``None``.
-        method : `str | None`
+            `None`.
+        auth : dict[str, Any], optional
+            Authentication details, by default `None`.
+        method : str, optional
             The HTTP method to use, by default "GET".
 
         Returns
         -------
-        `bytes`
+        bytes
             The downloaded content.
         """
 
@@ -45,39 +477,19 @@ class BaseQueryExtension(BaseQuery):
         if 'content-length' in response.headers:
             length = int(response.headers['content-length'])
             if length == 0:
-                log.warn('URL {0} has length=0'.format(url))
-        else:
-            length = None
+                log.warn(f'URL {url} has length=0')
 
         blocksize = astropy.utils.data.conf.download_block_size
-        bytes_read = 0
         content = b""
 
-        # Only show progress bar if logging level is INFO or lower.
-        if log.getEffectiveLevel() <= 20:
-            progress_stream = None  # Astropy default
-        else:
-            progress_stream = io.StringIO()
-
-        with ProgressBarOrSpinner(length, f'Downloading URL {url} ...', file=progress_stream) as pb:
-            for block in response.iter_content(blocksize):
-                content += block
-                bytes_read += len(block)
-                if length is not None:
-                    pb.update(bytes_read if bytes_read <= length else length)
-                else:
-                    pb.update(bytes_read)
+        for block in response.iter_content(blocksize):
+            content += block
 
         response.close()
 
         return content
 
-
-class GOAClass(ObservationsClass, BaseQueryExtension):
-    """GOAClass is responsible for handling operations related to the Gemini
-    Observatory Archive (GOA).
-    """
-    def logout(self) -> None:
+    def logout(self):
         """Logout from the GOA service by deleting the specific session cookie
         and updating the authentication state.
         """
@@ -89,44 +501,343 @@ class GOAClass(ObservationsClass, BaseQueryExtension):
         # Update authentication state.
         self._authenticated = False
 
-    def get_file_content(self, url, timeout: int | None = None, auth: dict[str, Any] | None = None,
-                         method: str | None = "GET", **kwargs) -> bytes:
-        """Download the file content from a given URL.
+    def get_file_content(self, filename, timeout=None, auth=None, method="GET", **kwargs):
+        """Wrapper around `_download_file_content`.
 
         Parameters
         ----------
-        url : `str`
-            The URL from where to download the file.
-        timeout : `int | None`
+        filename : str
+            Name of the file to download content.
+        timeout : int, optional
             Time in seconds to wait for the server response, by default
-            ``None``.
-        auth : `dict[str, Any] | None`
-            Authentication details, by default ``None``.
-        method : `str | None`
+            `None`.
+        auth : dict[str, Any], optional
+            Authentication details, by default `None`.
+        method : str, optional
             The HTTP method to use, by default "GET".
 
         Returns
         -------
-        `bytes`
-            The downloaded file content.
+        bytes
+            The downloaded content.
         """
+        url = self.get_file_url(filename)
         return self._download_file_content(url, timeout=timeout, auth=auth, method=method, **kwargs)
 
-    def get_file_url(self, filename: str) -> str:
+    def get_file_url(self, filename):
         """Generate the file URL based on the filename.
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             The name of the file.
 
         Returns
         -------
-        `str`
+        str
             The URL where the file can be downloaded.
         """
-        return f"https://archive.gemini.edu/file/{filename}"
+        return self.url_helper.get_file_url(filename)
+
+    def get_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True,
+                  remove_compressed_fits=True, remove_readme=True, **query_kwargs):
+        """Download all files associated with GOA query as a tar
+        archive. Will untar folder after download.
+
+        This will overwrite any files that already exist.
+
+        Parameters
+        ----------
+        dest_folder : Path or str
+            The folder where the tar archive should be saved.
+        query_args : tuple
+            Query arguments to pass to GOA query.
+        tar_name : str
+            The name of the output folder, default is
+            "goaquery-YYYYMMDDHHMMSS".
+        decompress_fits : bool, optional
+            Decompress bz2 fits files, default is `True`.
+        remove_compressed_fits : bool, optional
+            If `True`, removes the compressed fits file(s) after
+            decompressing. `decompress_fits` must be `True`.
+            By default, `True`.
+        remove_readme : bool, optional
+            Removes the README and MD5 text files included in download, default
+            is `True`.
+        query_kwargs : dict
+            Query keyword arguments to pass to GOA query.
+        """
+        # Convert destination folder.
+        dest_folder = Path(dest_folder).expanduser()
+
+        # url = f"{self._download_url}/progid={obs_id}"
+        url = self.url_helper.get_tar_file_url(*query_args, **query_kwargs)
+        print(url)
+        method = "GET"
+        response = self._session.request(method, url)
+        response.raise_for_status()
+
+        if b"No files to download." in response.content:
+            log.warn(response.content.decode())
+            return
+
+        # Generate tar_filename based on tar_name or current time.
+        if tar_name is None:
+            timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+            tar_name = f"goaquery-{timestamp}"
+
+        # Write the tarball to file.
+        tar_filename = f"{tar_name}.tar.bz2"
+        dest_folder.mkdir(parents=True, exist_ok=True)
+        dest_path = dest_folder / tar_filename
+        with open(dest_path, "wb") as f:
+            f.write(response.content)
+
+        # Extract the tar archive.
+        # Create the extract directory.
+        extract_dir = dest_folder / tar_name
+        extract_dir.mkdir(parents=True, exist_ok=True)
+
+        with tarfile.open(dest_path, "r") as tar:
+            tar.extractall(path=extract_dir)
+
+        # Remove tarfile.
+        dest_path.unlink()
+
+        # Delete additional files if wanted.
+        if remove_readme:
+            for file_name in ["README.txt", "md5sums.txt"]:
+                file_path = extract_dir / file_name
+                if file_path.exists():
+                    file_path.unlink()
+
+        # Decompress inner files.
+        if decompress_fits:
+            for inner_file in extract_dir.iterdir():
+                if inner_file.suffix == ".bz2":
+                    self._decompress_bz2(inner_file, remove_compressed_fits=remove_compressed_fits)
+
+    def _decompress_bz2(self, file_path: Path, remove_compressed_fits: bool | None = False) -> None:
+        """Decompress a .bz2 file and write to the same filename.
+
+        This will overwrite any files that already exist.
+
+        Parameters
+        ----------
+        file_path : `Path`
+            Path to the .bz2 file to be decompressed.
+        remove_compressed_fits : `bool | None`
+            If ``True``, removes the compressed fits file(s) after
+            decompressing. By default, ``False``.
+        """
+        decompressed_file_path = file_path.with_suffix('')
+
+        chunk_size = 1024 * 1024
+
+        with bz2.open(file_path, 'rb') as in_file, open(decompressed_file_path, 'wb') as out_file:
+            while (chunk := in_file.read(chunk_size)):
+                out_file.write(chunk)
+
+        if remove_compressed_fits:
+            file_path.unlink()
+
+
+def _gemini_json_to_table(json):
+    """
+    takes a JSON object as returned from the Gemini archive webserver and turns it into an `~astropy.table.Table`
+
+    Parameters
+    ----------
+    json : dict
+        A JSON object from the Gemini archive webserver
+
+    Returns
+    -------
+    response : `~astropy.table.Table`
+    """
+
+    data_table = Table(masked=True)
+
+    for key in __keys__:
+        col_data = np.array([obj.get(key, None) for obj in json])
+
+        atype = str
+
+        col_mask = np.equal(col_data, None)
+        data_table.add_column(MaskedColumn(col_data.astype(atype), name=key, mask=col_mask))
+
+    return data_table
+
+
+__keys__ = ["exposure_time",
+            "detector_roi_setting",
+            "detector_welldepth_setting",
+            "telescope",
+            "mdready",
+            "requested_bg",
+            "engineering",
+            "cass_rotator_pa",
+            "ut_datetime",
+            "file_size",
+            "types",
+            "requested_wv",
+            "detector_readspeed_setting",
+            "size",
+            "laser_guide_star",
+            "observation_id",
+            "science_verification",
+            "raw_cc",
+            "filename",
+            "instrument",
+            "reduction",
+            "camera",
+            "ra",
+            "detector_binning",
+            "lastmod",
+            "wavelength_band",
+            "data_size",
+            "mode",
+            "raw_iq",
+            "airmass",
+            "elevation",
+            "data_label",
+            "requested_iq",
+            "object",
+            "requested_cc",
+            "program_id",
+            "file_md5",
+            "central_wavelength",
+            "raw_wv",
+            "compressed",
+            "filter_name",
+            "detector_gain_setting",
+            "path",
+            "observation_class",
+            "qa_state",
+            "observation_type",
+            "calibration_program",
+            "md5",
+            "adaptive_optics",
+            "name",
+            "focal_plane_mask",
+            "data_md5",
+            "raw_bg",
+            "disperser",
+            "wavefront_sensor",
+            "gcal_lamp",
+            "detector_readmode_setting",
+            "phot_standard",
+            "local_time",
+            "spectroscopy",
+            "azimuth",
+            "release",
+            "dec"]
+
+Observations = ObservationsClass()
+
+
+# class GOAClass(ObservationsClass):
+#     """GOAClass is responsible for handling operations related to the Gemini
+#     Observatory Archive (GOA).
+#     """
+#     url_helper = URLHelper()
+#     _base_url = "https://archive.gemini.edu"
+#     _summary_url = f"{_base_url}/jsonsummary/canonical/NotFail"
+#     _file_list_url = f"{_base_url}/jsonfilelist/canonical/NotFail"
+#     _download_url = f"{_base_url}/download/canonical/NotFail"
+#     _file_url = f"{_base_url}/file"
+
+#     def _download_file_content(self, url, timeout=None, auth=None, method="GET", **kwargs):
+#         """Download content from a URL and return it. Resembles
+#         `_download_file` but returns the content instead of saving it to a
+#         local file.
+
+#         Parameters
+#         ----------
+#         url : str
+#             The URL from where to download the file.
+#         timeout : int, optional
+#             Time in seconds to wait for the server response, by default
+#             `None`.
+#         auth : dict[str, Any], optional
+#             Authentication details, by default `None`.
+#         method : str, optional
+#             The HTTP method to use, by default "GET".
+
+#         Returns
+#         -------
+#         bytes
+#             The downloaded content.
+#         """
+
+#         response = self._session.request(method, url, timeout=timeout, auth=auth, **kwargs)
+#         response.raise_for_status()
+
+#         if 'content-length' in response.headers:
+#             length = int(response.headers['content-length'])
+#             if length == 0:
+#                 log.warn(f'URL {url} has length=0')
+
+#         blocksize = astropy.utils.data.conf.download_block_size
+#         content = b""
+
+#         for block in response.iter_content(blocksize):
+#             content += block
+
+#         response.close()
+
+#         return content
+
+#     def logout(self):
+#         """Logout from the GOA service by deleting the specific session cookie
+#         and updating the authentication state.
+#         """
+#         # Delete specific cookie.
+#         cookie_name = "gemini_archive_session"
+#         if cookie_name in self._session.cookies:
+#             del self._session.cookies[cookie_name]
+
+#         # Update authentication state.
+#         self._authenticated = False
+
+#     def get_file_content(self, filename, timeout=None, auth=None, method="GET", **kwargs):
+#         """Wrapper around `_download_file_content`.
+
+#         Parameters
+#         ----------
+#         filename : str
+#             Name of the file to download content.
+#         timeout : int, optional
+#             Time in seconds to wait for the server response, by default
+#             `None`.
+#         auth : dict[str, Any], optional
+#             Authentication details, by default `None`.
+#         method : str, optional
+#             The HTTP method to use, by default "GET".
+
+#         Returns
+#         -------
+#         bytes
+#             The downloaded content.
+#         """
+#         url = self.get_file_url(filename)
+#         return self._download_file_content(url, timeout=timeout, auth=auth, method=method, **kwargs)
+
+#     def get_file_url(self, filename):
+#         """Generate the file URL based on the filename.
+
+#         Parameters
+#         ----------
+#         filename : str
+#             The name of the file.
+
+#         Returns
+#         -------
+#         str
+#             The URL where the file can be downloaded.
+#         """
+#         return f"https://archive.gemini.edu/file/{filename}"
 
 
 # Instantiate the GOAClass.
-GOA = GOAClass()
+# GOA = GOAClass()

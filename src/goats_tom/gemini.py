@@ -1,8 +1,11 @@
 from __future__ import annotations
 # Standard library imports.
+import bz2
 import logging
 import requests
 from typing import Any
+from pathlib import Path
+from requests.exceptions import HTTPError
 
 # Related third party imports.
 from astropy.time import Time
@@ -11,7 +14,7 @@ from crispy_forms.layout import Div, HTML
 from django.conf import settings
 from django import forms
 from dateutil.parser import parse
-from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile, File
 from tom_observations.facility import BaseRoboticObservationFacility, BaseRoboticObservationForm
 from tom_common.exceptions import ImproperCredentialsException
 from tom_targets.models import Target
@@ -20,7 +23,7 @@ from tom_dataproducts.models import DataProduct
 from tom_dataproducts.utils import create_image_dataproduct
 
 # Local application/library specific imports.
-from .astroquery_gemini import GOA
+from .astroquery_gemini import Observations as GOA
 
 try:
     AUTO_THUMBNAILS = settings.AUTO_THUMBNAILS
@@ -507,8 +510,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         return SITES
 
     def get_observation_status(self, observation_id):
-        print("WOW")
-        return {'state': 'OBSERVED', 'scheduled_start': None, 'scheduled_end': None}
+        return {'state': 'Observed', 'scheduled_start': None, 'scheduled_end': None}
 
     def get_facility_context_data(self, **kwargs):
         """
@@ -607,27 +609,88 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         authenticated.
         """
         final_products = []
-        products = self.data_products(observation_record.observation_id, product_id, query_params)
+        target = observation_record.target
+        facility = observation_record.facility
+        # Query params only provided if GOA query is true.
+        if query_params:
+            # Get target path.
+            target_path = Path(f"{settings.MEDIA_ROOT}/{target.name}")
+
+            # Set default args and kwargs if not provided in query_params.
+            args = query_params.get("args", ())
+            kwargs = query_params.get("kwargs", {})
+
+            # Pass in the observation ID to query only for this observation.
+            kwargs["progid"] = observation_record.observation_id
+
+            # Query GOA for tarfile.
+            GOA.get_files(target_path, *args, tar_name=facility, decompress_fits=True,
+                          remove_compressed_fits=True, **kwargs)
+
+            # Handle case if GOA found nothing and did not create folder.
+            target_facility_path = target_path / facility
+            if not target_facility_path.exists():
+                return final_products
+
+            # Now lead by the files in the folder.
+            for file_path in target_facility_path.iterdir():
+                if file_path.suffix != ".fits":
+                    continue
+                product_id = file_path.stem
+
+                # Only proceed if the file content was successfully downloaded.
+                dp, created = DataProduct.objects.get_or_create(
+                    product_id=product_id,
+                    target=target,
+                    observation_record=observation_record,
+                )
+
+                if created:
+                    dp.data.name = f"{target.name}/{facility}/{file_path.name}"
+                    dp.save()
+                    logger.info("Saved new dataproduct from tarfile: %s", dp.data)
+
+                if AUTO_THUMBNAILS:
+                    create_image_dataproduct(dp)
+                    dp.get_preview()
+
+                final_products.append(dp)
+
+            return final_products
+
+        # Handle case for specific file download.
+        # TODO: Should download compressed then uncompress?
+        products = self.data_products(observation_record.observation_id, product_id)
 
         for product in products:
             if product['is_proprietary'] and not GOA.authenticated():
                 # Skip downloading if proprietary and not authenticated.
-                logger.info(f"Skipping proprietary file {product['filename']}")
+                logger.info("Skipping proprietary file %s", product["filename"])
                 continue
 
-            # Only proceed if the file content was successfully downloaded
+            # Only proceed if the file content was successfully downloaded.
             dp, created = DataProduct.objects.get_or_create(
                 product_id=product['id'],
-                target=observation_record.target,
+                target=target,
                 observation_record=observation_record,
             )
 
             if created:
-                product_data = GOA.get_file_content(product["url"])
-                dfile = ContentFile(product_data)
-                dp.data.save(product['filename'], dfile)
-                dp.save()
-                logger.info(f'Saved new dataproduct: {dp.data}')
+                try:
+                    # Users can still try to download proprietary data that
+                    # does not belong to their account.
+                    product_data = GOA.get_file_content(product["filename"])
+                    # Decompress the data
+                    decompressed_product_data = bz2.decompress(product_data)
+                    dfile = ContentFile(decompressed_product_data)
+                    dp.data.save(product["filename"], dfile)
+                    dp.save()
+                    logger.info("Saved new dataproduct: %s", dp.data)
+                except HTTPError as e:
+                    if e.response.status_code == 403:
+                        logger.error("You are not authorized to download this data.")
+                    else:
+                        logger.error("HTTP Error occured: %s", e)
 
             if AUTO_THUMBNAILS:
                 create_image_dataproduct(dp)
@@ -637,8 +700,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
 
         return final_products
 
-    def data_products(self, observation_id: str, product_id: str | None = None, query_params={}
-                      ) -> list[dict[str, Any]]:
+    def data_products(self, observation_id: str, product_id: str | None = None) -> list[dict[str, Any]]:
         """Gets the products to save to the observation.
 
         Parameters
@@ -646,11 +708,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         observation_id : `str`
             The observation ID to look for products for.
         product_id : `str | None`, optional
-            The product ID to match, by default None.
-        query_params : `dict[str, Any] | None`
-            Query parameters to refine the data product search, by default
-            ``None``.
-
+            The product ID to match, by default ``None``.
 
         Returns
         -------
@@ -660,13 +718,8 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         # Store products.
         products = []
 
-        # Set default args and kwargs if not provided in query_params
-        args = query_params.get("args", ())
-        kwargs = query_params.get("kwargs", {})
-
         # Get file list from GOA.
-        files = GOA.query_criteria(*args, program_id=observation_id, **kwargs)
-
+        files = GOA.query_criteria(program_id=observation_id)
         if files is None:
             return products
 
@@ -705,7 +758,8 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         return {
             "id": uncompressed_filename.strip(".fits"),
             "filename": uncompressed_filename,
+            "compressed_filename": product["name"],
             "created": product["lastmod"],
-            "url": GOA.get_file_url(uncompressed_filename),
+            "url": GOA.get_file_url(product["name"]),
             "is_proprietary": today_ut < release_date
         }
