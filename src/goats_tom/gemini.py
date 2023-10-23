@@ -638,14 +638,19 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                     continue
                 product_id = file_path.stem
 
-                # Only proceed if the file content was successfully downloaded.
-                dp, created = DataProduct.objects.get_or_create(
-                    product_id=product_id,
-                    target=target,
-                    observation_record=observation_record,
-                )
+                # Query DataProduct by product_id and target.
+                candidates = DataProduct.objects.filter(product_id=product_id, target=target)
 
-                if created:
+                if candidates.exists():
+                    # If we have candidates, just grab the first one.
+                    dp = candidates.first()
+                else:
+                    # Otherwise, create a new DataProduct.
+                    dp = DataProduct.objects.create(
+                        product_id=product_id,
+                        target=target,
+                        observation_record=observation_record,
+                    )
                     dp.data.name = f"{target.name}/{facility}/{file_path.name}"
                     dp.save()
                     logger.info("Saved new dataproduct from tarfile: %s", dp.data)
