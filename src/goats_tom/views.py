@@ -1,32 +1,105 @@
 # Standard library imports.
 from datetime import datetime
+from io import StringIO
 import json
 from typing import Any
+from urllib.parse import urlencode
 
 # Related third party imports.
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView, View, FormView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
-
-from tom_alerts.alerts import get_service_class as tom_alerts_get_service_class
-from tom_observations.facility import get_service_class as tom_facility_get_service_class
-from tom_alerts.models import BrokerQuery
-from tom_common.mixins import SuperuserRequiredMixin
-from tom_observations.models import ObservationRecord
-
+from django.utils.safestring import mark_safe
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from tom_alerts.alerts import get_service_class as tom_alerts_get_service_class
+from tom_alerts.models import BrokerQuery
+from tom_common.hints import add_hint
+from tom_common.mixins import SuperuserRequiredMixin
+from tom_observations.facility import get_service_class as tom_facility_get_service_class
+from tom_observations.models import ObservationRecord, ObservationTemplate
+from tom_observations.observation_template import ApplyObservationTemplateForm
+from tom_observations.views import AddExistingObservationView
+from tom_targets.views import TargetDetailView
 
 # Local application/library specific imports.
 from .forms import GOAQueryForm, GOALoginForm
 from .models import GOALogin
 from .astroquery_gemini import Observations as GOA
+
+
+class GOATSTargetDetailView(TargetDetailView):
+    """Extends TOMToolkit view to handle redirecting tab pane URL."""
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handles the GET requests to this view. If update_status is passed into
+        the query parameters, calls the updatestatus management command to
+        query for new statuses for ``ObservationRecord`` objects associated
+        with this target.
+        """
+        update_status = request.GET.get("update_status", False)
+        if update_status:
+            if not request.user.is_authenticated:
+                return redirect(reverse("login"))
+            target_id = kwargs.get("pk", None)
+            out = StringIO()
+            call_command("updatestatus", target_id=target_id, stdout=out)
+            messages.info(request, out.getvalue())
+            add_hint(request, mark_safe(
+                "Did you know updating observation statuses can be automated? Learn how in"
+                "<a href=https://tom-toolkit.readthedocs.io/en/stable/customization/automation.html>"
+                " the docs.</a>"))
+            return redirect(reverse("tom_targets:detail", args=(target_id,)) + "?tab=observations")
+
+        obs_template_form = ApplyObservationTemplateForm(request.GET)
+        if obs_template_form.is_valid():
+            obs_template = ObservationTemplate.objects.get(
+                pk=obs_template_form.cleaned_data["observation_template"].id)
+            obs_template_params = obs_template.parameters
+            obs_template_params["cadence_strategy"] = request.GET.get("cadence_strategy", "")
+            obs_template_params["cadence_frequency"] = request.GET.get("cadence_frequency", "")
+            params = urlencode(obs_template_params)
+            return redirect(
+                reverse("tom_observations:create",
+                        args=(obs_template.facility,)) + f"?target_id={self.get_object().id}&" + params)
+
+        return super().get(request, *args, **kwargs)
+
+
+class GOATSAddExistingObservationView(AddExistingObservationView):
+    """Extends TOMToolkit view to handle redirecting tab pane URL."""
+
+    def form_valid(self, form):
+        """
+        Runs after form validation. Creates a new ``ObservationRecord``
+        associated with the specified target and facility.
+        """
+        records = ObservationRecord.objects.filter(target_id=form.cleaned_data["target_id"],
+                                                   facility=form.cleaned_data["facility"],
+                                                   observation_id=form.cleaned_data["observation_id"])
+
+        if records and not form.cleaned_data.get("confirm"):
+            return redirect(reverse("tom_observations:add-existing") + "?" + self.request.POST.urlencode())
+        else:
+            ObservationRecord.objects.create(
+                target_id=form.cleaned_data["target_id"],
+                facility=form.cleaned_data["facility"],
+                parameters={},
+                observation_id=form.cleaned_data["observation_id"]
+            )
+            observation_id = form.cleaned_data["observation_id"]
+            messages.success(self.request, f"Successfully associated observation record {observation_id}")
+        base_url = reverse("tom_targets:detail", kwargs={"pk": form.cleaned_data["target_id"]})
+        query_params = urlencode({"tab": "observations"})
+        return redirect(f"{base_url}?{query_params}")
 
 
 class GOAQueryFormView(View):

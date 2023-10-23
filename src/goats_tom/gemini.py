@@ -719,14 +719,19 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         products = []
 
         # Get file list from GOA.
-        files = GOA.query_criteria(program_id=observation_id)
+        try:
+            files = GOA.query_criteria(program_id=observation_id)
+        except HTTPError as e:
+            logger.error("HTTP Error occured: %s", e)
+            return products
+
         if files is None:
             return products
 
         # Look for the product ID if it exists.
         if product_id is not None:
             for f in files:
-                if f["name"].strip(".fits") == product_id:
+                if f["name"].replace(".fits", "") == product_id:
                     products.append(self._create_data_product_entry(f))
                     break
                 # TODO: Issue warning that the product was not found.
@@ -756,7 +761,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         today_ut = Time.now()
 
         return {
-            "id": uncompressed_filename.strip(".fits"),
+            "id": uncompressed_filename.replace(".fits", ""),
             "filename": uncompressed_filename,
             "compressed_filename": product["name"],
             "created": product["lastmod"],
