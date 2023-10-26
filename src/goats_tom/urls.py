@@ -7,8 +7,10 @@ from tom_alerts.views import BrokerQueryListView
 # Local application/library specific imports.
 from . import views
 
+# TODO: Add app_name and update paths and URL lookups.
 
 urlpatterns = [
+    path('observations/<int:pk>/delete', views.ObservationRecordDeleteView.as_view(), name='delete'),
     path('targets/<int:pk>/', views.GOATSTargetDetailView.as_view(), name='detail'),
     path('observations/add/', views.GOATSAddExistingObservationView.as_view(), name='add-existing'),
     path("brokers/list/", BrokerQueryListView.as_view(), name="list"),

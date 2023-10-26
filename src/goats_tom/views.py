@@ -11,8 +11,9 @@ from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpRequest
+from django.forms import Form
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import TemplateView, View, FormView
+from django.views.generic import TemplateView, View, FormView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.utils.safestring import mark_safe
@@ -22,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 from tom_alerts.alerts import get_service_class as tom_alerts_get_service_class
 from tom_alerts.models import BrokerQuery
 from tom_common.hints import add_hint
-from tom_common.mixins import SuperuserRequiredMixin
+from tom_common.mixins import SuperuserRequiredMixin, Raise403PermissionRequiredMixin
 from tom_observations.facility import get_service_class as tom_facility_get_service_class
 from tom_observations.models import ObservationRecord, ObservationTemplate
 from tom_observations.observation_template import ApplyObservationTemplateForm
@@ -33,6 +34,32 @@ from tom_targets.views import TargetDetailView
 from .forms import GOAQueryForm, GOALoginForm
 from .models import GOALogin
 from .astroquery_gemini import Observations as GOA
+from .utils import delete_associated_data_products
+
+
+class ObservationRecordDeleteView(Raise403PermissionRequiredMixin, DeleteView):
+    """View for deleting an observation."""
+    permission_required = 'tom_observations.delete_observationrecord'
+    success_url = reverse_lazy('observations:list')
+    model = ObservationRecord
+
+    def form_valid(self, form: Form) -> HttpResponse:
+        """
+        Handle deletion of associated DataProducts upon valid form submission.
+        Parameters
+        ----------
+        form : `Form`
+            The form object.
+        Returns
+        -------
+        `HttpResponse`
+            HTTP response indicating the outcome of the deletion process.
+        """
+        # Fetch the ObservationRecord object.
+        observation_record = self.get_object()
+        delete_associated_data_products(observation_record)
+
+        return super().form_valid(form)
 
 
 class GOATSTargetDetailView(TargetDetailView):
