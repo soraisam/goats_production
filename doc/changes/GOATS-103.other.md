@@ -1,1 +1,0 @@
-Add Makefile for `antares2goats` packaging: Created a Makefile to automate the packaging of `antares2goats` into a ZIP file for uploading to Firefox and Chrome extension stores.

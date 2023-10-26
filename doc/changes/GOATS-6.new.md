@@ -1,1 +1,0 @@
-GOA Public Data Connection and Gemini Update: Introduced GOA connection for public data. Added query features. Improved Gemini facility documentation and code quality. Extended astroquery for future integration.

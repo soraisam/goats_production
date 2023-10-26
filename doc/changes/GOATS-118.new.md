@@ -1,1 +1,0 @@
-`astroquery` and `GOATS` enhanced for calibration files: Extended `astroquery` to download associated calibration files as a tar archive. `GOATS` now automatically downloads and ingests these files for an observation record into saved data products.

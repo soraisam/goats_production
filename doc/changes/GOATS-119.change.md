@@ -1,1 +1,0 @@
-Optimized GOA data and overhauled `astroquery` for Gemini: Implemented compressed and tar files for efficient data retrieval from GOA. Completed a major refactoring of the `astroquery` package for Gemini, in preparation for a future merge into the main `astroquery` project.

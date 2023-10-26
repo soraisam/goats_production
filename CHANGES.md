@@ -1,3 +1,27 @@
+## GOATS 23.10.0 (2023-10-26)
+
+
+### New Features
+
+- Integrate Firefox add-on: `antares2goats` hosted on Firefox has been integrated into `GOATS`. Users will be able to install the browser add-on, configure the token, and use the add-on without issue. [[#GOATS-110](https://noirlab.atlassian.net/browse/GOATS-110)]
+- `astroquery` and `GOATS` enhanced for calibration files: Extended `astroquery` to download associated calibration files as a tar archive. `GOATS` now automatically downloads and ingests these files for an observation record into saved data products. [[#GOATS-118](https://noirlab.atlassian.net/browse/GOATS-118)]
+- Added observation and thumbnail deletion: Added the ability to delete observations from a target and fixed a bug to correctly delete associated thumbnails from data products. [[#GOATS-121](https://noirlab.atlassian.net/browse/GOATS-121)]
+- GOA Public Data Connection and Gemini Update: Introduced GOA connection for public data. Added query features. Improved Gemini facility documentation and code quality. Extended astroquery for future integration. [[#GOATS-6](https://noirlab.atlassian.net/browse/GOATS-6)]
+- GOA Proprietary Data Connection and Gemini Update: Introduced GOA connection for proprietary data. Added GOA credential management. [[#GOATS-7](https://noirlab.atlassian.net/browse/GOATS-7)]
+
+
+### Changes
+
+- Removed CLI for installing extension: Due to Chrome being the only browser to be able to install an extension from the CLI, removing all references and code to install from the CLI. Users will only be able to install the `antares2goats` extension via the extension store. [[#GOATS-111](https://noirlab.atlassian.net/browse/GOATS-111)]
+- Improved GOATS frontend: Enhanced the user interface by adding two new input fields for GOA queries. Refined tab views for target management, specifically when adding existing observations or updating statuses. [[#GOATS-117](https://noirlab.atlassian.net/browse/GOATS-117)]
+- Optimized GOA data and overhauled `astroquery` for Gemini: Implemented compressed and tar files for efficient data retrieval from GOA. Completed a major refactoring of the `astroquery` package for Gemini, in preparation for a future merge into the main `astroquery` project. [[#GOATS-119](https://noirlab.atlassian.net/browse/GOATS-119)]
+
+
+### Other
+
+- Add Makefile for `antares2goats` packaging: Created a Makefile to automate the packaging of `antares2goats` into a ZIP file for uploading to Firefox and Chrome extension stores. [[#GOATS-103](https://noirlab.atlassian.net/browse/GOATS-103)]
+
+
 ## GOATS 23.09.0 (2023-09-25)
 
 
