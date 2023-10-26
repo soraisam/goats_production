@@ -584,6 +584,41 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
     def get_date_obs_from_fits_header(self, header):
         return None
 
+    def all_data_products(self, observation_record: ObservationRecord) -> list[dict[str, Any]]:
+        """Grabs all the data products.
+
+        Parameters
+        ----------
+        observation_record : ObservationRecord
+            The observation record to use for querying.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            A list of dict of data products
+        """
+        products = {"saved": [], "unsaved": []}
+        for product in self.data_products(observation_record):
+            try:
+                dp = DataProduct.objects.get(product_id=product["id"])
+                products["saved"].append(dp)
+            except DataProduct.DoesNotExist:
+                products["unsaved"].append(product)
+        # Obtain products uploaded manually by users
+        user_products = DataProduct.objects.filter(
+            observation_record_id=observation_record.id, product_id=None
+        )
+        for product in user_products:
+            products["saved"].append(product)
+
+        # Add any JPEG images created from DataProducts
+        image_products = DataProduct.objects.filter(
+            observation_record_id=observation_record.id, data_product_type="image_file"
+        )
+        for product in image_products:
+            products["saved"].append(product)
+        return products
+
     def save_data_products(self, observation_record: ObservationRecord, product_id: str | None = None,
                            query_params: dict[str, Any] | None = None) -> list[DataProduct]:
         """Save data products related to an observation record.
@@ -623,9 +658,20 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             # Pass in the observation ID to query only for this observation.
             kwargs["progid"] = observation_record.observation_id
 
-            # Query GOA for tarfile.
-            GOA.get_files(target_path, *args, tar_name=facility, decompress_fits=True,
-                          remove_compressed_fits=True, **kwargs)
+            try:
+                # Query GOA for science tarfile.
+                GOA.get_files(target_path, *args, tar_name=facility, decompress_fits=True,
+                              remove_compressed_fits=True, **kwargs)
+                # Query GOA for calibration tarfile.
+                # Only need to specify program ID.
+                calibration_kwargs = {"progid": observation_record.observation_id}
+                GOA.get_calibration_files(target_path, *args, tar_name=facility, decompress_fits=True,
+                                          remove_compressed_fits=True, **calibration_kwargs)
+            except HTTPError as e:
+                if e.response.status_code == 403:
+                    logger.error("You are not authorized to download this data.")
+                else:
+                    logger.error("HTTP Error occured: %s", e)
 
             # Handle case if GOA found nothing and did not create folder.
             target_facility_path = target_path / facility
@@ -660,22 +706,21 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                     dp.get_preview()
 
                 final_products.append(dp)
-
             return final_products
 
         # Handle case for specific file download.
         # TODO: Should download compressed then uncompress?
-        products = self.data_products(observation_record.observation_id, product_id)
+        products = self.data_products(observation_record, product_id)
 
         for product in products:
-            if product['is_proprietary'] and not GOA.authenticated():
+            if product["is_proprietary"] and not GOA.authenticated():
                 # Skip downloading if proprietary and not authenticated.
                 logger.info("Skipping proprietary file %s", product["filename"])
                 continue
 
             # Only proceed if the file content was successfully downloaded.
             dp, created = DataProduct.objects.get_or_create(
-                product_id=product['id'],
+                product_id=product["id"],
                 target=target,
                 observation_record=observation_record,
             )
@@ -684,7 +729,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                 try:
                     # Users can still try to download proprietary data that
                     # does not belong to their account.
-                    product_data = GOA.get_file_content(product["filename"])
+                    product_data = GOA.get_file_content(product["compressed_filename"])
                     # Decompress the data
                     decompressed_product_data = bz2.decompress(product_data)
                     dfile = ContentFile(decompressed_product_data)
@@ -705,13 +750,14 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
 
         return final_products
 
-    def data_products(self, observation_id: str, product_id: str | None = None) -> list[dict[str, Any]]:
+    def data_products(self, observation_record: ObservationRecord, product_id: str | None = None
+                      ) -> list[dict[str, Any]]:
         """Gets the products to save to the observation.
 
         Parameters
         ----------
-        observation_id : `str`
-            The observation ID to look for products for.
+        observation_record : `ObservationRecord`
+            The observation record to look for products for.
         product_id : `str | None`, optional
             The product ID to match, by default ``None``.
 
@@ -722,6 +768,9 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         """
         # Store products.
         products = []
+        files = []
+
+        observation_id = observation_record.observation_id
 
         # Get file list from GOA.
         try:
@@ -730,21 +779,36 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             logger.error("HTTP Error occured: %s", e)
             return products
 
-        if files is None:
-            return products
+        # Query DataProduct objects associated with the observation record.
+        all_products = DataProduct.objects.filter(observation_record=observation_record)
+
+        # Create a set of filenames from the DataProduct objects
+        filenames = {f"{p.product_id}.fits" for p in all_products}
+
+        # Generate calibration files by performing a set difference between
+        # filenames and file names returned from GOA.
+        cal_files = [{"name": name, "created": product.created, "release": None,
+                      "lastmod": product.modified, "filename": f"{name}.bz2"}
+                     for product, name in zip(all_products, filenames - {f["name"] for f in files})]
 
         # Look for the product ID if it exists.
         if product_id is not None:
+            product_found = False
             for f in files:
                 if f["name"].replace(".fits", "") == product_id:
+                    product_found = True
                     products.append(self._create_data_product_entry(f))
                     break
-                # TODO: Issue warning that the product was not found.
+            if not product_found:
+                for c in cal_files:
+                    if c["name"].replace(".fits", "") == product_id:
+                        products.append(self._create_data_product_entry(c))
+                        break
 
         # Loop through files and build data products.
         else:
-            for f in files:
-                products.append(self._create_data_product_entry(f))
+            products.extend([self._create_data_product_entry(f) for f in files])
+            products.extend([self._create_data_product_entry(c) for c in cal_files])
 
         return products
 
@@ -762,14 +826,18 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             A data product entry.
         """
         uncompressed_filename = product["name"]
-        release_date = Time(product["release"], format="isot", scale="utc")
-        today_ut = Time.now()
+        if product["release"] is None:
+            is_proprietary = False
+        else:
+            release_date = Time(product["release"], format="isot", scale="utc")
+            today_ut = Time.now()
+            is_proprietary = today_ut < release_date
 
         return {
             "id": uncompressed_filename.replace(".fits", ""),
             "filename": uncompressed_filename,
-            "compressed_filename": product["name"],
+            "compressed_filename": product["filename"],
             "created": product["lastmod"],
             "url": GOA.get_file_url(product["name"]),
-            "is_proprietary": today_ut < release_date
+            "is_proprietary": is_proprietary
         }
