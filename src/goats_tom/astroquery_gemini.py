@@ -539,6 +539,46 @@ class ObservationsClass(QueryWithLogin):
         """
         return self.url_helper.get_file_url(filename)
 
+    def get_calibration_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True,
+                              remove_compressed_fits=True, remove_readme=True, **query_kwargs):
+        """Download all associated calibrations files as a tar archive. Will
+        untar folder after download.
+
+        This will overwrite any files that already exist.
+
+        Parameters
+        ----------
+        dest_folder : Path or str
+            The folder where the tar archive should be saved.
+        query_args : tuple
+            Query arguments to pass to GOA query.
+        tar_name : str
+            The name of the output folder, default is
+            "goaquery-cal-YYYYMMDDHHMMSS".
+        decompress_fits : bool, optional
+            Decompress bz2 fits files, default is `True`.
+        remove_compressed_fits : bool, optional
+            If `True`, removes the compressed fits file(s) after
+            decompressing. `decompress_fits` must be `True`.
+            By default, `True`.
+        remove_readme : bool, optional
+            Removes the README and MD5 text files included in download, default
+            is `True`.
+        query_kwargs : dict
+            Query keyword arguments to pass to GOA query.
+        """
+        # Assign argument to get calibrations.
+        args = query_args + ("associated_calibrations",)
+
+        # Generate tar_filename based on tar_name or current time.
+        if tar_name is None:
+            timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+            tar_name = f"goaquery-cal-{timestamp}"
+
+        self.get_files(dest_folder, *args, tar_name=tar_name, decompress_fits=decompress_fits,
+                       remove_compressed_fits=remove_compressed_fits, remove_readme=remove_readme,
+                       **query_kwargs)
+
     def get_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True,
                   remove_compressed_fits=True, remove_readme=True, **query_kwargs):
         """Download all files associated with GOA query as a tar
@@ -570,7 +610,6 @@ class ObservationsClass(QueryWithLogin):
         # Convert destination folder.
         dest_folder = Path(dest_folder).expanduser()
 
-        # url = f"{self._download_url}/progid={obs_id}"
         url = self.url_helper.get_tar_file_url(*query_args, **query_kwargs)
         print(url)
         method = "GET"

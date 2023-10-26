@@ -59,6 +59,7 @@ class URLHelper:
 
     ENGINEERING_PARAMETERS = {'notengineering', 'engineering', 'includeengineering'}
     QA_PARAMETERS = {'NotFail', 'AnyQA', 'Pass', 'Lucky', 'Win', 'Usable', 'Undefind', 'Fail'}
+    FILE_CURATION_PARAMETERS = {'present', 'canonical', 'notpresent', 'notcanonical'}
     ENDPOINTS = {
         'summary': '/jsonsummary',
         'file_list': '/jsonfilelist',
@@ -127,8 +128,10 @@ class URLHelper:
 
         qa_parm = next((a for a in args if a in self.QA_PARAMETERS), 'NotFail')
 
+        file_curation_param = next((a for a in args if a in self.FILE_CURATION_PARAMETERS), 'canonical')
+
         # Filter out defaults from args.
-        args = [a for a in args if a not in [eng_parm, qa_parm]]
+        args = [a for a in args if a not in [eng_parm, qa_parm, file_curation_param]]
 
         path_parts = [url_endpoint, eng_parm, qa_parm]
         path_parts.extend(args)
