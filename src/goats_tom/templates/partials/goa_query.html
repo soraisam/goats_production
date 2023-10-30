@@ -13,19 +13,17 @@
     <div class="form-row justify-content-center">
       <div class="col-md-5">
         <div class="row form-group">
-          <label for="{{ form.observation_class.id_for_label }}" class="col-sm-4 col-form-label">Observation Class</label>
+          <label for="{{ form.observation_class.id_for_label }}" class="col-sm-4 col-form-label">{{ form.observation_class.label }}</label>
           <div class="col-sm-8">
             {{ form.observation_class }}
-            <small class="form-text text-muted"></small>
           </div>
         </div>
       </div>
       <div class="col-md-5">
         <div class="row form-group">
-          <label for="{{ form.observation_type.id_for_label }}" class="col-sm-4 col-form-label">Observation Type</label>
+          <label for="{{ form.observation_type.id_for_label }}" class="col-sm-4 col-form-label">{{ form.observation_type.label }}</label>
           <div class="col-sm-8">
             {{ form.observation_type }}
-            <small class="form-text text-muted"></small>
           </div>
         </div>
       </div>
@@ -33,19 +31,19 @@
     <div class="form-row justify-content-center">
       <div class="col-md-5">
         <div class="row form-group">
-          <label for="{{ form.raw_reduced.id_for_label }}" class="col-sm-4 col-form-label">Raw/Reduced</label>
+          <label for="{{ form.raw_reduced.id_for_label }}" class="col-sm-4 col-form-label">{{ form.raw_reduced.label }}</label>
           <div class="col-sm-8">
             {{ form.raw_reduced }}
-            <small class="form-text text-muted">(Select data by processing state)</small>
+            <small class="form-text text-muted">{{ form.raw_reduced.help_text }}</small>
           </div>
         </div>
       </div>
       <div class="col-md-5">
         <div class="row form-group">
-          <label for="{{ form.qa_state.id_for_label }}" class="col-sm-4 col-form-label">QA State</label>
+          <label for="{{ form.qa_state.id_for_label }}" class="col-sm-4 col-form-label">{{ form.qa_state.label }}</label>
           <div class="col-sm-8">
             {{ form.qa_state }}
-            <small class="form-text text-muted">(Quality of results you wish to access)</small>
+            <small class="form-text text-muted">{{ form.qa_state.help_text }}</small>
           </div>
         </div>
       </div>
@@ -53,19 +51,34 @@
     <div class="form-row justify-content-center">
       <div class="col-md-5">
         <div class="row form-group">
-          <label for="{{ form.filename_prefix.id_for_label }}" class="col-sm-4 col-form-label">Filename Prefix</label>
+          <label for="{{ form.filename_prefix.id_for_label }}" class="col-sm-4 col-form-label">{{ form.filename_prefix.label }}</label>
           <div class="col-sm-8">
             {{ form.filename_prefix }}
-            <small class="form-text text-muted">(Specify the first part of the filename to match by)</small>
+            <small class="form-text text-muted">{{ form.filename_prefix.help_text }}</small>
           </div>
         </div>
       </div>
       <div class="col-md-5">
         <div class="row form-group">
-          <label for="{{ form.save_to.id_for_label }}" class="col-sm-4 col-form-label">Save To</label>
+          <label for="{{ form.save_to.id_for_label }}" class="col-sm-4 col-form-label">{{ form.save_to.label }}</label>
           <div class="col-sm-8">
             {{ form.save_to }}
-            <small class="form-text text-muted">(Path to save data to if default path is not preferred)</small>
+            <small class="form-text text-muted">{{ form.save_to.help_text }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row justify-content-center">
+      <div class="col-md-10">
+        <div class="row form-group">
+          <label class="pt-0 col-sm-4 col-form-label">{{ form.download_calibrations.label }}</label>
+          <div class="col-sm-8">
+            {% for radio in form.download_calibrations %}
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="{{ form.download_calibrations.name }}" id="{{ radio.id_for_label }}" value="{{ radio.data.value }}" {% if radio.data.value == "yes" %}checked{% endif %}>
+                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+              </div>
+            {% endfor %}
           </div>
         </div>
       </div>
