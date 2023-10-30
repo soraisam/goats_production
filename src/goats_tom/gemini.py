@@ -658,15 +658,22 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             # Pass in the observation ID to query only for this observation.
             kwargs["progid"] = observation_record.observation_id
 
+            # Determine what to do with calibration data.
+            download_calibration = kwargs.pop("download_calibrations", None)
+
             try:
                 # Query GOA for science tarfile.
-                GOA.get_files(target_path, *args, tar_name=facility, decompress_fits=True,
-                              remove_compressed_fits=True, **kwargs)
-                # Query GOA for calibration tarfile.
-                # Only need to specify program ID.
-                calibration_kwargs = {"progid": observation_record.observation_id}
-                GOA.get_calibration_files(target_path, *args, tar_name=facility, decompress_fits=True,
-                                          remove_compressed_fits=True, **calibration_kwargs)
+                if not download_calibration == "only":
+                    print("downloading science files")
+                    GOA.get_files(target_path, *args, tar_name=facility, decompress_fits=True,
+                                  remove_compressed_fits=True, **kwargs)
+                if not download_calibration == "no":
+                    print("downloading calibration files")
+                    # Query GOA for calibration tarfile.
+                    # Only need to specify program ID.
+                    calibration_kwargs = {"progid": observation_record.observation_id}
+                    GOA.get_calibration_files(target_path, *args, tar_name=facility, decompress_fits=True,
+                                              remove_compressed_fits=True, **calibration_kwargs)
             except HTTPError as e:
                 if e.response.status_code == 403:
                     logger.error("You are not authorized to download this data.")

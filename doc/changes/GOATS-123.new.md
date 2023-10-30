@@ -1,0 +1,1 @@
+Added calibration radio button to `GOA` query form: Introduced an option to include, exclude, or solely download calibration data for an observation ID.

@@ -1,11 +1,7 @@
-# Standard library imports.
 import os
 from pathlib import Path
 
-# Related third party imports.
 from django import forms
-
-# Local application/library specific imports.
 
 
 class GOAQueryForm(forms.Form):
@@ -61,36 +57,52 @@ class GOAQueryForm(forms.Form):
         ("acqCal", "Acquisition Calibration")
     ]
 
+    DOWNLOAD_CALIBRATION_CHOICES = [
+        ("yes", "Yes"),
+        ("no", "No"),
+        ("only", "Only Calibrations")
+    ]
+
     observation_class = forms.ChoiceField(
+        label="Observation Class",
         choices=OBSERVATION_CLASSES,
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'}),
     )
+
     observation_type = forms.ChoiceField(
+        label="Observation Type",
         choices=OBSERVATION_TYPES,
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'}),
     )
+
     raw_reduced = forms.ChoiceField(
         choices=RAW_REDUCED_CHOICES,
         label="Raw/Reduced",
         widget=forms.Select(attrs={"class": "form-control"}),
-        required=False
+        required=False,
+        help_text="(Select data by processing state)"
     )
+
     qa_state = forms.ChoiceField(
         choices=QA_STATE_CHOICES,
         label="QA State",
         widget=forms.Select(attrs={"class": "form-control"}),
-        required=False
+        required=False,
+        help_text="(Quality of results you wish to access)"
     )
+
     filename_prefix = forms.CharField(
         label="Filename Prefix",
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "Leave empty for any"
         }),
-        required=False
+        required=False,
+        help_text="(Specify the first part of the filename to match by)"
     )
+
     save_to = forms.CharField(
         label="Save To",
         widget=forms.TextInput(attrs={
@@ -99,8 +111,17 @@ class GOAQueryForm(forms.Form):
         }),
         required=False,
         # TODO: Discuss how to save data other than TOMToolkit default.
-        disabled=True
+        disabled=True,
+        help_text="(Path to save data to if default path is not preferred)"
     )
+
+    download_calibrations = forms.ChoiceField(
+        choices=DOWNLOAD_CALIBRATION_CHOICES,
+        label="Download Associated Calibrations",
+        widget=forms.RadioSelect(attrs={'class': 'form-control'}),
+        required=True
+    )
+
     # Need input for hidden field.
     facility = forms.CharField(widget=forms.HiddenInput(), required=False)
 
@@ -157,6 +178,8 @@ class GOAQueryForm(forms.Form):
 
         if local_path_to_store:
             query_params["kwargs"]["local_path_to_store"] = local_path_to_store
+
+        query_params["kwargs"]["download_calibrations"] = cleaned_data["download_calibrations"]
 
         # TODO: Switch to this when astroquery gets updated.
         # query_params["kwargs"]["raw_reduced"] = cleaned_data["raw_reduced"]
