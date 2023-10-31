@@ -117,8 +117,9 @@ class ObservationsClass(QueryWithLogin):
         """
         Login to the Gemini Archive website.
 
-        This method will authenticate the session as a particular user.  This may give you access
-        to additional information or access based on your credentials
+        This method will authenticate the session as a particular user.
+        This may give you access to additional information or access based on
+        your credentials
 
         Parameters
         ----------
@@ -147,7 +148,8 @@ class ObservationsClass(QueryWithLogin):
         """
         search for Gemini observations by target on the sky.
 
-        Given a sky position and radius, returns a `~astropy.table.Table` of Gemini observations.
+        Given a sky position and radius, returns a `~astropy.table.Table` of
+        Gemini observations.
 
         Parameters
         ----------
@@ -173,14 +175,15 @@ class ObservationsClass(QueryWithLogin):
         """
         search for Gemini observations by target on the sky.
 
-        Given an object name and optional radius, returns a `~astropy.table.Table` of Gemini observations.
+        Given an object name and optional radius, returns a
+        `~astropy.table.Table` of Gemini observations.
 
         Parameters
         ----------
         objectname : str
-            The name of an object to search for.  This attempts to resolve the object
-            by name and do a search on that area of the sky.  This does not handle
-            moving targets.
+            The name of an object to search for.  This attempts to resolve the
+            object by name and do a search on that area of the sky.  This does
+            not handle moving targets.
         radius : str or `~astropy.units.Quantity` object, optional
             Default 0.3 degrees.
             The string must be parsable by `~astropy.coordinates.Angle`. The
@@ -196,16 +199,17 @@ class ObservationsClass(QueryWithLogin):
         return self.query_criteria(objectname=objectname, radius=radius)
 
     @class_or_instance
-    def query_criteria(self, *rawqueryargs, coordinates=None, radius=None, pi_name=None, program_id=None, utc_date=None,
-                       instrument=None, observation_class=None, observation_type=None, mode=None,
-                       adaptive_optics=None, program_text=None, objectname=None, raw_reduced=None,
+    def query_criteria(self, *rawqueryargs, coordinates=None, radius=None, pi_name=None, program_id=None,
+                       utc_date=None, instrument=None, observation_class=None, observation_type=None,
+                       mode=None, adaptive_optics=None, program_text=None, objectname=None, raw_reduced=None,
                        orderby=None, **rawquerykwargs):
         """
-        search a variety of known parameters against the Gemini observations.
+        Search a variety of known parameters against the Gemini observations.
 
-        Given various criteria, search the Gemini archive for matching observations.  Note that
-        ``rawqueryargs`` and ``rawquerykwargs`` will pick up additional positional and key=value
-        arguments and pass then on to the raw query as is.
+        Given various criteria, search the Gemini archive for matching
+        observations.  Note that ``rawqueryargs`` and ``rawquerykwargs`` will
+        pick up additional positional and key=value arguments and pass then on
+        to the raw query as is.
 
         Parameters
         ----------
@@ -225,9 +229,11 @@ class ObservationsClass(QueryWithLogin):
             Can be used to match on program ID
         utc_date : date or (date,date) tuple, optional
             Default None.
-            Can be used to search for observations on a particular day or range of days (inclusive).
+            Can be used to search for observations on a particular day or range
+            of days (inclusive).
         instrument : str, optional
-            Can be used to search for a particular instrument.  Valid values are:
+            Can be used to search for a particular instrument.  Valid values
+            are:
                 'GMOS',
                 'GMOS-N',
                 'GMOS-S',
@@ -251,7 +257,8 @@ class ObservationsClass(QueryWithLogin):
                 'ABU',
                 'CIRPASS'
         observation_class : str, optional
-            Specifies the class of observations to search for.  Valid values are:
+            Specifies the class of observations to search for.  Valid values
+            are:
                 'science',
                 'acq',
                 'progCal',
@@ -284,11 +291,13 @@ class ObservationsClass(QueryWithLogin):
                 'NGS',
                 'LGS'
         program_text : str, optional
-            Specify text in the information about the program.  This is free form text.
+            Specify text in the information about the program.  This is free
+            form text.
         objectname : str, optional
             Give the name of the target.
         raw_reduced : str, optional
-            Indicate the raw or reduced status of the observations to search for.  Valid values are:
+            Indicate the raw or reduced status of the observations to search
+            for.  Valid values are:
                 'RAW',
                 'PREPARED',
                 'PROCESSED_BIAS',
@@ -296,16 +305,18 @@ class ObservationsClass(QueryWithLogin):
                 'PROCESSED_FRINGE',
                 'PROCESSED_ARC'
         orderby : str, optional
-            Indicates how the results should be sorted.  Values should be like the ones used
-            in the archive website when sorting a column.  For example, ``data_label_desc`` would
-            sort by the data label in descending order.
+            Indicates how the results should be sorted.  Values should be like
+            the ones used in the archive website when sorting a column.
+            example, ``data_label_desc`` would sort by the data label in
+            descending order.
         rawqueryargs : list, optional
-            Additional arguments will be passed down to the raw query.  This covers any
-            additional parameters that would end up as '/parametervalue/' in the URL to the archive
-            webservice.
+            Additional arguments will be passed down to the raw query.  This
+            covers any additional parameters that would end up as
+            '/parametervalue/' in the URL to the archive webservice.
         rawquerykwargs : dict, optional
-            Additional key/value arguments will also be passed down to the raw query.  This covers
-            any parameters that would end up as '/key=value/' in the URL to the archive webservice.
+            Additional key/value arguments will also be passed down to the raw
+            query.  This covers any parameters that would end up as
+            '/key=value/' in the URL to the archive webservice.
 
         Returns
         -------
@@ -313,15 +324,17 @@ class ObservationsClass(QueryWithLogin):
 
         Raises
         ------
-        ValueError: passed value is not recognized for the given field, see message for details
+        ValueError: passed value is not recognized for the given field, see
+        message for details
         """
 
         # Build parameters into raw query
         #
-        # This consists of a set of unnamed arguments, args, and key/value pairs, kwargs
+        # This consists of a set of unnamed arguments, args, and key/value
+        # pairs, kwargs
 
-        # These will hold the passed freeform parameters plus the explicit criteria
-        # for our eventual call to the raw query method
+        # These will hold the passed freeform parameters plus the explicit
+        # criteria for our eventual call to the raw query method
         args = list()
         kwargs = dict()
 
@@ -353,26 +366,26 @@ class ObservationsClass(QueryWithLogin):
                     raise ValueError("utc_date tuple should have two values")
                 if not isinstance(utc_date[0], date) or not isinstance(utc_date[1], date):
                     raise ValueError("utc_date tuple should have date values in it")
-                args.append("{:%Y%m%d}-{:%Y%m%d}".format(*utc_date))
+                args.append(f"{utc_date[0]:%Y%m%d}-{utc_date[1]:%Y%m%d}")
         if instrument is not None:
             if instrument.upper() not in __valid_instruments__:
-                raise ValueError("Unrecognized instrument: %s" % instrument)
+                raise ValueError(f"Unrecognized instrument: {instrument}")
             args.append(instrument)
         if observation_class is not None:
             if observation_class not in __valid_observation_class__:
-                raise ValueError("Unrecognized observation class: %s" % observation_class)
+                raise ValueError(f"Unrecognized observation class: {observation_class}")
             args.append(observation_class)
         if observation_type is not None:
             if observation_type not in __valid_observation_types__:
-                raise ValueError("Unrecognized observation type: %s" % observation_type)
+                raise ValueError(f"Unrecognized observation type: {observation_type}")
             args.append(observation_type)
         if mode is not None:
             if mode not in __valid_modes__:
-                raise ValueError("Unrecognized mode: %s" % mode)
+                raise ValueError(f"Unrecognized mode: {mode}")
             args.append(mode)
         if adaptive_optics is not None:
             if adaptive_optics not in __valid_adaptive_optics__:
-                raise ValueError("Unrecognized adaptive optics: %s" % adaptive_optics)
+                raise ValueError(f"Unrecognized adaptive optics: {adaptive_optics}")
             args.append(adaptive_optics)
         if program_text is not None:
             kwargs["ProgramText"] = program_text
@@ -380,7 +393,7 @@ class ObservationsClass(QueryWithLogin):
             kwargs["object"] = objectname
         if raw_reduced is not None:
             if raw_reduced not in __valid_raw_reduced__:
-                raise ValueError("Unrecognized raw/reduced setting: %s" % raw_reduced)
+                raise ValueError(f"Unrecognized raw/reduced setting: {raw_reduced}")
             args.append(raw_reduced)
         if orderby is not None:
             kwargs["orderby"] = orderby
@@ -392,41 +405,52 @@ class ObservationsClass(QueryWithLogin):
         """
         perform flexible query against Gemini observations
 
-        This is a more flexible query method.  This method will do special handling for
-        coordinates and radius if present in kwargs.  However, for the remaining arguments
-        it assumes all of args are useable as query path elements.  For kwargs, it assumes
-        all of the elements can be passed as name=value within the query path to Gemini.
+        This is a more flexible query method.  This method will do special
+        handling for coordinates and radius if present in kwargs.  However, for
+        the remaining arguments it assumes all of args are useable as query
+        path elements.  For kwargs, it assumes all of the elements can be
+        passed as name=value within the query path to Gemini.
 
-        This method does not do any validation checking or attempt to interperet the
-        values being passed, aside from coordinates and radius.
+        This method does not do any validation checking or attempt to
+        interperet the values being passed, aside from coordinates and radius.
 
-        This method is most useful when the query_criteria and query_region do not
-        meet your needs and you can build the appropriate search in the website.  When
-        you see the URL that is generated by the archive, you can translate that into
-        an equivalent python call with this method.  For example, if the URL in the
-        website is:
+        This method is most useful when the query_criteria and query_region do
+        not meet your needs and you can build the appropriate search in the
+        website.  When you see the URL that is generated by the archive, you
+        can translate that into an equivalent python call with this method. For
+        example, if the URL in the website is:
 
         https://archive.gemini.edu/searchform/RAW/cols=CTOWEQ/notengineering/GMOS-N/PIname=Hirst/NotFail
 
-        You can disregard NotFail, cols=x and notengineering.  You would run this query as
+        You can disregard NotFail, cols=x and notengineering. You would run
+        this query as
 
         query_raw('GMOS-N', PIname='Hirst')
 
         Parameters
         ----------
         args :
-            The list of parameters to be passed via the query path to the webserver
+            The list of parameters to be passed via the query path to the
+            webserver
         kwargs :
-            The dictionary of parameters to be passed by name=value within the query
-            path to the webserver.  The ``orderby`` key value pair has a special
-            intepretation and is appended as a query parameter like the one used
-            in the archive website for sorting results.
+            The dictionary of parameters to be passed by name=value within the
+            query path to the webserver.  The ``orderby`` key value pair has a
+            special intepretation and is appended as a query parameter like the
+            one used in the archive website for sorting results.
 
         Returns
         -------
         response : `~astropy.table.Table`
         """
         url = self.url_helper.get_summary_url(*args, **kwargs)
+
+        response = self._request(method="GET", url=url, data={}, timeout=conf.GOA_TIMEOUT, cache=False)
+
+        js = response.json()
+        return _gemini_json_to_table(js)
+
+    def get_file_list(self, *query_args, **query_kwargs):
+        url = self.url_helper.get_file_list_url(*query_args, **query_kwargs)
 
         response = self._request(method="GET", url=url, data={}, timeout=conf.GOA_TIMEOUT, cache=False)
 
@@ -683,200 +707,36 @@ class ObservationsClass(QueryWithLogin):
 
 def _gemini_json_to_table(json):
     """
-    takes a JSON object as returned from the Gemini archive webserver and turns it into an `~astropy.table.Table`
+    Takes a JSON object as returned from the Gemini archive webserver and turns
+    it into an `~astropy.table.Table`.
 
     Parameters
     ----------
-    json : dict
-        A JSON object from the Gemini archive webserver
+    json : list[dict]
+        A list of JSON objects from the Gemini archive webserver
 
     Returns
     -------
     response : `~astropy.table.Table`
     """
 
+    if not json:
+        return Table()
+
+    # Inferring keys from the first JSON object
+    keys = json[0].keys()
+
     data_table = Table(masked=True)
 
-    for key in __keys__:
+    for key in keys:
         col_data = np.array([obj.get(key, None) for obj in json])
 
-        atype = str
-
+        atype = str  # Define type if necessary; default is string
         col_mask = np.equal(col_data, None)
+
         data_table.add_column(MaskedColumn(col_data.astype(atype), name=key, mask=col_mask))
 
     return data_table
 
 
-__keys__ = ["exposure_time",
-            "detector_roi_setting",
-            "detector_welldepth_setting",
-            "telescope",
-            "mdready",
-            "requested_bg",
-            "engineering",
-            "cass_rotator_pa",
-            "ut_datetime",
-            "file_size",
-            "types",
-            "requested_wv",
-            "detector_readspeed_setting",
-            "size",
-            "laser_guide_star",
-            "observation_id",
-            "science_verification",
-            "raw_cc",
-            "filename",
-            "instrument",
-            "reduction",
-            "camera",
-            "ra",
-            "detector_binning",
-            "lastmod",
-            "wavelength_band",
-            "data_size",
-            "mode",
-            "raw_iq",
-            "airmass",
-            "elevation",
-            "data_label",
-            "requested_iq",
-            "object",
-            "requested_cc",
-            "program_id",
-            "file_md5",
-            "central_wavelength",
-            "raw_wv",
-            "compressed",
-            "filter_name",
-            "detector_gain_setting",
-            "path",
-            "observation_class",
-            "qa_state",
-            "observation_type",
-            "calibration_program",
-            "md5",
-            "adaptive_optics",
-            "name",
-            "focal_plane_mask",
-            "data_md5",
-            "raw_bg",
-            "disperser",
-            "wavefront_sensor",
-            "gcal_lamp",
-            "detector_readmode_setting",
-            "phot_standard",
-            "local_time",
-            "spectroscopy",
-            "azimuth",
-            "release",
-            "dec"]
-
 Observations = ObservationsClass()
-
-
-# class GOAClass(ObservationsClass):
-#     """GOAClass is responsible for handling operations related to the Gemini
-#     Observatory Archive (GOA).
-#     """
-#     url_helper = URLHelper()
-#     _base_url = "https://archive.gemini.edu"
-#     _summary_url = f"{_base_url}/jsonsummary/canonical/NotFail"
-#     _file_list_url = f"{_base_url}/jsonfilelist/canonical/NotFail"
-#     _download_url = f"{_base_url}/download/canonical/NotFail"
-#     _file_url = f"{_base_url}/file"
-
-#     def _download_file_content(self, url, timeout=None, auth=None, method="GET", **kwargs):
-#         """Download content from a URL and return it. Resembles
-#         `_download_file` but returns the content instead of saving it to a
-#         local file.
-
-#         Parameters
-#         ----------
-#         url : str
-#             The URL from where to download the file.
-#         timeout : int, optional
-#             Time in seconds to wait for the server response, by default
-#             `None`.
-#         auth : dict[str, Any], optional
-#             Authentication details, by default `None`.
-#         method : str, optional
-#             The HTTP method to use, by default "GET".
-
-#         Returns
-#         -------
-#         bytes
-#             The downloaded content.
-#         """
-
-#         response = self._session.request(method, url, timeout=timeout, auth=auth, **kwargs)
-#         response.raise_for_status()
-
-#         if 'content-length' in response.headers:
-#             length = int(response.headers['content-length'])
-#             if length == 0:
-#                 log.warn(f'URL {url} has length=0')
-
-#         blocksize = astropy.utils.data.conf.download_block_size
-#         content = b""
-
-#         for block in response.iter_content(blocksize):
-#             content += block
-
-#         response.close()
-
-#         return content
-
-#     def logout(self):
-#         """Logout from the GOA service by deleting the specific session cookie
-#         and updating the authentication state.
-#         """
-#         # Delete specific cookie.
-#         cookie_name = "gemini_archive_session"
-#         if cookie_name in self._session.cookies:
-#             del self._session.cookies[cookie_name]
-
-#         # Update authentication state.
-#         self._authenticated = False
-
-#     def get_file_content(self, filename, timeout=None, auth=None, method="GET", **kwargs):
-#         """Wrapper around `_download_file_content`.
-
-#         Parameters
-#         ----------
-#         filename : str
-#             Name of the file to download content.
-#         timeout : int, optional
-#             Time in seconds to wait for the server response, by default
-#             `None`.
-#         auth : dict[str, Any], optional
-#             Authentication details, by default `None`.
-#         method : str, optional
-#             The HTTP method to use, by default "GET".
-
-#         Returns
-#         -------
-#         bytes
-#             The downloaded content.
-#         """
-#         url = self.get_file_url(filename)
-#         return self._download_file_content(url, timeout=timeout, auth=auth, method=method, **kwargs)
-
-#     def get_file_url(self, filename):
-#         """Generate the file URL based on the filename.
-
-#         Parameters
-#         ----------
-#         filename : str
-#             The name of the file.
-
-#         Returns
-#         -------
-#         str
-#             The URL where the file can be downloaded.
-#         """
-#         return f"https://archive.gemini.edu/file/{filename}"
-
-
-# Instantiate the GOAClass.
-# GOA = GOAClass()

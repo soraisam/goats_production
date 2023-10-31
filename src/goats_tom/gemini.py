@@ -2,9 +2,9 @@ from __future__ import annotations
 # Standard library imports.
 import bz2
 import logging
-import requests
-from typing import Any
 from pathlib import Path
+from typing import Any
+import requests
 from requests.exceptions import HTTPError
 
 # Related third party imports.
@@ -13,11 +13,11 @@ from astropy import units as u
 from crispy_forms.layout import Div, HTML
 from django.conf import settings
 from django import forms
+from django.core.files.base import ContentFile
 from dateutil.parser import parse
-from django.core.files.base import ContentFile, File
-from tom_observations.facility import BaseRoboticObservationFacility, BaseRoboticObservationForm
 from tom_common.exceptions import ImproperCredentialsException
 from tom_targets.models import Target
+from tom_observations.facility import BaseRoboticObservationFacility, BaseRoboticObservationForm
 from tom_observations.models import ObservationRecord
 from tom_dataproducts.models import DataProduct
 from tom_dataproducts.utils import create_image_dataproduct
@@ -126,7 +126,8 @@ def obs_choices():
         for obs in GEM_SETTINGS['programs'][p]:
             obsid = p + '-' + obs
             val = p.split('-')
-            showtext = val[0][1] + val[1][2:] + val[2] + val[3] + '[' + obs + '] ' + GEM_SETTINGS['programs'][p][obs]
+            showtext = val[0][1] + val[1][2:] + val[2] + val[3] + '[' + obs + '] ' \
+                + GEM_SETTINGS['programs'][p][obs]
             choices.append((obsid, showtext))
     return choices
 
@@ -142,85 +143,26 @@ def get_site(progid, location=False):
 
 class GEMObservationForm(BaseRoboticObservationForm):
     """
-    The GEMObservationForm defines and collects the parameters for the Gemini
-    Target of Opportunity (ToO) observation request API. The Gemini ToO process is described at
+    Defines and collects parameters for the Gemini ToO observation API.
 
-    https://www.gemini.edu/node/11005
+    Refer to https://www.gemini.edu/node/11005 for the ToO process and
+    https://www.gemini.edu/node/12109 for user key and authentication.
 
-    The team must have have an approved ToO program on Gemini and define ToO template observations,
-    complete observations without defined targets, during the Phase 2 process. Authentication
-    is done via a "User key" tied to an email address. See the following page for help on getting
-    a user key and the password needed for the trigger request.
+    Available parameters include prog, email, password, obsnum, target,
+    ra, dec, mags, noteTitle, note, posangle, exptime, group, gstarget,
+    gsra, gsdec, gsmags, gsprobe, ready, windowDate, windowTime,
+    windowDuration, elevationType, elevationMin, elevationMax.
 
-    https://www.gemini.edu/node/12109
+    The server clones a template observation and updates it with the
+    provided info. The 'ready' parameter sets the observation status. The
+    exposure time is set in the instrument "static component".
 
-    The following parameters are available.
+    Guide star parameters are optional but recommended. If any gs* parameter
+    is specified, gsra, gsdec, and gsprobe must also be specified.
 
-    prog           - program id
-    email          - email address for user key
-    password       - password for user key associated with email, site specific, emailed by the ODB
-    obsnum         - id of the template observation to clone and update, must be 'On Hold'
-    target         - name of the target
-    ra             - target RA [J2000], format 'HH:MM:SS.SS'
-    dec            - target Dec[J2000], format 'DD:MM:SS.SSS'
-    mags           - target magnitude information (optional)
-    noteTitle      - title for the note, "Finding Chart" if not provided (optional)
-    note           - text to include in a "Finding Chart" note (optional)
-    posangle       - position angle [degrees E of N], defaults to 0 (optional)
-    exptime        - exposure time [seconds], if not given then value in template used (optional)
-    group          - name of the group for the new observation (optional)
-    gstarget       - name of guide star (optional, but must be set if any gs* parameter given)
-    gsra           - guide star RA [J2000] (optional, but must be set if any gs* parameter given)
-    gsdec          - guide star Dec[J2000] (optional, but must be set if any gs* parameter given)
-    gsmags         - guide star magnitude (optional)
-    gsprobe        - PWFS1, PWFS2, OIWFS, or AOWFS (optional, but must be set if any gs* parameter given)
-    ready          - if "true" set the status to "Prepared/Ready", otherwise remains at "On Hold" (default "true")
-    windowDate     - interpreted in UTC in the format 'YYYY-MM-DD'
-    windowTime     - interpreted in UTC in the format 'HH:MM'
-    windowDuration - integer hours
-    elevationType  - "none", "hourAngle", or "airmass"
-    elevationMin   - minimum value for hourAngle/airmass
-    elevationMax   - maximum value for hourAngle/airmass
-
-    The server authenticates the request, finds the matching template
-    observation, clones it, and then updates it with the remainder of the
-    information.  That way the template observation can be reused in the
-    future.  The target name, ra, and dec are straightforward.  The note
-    text is added to a new note, the identified purpose of which is to
-    contain a link to a finding chart.  The "ready" parameter is used to
-    determine whether to mark the observation as "Prepared" (and thereby generate
-    the TOO trigger) or keep it "On Hold".
-
-    The exposure time parameter, if given, only sets the exposure time in the
-    instrument "static component", which is tied to the first sequence step.
-    Any exposure times defined in additional instrument iterators in the
-    template observation sequence will not be changed. If the exposure time is not
-    given then the value defined in the template observation is used. The
-    exposure time must be an integer between 1 and 1200 seconds.
-
-    If the group is specified and it does not exist (using a
-    case-sensitive match) then a new group is created.
-
-    The guide star ra, dec, and probe are optional but recommended since
-    there is no guarantee, especially for GMOS, that a guide star will
-    be available at the requested position angle. If no guide star is given
-    then the OT will attempt to find a guide star. If any gs* parameter
-    is specified, then gsra, gsdec, and gsprobe must all be specified.
-    Otherwise an HTTP 400 (Bad Request) is returned with the message
-    "guide star not completely specified".  If gstarget is missing or ""
-    but other gs* parameters are present, then it defaults to "GS".
-
-    If "target", "ra", or "dec" are missing, then an HTTP 400 (Bad
-    Request) is returned with the name of the missing parameter.
-
-    If any ra, dec, or guide probe parameter cannot be parsed, it also
-    generates a bad request response.
-
-    Magnitudes are optional, but when supplied must contain all three elements
-    (value, band, system). Multiple magnitudes can be supplied; use a comma to
-    delimit them (for example "24.2/U/Vega,23.4/r/AB"). Magnitudes can be specified
-    in Vega, AB or Jy systems in the following bands: u, U, B, g, V, UC, r, R, i,
-    I, z, Y, J, H, K, L, M, N, Q, AP.
+    Errors result in HTTP 400 responses. Magnitudes are optional but when
+    supplied must contain all elements. Multiple magnitudes can be delimited
+    by a comma.
     """
 
     # Form fields
@@ -237,7 +179,8 @@ class GEMObservationForm(BaseRoboticObservationForm):
                                         choices=(('u', 'u'), ('U', 'U'), ('B', 'B'), ('g', 'g'), ('V', 'V'),
                                                  ('UC', 'UC'), ('r', 'r'), ('R', 'R'), ('i', 'i'), ('I', 'I'),
                                                  ('z', 'z'), ('Y', 'Y'), ('J', 'J'), ('H', 'H'), ('K', 'K'),
-                                                 ('L', 'L'), ('M', 'M'), ('N', 'N'), ('Q', 'Q'), ('AP', 'AP')))
+                                                 ('L', 'L'), ('M', 'M'), ('N', 'N'), ('Q', 'Q'),
+                                                 ('AP', 'AP')))
     posangle = forms.FloatField(min_value=0.,
                                 max_value=360.,
                                 required=False,
@@ -251,9 +194,12 @@ class GEMObservationForm(BaseRoboticObservationForm):
     note = forms.CharField(required=False, label='Note Text')
 
     eltype = forms.ChoiceField(required=False, label='Airmass/Hour Angle',
-                               choices=(('none', 'None'), ('airmass', 'Airmass'), ('hourAngle', 'Hour Angle')))
-    elmin = forms.FloatField(required=False, min_value=-5.0, max_value=5.0, label='Min Airmass/HA', initial=1.0)
-    elmax = forms.FloatField(required=False, min_value=-5.0, max_value=5.0, label='Max Airmass/HA', initial=2.0)
+                               choices=(('none', 'None'), ('airmass', 'Airmass'),
+                                        ('hourAngle', 'Hour Angle')))
+    elmin = forms.FloatField(required=False, min_value=-5.0, max_value=5.0, label='Min Airmass/HA',
+                             initial=1.0)
+    elmax = forms.FloatField(required=False, min_value=-5.0, max_value=5.0, label='Max Airmass/HA',
+                             initial=2.0)
 
     gstarg = forms.CharField(required=False, label='Guide Star Name')
     gsra = forms.CharField(required=False, label='Guide Star RA')
@@ -266,20 +212,24 @@ class GEMObservationForm(BaseRoboticObservationForm):
     gsbrightness_band = forms.ChoiceField(required=False,
                                           initial='UC',
                                           label='Brightness Band',
-                                          choices=(('UP', 'u'), ('U', 'U'), ('B', 'B'), ('GP', 'g'), ('V', 'V'),
-                                                   ('UC', 'UC'), ('RP', 'r'), ('R', 'R'), ('IP', 'i'), ('I', 'I'),
-                                                   ('ZP', 'z'), ('Y', 'Y'), ('J', 'J'), ('H', 'H'), ('K', 'K'),
-                                                   ('L', 'L'), ('M', 'M'), ('N', 'N'), ('Q', 'Q'), ('AP', 'AP')))
+                                          choices=(('UP', 'u'), ('U', 'U'), ('B', 'B'), ('GP', 'g'),
+                                                   ('V', 'V'),
+                                                   ('UC', 'UC'), ('RP', 'r'), ('R', 'R'), ('IP', 'i'),
+                                                   ('I', 'I'),
+                                                   ('ZP', 'z'), ('Y', 'Y'), ('J', 'J'), ('H', 'H'),
+                                                   ('K', 'K'),
+                                                   ('L', 'L'), ('M', 'M'), ('N', 'N'), ('Q', 'Q'),
+                                                   ('AP', 'AP')))
     gsprobe = forms.ChoiceField(required=False,
                                 label='Guide Probe',
                                 initial='OIWFS',
                                 choices=(('OIWFS', 'OIWFS'),
                                          ('PWFS1', 'PWFS1'),
                                          ('PWFS2', 'PWFS2'),
-                                         ('AOWFS', 'AOWFS')))  # GS probe (PWFS1/PWFS2/OIWFS/AOWFS)
+                                         ('AOWFS', 'AOWFS')))
     window_start = forms.CharField(required=False,
-                                   # widget=forms.TextInput(attrs={'type': 'date'}),
-                                   widget=forms.DateTimeInput(attrs={'type': 'datetime'}, format='%Y-%m-%d %H:%M:%S'),
+                                   widget=forms.DateTimeInput(attrs={'type': 'datetime'},
+                                                              format='%Y-%m-%d %H:%M:%S'),
                                    label='Timing Window')
     window_duration = forms.IntegerField(required=False, min_value=1, label='Window Duration [hr]')
 
@@ -364,8 +314,9 @@ class GEMObservationForm(BaseRoboticObservationForm):
         if self.cleaned_data['exptimes'] != '':
             expvalues = self.cleaned_data['exptimes'].split(',')
             if len(expvalues) != nobs:
-                payloads.append({"error": "If exptimes given, the number of values must equal the number of obsids "
-                                          "selected."})
+                payloads.append(
+                    {"error": ("If exptimes given, the number of values must equal the number of obsids "
+                               "selected.")})
                 return payloads
 
             # Convert exposure times to integers
@@ -428,8 +379,8 @@ class GEMObservationForm(BaseRoboticObservationForm):
                 gsdec = self.cleaned_data['gsdec']
                 if self.cleaned_data['gsbrightness'] is not None:
                     sgsmag = str(self.cleaned_data['gsbrightness']).strip() + '/' + \
-                             self.cleaned_data['gsbrightness_band'] + '/' + \
-                             self.cleaned_data['gsbrightness_system']
+                        self.cleaned_data['gsbrightness_band'] + '/' + \
+                        self.cleaned_data['gsbrightness_system']
 
             if gstarg != '':
                 payload['gstarget'] = gstarg
@@ -447,8 +398,9 @@ class GEMObservationForm(BaseRoboticObservationForm):
 
 class GOATSGEMFacility(BaseRoboticObservationFacility):
     """
-    The ``GEMFacility`` is the interface to the Gemini Telescope. For information regarding Gemini observing and the
-    available parameters, please see https://www.gemini.edu/observing/start-here
+    The ``GEMFacility`` is the interface to the Gemini Telescope. For
+    information regarding Gemini observing and the available parameters, please
+    see https://www.gemini.edu/observing/start-here
     """
 
     name = 'GEM'
@@ -512,30 +464,24 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
     def get_observation_status(self, observation_id):
         return {'state': 'Observed', 'scheduled_start': None, 'scheduled_end': None}
 
-    def get_facility_context_data(self, **kwargs):
-        """
-        This method provides an opportunity for the Facility subclass to add additional
-        context data. It will be called by the OberservationCreateView.get_context_data()
-        method and the context dictionary passed to the template will be updated with the
-        returned facility context dictionary.
-        """
-        return kwargs
-
     def get_flux_constant(self) -> u:
         """
-        Returns the astropy quantity that a facility uses for its spectral flux conversion.
+        Returns the astropy quantity that a facility uses for its spectral flux
+        conversion.
         """
         return FLUX_CONSTANT
 
     def get_wavelength_units(self):
         """
-        Returns the astropy units that a facility uses for its spectral wavelengths
+        Returns the astropy units that a facility uses for its spectral
+        wavelengths
         """
         pass
 
     def is_fits_facility(self, header):
         """
-        Returns True if the FITS header is from this facility based on valid keywords and associated
+        Returns True if the FITS header is from this facility based on valid
+        keywords and associated
         values, False otherwise.
         """
         return False
@@ -555,7 +501,8 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
 
     def get_facility_status(self):
         """
-        Returns a dictionary describing the current availability of the Facility
+        Returns a dictionary describing the current availability of the
+        Facility
         telescopes. This is intended to be useful in observation planning.
         The top-level (Facility) dictionary has a list of sites. Each site
         is represented by a site dictionary which has a list of telescopes.
@@ -575,9 +522,11 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
 
     def cancel_observation(self, observation_id):
         """
-        Takes an observation id and submits a request to the observatory that the observation be cancelled.
+        Takes an observation id and submits a request to the observatory that
+        the observation be cancelled.
 
-        If the cancellation was successful, return True. Otherwise, return False.
+        If the cancellation was successful, return True. Otherwise, return
+        False.
         """
         raise NotImplementedError('This facility has not implemented cancel observation.')
 
