@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 # Related third party imports.
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.management import call_command
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpRequest
@@ -17,11 +18,13 @@ from django.views.generic import TemplateView, View, FormView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.utils.safestring import mark_safe
+from guardian.shortcuts import assign_perm
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from tom_alerts.alerts import get_service_class as tom_alerts_get_service_class
 from tom_alerts.models import BrokerQuery
+from tom_alerts.views import CreateTargetFromAlertView
 from tom_common.hints import add_hint
 from tom_common.mixins import SuperuserRequiredMixin, Raise403PermissionRequiredMixin
 from tom_observations.facility import get_service_class as tom_facility_get_service_class
@@ -37,19 +40,74 @@ from .astroquery_gemini import Observations as GOA
 from .utils import delete_associated_data_products
 
 
+class GOATSCreateTargetFromAlertView(CreateTargetFromAlertView):
+    """GOATS override to redirect to list view of targets."""
+
+    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """Handle POST request for creating targets from alerts. Redirects to
+        the list view of targets if any target creation succeeds. Otherwise,
+        redirects back to the alert view.
+
+        Parameters
+        ----------
+        request : `HttpRequest`
+            The request object.
+
+        Returns
+        -------
+        `HttpResponse`
+            Redirects to the list view of targets or back to the alert view
+            based on the outcome of target creation.
+
+        """
+        query_id = self.request.POST["query_id"]
+        broker_name = self.request.POST["broker"]
+        broker_class = tom_alerts_get_service_class(broker_name)
+        alerts = self.request.POST.getlist("alerts")
+        errors = []
+        if not alerts:
+            messages.warning(request, "Please select at least one alert from which to create a target.")
+            return redirect(reverse("tom_alerts:run", kwargs={"pk": query_id}))
+        for alert_id in alerts:
+            cached_alert = cache.get(f"alert_{alert_id}")
+            if not cached_alert:
+                messages.error(request, "Could not create targets. Try re running the query again.")
+                return redirect(reverse("tom_alerts:run", kwargs={"pk": query_id}))
+            generic_alert = broker_class().to_generic_alert(json.loads(cached_alert))
+            target, extras, aliases = generic_alert.to_target()
+            try:
+                target.save(extras=extras, names=aliases)
+                broker_class().process_reduced_data(target, json.loads(cached_alert))
+                for group in request.user.groups.all().exclude(name="Public"):
+                    assign_perm("tom_targets.view_target", group, target)
+                    assign_perm("tom_targets.change_target", group, target)
+                    assign_perm("tom_targets.delete_target", group, target)
+            except IntegrityError:
+                messages.warning(request, (f"Unable to save {target.name}, target with that name already"
+                                           " exists."))
+                errors.append(target.name)
+
+        if (len(alerts) == len(errors)):
+            return redirect(reverse("tom_alerts:run", kwargs={"pk": query_id}))
+
+        return redirect(reverse("tom_targets:list"))
+
+
 class ObservationRecordDeleteView(Raise403PermissionRequiredMixin, DeleteView):
     """View for deleting an observation."""
-    permission_required = 'tom_observations.delete_observationrecord'
-    success_url = reverse_lazy('observations:list')
+    permission_required = "tom_observations.delete_observationrecord"
+    success_url = reverse_lazy("observations:list")
     model = ObservationRecord
 
     def form_valid(self, form: Form) -> HttpResponse:
-        """
-        Handle deletion of associated DataProducts upon valid form submission.
+        """Handle deletion of associated DataProducts upon valid form
+        submission.
+
         Parameters
         ----------
         form : `Form`
             The form object.
+
         Returns
         -------
         `HttpResponse`
