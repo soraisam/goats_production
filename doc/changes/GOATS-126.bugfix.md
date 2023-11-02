@@ -1,0 +1,1 @@
+Simplified redirecting users to the target list view for consistency and better UX.
