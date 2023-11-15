@@ -8,6 +8,7 @@ import requests
 from requests.exceptions import HTTPError
 
 # Related third party imports.
+from astropy.table import Table
 from astropy.time import Time
 from astropy import units as u
 from crispy_forms.layout import Div, HTML
@@ -610,10 +611,16 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             # Determine what to do with calibration data.
             download_calibration = kwargs.pop("download_calibrations", None)
 
+            # Create blank mapping.
+            name_reduction_map = {}
             try:
                 # Query GOA for science tarfile.
                 if not download_calibration == "only":
                     print("downloading science files")
+                    file_list = GOA.query_criteria(*args, **kwargs)
+                    # Create the mapping.
+                    name_reduction_map = _create_name_reduction_map(file_list)
+
                     GOA.get_files(target_path, *args, tar_name=facility, decompress_fits=True,
                                   remove_compressed_fits=True, **kwargs)
                 if not download_calibration == "no":
@@ -640,6 +647,10 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                     continue
                 product_id = file_path.stem
 
+                # Use the mapping to get the data product type.
+                # If not found, return default for calibration.
+                data_product_type = name_reduction_map.get(file_path.name, "RAW")
+
                 # Query DataProduct by product_id and target.
                 candidates = DataProduct.objects.filter(product_id=product_id, target=target)
 
@@ -648,12 +659,14 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                     dp = candidates.first()
                 else:
                     # Otherwise, create a new DataProduct.
+                    data_product_name = f"{target.name}/{facility}/{file_path.name}"
                     dp = DataProduct.objects.create(
                         product_id=product_id,
                         target=target,
                         observation_record=observation_record,
+                        data_product_type=data_product_type
                     )
-                    dp.data.name = f"{target.name}/{facility}/{file_path.name}"
+                    dp.data.name = data_product_name
                     dp.save()
                     logger.info("Saved new dataproduct from tarfile: %s", dp.data)
 
@@ -679,6 +692,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                 product_id=product["id"],
                 target=target,
                 observation_record=observation_record,
+                data_product_type=product["data_product_type"]
             )
 
             if created:
@@ -744,7 +758,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         # Generate calibration files by performing a set difference between
         # filenames and file names returned from GOA.
         cal_files = [{"name": name, "created": product.created, "release": None,
-                      "lastmod": product.modified, "filename": f"{name}.bz2"}
+                      "lastmod": product.modified, "filename": f"{name}.bz2", "reduction": "RAW"}
                      for product, name in zip(all_products, filenames - {f["name"] for f in files})]
 
         # Look for the product ID if it exists.
@@ -753,47 +767,65 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             for f in files:
                 if f["name"].replace(".fits", "") == product_id:
                     product_found = True
-                    products.append(self._create_data_product_entry(f))
+                    products.append(_create_data_product_entry(f))
                     break
             if not product_found:
                 for c in cal_files:
                     if c["name"].replace(".fits", "") == product_id:
-                        products.append(self._create_data_product_entry(c))
+                        products.append(_create_data_product_entry(c))
                         break
 
         # Loop through files and build data products.
         else:
-            products.extend([self._create_data_product_entry(f) for f in files])
-            products.extend([self._create_data_product_entry(c) for c in cal_files])
+            products.extend([_create_data_product_entry(f) for f in files])
+            products.extend([_create_data_product_entry(c) for c in cal_files])
 
         return products
 
-    def _create_data_product_entry(self, product: Any) -> dict[str, Any]:
-        """Creates the entry for a specified product.
 
-        Parameters
-        ----------
-        product : `Any`
-            The product information from GOA, usually a pydantic `BaseModel`.
+def _create_data_product_entry(product: Any) -> dict[str, Any]:
+    """Creates the entry for a specified product.
 
-        Returns
-        -------
-        `dict[str, Any]`
-            A data product entry.
-        """
-        uncompressed_filename = product["name"]
-        if product["release"] is None:
-            is_proprietary = False
-        else:
-            release_date = Time(product["release"], format="isot", scale="utc")
-            today_ut = Time.now()
-            is_proprietary = today_ut < release_date
+    Parameters
+    ----------
+    product : `Any`
+        The product information from GOA.
 
-        return {
-            "id": uncompressed_filename.replace(".fits", ""),
-            "filename": uncompressed_filename,
-            "compressed_filename": product["filename"],
-            "created": product["lastmod"],
-            "url": GOA.get_file_url(product["name"]),
-            "is_proprietary": is_proprietary
-        }
+    Returns
+    -------
+    `dict[str, Any]`
+        A data product entry.
+    """
+    uncompressed_filename = product["name"]
+    if product["release"] is None:
+        is_proprietary = False
+    else:
+        release_date = Time(product["release"], format="isot", scale="utc")
+        today_ut = Time.now()
+        is_proprietary = today_ut < release_date
+
+    return {
+        "id": uncompressed_filename.replace(".fits", ""),
+        "filename": uncompressed_filename,
+        "compressed_filename": product["filename"],
+        "created": product["lastmod"],
+        "url": GOA.get_file_url(product["name"]),
+        "is_proprietary": is_proprietary,
+        "data_product_type": product["reduction"]
+    }
+
+
+def _create_name_reduction_map(file_list: Table) -> dict[str, str]:
+    """Create a mapping from file "name" to "reduction" values from GOA.
+
+    Parameters
+    ----------
+    file_list : `Table`
+        Astropy `Table` containing file information.
+
+    Returns
+    -------
+    `dict[str, str]`
+        A dictionary mapping file 'name' to their 'reduction' values.
+    """
+    return {row['name']: row['reduction'] for row in file_list}
