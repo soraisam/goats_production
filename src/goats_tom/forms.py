@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 from django import forms
 
 
@@ -103,18 +100,6 @@ class GOAQueryForm(forms.Form):
         help_text="(Specify the first part of the filename to match by)"
     )
 
-    save_to = forms.CharField(
-        label="Save To",
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Leave empty for default"
-        }),
-        required=False,
-        # TODO: Discuss how to save data other than TOMToolkit default.
-        disabled=True,
-        help_text="(Path to save data to if default path is not preferred)"
-    )
-
     download_calibrations = forms.ChoiceField(
         choices=DOWNLOAD_CALIBRATION_CHOICES,
         label="Download Associated Calibrations",
@@ -136,17 +121,6 @@ class GOAQueryForm(forms.Form):
         # Call the parent class's is_valid first.
         valid = super().is_valid()
 
-        # Check if the local_path_to_store exists and is writable.
-        local_path = self.cleaned_data.get("save_to", "")
-        if local_path:
-            local_path = Path(local_path)
-            if not local_path.exists():
-                self.add_error("save_to", "The path does not exist.")
-                valid = False
-            elif not os.access(local_path, os.W_OK):
-                self.add_error("save_to", "Permission to write to the path is denied.")
-                valid = False
-
         return valid
 
     def clean(self) -> None:
@@ -155,7 +129,6 @@ class GOAQueryForm(forms.Form):
 
         # Check the optional arguments.
         filename_prefix = cleaned_data.get("filename_prefix", "")
-        local_path_to_store = cleaned_data.get("local_path_to_store", "")
 
         args_list = [cleaned_data["qa_state"]]
 
@@ -175,9 +148,6 @@ class GOAQueryForm(forms.Form):
 
         if filename_prefix:
             query_params["kwargs"]["filepre"] = filename_prefix
-
-        if local_path_to_store:
-            query_params["kwargs"]["local_path_to_store"] = local_path_to_store
 
         query_params["kwargs"]["download_calibrations"] = cleaned_data["download_calibrations"]
 
