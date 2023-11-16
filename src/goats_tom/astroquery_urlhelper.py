@@ -65,7 +65,8 @@ class URLHelper:
         'file_list': '/jsonfilelist',
         'tar_file': '/download',
         'file': '/file',
-        'login': '/login'
+        'login': '/login',
+        'search': '/searchform'
     }
     VALID_ENDPOINTS = set(ENDPOINTS.keys())
 
@@ -94,6 +95,10 @@ class URLHelper:
         """Wrapper for getting single file URL."""
         return f'{self.server}{self.ENDPOINTS["file"]}/{filename}'
 
+    def get_search_url(self, program_id):
+        """Wrapper for getting the search URL for a program ID."""
+        return f'{self.server}{self.ENDPOINTS["search"]}/{program_id}'
+
     def build_url(self, *args, endpoint=None, **kwargs):
         """
         Build a URL with the given args and kwargs as the query parameters.
@@ -120,6 +125,8 @@ class URLHelper:
             return self.get_file_url(args[0])
         elif endpoint == 'login':
             return self.get_login_url()
+        elif endpoint == 'search':
+            return self.get_search_url(args[0])
 
         url_endpoint = self.ENDPOINTS[endpoint]
 

@@ -450,8 +450,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         return errors
 
     def get_observation_url(self, observation_id):
-        # return PORTAL_URL + '/requests/' + observation_id
-        return ''
+        return GOA.get_search_url(observation_id)
 
     def get_start_end_keywords(self):
         return ('window_start', 'window_end')

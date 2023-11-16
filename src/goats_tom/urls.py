@@ -10,6 +10,8 @@ from . import views
 # TODO: Add app_name and update paths and URL lookups.
 
 urlpatterns = [
+    path("dataproducts/data/<int:pk>/delete/", views.GOATSDataProductDelieteView.as_view(),
+         name="delete-dataproduct"),
     path("alerts/alert/create/", views.GOATSCreateTargetFromAlertView.as_view(), name="create-target"),
     path("observations/<int:pk>/delete/", views.ObservationRecordDeleteView.as_view(), name="delete"),
     path("targets/<int:pk>/", views.GOATSTargetDetailView.as_view(), name="detail"),

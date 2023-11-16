@@ -563,6 +563,21 @@ class ObservationsClass(QueryWithLogin):
         """
         return self.url_helper.get_file_url(filename)
 
+    def get_search_url(self, program_id):
+        """Generate the search URL based on the program ID.
+
+        Parameters
+        ----------
+        program_id : str
+            The program ID to search for.
+
+        Returns
+        -------
+        str
+            The URL for the program ID.
+        """
+        return self.url_helper.get_search_url(program_id)
+
     def get_calibration_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True,
                               remove_compressed_fits=True, remove_readme=True, **query_kwargs):
         """Download all associated calibrations files as a tar archive. Will
