@@ -2,15 +2,23 @@ from tom_dataproducts.models import DataProduct, ReducedDatum
 from tom_observations.models import ObservationRecord
 
 
-def delete_associated_data_products(observation_record: ObservationRecord) -> None:
-    """Utility function to delete associated DataProducts.
+def delete_associated_data_products(record_or_product: ObservationRecord | DataProduct) -> None:
+    """
+    Utility function to delete associated DataProducts or a single DataProduct.
 
     Parameters
     ----------
-    observation_record : `ObservationRecord`
-        The ObservationRecord object to find associated DataProducts.
+    record_or_product : Union[ObservationRecord, DataProduct]
+        The ObservationRecord object to find associated DataProducts,
+        or a single DataProduct to be deleted.
     """
-    query = DataProduct.objects.filter(observation_record=observation_record)
+    if isinstance(record_or_product, ObservationRecord):
+        query = DataProduct.objects.filter(observation_record=record_or_product)
+    elif isinstance(record_or_product, DataProduct):
+        query = [record_or_product]
+    else:
+        raise ValueError("Invalid argument type. Must be ObservationRecord or DataProduct.")
+
     for data_product in query:
         # Delete associated ReducedDatum objects.
         ReducedDatum.objects.filter(data_product=data_product).delete()
@@ -19,6 +27,7 @@ def delete_associated_data_products(observation_record: ObservationRecord) -> No
         data_product.data.delete()
 
         # Delete thumbnail from the disk.
+        print("DELETING THUMBNAIL")
         data_product.thumbnail.delete()
 
         # Delete the `DataProduct` object from the database.

@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.management import call_command
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse, HttpRequest, HttpResponseRedirect
 from django.forms import Form
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView, View, FormView, DeleteView
@@ -27,6 +27,7 @@ from tom_alerts.models import BrokerQuery
 from tom_alerts.views import CreateTargetFromAlertView
 from tom_common.hints import add_hint
 from tom_common.mixins import SuperuserRequiredMixin, Raise403PermissionRequiredMixin
+from tom_dataproducts.views import DataProductDeleteView
 from tom_observations.facility import get_service_class as tom_facility_get_service_class
 from tom_observations.models import ObservationRecord, ObservationTemplate
 from tom_observations.observation_template import ApplyObservationTemplateForm
@@ -38,6 +39,29 @@ from .forms import GOAQueryForm, GOALoginForm
 from .models import GOALogin
 from .astroquery_gemini import Observations as GOA
 from .utils import delete_associated_data_products
+
+
+class GOATSDataProductDelieteView(DataProductDeleteView):
+    def form_valid(self, form):
+        """
+        Method that handles DELETE requests for this view. It performs the
+        following actions in order:
+        1. Deletes all ``ReducedDatum`` objects associated with the
+        ``DataProduct``.
+        2. Deletes the file referenced by the ``DataProduct``.
+        3. Deletes the ``DataProduct`` object from the database.
+
+        :param form: Django form instance containing the data for the DELETE
+        request.
+        :type form: django.forms.Form
+        :return: HttpResponseRedirect to the success URL.
+        :rtype: HttpResponseRedirect
+        """
+        # Fetch the DataProduct object
+        data_product = self.get_object()
+        delete_associated_data_products(data_product)
+
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class GOATSCreateTargetFromAlertView(CreateTargetFromAlertView):
