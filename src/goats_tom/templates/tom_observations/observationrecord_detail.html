@@ -1,5 +1,5 @@
 {% extends 'tom_common/base.html' %}
-{% load bootstrap4 static observation_extras dataproduct_extras gemini %}
+{% load bootstrap4 static observation_extras dataproduct_extras gemini tom_overrides%}
 {% block title %} Observation record: {{ object.id }} {% endblock %}
 {% block additional_css %}
 <link rel="stylesheet" href="{% static 'tom_observations/css/main.css' %}">
@@ -52,7 +52,7 @@
           {% endbuttons %}
         </div>
       </div>
-      {% dataproduct_list_for_observation_saved data_products request %}
+      {% goats_dataproduct_list_for_observation_saved data_products request object %}
     </form>
     {% if object.facility != "GEM" %}
     <form method="POST" action="{% url 'tom_dataproducts:save' object.id %}">

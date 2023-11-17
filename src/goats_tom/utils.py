@@ -8,7 +8,7 @@ def delete_associated_data_products(record_or_product: ObservationRecord | DataP
 
     Parameters
     ----------
-    record_or_product : Union[ObservationRecord, DataProduct]
+    record_or_product : ObservationRecord | DataProduct
         The ObservationRecord object to find associated DataProducts,
         or a single DataProduct to be deleted.
     """
@@ -27,7 +27,6 @@ def delete_associated_data_products(record_or_product: ObservationRecord | DataP
         data_product.data.delete()
 
         # Delete thumbnail from the disk.
-        print("DELETING THUMBNAIL")
         data_product.thumbnail.delete()
 
         # Delete the `DataProduct` object from the database.
