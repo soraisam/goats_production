@@ -1,0 +1,1 @@
+Enhanced download and decompression performance: Optimized the process for downloading and decompressing tar files from GOA, significantly reducing the time required. Implemented streaming for data downloads, which minimizes memory usage for large files.

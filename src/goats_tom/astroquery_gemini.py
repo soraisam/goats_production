@@ -10,6 +10,7 @@ import bz2
 import os
 from pathlib import Path
 from datetime import date, datetime
+from multiprocessing import Pool
 import tarfile
 
 import astropy
@@ -618,8 +619,8 @@ class ObservationsClass(QueryWithLogin):
                        remove_compressed_fits=remove_compressed_fits, remove_readme=remove_readme,
                        **query_kwargs)
 
-    def get_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True,
-                  remove_compressed_fits=True, remove_readme=True, **query_kwargs):
+    def get_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True, remove_readme=True,
+                  **query_kwargs):
         """Download all files associated with GOA query as a tar
         archive. Will untar folder after download.
 
@@ -636,10 +637,6 @@ class ObservationsClass(QueryWithLogin):
             "goaquery-YYYYMMDDHHMMSS".
         decompress_fits : bool, optional
             Decompress bz2 fits files, default is `True`.
-        remove_compressed_fits : bool, optional
-            If `True`, removes the compressed fits file(s) after
-            decompressing. `decompress_fits` must be `True`.
-            By default, `True`.
         remove_readme : bool, optional
             Removes the README and MD5 text files included in download, default
             is `True`.
@@ -651,8 +648,7 @@ class ObservationsClass(QueryWithLogin):
 
         url = self.url_helper.get_tar_file_url(*query_args, **query_kwargs)
         print(url)
-        method = "GET"
-        response = self._session.request(method, url)
+        response = self._session.get(url, stream=True)
         response.raise_for_status()
 
         if b"No files to download." in response.content:
@@ -660,16 +656,17 @@ class ObservationsClass(QueryWithLogin):
             return
 
         # Generate tar_filename based on tar_name or current time.
-        if tar_name is None:
-            timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-            tar_name = f"goaquery-{timestamp}"
+        tar_name = tar_name or f"goaquery-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
 
         # Write the tarball to file.
-        tar_filename = f"{tar_name}.tar.bz2"
+        tar_filename = f"{tar_name}.tar"
         dest_folder.mkdir(parents=True, exist_ok=True)
         dest_path = dest_folder / tar_filename
+
+        # Stream download.
         with open(dest_path, "wb") as f:
-            f.write(response.content)
+            for chunk in response.iter_content(chunk_size=conf.GOA_CHUNK_SIZE):
+                f.write(chunk)
 
         # Extract the tar archive.
         # Create the extract directory.
@@ -691,33 +688,37 @@ class ObservationsClass(QueryWithLogin):
 
         # Decompress inner files.
         if decompress_fits:
-            for inner_file in extract_dir.iterdir():
-                if inner_file.suffix == ".bz2":
-                    self._decompress_bz2(inner_file, remove_compressed_fits=remove_compressed_fits)
+            file_paths = list(extract_dir.glob("*.bz2"))
+            self._decompress_bz2_parallel(file_paths)
 
-    def _decompress_bz2(self, file_path: Path, remove_compressed_fits: bool | None = False) -> None:
+    def _decompress_bz2_parallel(self, file_paths):
+        """Parallize decompressing files.
+
+        Parameters
+        ----------
+        file_paths : list[Paths]
+            List of file paths to decompress.
+        """
+        with Pool() as pool:
+            pool.map(self._decompress_bz2, file_paths)
+
+    def _decompress_bz2(self, file_path):
         """Decompress a .bz2 file and write to the same filename.
 
         This will overwrite any files that already exist.
 
         Parameters
         ----------
-        file_path : `Path`
+        file_path : Path
             Path to the .bz2 file to be decompressed.
-        remove_compressed_fits : `bool | None`
-            If ``True``, removes the compressed fits file(s) after
-            decompressing. By default, ``False``.
         """
         decompressed_file_path = file_path.with_suffix('')
 
-        chunk_size = 1024 * 1024
-
         with bz2.open(file_path, 'rb') as in_file, open(decompressed_file_path, 'wb') as out_file:
-            while (chunk := in_file.read(chunk_size)):
+            while (chunk := in_file.read(conf.GOA_CHUNK_SIZE)):
                 out_file.write(chunk)
 
-        if remove_compressed_fits:
-            file_path.unlink()
+        file_path.unlink()
 
 
 def _gemini_json_to_table(json):
