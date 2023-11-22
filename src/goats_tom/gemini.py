@@ -15,6 +15,8 @@ from crispy_forms.layout import Div, HTML
 from django.conf import settings
 from django import forms
 from django.core.files.base import ContentFile
+from django.contrib import messages
+from django.http import HttpRequest
 from dateutil.parser import parse
 from tom_common.exceptions import ImproperCredentialsException
 from tom_targets.models import Target
@@ -569,7 +571,8 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         return products
 
     def save_data_products(self, observation_record: ObservationRecord, product_id: str | None = None,
-                           query_params: dict[str, Any] | None = None) -> list[DataProduct]:
+                           request: HttpRequest | None = None, query_params: dict[str, Any] | None = None
+                           ) -> list[DataProduct]:
         """Save data products related to an observation record.
 
         Parameters
@@ -578,6 +581,8 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             The observation record object.
         product_id : `str | None`
             The ID of the product to download, by default ``None``.
+        request : `HttpRequest`
+            The request to attach messages to.
         query_params : `dict[str, Any] | None`
             Query parameters to refine the data product search, by default
             ``None``.
@@ -620,15 +625,33 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                     # Create the mapping.
                     name_reduction_map = _create_name_reduction_map(file_list)
 
-                    GOA.get_files(target_path, *args, tar_name=facility, decompress_fits=True,
-                                  remove_compressed_fits=True, **kwargs)
+                    science_download_info = GOA.get_files(target_path, *args, tar_name=facility,
+                                                          decompress_fits=True, remove_compressed_fits=True,
+                                                          **kwargs)
+
+                    if request:
+                        if science_download_info["success"]:
+                            message_type = messages.success
+                        else:
+                            message_type = messages.error
+                        message_type(request, f"Observation Files: {science_download_info['message']}")
+
                 if not download_calibration == "no":
                     print("downloading calibration files")
                     # Query GOA for calibration tarfile.
                     # Only need to specify program ID.
                     calibration_kwargs = {"progid": observation_record.observation_id}
-                    GOA.get_calibration_files(target_path, *args, tar_name=facility, decompress_fits=True,
-                                              remove_compressed_fits=True, **calibration_kwargs)
+                    calibration_download_info = GOA.get_calibration_files(
+                        target_path, *args, tar_name=facility, decompress_fits=True,
+                        remove_compressed_fits=True, **calibration_kwargs)
+
+                    if request:
+                        if calibration_download_info["success"]:
+                            message_type = messages.success
+                        else:
+                            message_type = messages.error
+                        message_type(request, f"Calibration Files: {calibration_download_info['message']}")
+
             except HTTPError as e:
                 if e.response.status_code == 403:
                     logger.error("You are not authorized to download this data.")

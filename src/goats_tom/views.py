@@ -345,7 +345,7 @@ class GOAQueryFormView(View):
 
             # Must pass in product_id to avoid args and product_id issue.
             service_class().save_data_products(
-                observation_record, query_params=form.cleaned_data["query_params"])
+                observation_record, request=request, query_params=form.cleaned_data["query_params"])
             # At the end of this, clear the cookies to prevent other users.
             GOA.logout()
 
@@ -498,15 +498,16 @@ class GOALoginView(LoginRequiredMixin, FormView):
         if not GOA.authenticated():
             messages.error(self.request, "Failed to verify GOA login credentials. Please try again.")
         else:
-            GOA.logout()
-
-            # Save to your model (update or create new)
-            GOALogin.objects.update_or_create(
-                user=user,
-                defaults={"username": username, "password": password},
-            )
-
             messages.success(self.request, "GOA login information verified and saved successfully.")
+
+        # No matter what, logout and save credentials.
+        GOA.logout()
+
+        GOALogin.objects.update_or_create(
+            user=user,
+            defaults={"username": username, "password": password},
+        )
+
         return super().form_valid(form)
 
     def form_invalid(self, form: GOALoginForm) -> HttpResponse:
