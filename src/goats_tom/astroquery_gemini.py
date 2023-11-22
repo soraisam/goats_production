@@ -12,6 +12,7 @@ from pathlib import Path
 from datetime import date, datetime
 from multiprocessing import Pool
 import tarfile
+from typing import Any
 
 import astropy
 import astropy.units as u
@@ -25,7 +26,7 @@ from .astroquery_urlhelper import URLHelper
 from .astroquery_conf import conf
 
 
-__all__ = ['Observations', 'ObservationsClass']  # specifies what to import
+__all__ = ["Observations", "ObservationsClass"]  # specifies what to import
 
 
 __valid_instruments__ = [
@@ -580,7 +581,8 @@ class ObservationsClass(QueryWithLogin):
         return self.url_helper.get_search_url(program_id)
 
     def get_calibration_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True,
-                              remove_compressed_fits=True, remove_readme=True, **query_kwargs):
+                              remove_compressed_fits=True, remove_readme=True, **query_kwargs
+                              ) -> dict[str, Any]:
         """Download all associated calibrations files as a tar archive. Will
         untar folder after download.
 
@@ -606,6 +608,12 @@ class ObservationsClass(QueryWithLogin):
             is `True`.
         query_kwargs : dict
             Query keyword arguments to pass to GOA query.
+
+        Returns
+        -------
+        `dict[str, int]`
+            A dictionary containing the number of files downloaded, the number
+            of files omitted, a human-readable message, and boolean success.
         """
         # Assign argument to get calibrations.
         args = query_args + ("associated_calibrations",)
@@ -615,12 +623,12 @@ class ObservationsClass(QueryWithLogin):
             timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
             tar_name = f"goaquery-cal-{timestamp}"
 
-        self.get_files(dest_folder, *args, tar_name=tar_name, decompress_fits=decompress_fits,
-                       remove_compressed_fits=remove_compressed_fits, remove_readme=remove_readme,
-                       **query_kwargs)
+        return self.get_files(dest_folder, *args, tar_name=tar_name, decompress_fits=decompress_fits,
+                              remove_compressed_fits=remove_compressed_fits, remove_readme=remove_readme,
+                              **query_kwargs)
 
     def get_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True, remove_readme=True,
-                  **query_kwargs):
+                  **query_kwargs) -> dict[str, Any]:
         """Download all files associated with GOA query as a tar
         archive. Will untar folder after download.
 
@@ -642,6 +650,12 @@ class ObservationsClass(QueryWithLogin):
             is `True`.
         query_kwargs : dict
             Query keyword arguments to pass to GOA query.
+
+        Returns
+        -------
+        `dict[str, int]`
+            A dictionary containing the number of files downloaded, the number
+            of files omitted, a human-readable message, and boolean success.
         """
         # Convert destination folder.
         dest_folder = Path(dest_folder).expanduser()
@@ -653,7 +667,7 @@ class ObservationsClass(QueryWithLogin):
 
         if b"No files to download." in response.content:
             log.warn(response.content.decode())
-            return
+            return {"message": "No available files to download. Verify search is valid.", "success": False}
 
         # Generate tar_filename based on tar_name or current time.
         tar_name = tar_name or f"goaquery-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
@@ -679,6 +693,9 @@ class ObservationsClass(QueryWithLogin):
         # Remove tarfile.
         dest_path.unlink()
 
+        # Build download statistics.
+        download_info = self._generate_download_info(extract_dir)
+
         # Delete additional files if wanted.
         if remove_readme:
             for file_name in ["README.txt", "md5sums.txt"]:
@@ -690,6 +707,72 @@ class ObservationsClass(QueryWithLogin):
         if decompress_fits:
             file_paths = list(extract_dir.glob("*.bz2"))
             self._decompress_bz2_parallel(file_paths)
+
+        return download_info
+
+    def _generate_download_info(self, extract_dir: Path) -> dict[str, int]:
+        """Generate download information.
+
+        Parameters
+        ----------
+        `extract_dir` : Path
+            The directory where "README.txt" and "md5sums.txt" are located.
+
+        Returns
+        -------
+        `dict[str, int]`
+            A dictionary containing the number of files downloaded, the number
+            of files omitted, a human-readable message, and boolean success.
+        """
+
+        readme_path = extract_dir / "README.txt"
+        md5sums_path = extract_dir / "md5sums.txt"
+
+        # Get names of files downloaded.
+        downloaded_files = []
+        if md5sums_path.exists():
+            with open(md5sums_path, "r") as file:
+                for line in file:
+                    parts = line.strip().split()
+                    if len(parts) == 2:
+                        downloaded_files.append(parts[1])
+
+        # Get number of files downloaded.
+        num_files_downloaded = len(downloaded_files)
+
+        # Get number of files omitted.
+        num_files_omitted = 0
+        if readme_path.exists():
+            with open(readme_path, "r") as file:
+                num_files_omitted = sum(1 for line in file if ".fits.bz2" in line)
+
+        # Constructing the message
+        if num_files_downloaded == 0 and num_files_omitted == 0:
+            message = "No files were found or downloaded. Data for this observation record does not exist."
+        else:
+            message = f"Downloaded {num_files_downloaded} files."
+            if num_files_omitted > 0:
+                message += f" {num_files_omitted} proprietary files were omitted."
+
+        # Extract search criteria from README.txt
+        search_url = ""
+        if readme_path.exists():
+            with open(readme_path, "r") as file:
+                for line in file:
+                    if "The search criteria was:" in line:
+                        search_url = line.split(": ")[1].strip()
+                        break
+
+        download_info = {
+            "downloaded_files": downloaded_files,
+            "num_files_downloaded": num_files_downloaded,
+            "num_files_omitted": num_files_omitted,
+            "message": message,
+            "search_url": search_url,
+            "success": True
+        }
+
+        return download_info
 
     def _decompress_bz2_parallel(self, file_paths):
         """Parallize decompressing files.
@@ -712,9 +795,9 @@ class ObservationsClass(QueryWithLogin):
         file_path : Path
             Path to the .bz2 file to be decompressed.
         """
-        decompressed_file_path = file_path.with_suffix('')
+        decompressed_file_path = file_path.with_suffix("")
 
-        with bz2.open(file_path, 'rb') as in_file, open(decompressed_file_path, 'wb') as out_file:
+        with bz2.open(file_path, "rb") as in_file, open(decompressed_file_path, "wb") as out_file:
             while (chunk := in_file.read(conf.GOA_CHUNK_SIZE)):
                 out_file.write(chunk)
 
