@@ -659,14 +659,17 @@ class ObservationsClass(QueryWithLogin):
         """
         # Convert destination folder.
         dest_folder = Path(dest_folder).expanduser()
-
         url = self.url_helper.get_tar_file_url(*query_args, **query_kwargs)
         print(url)
+
         response = self._session.get(url, stream=True)
         response.raise_for_status()
 
-        if b"No files to download." in response.content:
-            log.warn(response.content.decode())
+        # Check if data is good.
+        data = response.iter_content(chunk_size=conf.GOA_CHUNK_SIZE)
+        first_chunk = next(data)
+        if b"No files to download." in first_chunk:
+            response.close()
             return {"message": "No available files to download. Verify search is valid.", "success": False}
 
         # Generate tar_filename based on tar_name or current time.
@@ -679,20 +682,21 @@ class ObservationsClass(QueryWithLogin):
 
         # Stream download.
         with open(dest_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=conf.GOA_CHUNK_SIZE):
+            f.write(first_chunk)
+            for chunk in data:
                 f.write(chunk)
+
+        response.close()
 
         # Extract the tar archive.
         # Create the extract directory.
         extract_dir = dest_folder / tar_name
         extract_dir.mkdir(parents=True, exist_ok=True)
-
         with tarfile.open(dest_path, "r") as tar:
             tar.extractall(path=extract_dir)
 
         # Remove tarfile.
         dest_path.unlink()
-
         # Build download statistics.
         download_info = self._generate_download_info(extract_dir)
 
@@ -702,12 +706,10 @@ class ObservationsClass(QueryWithLogin):
                 file_path = extract_dir / file_name
                 if file_path.exists():
                     file_path.unlink()
-
         # Decompress inner files.
         if decompress_fits:
             file_paths = list(extract_dir.glob("*.bz2"))
             self._decompress_bz2_parallel(file_paths)
-
         return download_info
 
     def _generate_download_info(self, extract_dir: Path) -> dict[str, int]:
