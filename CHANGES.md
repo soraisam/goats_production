@@ -1,3 +1,31 @@
+## GOATS 23.11.0 (2023-11-27)
+
+
+### New Features
+
+- Added data product type support. [[#GOATS-117](https://noirlab.atlassian.net/browse/GOATS-117)]
+- Enhanced GOA query feedback: Extended the GOA query functionality to construct and return comprehensive download information. This enhancement includes detailed feedback to GOATS users regarding the status of their queries, encompassing error notifications, the count of downloaded files, and alerts about potentially missed files due to the absence of user authentication. [[#GOATS-122](https://noirlab.atlassian.net/browse/GOATS-122)]
+- Added calibration radio button to `GOA` query form: Introduced an option to include, exclude, or solely download calibration data for an observation ID. [[#GOATS-123](https://noirlab.atlassian.net/browse/GOATS-123)]
+- Added GOA observation ID URL: Implemented a new feature to display a URL for GOA observation ID on the observation page for viewing available data files. [[#GOATS-152](https://noirlab.atlassian.net/browse/GOATS-152)]
+- Enhanced observation record management: Introduced a new view to efficiently handle the deletion of all data products associated with an observation record. This update includes a confirmation page for deletion operations, ensuring user confirmation before proceeding with data removal. Additionally, the update fixes a typo and improves permission handling for both `GET` and `POST` requests for deleting all data products, enhancing the overall user experience and security. [[#GOATS-158](https://noirlab.atlassian.net/browse/GOATS-158)]
+
+
+### Changes
+
+- Updated URL to reflect active tab: Enhanced the target page to modify the URL in accordance with the currently active tab, ensuring that refreshing the page maintains the user's selected tab. [[#GOATS-159](https://noirlab.atlassian.net/browse/GOATS-159)]
+
+
+### Bug Fixes
+
+- Simplified redirecting users to the target list view for consistency and better UX. [[#GOATS-126](https://noirlab.atlassian.net/browse/GOATS-126)]
+- Fixed thumbnail deletion for data products: Resolved a bug where data product thumbnails were not being deleted properly along with the data product, leading to multiple copies. [[#GOATS-154](https://noirlab.atlassian.net/browse/GOATS-154)]
+
+
+### Enhancements
+
+- Enhanced download and decompression performance: Optimized the process for downloading and decompressing tar files from GOA, significantly reducing the time required. Implemented streaming for data downloads, which minimizes memory usage for large files. [[#GOATS-155](https://noirlab.atlassian.net/browse/GOATS-155)]
+
+
 ## GOATS 23.10.0 (2023-10-26)
 
 

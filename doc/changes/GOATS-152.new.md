@@ -1,1 +1,0 @@
-Added GOA observation ID URL: Implemented a new feature to display a URL for GOA observation ID on the observation page for viewing available data files.
