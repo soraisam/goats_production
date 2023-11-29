@@ -15,11 +15,11 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpRequest, HttpResponseRedirect
 from django.forms import Form
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import TemplateView, View, FormView, DeleteView
+from django.views.generic import TemplateView, View, FormView, DeleteView, DetailView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.utils.safestring import mark_safe
-from guardian.shortcuts import assign_perm
+from guardian.shortcuts import assign_perm, get_objects_for_user
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -28,11 +28,13 @@ from tom_alerts.models import BrokerQuery
 from tom_alerts.views import CreateTargetFromAlertView
 from tom_common.hints import add_hint
 from tom_common.mixins import SuperuserRequiredMixin, Raise403PermissionRequiredMixin
+from tom_dataproducts.forms import AddProductToGroupForm, DataProductUploadForm
 from tom_dataproducts.views import DataProductDeleteView
-from tom_observations.facility import get_service_class as tom_facility_get_service_class
+from tom_observations.facility import get_service_class as tom_observations_get_service_class
+from tom_observations.facility import BaseManualObservationFacility
 from tom_observations.models import ObservationRecord, ObservationTemplate
 from tom_observations.observation_template import ApplyObservationTemplateForm
-from tom_observations.views import AddExistingObservationView
+from tom_observations.views import AddExistingObservationView, ObservationRecordDetailView
 from tom_targets.views import TargetDetailView
 
 # Local application/library specific imports.
@@ -40,6 +42,29 @@ from .forms import GOAQueryForm, GOALoginForm
 from .models import GOALogin
 from .astroquery_gemini import Observations as GOA
 from .utils import delete_associated_data_products
+
+
+class GOATSObservationRecordDetailView(ObservationRecordDetailView):
+    """View to override creating thumbnails."""
+
+    def get_context_data(self, *args, **kwargs):
+        """Override for avoiding "get_preview" and creating thumbnail."""
+        context = super(DetailView, self).get_context_data(*args, **kwargs)
+        context['form'] = AddProductToGroupForm()
+        facility = tom_observations_get_service_class(self.object.facility)()
+        facility.set_user(self.request.user)
+        context['editable'] = isinstance(facility, BaseManualObservationFacility)
+        context['data_products'] = facility.all_data_products(self.object)
+        context['can_be_cancelled'] = self.object.status not in facility.get_terminal_observing_states()
+
+        data_product_upload_form = DataProductUploadForm(
+            initial={
+                'observation_record': self.get_object(),
+                'referrer': reverse('tom_observations:detail', args=(self.get_object().id,))
+            }
+        )
+        context['data_product_form'] = data_product_upload_form
+        return context
 
 
 class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
@@ -92,14 +117,14 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
             return False
         return super().check_permissions(request)
 
-    def get(self, request: HttpRequest, observation_id: int) -> HttpResponse:
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
         """Handle the GET request to show the confirmation page.
 
         Parameters
         ----------
         request : `HttpRequest`
             The `HttpRequest` object.
-        observation_id : `int`
+        pk : `int`
             The ID of the observation record.
 
         Returns
@@ -107,20 +132,20 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
         `HttpResponse`
             The HttpResponse object rendering the confirmation page.
         """
-        observation_record = get_object_or_404(ObservationRecord, pk=observation_id)
+        observation_record = get_object_or_404(ObservationRecord, pk=pk)
         context = {
             "object": observation_record,
         }
         return render(request, self.template_name, context)
 
-    def post(self, request: HttpRequest, observation_id: int) -> HttpResponse:
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         """Handle the POST request to delete data products.
 
         Parameters
         ----------
         request : `HttpRequest`
             The `HttpRequest` object.
-        observation_id : `int`
+        pk : `int`
             The ID of the observation record.
 
         Returns
@@ -128,14 +153,14 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
         `HttpResponse`
             Redirects to the observation detail page after deletion.
         """
-        observation_record = get_object_or_404(ObservationRecord, pk=observation_id)
+        observation_record = get_object_or_404(ObservationRecord, pk=pk)
         try:
             delete_associated_data_products(observation_record)
             messages.success(request, "Data products deleted successfully.")
         except Exception as e:
             messages.error(request, f"Error during deletion: {e}")
 
-        return redirect(reverse("tom_observations:detail", args=[observation_id]))
+        return redirect(reverse("tom_observations:detail", args=[pk]))
 
 
 class GOATSDataProductDelieteView(DataProductDeleteView):
@@ -327,7 +352,7 @@ class GOAQueryFormView(View):
         observation_record = ObservationRecord.objects.get(pk=kwargs["pk"])
         if form.is_valid():
             # Do something with form.cleaned_data
-            service_class = tom_facility_get_service_class(form.cleaned_data["facility"])
+            service_class = tom_observations_get_service_class(form.cleaned_data["facility"])
 
             # Get GOA credentials.
             prop_data_msg = "Proprietary data will not be downloaded."

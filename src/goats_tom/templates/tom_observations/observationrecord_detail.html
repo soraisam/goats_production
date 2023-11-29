@@ -23,13 +23,6 @@
     <p class="my-auto"><strong>Status:</strong> {{ object.status }}</p>
   </div>
 </div>
-<div class="row">
-  <div class="col-md-6">
-    {% if image %}
-    <img src="{{ image }}" class="display">
-    {% endif %}
-  </div>
-</div>
 <hr class="mb-5" />
 {% render_goa_query_form %}
 {% render_launch_dragons %}
