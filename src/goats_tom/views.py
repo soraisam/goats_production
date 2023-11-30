@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.cache import cache
+from django.core import serializers
 from django.core.management import call_command
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpRequest, HttpResponseRedirect
@@ -19,7 +20,7 @@ from django.views.generic import TemplateView, View, FormView, DeleteView, Detai
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.utils.safestring import mark_safe
-from guardian.shortcuts import assign_perm, get_objects_for_user
+from guardian.shortcuts import assign_perm
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -42,6 +43,7 @@ from .forms import GOAQueryForm, GOALoginForm
 from .models import GOALogin
 from .astroquery_gemini import Observations as GOA
 from .utils import delete_associated_data_products
+from .tasks import download_goa_files
 
 
 class GOATSObservationRecordDetailView(ObservationRecordDetailView):
@@ -351,8 +353,6 @@ class GOAQueryFormView(View):
         form = GOAQueryForm(request.POST)
         observation_record = ObservationRecord.objects.get(pk=kwargs["pk"])
         if form.is_valid():
-            # Do something with form.cleaned_data
-            service_class = tom_observations_get_service_class(form.cleaned_data["facility"])
 
             # Get GOA credentials.
             prop_data_msg = "Proprietary data will not be downloaded."
@@ -362,17 +362,20 @@ class GOAQueryFormView(View):
                 GOA.login(goa_credentials.username, goa_credentials.password)
                 if not GOA.authenticated():
                     raise PermissionError
+                GOA.logout()
 
             except GOALogin.DoesNotExist:
                 messages.warning(request, f"GOA login credentials not found. {prop_data_msg}")
             except PermissionError:
                 messages.warning(request, f"GOA login failed. Re-enter login credentials. {prop_data_msg}")
 
-            # Must pass in product_id to avoid args and product_id issue.
-            service_class().save_data_products(
-                observation_record, request=request, query_params=form.cleaned_data["query_params"])
-            # At the end of this, clear the cookies to prevent other users.
-            GOA.logout()
+            query_params = form.cleaned_data["query_params"]
+
+            serialized_observation_record = serializers.serialize("json", [observation_record])
+
+            # Download in background.
+            download_goa_files(serialized_observation_record, query_params, request.user)
+            messages.info(request, "Downloading data in background. Check back soon!")
 
         else:
             # Pass the form with errors to the template

@@ -13,6 +13,7 @@ from datetime import date, datetime
 from multiprocessing import Pool
 import tarfile
 from typing import Any
+from gevent.threadpool import ThreadPool
 
 import astropy
 import astropy.units as u
@@ -580,9 +581,8 @@ class ObservationsClass(QueryWithLogin):
         """
         return self.url_helper.get_search_url(program_id)
 
-    def get_calibration_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True,
-                              remove_compressed_fits=True, remove_readme=True, **query_kwargs
-                              ) -> dict[str, Any]:
+    def get_calibration_files(self, dest_folder, *query_args, extract_dir=None, decompress_fits=True,
+                              remove_readme=True, **query_kwargs) -> dict[str, Any]:
         """Download all associated calibrations files as a tar archive. Will
         untar folder after download.
 
@@ -594,15 +594,10 @@ class ObservationsClass(QueryWithLogin):
             The folder where the tar archive should be saved.
         query_args : tuple
             Query arguments to pass to GOA query.
-        tar_name : str
-            The name of the output folder, default is
-            "goaquery-cal-YYYYMMDDHHMMSS".
+        extract_dir : Path or str
+            Where to extract the tar data.
         decompress_fits : bool, optional
             Decompress bz2 fits files, default is `True`.
-        remove_compressed_fits : bool, optional
-            If `True`, removes the compressed fits file(s) after
-            decompressing. `decompress_fits` must be `True`.
-            By default, `True`.
         remove_readme : bool, optional
             Removes the README and MD5 text files included in download, default
             is `True`.
@@ -618,16 +613,10 @@ class ObservationsClass(QueryWithLogin):
         # Assign argument to get calibrations.
         args = query_args + ("associated_calibrations",)
 
-        # Generate tar_filename based on tar_name or current time.
-        if tar_name is None:
-            timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-            tar_name = f"goaquery-cal-{timestamp}"
+        return self.get_files(dest_folder, *args, extract_dir=extract_dir, decompress_fits=decompress_fits,
+                              remove_readme=remove_readme, **query_kwargs)
 
-        return self.get_files(dest_folder, *args, tar_name=tar_name, decompress_fits=decompress_fits,
-                              remove_compressed_fits=remove_compressed_fits, remove_readme=remove_readme,
-                              **query_kwargs)
-
-    def get_files(self, dest_folder, *query_args, tar_name=None, decompress_fits=True, remove_readme=True,
+    def get_files(self, dest_folder, *query_args, extract_dir=None, decompress_fits=True, remove_readme=True,
                   **query_kwargs) -> dict[str, Any]:
         """Download all files associated with GOA query as a tar
         archive. Will untar folder after download.
@@ -640,9 +629,8 @@ class ObservationsClass(QueryWithLogin):
             The folder where the tar archive should be saved.
         query_args : tuple
             Query arguments to pass to GOA query.
-        tar_name : str
-            The name of the output folder, default is
-            "goaquery-YYYYMMDDHHMMSS".
+        extract_dir : Path or str
+            Where to extract the tar data.
         decompress_fits : bool, optional
             Decompress bz2 fits files, default is `True`.
         remove_readme : bool, optional
@@ -670,18 +658,25 @@ class ObservationsClass(QueryWithLogin):
         first_chunk = next(data)
         if b"No files to download." in first_chunk:
             response.close()
-            return {"message": "No available files to download. Verify search is valid.", "success": False}
+            return {
+                "downloaded_files": [],
+                "num_files_downloaded": 0,
+                "num_files_omitted": 0,
+                "message": "No available files to download. Verify search is valid.",
+                "search_url": url,
+                "success": False
+            }
 
-        # Generate tar_filename based on tar_name or current time.
-        tar_name = tar_name or f"goaquery-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        # Generate tar_filename based on current time.
+        tar_name = f"goaquery-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}"
 
         # Write the tarball to file.
         tar_filename = f"{tar_name}.tar"
         dest_folder.mkdir(parents=True, exist_ok=True)
-        dest_path = dest_folder / tar_filename
+        tar_path = dest_folder / tar_filename
 
         # Stream download.
-        with open(dest_path, "wb") as f:
+        with open(tar_path, "wb") as f:
             f.write(first_chunk)
             for chunk in data:
                 f.write(chunk)
@@ -690,13 +685,14 @@ class ObservationsClass(QueryWithLogin):
 
         # Extract the tar archive.
         # Create the extract directory.
-        extract_dir = dest_folder / tar_name
+        if extract_dir is None:
+            extract_dir = dest_folder / tar_name
         extract_dir.mkdir(parents=True, exist_ok=True)
-        with tarfile.open(dest_path, "r") as tar:
+        with tarfile.open(tar_path, "r") as tar:
             tar.extractall(path=extract_dir)
 
         # Remove tarfile.
-        dest_path.unlink()
+        tar_path.unlink()
         # Build download statistics.
         download_info = self._generate_download_info(extract_dir)
 
@@ -706,10 +702,22 @@ class ObservationsClass(QueryWithLogin):
                 file_path = extract_dir / file_name
                 if file_path.exists():
                     file_path.unlink()
+
         # Decompress inner files.
         if decompress_fits:
-            file_paths = list(extract_dir.glob("*.bz2"))
-            self._decompress_bz2_parallel(file_paths)
+            file_paths = [(extract_dir / filename) for filename in download_info["downloaded_files"]]
+            parallize = True
+            if parallize:
+                self._gevent_decompress_bz2_parallel(file_paths)
+            else:
+                for f in file_paths:
+                    self._decompress_bz2(f)
+
+            # Remove the ".bz2" from file name if decompressed.
+            download_info["downloaded_files"] = [
+                filename.replace(".bz2", "") for filename in download_info["downloaded_files"]
+            ]
+
         return download_info
 
     def _generate_download_info(self, extract_dir: Path) -> dict[str, int]:
@@ -776,7 +784,7 @@ class ObservationsClass(QueryWithLogin):
 
         return download_info
 
-    def _decompress_bz2_parallel(self, file_paths):
+    def _decompress_bz2_parallel(self, file_paths: list[Path]) -> None:
         """Parallize decompressing files.
 
         Parameters
@@ -784,10 +792,11 @@ class ObservationsClass(QueryWithLogin):
         file_paths : list[Paths]
             List of file paths to decompress.
         """
-        with Pool() as pool:
+        print("starting multi")
+        with Pool(2) as pool:
             pool.map(self._decompress_bz2, file_paths)
 
-    def _decompress_bz2(self, file_path):
+    def _decompress_bz2(self, file_path: Path) -> None:
         """Decompress a .bz2 file and write to the same filename.
 
         This will overwrite any files that already exist.
@@ -804,6 +813,18 @@ class ObservationsClass(QueryWithLogin):
                 out_file.write(chunk)
 
         file_path.unlink()
+
+    def _gevent_decompress_bz2_parallel(self, file_paths: list[Path]) -> None:
+        """Parallelize decompressing files compatible with "gevent" and "huey".
+
+        Parameters
+        ----------
+        file_paths : `list[Paths]`
+            List of file paths to decompress.
+        """
+        pool = ThreadPool(8)
+        pool.map(self._decompress_bz2, file_paths)
+        pool.join()
 
 
 def _gemini_json_to_table(json):
