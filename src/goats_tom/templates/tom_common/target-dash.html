@@ -1,0 +1,36 @@
+{% extends 'tom_common/base.html' %}
+{% load comments bootstrap4 tom_common_extras targets_extras observation_extras dataproduct_extras static cache gemini %}
+{% block additional_css %}
+<link rel="stylesheet" href="{% static 'tom_common/css/main.css' %}">
+<link rel="stylesheet" href="{% static 'tom_targets/css/main.css' %}">
+{% endblock %}
+{% block content %}
+  <div class="row">
+    <div class="col-md-4">
+      <div id="target-info">
+        <h3>{{ target.name }}</h3>
+        {% target_buttons target %}
+        {% target_data target %}
+        {% recent_photometry target limit=3 %}
+        {% share_data target %}
+        {% if target.type == 'SIDEREAL' %}
+        {% aladin target %}
+        {% endif %}
+        {% comments_enabled as comments_are_enabled %}
+        <hr/>
+        <h5>Comments</h5>
+          {% if comments_are_enabled %}
+            {% render_comment_list for target %}
+            {% url 'targets:detail' target.id as next %}
+            {% if user.is_authenticated %}
+              {% render_comment_form for target %}
+            {% endif %}
+          {% endif %}
+      </div>
+    </div>
+    <div class="col-md-8">
+      {% block target_obs_content %}
+      {% endblock %}
+    </div>
+  </div>
+{% endblock %}

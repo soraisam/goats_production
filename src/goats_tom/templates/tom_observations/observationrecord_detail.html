@@ -1,10 +1,10 @@
-{% extends 'tom_common/base.html' %}
+{% extends 'tom_common/target-dash.html' %}
 {% load bootstrap4 static observation_extras dataproduct_extras gemini tom_overrides%}
-{% block title %} Observation record: {{ object.id }} {% endblock %}
+{% block title %} Observation record: {{ observationrecord.id }} {% endblock %}
 {% block additional_css %}
 <link rel="stylesheet" href="{% static 'tom_observations/css/main.css' %}">
 {% endblock %}
-{% block content %}
+{% block target_obs_content %}
 <div class="row">
   <div class="col text-center">
     <h2>{{ object }}</h2>

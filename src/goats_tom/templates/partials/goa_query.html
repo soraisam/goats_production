@@ -8,7 +8,7 @@
       {% endfor %}
   </ul>
   {% endif %}
-  <form method="post" action="{% url 'goa_query' object.id%}">
+  <form method="post" action="{% url 'goa_query' observationrecord.id%}">
     {% csrf_token %}
     <div class="form-row justify-content-center">
       <div class="col-md-5">
