@@ -1,0 +1,1 @@
+Enhanced GOATS CLI for worker management: Extended the GOATS command-line interface to include the `--workers` option in the `goats run` command, enabling users to spin up or down `greenlet`` workers as needed. This feature allows for flexible worker management while maintaining a lightweight footprint, though users should be cautious not to start too many or too few workers.

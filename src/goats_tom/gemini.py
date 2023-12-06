@@ -597,6 +597,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         Skips downloading if the data is proprietary and the user is not
         authenticated.
         """
+        # TODO: Extract this out to TOMToolkit.
         final_products = []
         target = observation_record.target
         facility = observation_record.facility
@@ -626,8 +627,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                     name_reduction_map = _create_name_reduction_map(file_list)
 
                     science_download_info = GOA.get_files(target_path, *args, tar_name=facility,
-                                                          decompress_fits=True, remove_compressed_fits=True,
-                                                          **kwargs)
+                                                          decompress_fits=True, **kwargs)
 
                     if request:
                         if science_download_info["success"]:
@@ -642,8 +642,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                     # Only need to specify program ID.
                     calibration_kwargs = {"progid": observation_record.observation_id}
                     calibration_download_info = GOA.get_calibration_files(
-                        target_path, *args, tar_name=facility, decompress_fits=True,
-                        remove_compressed_fits=True, **calibration_kwargs)
+                        target_path, *args, tar_name=facility, decompress_fits=True, **calibration_kwargs)
 
                     if request:
                         if calibration_download_info["success"]:

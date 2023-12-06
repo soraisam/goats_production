@@ -23,6 +23,8 @@ dependencies = [
     "click",
     "werkzeug",
     "django-cors-headers",
+    "huey>=2.5.0",
+    "greenlet==2.0.2"
 ]
 
 version = "23.11.0"

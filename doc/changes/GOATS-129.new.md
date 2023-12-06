@@ -1,0 +1,1 @@
+Implemented Huey for background tasks: Integrated Huey, a lightweight Python task queue, into GOATS to handle background tasks using sqlite3. This addition streamlines the data download process, eliminating the need for users to endure unresponsive periods during downloads and keeps the application lightweight by avoiding complex libraries.

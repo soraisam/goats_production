@@ -3,6 +3,7 @@ __all__ = ["cli"]
 from pathlib import Path
 import shutil
 import subprocess
+import threading
 from typing import IO, Any
 
 # Related third party imports.
@@ -11,6 +12,7 @@ from click._compat import get_text_stderr
 
 # Local application/library specific imports.
 from .modify_settings import modify_settings
+from .modify_manage import modify_manage
 
 
 class GOATSClickException(click.ClickException):
@@ -45,7 +47,7 @@ def cli(ctx):
         click.echo(ctx.get_help())
 
 
-@click.command(help=("Installs GOATS and antares2goats browser extension if specified."))
+@click.command(help=("Installs GOATS."))
 @click.option("-p", "--project-name", default="GOATS", type=str,
               help="Specify a custom project name. Default is 'GOATS'.")
 @click.option("-d", "--directory", default=Path.cwd(), type=Path,
@@ -99,6 +101,9 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
         # Get the path for the 'manage.py' file.
         manage_file = project_path / "manage.py"
 
+        # Modify the manage file for Huey.
+        modify_manage(manage_file)
+
         # Setup the TOM Toolkit.
         subprocess.run([f"{manage_file}", "goats_setup"], check=True)
 
@@ -119,15 +124,16 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
                                   f" {error.returncode}.")
 
 
-@click.command(help=("Starts the server for GOATS."))
+@click.command(help=("Starts the server and workers for GOATS."))
 @click.option("-p", "--project-name", default="GOATS", type=str,
               help="Specify a custom project name. Default is 'GOATS'.")
 @click.option("-d", "--directory", default=Path.cwd(), type=Path,
               help=("Specify the parent directory where GOATS is installed. "
                     "Default is the current directory."))
-@click.option("--reloader", is_flag=True, help="Runs the server with reloader for active development.")
-def run(project_name: str, directory: Path | str, reloader: bool) -> None:
-    """Starts the server for GOATS.
+@click.option("-w", "--workers", default=3, type=int,
+              help="Number of workers to spawn for background tasks.")
+def run(project_name: str, directory: Path | str, workers: int) -> None:
+    """Starts the server and workers for GOATS.
 
     Parameters
     ----------
@@ -135,9 +141,8 @@ def run(project_name: str, directory: Path | str, reloader: bool) -> None:
         The name of the project to be started.
     directory : `Path | str`
         The directory where the project is installed.
-    reloader : `bool`
-        Runs the server with the reloader option enabled for active
-        development.
+    workers : `int`
+        The number of workers to spawn for background tasks.
 
     Raises
     ------
@@ -157,16 +162,60 @@ def run(project_name: str, directory: Path | str, reloader: bool) -> None:
         raise GOATSClickException(f"The 'manage.py' file for the project '{project_name}' does not at exist "
                                   f"at '{manage_file.absolute()}'.")
     display_ok()
+
+    display_message("Starting GOATS and background workers:", show_goats_emoji=False)
+    # Start Huey consumer in a separate thread
+    huey_thread = threading.Thread(target=start_huey_consumer, args=(str(manage_file), workers))
+    huey_thread.start()
+
+    # Start Django server in a separate thread
+    django_thread = threading.Thread(target=start_django_server, args=(str(manage_file),))
+    django_thread.start()
+
+    # Keep the main thread running while sub-threads are working
+    django_thread.join()
+    huey_thread.join()
+
+
+def start_django_server(manage_file: Path) -> None:
+    """Starts the Django development server.
+
+    Parameters
+    ----------
+    manage_file : `Path`
+        Path to the GOATS manage file.
+
+    Raises
+    ------
+    GOATSClickException
+        Raised if issue starting Django server.
+    """
     try:
-        # Start the dev server, not meant for production.
-        if reloader:
-            subprocess.run([f"{manage_file}", "runserver_plus"], check=True)
-        else:
-            subprocess.run([f"{manage_file}", "runserver"], check=True)
+        subprocess.run([f"{manage_file}", "runserver"], check=True)
     except subprocess.CalledProcessError as error:
-        cmd_str = " ".join(error.cmd)
-        raise GOATSClickException(f"An error occurred while running the command: '{cmd_str}'. Exit status: "
-                                  f"{error.returncode}.")
+        raise GOATSClickException(f"Error running Django server: '{error.cmd}'. "
+                                  f"Exit status: {error.returncode}.")
+
+
+def start_huey_consumer(manage_file: Path, workers: int) -> None:
+    """Starts the Huey consumer with "greenlet" workers.
+
+    Parameters
+    ----------
+    manage_file : `Path`
+        Path to the GOATS manage file.
+
+    Raises
+    ------
+    GOATSClickException
+        Raised if issue starting Huey consumers.
+    """
+    try:
+        subprocess.run(
+            [f"{manage_file}", "run_huey", "--workers", f"{workers}"], check=True)
+    except subprocess.CalledProcessError as error:
+        raise GOATSClickException(f"Error running Huey consumer: '{error.cmd}'. "
+                                  f"Exit status: {error.returncode}.")
 
 
 def display_message(message: str, show_goats_emoji: bool = True, color: str = "cyan") -> None:

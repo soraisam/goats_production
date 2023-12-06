@@ -10,7 +10,7 @@ class Conf(_config.ConfigNamespace):
     GOA_SERVER = _config.ConfigItem('https://archive.gemini.edu', 'URL for GOA server.')
     GOA_TIMEOUT = _config.ConfigItem(5, 'Time limit for connecting to GOA server.')
     GOA_RADIUS = _config.ConfigItem("0.3 deg", 'Default query radius if not provided.')
-    GOA_CHUNK_SIZE = _config.ConfigItem(100*1024*1024, "Chunk size to read/download files.")
+    GOA_CHUNK_SIZE = _config.ConfigItem(20*1024*1024, "Chunk size to read/download files.")
 
 
 conf = Conf()
