@@ -119,7 +119,7 @@ HUEY = {
     'immediate': False,  # If DEBUG=True, run synchronously.
     'utc': True,  # Use UTC for all times internally.
     'consumer': {
-        'workers': 1,
+        'workers': 3,
         'worker_type': 'greenlet',
         'initial_delay': 0.1,  # Smallest polling interval, same as -d.
         'backoff': 1.15,  # Exponential backoff using this rate, -b.

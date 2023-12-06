@@ -792,8 +792,8 @@ class ObservationsClass(QueryWithLogin):
         file_paths : list[Paths]
             List of file paths to decompress.
         """
-        print("starting multi")
-        with Pool(2) as pool:
+        # TODO: Make n cores a configuration.
+        with Pool() as pool:
             pool.map(self._decompress_bz2, file_paths)
 
     def _decompress_bz2(self, file_path: Path) -> None:
@@ -822,7 +822,8 @@ class ObservationsClass(QueryWithLogin):
         file_paths : `list[Paths]`
             List of file paths to decompress.
         """
-        pool = ThreadPool(8)
+        # TODO: Make gevent threads a configuration.
+        pool = ThreadPool(10)
         pool.map(self._decompress_bz2, file_paths)
         pool.join()
 
