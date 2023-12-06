@@ -26,7 +26,13 @@ def render_goa_query_form(context: template.context.RequestContext) -> dict[str,
     """
     form = GOAQueryForm()
     # Need to pass in the context of the object for partial to work.
-    return {"form": form, "object": context.get("object", {})}
+    observationrecord = context.get("object", {})
+    return {
+        "form": form,
+        "observationrecord": observationrecord,
+        "object": observationrecord,
+        "target": observationrecord.target
+    }
 
 
 @register.inclusion_tag("partials/launch_dragons.html", takes_context=True)

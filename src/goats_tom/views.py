@@ -55,13 +55,15 @@ class GOATSObservationRecordDetailView(ObservationRecordDetailView):
         context['form'] = AddProductToGroupForm()
         facility = tom_observations_get_service_class(self.object.facility)()
         facility.set_user(self.request.user)
+        observation_record = self.get_object()
+
         context['editable'] = isinstance(facility, BaseManualObservationFacility)
         context['data_products'] = facility.all_data_products(self.object)
         context['can_be_cancelled'] = self.object.status not in facility.get_terminal_observing_states()
-
+        context['target'] = observation_record.target
         data_product_upload_form = DataProductUploadForm(
             initial={
-                'observation_record': self.get_object(),
+                'observation_record': observation_record,
                 'referrer': reverse('tom_observations:detail', args=(self.get_object().id,))
             }
         )

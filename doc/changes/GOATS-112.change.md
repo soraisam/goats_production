@@ -1,0 +1,1 @@
+Modified view for observations: Included the target sidebar in the observation view to provide a cohesive user experience, enabling users to see target information alongside specific observation details.
