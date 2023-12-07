@@ -8,6 +8,7 @@ from tom_alerts.views import BrokerQueryListView
 from . import views
 
 # TODO: Add app_name and update paths and URL lookups.
+# TODO: Make unified path formats.
 
 urlpatterns = [path("observations/<int:pk>/delete-data-products/", views.DeleteObservationDataProductsView.
                     as_view(), name="delete-observation-data-products"),
@@ -27,4 +28,6 @@ urlpatterns = [path("observations/<int:pk>/delete-data-products/", views.DeleteO
                path("users/<int:pk>/generate_token/", views.UserGenerateTokenView.as_view(),
                     name="user-generate-token"),
                path("users/<int:pk>/goa_login/", views.GOALoginView.as_view(), name="user-goa-login"),
-               path("goa_query/<int:pk>/", views.GOAQueryFormView.as_view(), name="goa_query"),]
+               path("goa_query/<int:pk>/", views.GOAQueryFormView.as_view(), name="goa_query"),
+               path("api/ongoing-tasks/", views.ongoing_tasks, name="ongoing_tasks"),
+               path("recent-downloads/", views.recent_downloads, name="recent_downloads"),]

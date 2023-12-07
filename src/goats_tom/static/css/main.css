@@ -167,3 +167,9 @@ footer {
 .shadow-xl {
   box-shadow: 0 15px 35px hsla(0deg 0% 0% / 20%);
 }
+
+.download-tasks-container {
+  max-height: 300px; /* Adjust as needed */
+  padding: 10px;
+  width: 700px;
+}

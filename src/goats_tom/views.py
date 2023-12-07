@@ -13,7 +13,8 @@ from django.core.cache import cache
 from django.core import serializers
 from django.core.management import call_command
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpRequest, HttpResponseRedirect
+from django.db.models import Q
+from django.http import HttpResponse, HttpRequest, HttpResponseRedirect, JsonResponse
 from django.forms import Form
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView, View, FormView, DeleteView, DetailView
@@ -40,10 +41,64 @@ from tom_targets.views import TargetDetailView
 
 # Local application/library specific imports.
 from .forms import GOAQueryForm, GOALoginForm
-from .models import GOALogin
+from .models import GOALogin, TaskProgress
 from .astroquery_gemini import Observations as GOA
 from .utils import delete_associated_data_products
 from .tasks import download_goa_files
+
+
+def recent_downloads(request: HttpRequest) -> HttpResponse:
+    """Handle requests to the recent downloads page, displaying a list of
+    completed tasks.
+
+    Fetches all completed `TaskProgress` instances, sorted by start time in
+    descending order, and renders them to the 'recent_downloads.html' template.
+
+    Parameters
+    ----------
+    request : `HttpRequest`
+        The HTTP request object.
+
+    Returns
+    -------
+    `HttpResponse`
+        The rendered HTML response containing the recent downloads.
+    """
+    # Fetch all TaskProgress instances
+    tasks = TaskProgress.objects.filter(done=True).order_by("-start_time")
+
+    # Pass the tasks to the template
+    context = {
+        "tasks": tasks
+    }
+    return render(request, "recent_downloads.html", context)
+
+
+def ongoing_tasks(request: HttpRequest) -> JsonResponse:
+    """Provide a JSON response with a list of ongoing tasks.
+
+    Fetches all ongoing `TaskProgress` instances that are not marked as done.
+    Additionally, updates the "done" status of tasks that are completed or
+    failed.
+
+    Parameters
+    ----------
+    request : `HttpRequest`
+        The HTTP request object.
+
+    Returns
+    -------
+    `JsonResponse`
+        A JSON response containing the ongoing tasks.
+    """
+    # First, evaluate the QuerySet and get the current tasks data
+    tasks = list(TaskProgress.objects.filter(done=False).values("task_id", "progress", "status"))
+
+    # Now update "done" to True for tasks that are completed or failed
+    TaskProgress.objects.filter(Q(status="completed") | Q(status="failed")).update(done=True)
+
+    # Return the evaluated tasks list
+    return JsonResponse(tasks, safe=False)
 
 
 class GOATSObservationRecordDetailView(ObservationRecordDetailView):
@@ -52,22 +107,22 @@ class GOATSObservationRecordDetailView(ObservationRecordDetailView):
     def get_context_data(self, *args, **kwargs):
         """Override for avoiding "get_preview" and creating thumbnail."""
         context = super(DetailView, self).get_context_data(*args, **kwargs)
-        context['form'] = AddProductToGroupForm()
+        context["form"] = AddProductToGroupForm()
         facility = tom_observations_get_service_class(self.object.facility)()
         facility.set_user(self.request.user)
         observation_record = self.get_object()
 
-        context['editable'] = isinstance(facility, BaseManualObservationFacility)
-        context['data_products'] = facility.all_data_products(self.object)
-        context['can_be_cancelled'] = self.object.status not in facility.get_terminal_observing_states()
-        context['target'] = observation_record.target
+        context["editable"] = isinstance(facility, BaseManualObservationFacility)
+        context["data_products"] = facility.all_data_products(self.object)
+        context["can_be_cancelled"] = self.object.status not in facility.get_terminal_observing_states()
+        context["target"] = observation_record.target
         data_product_upload_form = DataProductUploadForm(
             initial={
-                'observation_record': observation_record,
-                'referrer': reverse('tom_observations:detail', args=(self.get_object().id,))
+                "observation_record": observation_record,
+                "referrer": reverse("tom_observations:detail", args=(self.get_object().id,))
             }
         )
-        context['data_product_form'] = data_product_upload_form
+        context["data_product_form"] = data_product_upload_form
         return context
 
 
