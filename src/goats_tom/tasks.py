@@ -9,13 +9,24 @@ from huey.contrib.djhuey import db_task
 from tom_dataproducts.models import DataProduct
 from .astroquery_gemini import Observations as GOA
 from .utils import create_name_reduction_map
-from .models import GOALogin
+from .models import GOALogin, TaskProgress
 
 logger = logging.getLogger(__name__)
 
 
 @db_task()
 def download_goa_files(serialized_observation_record, query_params, user: int):
+    # Only ever one observation record passed.
+    observation_record = list(serializers.deserialize("json", serialized_observation_record))[0].object
+    target = observation_record.target
+    facility = observation_record.facility
+    # Create TaskProgress record at the start
+    task_progress = TaskProgress.objects.create(
+        task_id=observation_record.observation_id,
+        progress=1,
+        status="running",
+    )
+
     # Have to handle logging in for each task.
     prop_data_msg = "Proprietary data will not be downloaded."
     try:
@@ -29,11 +40,6 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
         logger.warning(f"GOA login credentials not found. {prop_data_msg}")
     except PermissionError:
         logger.warning(f"GOA login failed. Re-enter login credentials. {prop_data_msg}")
-
-    # Only ever one observation record passed.
-    observation_record = list(serializers.deserialize("json", serialized_observation_record))[0].object
-    target = observation_record.target
-    facility = observation_record.facility
 
     # Get target path.
     target_path = Path(f"{settings.MEDIA_ROOT}/{target.name}")
@@ -64,6 +70,8 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
             sci_out = GOA.get_files(target_path, *args, extract_dir=target_facility_path,
                                     decompress_fits=True, **kwargs)
             sci_files = sci_out["downloaded_files"]
+            task_progress.progress += 45
+            task_progress.save()
 
         if not download_calibration == "no":
             print(f"{observation_record.observation_id}: Downloading calibration files...")
@@ -75,6 +83,9 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
                                                 **calibration_kwargs)
             cal_files = cal_out["downloaded_files"]
 
+        task_progress.progress = 90
+        task_progress.save()
+
     except HTTPError as e:
         if e.response.status_code == 403:
             logger.error("You are not authorized to download this data.")
@@ -83,6 +94,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
 
     # Handle case if GOA found nothing and did not create folder.
     if not target_facility_path.exists():
+        task_progress.finish()
         return
 
     downloaded_files = sci_files + cal_files
@@ -117,3 +129,4 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
             logger.info("Saved new dataproduct from tarfile: %s", dp.data)
 
     GOA.logout()
+    task_progress.finish()
