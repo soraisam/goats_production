@@ -1,4 +1,4 @@
-__all__ = ["delete_associated_data_products", "create_name_reduction_map"]
+__all__ = ["delete_associated_data_products", "create_name_reduction_map", "custom_data_product_path"]
 from astropy.table import Table
 
 from tom_dataproducts.models import DataProduct, ReducedDatum
@@ -50,3 +50,25 @@ def create_name_reduction_map(file_list: Table) -> dict[str, str]:
         A dictionary mapping file 'name' to their 'reduction' values.
     """
     return {row['name']: row['reduction'] for row in file_list}
+
+
+def custom_data_product_path(data_product: DataProduct, filename: str) -> str:
+    """Override where data products are saved. This is set in "settings.py"
+
+    Parameters
+    ----------
+    data_product : `DataProduct`
+        The data product to save.
+    filename : `str`
+        The filename to use.
+
+    Returns
+    -------
+    `str`
+        The path to the data product.
+    """
+    if data_product.observation_record is not None:
+        return (f"{data_product.target.name}/{data_product.observation_record.facility}"
+                f"/{data_product.observation_record.observation_id}/{filename}")
+    else:
+        return f"{data_product.target.name}/none/none/{filename}"

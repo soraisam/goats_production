@@ -581,7 +581,7 @@ class ObservationsClass(QueryWithLogin):
         """
         return self.url_helper.get_search_url(program_id)
 
-    def get_calibration_files(self, dest_folder, *query_args, extract_dir=None, decompress_fits=True,
+    def get_calibration_files(self, dest_folder, *query_args, decompress_fits=True,
                               remove_readme=True, **query_kwargs) -> dict[str, Any]:
         """Download all associated calibrations files as a tar archive. Will
         untar folder after download.
@@ -591,64 +591,60 @@ class ObservationsClass(QueryWithLogin):
         Parameters
         ----------
         dest_folder : Path or str
-            The folder where the tar archive should be saved.
+            The folder where the tar archive should be saved and extracted
+            files moved to.
         query_args : tuple
             Query arguments to pass to GOA query.
-        extract_dir : Path or str
-            Where to extract the tar data.
         decompress_fits : bool, optional
             Decompress bz2 fits files, default is `True`.
         remove_readme : bool, optional
-            Removes the README and MD5 text files included in download, default
-            is `True`.
+            Remove README and MD5 text files included in download, default is
+            `True`.
         query_kwargs : dict
             Query keyword arguments to pass to GOA query.
 
         Returns
         -------
-        `dict[str, int]`
+        dict[str, Any]
             A dictionary containing the number of files downloaded, the number
             of files omitted, a human-readable message, and boolean success.
         """
         # Assign argument to get calibrations.
         args = query_args + ("associated_calibrations",)
 
-        return self.get_files(dest_folder, *args, extract_dir=extract_dir, decompress_fits=decompress_fits,
+        return self.get_files(dest_folder, *args, decompress_fits=decompress_fits,
                               remove_readme=remove_readme, **query_kwargs)
 
-    def get_files(self, dest_folder, *query_args, extract_dir=None, decompress_fits=True, remove_readme=True,
+    def get_files(self, dest_folder, *query_args, decompress_fits=True, remove_readme=True,
                   **query_kwargs) -> dict[str, Any]:
-        """Download all files associated with GOA query as a tar
-        archive. Will untar folder after download.
-
-        This will overwrite any files that already exist.
+        """
+        Download all files associated with a GOA query as a tar
+        archive and optionally decompress bz2 files.
 
         Parameters
         ----------
         dest_folder : Path or str
-            The folder where the tar archive should be saved.
+            The folder where the tar archive should be saved and extracted
+            files moved to.
         query_args : tuple
             Query arguments to pass to GOA query.
-        extract_dir : Path or str
-            Where to extract the tar data.
         decompress_fits : bool, optional
             Decompress bz2 fits files, default is `True`.
         remove_readme : bool, optional
-            Removes the README and MD5 text files included in download, default
-            is `True`.
+            Remove README and MD5 text files included in download, default is
+            `True`.
         query_kwargs : dict
             Query keyword arguments to pass to GOA query.
 
         Returns
         -------
-        `dict[str, int]`
+        dict[str, Any]
             A dictionary containing the number of files downloaded, the number
             of files omitted, a human-readable message, and boolean success.
         """
         # Convert destination folder.
         dest_folder = Path(dest_folder).expanduser()
         url = self.url_helper.get_tar_file_url(*query_args, **query_kwargs)
-        print(url)
 
         response = self._session.get(url, stream=True)
         response.raise_for_status()
@@ -668,44 +664,37 @@ class ObservationsClass(QueryWithLogin):
             }
 
         # Generate tar_filename based on current time.
-        tar_name = f"goaquery-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}"
-
-        # Write the tarball to file.
-        tar_filename = f"{tar_name}.tar"
+        tar_name = f"goaquery-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}.tar"
         dest_folder.mkdir(parents=True, exist_ok=True)
-        tar_path = dest_folder / tar_filename
+        tar_path = dest_folder / tar_name
 
         # Stream download.
         with open(tar_path, "wb") as f:
             f.write(first_chunk)
             for chunk in data:
                 f.write(chunk)
-
         response.close()
 
         # Extract the tar archive.
-        # Create the extract directory.
-        if extract_dir is None:
-            extract_dir = dest_folder / tar_name
-        extract_dir.mkdir(parents=True, exist_ok=True)
         with tarfile.open(tar_path, "r") as tar:
-            tar.extractall(path=extract_dir)
+            tar.extractall(path=dest_folder)
 
         # Remove tarfile.
         tar_path.unlink()
+
         # Build download statistics.
-        download_info = self._generate_download_info(extract_dir)
+        download_info = self._generate_download_info(dest_folder)
 
         # Delete additional files if wanted.
         if remove_readme:
             for file_name in ["README.txt", "md5sums.txt"]:
-                file_path = extract_dir / file_name
+                file_path = dest_folder / file_name
                 if file_path.exists():
                     file_path.unlink()
 
         # Decompress inner files.
         if decompress_fits:
-            file_paths = [(extract_dir / filename) for filename in download_info["downloaded_files"]]
+            file_paths = [(dest_folder / filename) for filename in download_info["downloaded_files"]]
             parallize = True
             if parallize:
                 self._gevent_decompress_bz2_parallel(file_paths)
@@ -713,7 +702,7 @@ class ObservationsClass(QueryWithLogin):
                 for f in file_paths:
                     self._decompress_bz2(f)
 
-            # Remove the ".bz2" from file name if decompressed.
+            # Update file names in download_info.
             download_info["downloaded_files"] = [
                 filename.replace(".bz2", "") for filename in download_info["downloaded_files"]
             ]
