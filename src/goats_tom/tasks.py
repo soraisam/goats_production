@@ -1,4 +1,3 @@
-from pathlib import Path
 import logging
 from requests.exceptions import HTTPError
 
@@ -20,6 +19,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
     observation_record = list(serializers.deserialize("json", serialized_observation_record))[0].object
     target = observation_record.target
     facility = observation_record.facility
+    observation_id = observation_record.observation_id
     # Create TaskProgress record at the start
     task_progress = TaskProgress.objects.create(
         task_id=observation_record.observation_id,
@@ -42,8 +42,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
         logger.warning(f"GOA login failed. Re-enter login credentials. {prop_data_msg}")
 
     # Get target path.
-    target_path = Path(f"{settings.MEDIA_ROOT}/{target.name}")
-    target_facility_path = target_path / facility
+    target_facility_path = settings.MEDIA_ROOT / target.name / facility / observation_id
 
     # Set default args and kwargs if not provided in query_params.
     args = query_params.get("args", ())
@@ -67,7 +66,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
             file_list = GOA.query_criteria(*args, **kwargs)
             # Create the mapping.
             name_reduction_map = create_name_reduction_map(file_list)
-            sci_out = GOA.get_files(target_path, *args, extract_dir=target_facility_path,
+            sci_out = GOA.get_files(target_facility_path, *args,
                                     decompress_fits=True, **kwargs)
             sci_files = sci_out["downloaded_files"]
             task_progress.progress += 45
@@ -78,7 +77,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
             # Query GOA for calibration tarfile.
             # Only need to specify program ID.
             calibration_kwargs = {"progid": observation_record.observation_id}
-            cal_out = GOA.get_calibration_files(target_path, *args, extract_dir=target_facility_path,
+            cal_out = GOA.get_calibration_files(target_facility_path, *args,
                                                 decompress_fits=True,
                                                 **calibration_kwargs)
             cal_files = cal_out["downloaded_files"]
@@ -117,7 +116,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
             dp = candidates.first()
         else:
             # Otherwise, create a new DataProduct.
-            data_product_name = f"{target.name}/{facility}/{file_path.name}"
+            data_product_name = f"{target.name}/{facility}/{observation_id}/{file_path.name}"
             dp = DataProduct.objects.create(
                 product_id=product_id,
                 target=target,
