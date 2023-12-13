@@ -113,7 +113,7 @@ function createProgressBar(task) {
   const progressBarDiv = document.createElement("div");
   progressBarDiv.className = "progress";
   const progressBar = document.createElement("div");
-  progressBar.classList.add("progress-bar", "progress-bar-striped", "progress-bar-animated");
+  progressBar.classList.add("progress-bar", "progress-bar-striped", "progress-bar-animated", "bg-info");
   progressBar.id = `progress-${task.task_id}`;
   progressBar.setAttribute("role", "progressbar");
   progressBar.setAttribute("aria-valuenow", task.progress);

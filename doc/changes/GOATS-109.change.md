@@ -1,0 +1,1 @@
+Implemented dark mode and enhanced UI flexibility: Switched to dark mode for GOATS, limited to light or dark because bootstrap 4 does not support switching using themes. Integrated Font Awesome icons to improve the user interface aesthetics and enabled setting Plotly theme from Django settings for customizable visualizations.
