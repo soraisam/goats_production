@@ -7,7 +7,7 @@
 {% block target_obs_content %}
 <div class="row">
   <div class="col text-center">
-    <h2>{{ object }}</h2>
+    <h2>{{ object.observation_id }} @{{ object.facility }}</h2>
   </div>
 </div>
 <div class="row mb-5">
@@ -16,9 +16,9 @@
       <p>{% update_observation_id_form object %}</p>
     {% endif %}
 
-    <p class="my-auto"><strong>Observation ID:</strong> {{ object.observation_id }}{% if object.url %}
+    {% if object.url %}
       <a class="btn btn-success ml-3" href="{{ object.url }}" target="_blank">View at observatory »</a>
-      {% endif %}</p>
+    {% endif %}
     <p class="my-auto"><strong>Created:</strong> {{ object.created }} <strong>Modified:</strong> {{ object.modified }}</p>
     <p class="my-auto"><strong>Status:</strong> {{ object.status }}</p>
   </div>
