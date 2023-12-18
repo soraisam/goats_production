@@ -1,17 +1,13 @@
 # Standard library imports.
 from datetime import datetime
-from io import StringIO
 import json
 from typing import Any
-from urllib.parse import urlencode
 
 # Related third party imports.
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.core.cache import cache
 from django.core import serializers
-from django.core.management import call_command
 from django.db import IntegrityError
 from django.db.models import Q
 from django.http import HttpResponse, HttpRequest, HttpResponseRedirect, JsonResponse
@@ -20,24 +16,18 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView, View, FormView, DeleteView, DetailView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
-from django.utils.safestring import mark_safe
-from guardian.shortcuts import assign_perm
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from tom_alerts.alerts import get_service_class as tom_alerts_get_service_class
 from tom_alerts.models import BrokerQuery
-from tom_alerts.views import CreateTargetFromAlertView
-from tom_common.hints import add_hint
 from tom_common.mixins import SuperuserRequiredMixin, Raise403PermissionRequiredMixin
 from tom_dataproducts.forms import AddProductToGroupForm, DataProductUploadForm
 from tom_dataproducts.views import DataProductDeleteView
 from tom_observations.facility import get_service_class as tom_observations_get_service_class
 from tom_observations.facility import BaseManualObservationFacility
-from tom_observations.models import ObservationRecord, ObservationTemplate
-from tom_observations.observation_template import ApplyObservationTemplateForm
-from tom_observations.views import AddExistingObservationView, ObservationRecordDetailView
-from tom_targets.views import TargetDetailView
+from tom_observations.models import ObservationRecord
+from tom_observations.views import ObservationRecordDetailView
 
 # Local application/library specific imports.
 from .forms import GOAQueryForm, GOALoginForm
@@ -245,59 +235,6 @@ class GOATSDataProductDelieteView(DataProductDeleteView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class GOATSCreateTargetFromAlertView(CreateTargetFromAlertView):
-    """GOATS override to redirect to list view of targets."""
-
-    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """Handle POST request for creating targets from alerts. Redirects to
-        the list view of targets if any target creation succeeds. Otherwise,
-        redirects back to the alert view.
-
-        Parameters
-        ----------
-        request : `HttpRequest`
-            The request object.
-
-        Returns
-        -------
-        `HttpResponse`
-            Redirects to the list view of targets or back to the alert view
-            based on the outcome of target creation.
-
-        """
-        query_id = self.request.POST["query_id"]
-        broker_name = self.request.POST["broker"]
-        broker_class = tom_alerts_get_service_class(broker_name)
-        alerts = self.request.POST.getlist("alerts")
-        errors = []
-        if not alerts:
-            messages.warning(request, "Please select at least one alert from which to create a target.")
-            return redirect(reverse("tom_alerts:run", kwargs={"pk": query_id}))
-        for alert_id in alerts:
-            cached_alert = cache.get(f"alert_{alert_id}")
-            if not cached_alert:
-                messages.error(request, "Could not create targets. Try re running the query again.")
-                return redirect(reverse("tom_alerts:run", kwargs={"pk": query_id}))
-            generic_alert = broker_class().to_generic_alert(json.loads(cached_alert))
-            target, extras, aliases = generic_alert.to_target()
-            try:
-                target.save(extras=extras, names=aliases)
-                broker_class().process_reduced_data(target, json.loads(cached_alert))
-                for group in request.user.groups.all().exclude(name="Public"):
-                    assign_perm("tom_targets.view_target", group, target)
-                    assign_perm("tom_targets.change_target", group, target)
-                    assign_perm("tom_targets.delete_target", group, target)
-            except IntegrityError:
-                messages.warning(request, (f"Unable to save {target.name}, target with that name already"
-                                           " exists."))
-                errors.append(target.name)
-
-        if (len(alerts) == len(errors)):
-            return redirect(reverse("tom_alerts:run", kwargs={"pk": query_id}))
-
-        return redirect(reverse("tom_targets:list"))
-
-
 class ObservationRecordDeleteView(Raise403PermissionRequiredMixin, DeleteView):
     """View for deleting an observation."""
     permission_required = "tom_observations.delete_observationrecord"
@@ -323,73 +260,6 @@ class ObservationRecordDeleteView(Raise403PermissionRequiredMixin, DeleteView):
         delete_associated_data_products(observation_record)
 
         return super().form_valid(form)
-
-
-class GOATSTargetDetailView(TargetDetailView):
-    """Extends TOMToolkit view to handle redirecting tab pane URL."""
-
-    def get(self, request, *args, **kwargs):
-        """
-        Handles the GET requests to this view. If update_status is passed into
-        the query parameters, calls the updatestatus management command to
-        query for new statuses for ``ObservationRecord`` objects associated
-        with this target.
-        """
-        update_status = request.GET.get("update_status", False)
-        if update_status:
-            if not request.user.is_authenticated:
-                return redirect(reverse("login"))
-            target_id = kwargs.get("pk", None)
-            out = StringIO()
-            call_command("updatestatus", target_id=target_id, stdout=out)
-            messages.info(request, out.getvalue())
-            add_hint(request, mark_safe(
-                "Did you know updating observation statuses can be automated? Learn how in"
-                "<a href=https://tom-toolkit.readthedocs.io/en/stable/customization/automation.html>"
-                " the docs.</a>"))
-            return redirect(reverse("tom_targets:detail", args=(target_id,)) + "?tab=observations")
-
-        obs_template_form = ApplyObservationTemplateForm(request.GET)
-        if obs_template_form.is_valid():
-            obs_template = ObservationTemplate.objects.get(
-                pk=obs_template_form.cleaned_data["observation_template"].id)
-            obs_template_params = obs_template.parameters
-            obs_template_params["cadence_strategy"] = request.GET.get("cadence_strategy", "")
-            obs_template_params["cadence_frequency"] = request.GET.get("cadence_frequency", "")
-            params = urlencode(obs_template_params)
-            return redirect(
-                reverse("tom_observations:create",
-                        args=(obs_template.facility,)) + f"?target_id={self.get_object().id}&" + params)
-
-        return super().get(request, *args, **kwargs)
-
-
-class GOATSAddExistingObservationView(AddExistingObservationView):
-    """Extends TOMToolkit view to handle redirecting tab pane URL."""
-
-    def form_valid(self, form):
-        """
-        Runs after form validation. Creates a new ``ObservationRecord``
-        associated with the specified target and facility.
-        """
-        records = ObservationRecord.objects.filter(target_id=form.cleaned_data["target_id"],
-                                                   facility=form.cleaned_data["facility"],
-                                                   observation_id=form.cleaned_data["observation_id"])
-
-        if records and not form.cleaned_data.get("confirm"):
-            return redirect(reverse("tom_observations:add-existing") + "?" + self.request.POST.urlencode())
-        else:
-            ObservationRecord.objects.create(
-                target_id=form.cleaned_data["target_id"],
-                facility=form.cleaned_data["facility"],
-                parameters={},
-                observation_id=form.cleaned_data["observation_id"]
-            )
-            observation_id = form.cleaned_data["observation_id"]
-            messages.success(self.request, f"Successfully associated observation record {observation_id}")
-        base_url = reverse("tom_targets:detail", kwargs={"pk": form.cleaned_data["target_id"]})
-        query_params = urlencode({"tab": "observations"})
-        return redirect(f"{base_url}?{query_params}")
 
 
 class GOAQueryFormView(View):
