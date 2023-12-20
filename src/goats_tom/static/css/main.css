@@ -1,51 +1,17 @@
 :root {
   --white: #fff;
   --gray-50: #FAFAFA;
-	--gray-100: #F5F5F5;
-	--gray-200: #EEE;
-	--gray-300: #E0E0E0;
-	--gray-400: #BDBDBD;
-	--gray-500: #9E9E9E;
-	--gray-600: #757575;
-	--gray-700: #616161;
-	--gray-800: #424242;
-	--gray-900: #212121;
+	--gray-100: #C9C9C9;
+	--gray-200: #B8B8B8;
+	--gray-300: #828282;
+	--gray-400: #696969;
+	--gray-500: #3B3B3B;
+	--gray-600: #2E2E2E;
+	--gray-700: #242424;
+	--gray-800: #1F1F1F;
+	--gray-900: #141414;
   --black: #000;
-  --primary-50: #fefce6;
-  --primary-100: #fcf6c3;
-  --primary-200: #faef9b;
-  --primary-300: #f9e975;
-  --primary-400: #f7e457;
-  --primary-500: #f4df3a;
-  --primary-600: #f4ce37;
-  --primary-700: #f1b730;
-  --primary-800: #eea029;
-  --primary-900: #e8781c;
-  --primary: #f1b730;
-  --primary-variant: #e8781c;
-  --secondary-50: #dff8fd;
-  --secondary-100: #afedfa;
-  --secondary-200: #78e1f6;
-  --secondary-300: #30d4f1;
-  --secondary-400: #00cbec;
-  --secondary-500: #00c1e7;
-  --secondary-600: #00b1d3;
-  --secondary-700: #009cb8;
-  --secondary-800: #00889e;
-  --secondary-900: #006571;
-  --secondary: #009cb8;
-  --secondary-variant: #30d4f1;
-  --accent-50: #fbe0f2;
-  --accent-100: #f5b1de;
-  --accent-200: #f27ac6;
-  --accent-300: #f130ad;
-  --accent-400: #f30097;
-  --accent-500: #f0007d;
-  --accent-600: #de007a;
-  --accent-700: #c70074;
-  --accent-800: #af006f;
-  --accent-900: #850068;
-  --accent: #f130ad;
+  --gemini: #F2AC14;
 
   font-size: 14px;
   font-family: arial, sans-serif;
@@ -65,7 +31,7 @@
 
 .goats-footer {
   background-color: var(--black);
-  color: var(--gray-200);
+  color: var(--gray-100);
   padding: .5rem 1rem;
 }
 
@@ -76,9 +42,8 @@
 }
 
 .goats-navbar {
-  background-color: var(--primary);;
+  background-color: var(--gray-800);;
   padding: .25rem 1rem;
-  box-shadow: 0 1px 3px hsla(0deg 0% 0% / 20%);
 }
 
 main.container {
@@ -87,6 +52,7 @@ main.container {
 
 input {
   accent-color: var(--primary);
+  color-scheme: dark;
 }
 
 .accent-bar {
@@ -99,7 +65,14 @@ input {
 }
 
 .goats-banner {
-  background-color: var(--white);
+  background: var(--gemini);
+  background: linear-gradient(
+    90deg,
+    rgb(242 172 20 / 100%) 0%,
+    rgb(242 120 12 / 100%) 50%,
+    rgb(166 75 41 / 100%) 100%
+  );
+
 }
 
 /* .background {
@@ -112,14 +85,14 @@ input {
 }
 
 .goats-subtitle {
-  color: var(--gray-700);
+  color: var(--gemini);
   font-size: 3.25rem;
   font-weight: 600;
   line-height: 1;
 }
 
 .goats-slogan {
-  color: var(--gray-600);
+  color: var(--gray-300);
 }
 
 .goats-emoji {
@@ -172,4 +145,14 @@ footer {
   max-height: 300px; /* Adjust as needed */
   padding: 10px;
   width: 700px;
+}
+
+.action-button {
+  width: 30px;
+  height: 30px;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
 }

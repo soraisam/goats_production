@@ -24,7 +24,8 @@ dependencies = [
     "werkzeug",
     "django-cors-headers",
     "huey>=2.5.0",
-    "greenlet==2.0.2"
+    "greenlet==2.0.2",
+    "fontawesomefree==6.5.1"
 ]
 
 version = "23.11.0"

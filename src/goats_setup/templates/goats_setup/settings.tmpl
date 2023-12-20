@@ -36,6 +36,7 @@ TOM_NAME = 'GOATS'
 INSTALLED_APPS = [
     'goats_tom',
     'huey.contrib.djhuey',
+    'fontawesomefree',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -367,6 +368,10 @@ CORS_ORIGIN_REGEX_WHITELIST = [
     r"^chrome-extension://[a-zA-Z0-9-]+$",
     r"^moz-extension://[a-zA-Z0-9-]+$",
 ]
+
+# Default Plotly theme setting, can set to any valid theme:
+# 'plotly', 'plotly_white', 'plotly_dark', 'ggplot2', 'seaborn', 'simple_white', 'none'
+PLOTLY_THEME = 'plotly_dark'
 
 try:
     from local_settings import * # noqa
