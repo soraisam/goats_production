@@ -54,7 +54,7 @@
         </div>
       </li>
       {% if user.is_authenticated %}
-      <li class="nav-item dropdown">
+      <li class="nav-item dropdown ">
         <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name|starts_with:'user-' %}active{% endif %}" data-toggle="dropdown">
           {% if user.first_name or user.last_name %}
           {{ user.first_name }} {{ user.last_name }} ({{ user.username }})
@@ -62,7 +62,7 @@
           {{ user.username }}
           {% endif %}
         </a>
-        <div class="dropdown-menu">
+        <div class="dropdown-menu dropdown-menu-right">
           <a class="dropdown-item" href="{% url 'user-list' %}">Users</a>
           <a class="dropdown-item" href="{% url 'user-update' user.id %}">Settings</a>
           <div class="dropdown-divider"></div>
