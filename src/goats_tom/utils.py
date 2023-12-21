@@ -1,6 +1,9 @@
-__all__ = ["delete_associated_data_products", "create_name_reduction_map", "custom_data_product_path"]
+__all__ = ["delete_associated_data_products", "create_name_reduction_map", "custom_data_product_path",
+           "build_json_response"]
 from astropy.table import Table
 
+from django.http import JsonResponse
+from rest_framework import status
 from tom_dataproducts.models import DataProduct, ReducedDatum
 from tom_observations.models import ObservationRecord
 
@@ -72,3 +75,26 @@ def custom_data_product_path(data_product: DataProduct, filename: str) -> str:
                 f"/{data_product.observation_record.observation_id}/{filename}")
     else:
         return f"{data_product.target.name}/none/none/{filename}"
+
+
+def build_json_response(error_message: str | None = None, error_status: int | None = status.HTTP_200_OK
+                        ) -> JsonResponse:
+    """Build a JSON response.
+
+    Parameters
+    ----------
+    error_message : `str`, optional
+        The error message to include in the response. If `None`, the response
+        indicates a successful operation.
+    error_status : `int`, optional
+        The HTTP status code for the response. Defaults to 200 (HTTP_200_OK).
+
+    Returns
+    -------
+    `JsonResponse`
+        A JSON response with either a success or error status.
+    """
+    if error_message:
+        return JsonResponse({"status": "error", "message": error_message}, status=error_status)
+
+    return JsonResponse({"status": "success", "message": ""}, status=error_status)

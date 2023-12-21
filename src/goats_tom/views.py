@@ -19,6 +19,7 @@ from django.contrib import messages
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 from tom_alerts.alerts import get_service_class as tom_alerts_get_service_class
 from tom_alerts.models import BrokerQuery
 from tom_common.mixins import SuperuserRequiredMixin, Raise403PermissionRequiredMixin
@@ -33,8 +34,45 @@ from tom_observations.views import ObservationRecordDetailView
 from .forms import GOAQueryForm, GOALoginForm
 from .models import GOALogin, TaskProgress
 from .astroquery_gemini import Observations as GOA
-from .utils import delete_associated_data_products
+from .utils import delete_associated_data_products, build_json_response
 from .tasks import download_goa_files
+
+
+def update_brokerquery_name(request: HttpRequest, pk: int) -> JsonResponse:
+    """
+    Update the name of a BrokerQuery object.
+
+    Parameters
+    ----------
+    request : `HttpRequest`
+        The incoming HTTP request.
+    pk : `int`
+        The ID of the BrokerQuery to be updated.
+
+    Returns
+    -------
+    `JsonResponse`
+        A JSON response indicating the status of the update operation. Returns
+        a 200 status code if the update is successful. Returns an error message
+        with a 404 status code if the query is not found, and with a 400 status
+        code for any other invalid request.
+
+    """
+    if request.method == "POST":
+        new_name = request.POST.get("name")
+
+        try:
+            query = BrokerQuery.objects.get(pk=pk)
+            query.name = new_name
+            # Need to update query_name to show in form.
+            query.parameters["query_name"] = new_name
+            query.save()
+            return build_json_response()
+
+        except BrokerQuery.DoesNotExist:
+            return build_json_response("Query not found", status.HTTP_404_NOT_FOUND)
+
+    return build_json_response("Invalid request", status.HTTP_400_BAD_REQUEST)
 
 
 def recent_downloads(request: HttpRequest) -> HttpResponse:
