@@ -1,1 +1,0 @@
-Fixed a bug in TOMToolkit where the time was incorrectly displayed with the month instead of the minute.

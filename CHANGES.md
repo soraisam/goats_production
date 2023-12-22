@@ -1,3 +1,27 @@
+## GOATS 23.12.0 (2023-12-22)
+
+
+### New Features
+
+- Implemented Huey for background tasks: Integrated Huey, a lightweight Python task queue, into GOATS to handle background tasks using sqlite3. This addition streamlines the data download process, eliminating the need for users to endure unresponsive periods during downloads and keeps the application lightweight by avoiding complex libraries. [[#GOATS-129](https://noirlab.atlassian.net/browse/GOATS-129)]
+- Implemented navbar download display and recent downloads view: Introduced a new update mechanism in the navbar for displaying background downloads across all pages using polling and implemented a new view for accessing recent downloads. [[#GOATS-157](https://noirlab.atlassian.net/browse/GOATS-157)]
+- Allowed editing of query names in query list view. [[#GOATS-78](https://noirlab.atlassian.net/browse/GOATS-78)]
+
+
+### Changes
+
+- Implemented dark mode and enhanced UI flexibility: Switched to dark mode for GOATS, limited to light or dark because bootstrap 4 does not support switching using themes. Integrated Font Awesome icons to improve the user interface aesthetics and enabled setting Plotly theme from Django settings for customizable visualizations. [[#GOATS-109](https://noirlab.atlassian.net/browse/GOATS-109)]
+- Modified view for observations: Included the target sidebar in the observation view to provide a cohesive user experience, enabling users to see target information alongside specific observation details. [[#GOATS-112](https://noirlab.atlassian.net/browse/GOATS-112)]
+- Enhanced GOATS CLI for worker management: Extended the GOATS command-line interface to include the `--workers` option in the `goats run` command, enabling users to spin up or down `greenlet`` workers as needed. This feature allows for flexible worker management while maintaining a lightweight footprint, though users should be cautious not to start too many or too few workers. [[#GOATS-129](https://noirlab.atlassian.net/browse/GOATS-129)]
+- Change data product storage organization: Data products are now organized by observation ID folders, nested under target and facility folders. [[#GOATS-156](https://noirlab.atlassian.net/browse/GOATS-156)]
+- Improved target deletion process: Enhanced deletion of targets now includes removal of all associated observation records and their data products. [[#GOATS-170](https://noirlab.atlassian.net/browse/GOATS-170)]
+
+
+### Bug Fixes
+
+- Fixed a bug in TOMToolkit where the time was incorrectly displayed with the month instead of the minute. [[#GOATS-166](https://noirlab.atlassian.net/browse/GOATS-166)]
+
+
 ## GOATS 23.11.0 (2023-11-27)
 
 

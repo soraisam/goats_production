@@ -1,1 +1,0 @@
-Implemented navbar download display and recent downloads view: Introduced a new update mechanism in the navbar for displaying background downloads across all pages using polling and implemented a new view for accessing recent downloads.
