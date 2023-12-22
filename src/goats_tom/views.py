@@ -29,6 +29,7 @@ from tom_observations.facility import get_service_class as tom_observations_get_
 from tom_observations.facility import BaseManualObservationFacility
 from tom_observations.models import ObservationRecord
 from tom_observations.views import ObservationRecordDetailView
+from tom_targets.views import TargetDeleteView
 
 # Local application/library specific imports.
 from .forms import GOAQueryForm, GOALoginForm
@@ -36,6 +37,34 @@ from .models import GOALogin, TaskProgress
 from .astroquery_gemini import Observations as GOA
 from .utils import delete_associated_data_products, build_json_response
 from .tasks import download_goa_files
+
+
+class GOATSTargetDeleteView(TargetDeleteView):
+    def form_valid(self, form: Form) -> HttpResponse:
+        """Handle deletion of associated observation records upon valid form
+        submission.
+
+        Parameters
+        ----------
+        form : `Form`
+            The form object.
+
+        Returns
+        -------
+        `HttpResponse`
+            HTTP response indicating the outcome of the deletion process.
+        """
+        target = self.get_object()
+        # Fetch the ObservationRecord object.
+        observation_records = ObservationRecord.objects.filter(target=target)
+        for observation_record in observation_records:
+            # Delete the observation data products.
+            delete_associated_data_products(observation_record)
+            # Delete the observation record itself.
+            observation_record.delete()
+
+        # Proceed with deletion of the object.
+        return super().form_valid(form)
 
 
 def update_brokerquery_name(request: HttpRequest, pk: int) -> JsonResponse:
