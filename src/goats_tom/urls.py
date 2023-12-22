@@ -10,7 +10,9 @@ from . import views
 # TODO: Add app_name and update paths and URL lookups.
 # TODO: Make unified path formats.
 
-urlpatterns = [path("alerts/query/<int:pk>/update-name", views.update_brokerquery_name,
+urlpatterns = [path("targets/<int:pk>/delete/", views.GOATSTargetDeleteView.as_view(),
+                    name="target-delete"),
+               path("alerts/query/<int:pk>/update-name", views.update_brokerquery_name,
                     name="update-brokerquery-name"),
                path("observations/<int:pk>/delete-data-products/", views.DeleteObservationDataProductsView.
                     as_view(), name="delete-observation-data-products"),
