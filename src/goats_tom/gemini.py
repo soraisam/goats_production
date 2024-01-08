@@ -27,6 +27,7 @@ from tom_dataproducts.utils import create_image_dataproduct
 
 # Local application/library specific imports.
 from .astroquery_gemini import Observations as GOA
+from .ocs_client import OCSClient
 
 try:
     AUTO_THUMBNAILS = settings.AUTO_THUMBNAILS
@@ -83,9 +84,12 @@ SITES = {
     }
 }
 
+ocs_client = OCSClient()
+
 
 def make_request(*args, **kwargs):
     response = requests.request(*args, **kwargs)
+    print(response.url)
     if 400 <= response.status_code < 500:
         logger.log(msg=f'Gemini request failed: {response.content}', level=logging.WARN)
         raise ImproperCredentialsException('GEM')
@@ -464,7 +468,13 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         return SITES
 
     def get_observation_status(self, observation_id):
-        return {'state': 'Observed', 'scheduled_start': None, 'scheduled_end': None}
+        try:
+            observation_summary = ocs_client.get_observation_summary(observation_id)
+            state = observation_summary["status"]
+        except Exception as e:
+            logger.error(e)
+            state = "Error"
+        return {'state': state, 'scheduled_start': None, 'scheduled_end': None}
 
     def get_flux_constant(self) -> u:
         """
