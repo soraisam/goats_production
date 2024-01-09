@@ -55,7 +55,8 @@ def cli(ctx):
                     "Default is the current directory."))
 @click.option("--overwrite", is_flag=True,
               help="Overwrite the existing project, if it exists. Default is False.")
-def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
+@click.option("-m", "--media-dir", type=Path, help="Path for saving downloaded media.", default=None)
+def install(project_name: str, directory: Path, overwrite: bool, media_dir: Path | None) -> None:
     """Installs GOATS with a specified or default name in a specified or
     default directory.
 
@@ -63,11 +64,13 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
     ----------
     project_name : `str`
         The name of the project to be created.
-    directory : `Path | str`
+    directory : `Path`
         The directory where the project will be created.
     overwrite : `bool`
         Whether to overwrite the existing project if it exists, default is
         `False`.
+    media_dir : `Path | None`
+        The path to save media files.
 
     Raises
     ------
@@ -75,6 +78,8 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
         Raised if GOATS installation already exists and overwrite disabled.
     GOATSClickException
         Raised if the 'subprocess' calls fail.
+    GOATSClickException
+        Raised if the 'media_dir' path is not writable.
     """
     project_path = directory / project_name
 
@@ -97,15 +102,24 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
 
         # Add the TOM Toolkit plugin.
         modify_settings(settings_file, add_goats=True)
-
         # Get the path for the 'manage.py' file.
         manage_file = project_path / "manage.py"
 
         # Modify the manage file for Huey.
         modify_manage(manage_file)
 
+        # Change the MEDIA_ROOT if provided.
+        if media_dir:
+            full_media_dir = media_dir / "data"
+            if full_media_dir.exists():
+                display_warning("Media root directory already exists, proceeding but existing data might "
+                                "conflict.")
+
         # Setup the TOM Toolkit.
-        subprocess.run([f"{manage_file}", "goats_setup"], check=True)
+        goats_setup_command = [f"{manage_file}", "goats_setup"]
+        if media_dir is not None:
+            goats_setup_command.extend(["--media-dir", f"{media_dir}"])
+        subprocess.run(goats_setup_command, check=True)
 
         # Migrate the webpage.
         display_message("Wrapping up:", show_goats_emoji=False)
@@ -123,6 +137,9 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
         raise GOATSClickException(f"An error occurred while running the command: '{cmd_str}'. Exit status:"
                                   f" {error.returncode}.")
 
+    except Exception as error:
+        raise GOATSClickException(str(error))
+
 
 @click.command(help=("Starts the server and workers for GOATS."))
 @click.option("-p", "--project-name", default="GOATS", type=str,
@@ -132,14 +149,14 @@ def install(project_name: str, directory: Path | str, overwrite: bool) -> None:
                     "Default is the current directory."))
 @click.option("-w", "--workers", default=3, type=int,
               help="Number of workers to spawn for background tasks.")
-def run(project_name: str, directory: Path | str, workers: int) -> None:
+def run(project_name: str, directory: Path, workers: int) -> None:
     """Starts the server and workers for GOATS.
 
     Parameters
     ----------
     project_name : `str`
         The name of the project to be started.
-    directory : `Path | str`
+    directory : `Path`
         The directory where the project is installed.
     workers : `int`
         The number of workers to spawn for background tasks.
