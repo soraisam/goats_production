@@ -1,42 +1,45 @@
 # Standard library imports.
-from datetime import datetime
 import json
+from datetime import datetime
 from typing import Any
 
 # Related third party imports.
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core import serializers
 from django.db import IntegrityError
 from django.db.models import Q
-from django.http import HttpResponse, HttpRequest, HttpResponseRedirect, JsonResponse
 from django.forms import Form
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import TemplateView, View, FormView, DeleteView, DetailView
-from django.urls import reverse_lazy, reverse
-from django.contrib import messages
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DeleteView, DetailView, FormView, TemplateView, View
+from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 from tom_alerts.alerts import get_service_class as tom_alerts_get_service_class
 from tom_alerts.models import BrokerQuery
-from tom_common.mixins import SuperuserRequiredMixin, Raise403PermissionRequiredMixin
+from tom_common.mixins import Raise403PermissionRequiredMixin, SuperuserRequiredMixin
 from tom_dataproducts.forms import AddProductToGroupForm, DataProductUploadForm
 from tom_dataproducts.views import DataProductDeleteView
-from tom_observations.facility import get_service_class as tom_observations_get_service_class
 from tom_observations.facility import BaseManualObservationFacility
+from tom_observations.facility import (
+    get_service_class as tom_observations_get_service_class,
+)
 from tom_observations.models import ObservationRecord
 from tom_observations.views import ObservationRecordDetailView
 from tom_targets.views import TargetDeleteView
 
-# Local application/library specific imports.
-from .forms import GOAQueryForm, GOALoginForm
-from .models import GOALogin, TaskProgress
 from .astroquery_gemini import Observations as GOA
-from .utils import delete_associated_data_products, build_json_response
+
+# Local application/library specific imports.
+from .forms import GOALoginForm, GOAQueryForm
+from .models import GOALogin, TaskProgress
 from .tasks import download_goa_files
+from .utils import build_json_response, delete_associated_data_products
 
 
 class GOATSTargetDeleteView(TargetDeleteView):
@@ -125,9 +128,7 @@ def recent_downloads(request: HttpRequest) -> HttpResponse:
     tasks = TaskProgress.objects.filter(done=True).order_by("-start_time")
 
     # Pass the tasks to the template
-    context = {
-        "tasks": tasks
-    }
+    context = {"tasks": tasks}
     return render(request, "recent_downloads.html", context)
 
 
@@ -149,10 +150,14 @@ def ongoing_tasks(request: HttpRequest) -> JsonResponse:
         A JSON response containing the ongoing tasks.
     """
     # First, evaluate the QuerySet and get the current tasks data
-    tasks = list(TaskProgress.objects.filter(done=False).values("task_id", "progress", "status"))
+    tasks = list(
+        TaskProgress.objects.filter(done=False).values("task_id", "progress", "status")
+    )
 
     # Now update "done" to True for tasks that are completed or failed
-    TaskProgress.objects.filter(Q(status="completed") | Q(status="failed")).update(done=True)
+    TaskProgress.objects.filter(Q(status="completed") | Q(status="failed")).update(
+        done=True
+    )
 
     # Return the evaluated tasks list
     return JsonResponse(tasks, safe=False)
@@ -171,12 +176,16 @@ class GOATSObservationRecordDetailView(ObservationRecordDetailView):
 
         context["editable"] = isinstance(facility, BaseManualObservationFacility)
         context["data_products"] = facility.all_data_products(self.object)
-        context["can_be_cancelled"] = self.object.status not in facility.get_terminal_observing_states()
+        context["can_be_cancelled"] = (
+            self.object.status not in facility.get_terminal_observing_states()
+        )
         context["target"] = observation_record.target
         data_product_upload_form = DataProductUploadForm(
             initial={
                 "observation_record": observation_record,
-                "referrer": reverse("tom_observations:detail", args=(self.get_object().id,))
+                "referrer": reverse(
+                    "tom_observations:detail", args=(self.get_object().id,)
+                ),
             }
         )
         context["data_product_form"] = data_product_upload_form
@@ -191,11 +200,15 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
     checks based on the application's settings.
     """
 
-    template_name = "tom_observations/observationrecord_dataproducts_confirm_delete.html"
+    template_name = (
+        "tom_observations/observationrecord_dataproducts_confirm_delete.html"
+    )
     # Share same permission since deleting all data products for observation.
     permission_required = "tom_observations.delete_dataproduct"
 
-    def get_required_permissions(self, request: HttpRequest | None = None) -> list[str] | None:
+    def get_required_permissions(
+        self, request: HttpRequest | None = None
+    ) -> list[str] | None:
         """Get the required permissions for this view.
 
         Parameters
@@ -279,7 +292,7 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
         return redirect(reverse("tom_observations:detail", args=[pk]))
 
 
-class GOATSDataProductDelieteView(DataProductDeleteView):
+class GOATSDataProductDeleteView(DataProductDeleteView):
     def form_valid(self, form):
         """
         Method that handles DELETE requests for this view. It performs the
@@ -304,6 +317,7 @@ class GOATSDataProductDelieteView(DataProductDeleteView):
 
 class ObservationRecordDeleteView(Raise403PermissionRequiredMixin, DeleteView):
     """View for deleting an observation."""
+
     permission_required = "tom_observations.delete_observationrecord"
     success_url = reverse_lazy("observations:list")
     model = ObservationRecord
@@ -347,7 +361,6 @@ class GOAQueryFormView(View):
         form = GOAQueryForm(request.POST)
         observation_record = ObservationRecord.objects.get(pk=kwargs["pk"])
         if form.is_valid():
-
             # Get GOA credentials.
             prop_data_msg = "Proprietary data will not be downloaded."
             try:
@@ -359,16 +372,25 @@ class GOAQueryFormView(View):
                 GOA.logout()
 
             except GOALogin.DoesNotExist:
-                messages.warning(request, f"GOA login credentials not found. {prop_data_msg}")
+                messages.warning(
+                    request, f"GOA login credentials not found. {prop_data_msg}"
+                )
             except PermissionError:
-                messages.warning(request, f"GOA login failed. Re-enter login credentials. {prop_data_msg}")
+                messages.warning(
+                    request,
+                    f"GOA login failed. Re-enter login credentials. {prop_data_msg}",
+                )
 
             query_params = form.cleaned_data["query_params"]
 
-            serialized_observation_record = serializers.serialize("json", [observation_record])
+            serialized_observation_record = serializers.serialize(
+                "json", [observation_record]
+            )
 
             # Download in background.
-            download_goa_files(serialized_observation_record, query_params, request.user)
+            download_goa_files(
+                serialized_observation_record, query_params, request.user
+            )
             messages.info(request, "Downloading data in background. Check back soon!")
 
         else:
@@ -378,10 +400,7 @@ class GOAQueryFormView(View):
                     msg = f"Error in {field}: {error}"
                     messages.error(request, msg)
 
-        return redirect(reverse(
-            "tom_observations:detail",
-            kwargs={"pk": kwargs["pk"]}
-        ))
+        return redirect(reverse("tom_observations:detail", kwargs={"pk": kwargs["pk"]}))
 
 
 class UserGenerateTokenView(SuperuserRequiredMixin, TemplateView):
@@ -415,15 +434,21 @@ class UserGenerateTokenView(SuperuserRequiredMixin, TemplateView):
             token context, or a URL pointing to the "user-list" view if the
             requester is not a superuser.
         """
-        user = User.objects.get(pk=self.kwargs["pk"])
+        try:
+            user = User.objects.get(pk=self.kwargs["pk"])
+        except User.DoesNotExist:
+            messages.error(request, "User not found.")
+            return redirect("user-list")
 
-        if request.user.is_superuser:
-            Token.objects.filter(user=user).delete()  # Delete any existing token
-            token, _ = Token.objects.get_or_create(user=user)
-        else:
-            # TODO: Should we issue an error and display it or just redirect?
-            return reverse_lazy("user-list")
+        if not request.user.is_superuser:
+            messages.error(
+                request, "You do not have permission to generate a token for this user."
+            )
+            return redirect("user-list")
 
+        # Superuser logic for generating token
+        Token.objects.filter(user=user).delete()
+        token, _ = Token.objects.get_or_create(user=user)
         return render(request, self.template_name, {"user": user, "token": token})
 
 
@@ -482,9 +507,12 @@ def receive_query(request: HttpResponse) -> HttpResponse:
 
         return HttpResponse(status=200)
 
+    return HttpResponse(status=404)
+
 
 class GOALoginView(LoginRequiredMixin, FormView):
     """View to handle GOA Login form."""
+
     template_name = "auth/goa_login.html"
     form_class = GOALoginForm
 
@@ -518,9 +546,14 @@ class GOALoginView(LoginRequiredMixin, FormView):
         # Test logging in to GOA.
         GOA.login(username, password)
         if not GOA.authenticated():
-            messages.error(self.request, "Failed to verify GOA login credentials. Please try again.")
+            messages.error(
+                self.request,
+                "Failed to verify GOA login credentials. Please try again.",
+            )
         else:
-            messages.success(self.request, "GOA login information verified and saved successfully.")
+            messages.success(
+                self.request, "GOA login information verified and saved successfully."
+            )
 
         # No matter what, logout and save credentials.
         GOA.logout()
@@ -545,7 +578,9 @@ class GOALoginView(LoginRequiredMixin, FormView):
         `HttpResponse`
             HTTP response.
         """
-        messages.error(self.request, "Failed to save GOA login information. Please try again.")
+        messages.error(
+            self.request, "Failed to save GOA login information. Please try again."
+        )
         return super().form_invalid(form)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:

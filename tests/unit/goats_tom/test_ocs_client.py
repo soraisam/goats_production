@@ -1,6 +1,7 @@
+from pathlib import Path
+
 import pytest
 from goats_tom.ocs_client import OCSClient
-from pathlib import Path
 
 
 @pytest.fixture
@@ -71,5 +72,6 @@ def test__get_site_url_invalid(client):
     """Test get_site_url with invalid observation ID."""
     with pytest.raises(ValueError):
         client._get_site_url("Invalid-ID")
+
 
 # TODO: Write tests for xmlrpc requests and odb requests.

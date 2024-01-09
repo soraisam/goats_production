@@ -1,13 +1,14 @@
-from tom_setup.management.commands.tom_setup import Command as TOMCommand
 import sys
 from pathlib import Path
-from packaging import version
+
 from django.conf import settings
+from django.contrib.auth.models import Group, User
+from django.core.management import call_command
+from django.core.management.utils import get_random_secret_key
 from django.template.loader import get_template
 from django.utils import timezone
-from django.core.management.utils import get_random_secret_key
-from django.core.management import call_command
-from django.contrib.auth.models import Group, User
+from packaging import version
+from tom_setup.management.commands.tom_setup import Command as TOMCommand
 
 PYTHON_VERSION = "3.10"
 
@@ -18,12 +19,15 @@ class Command(TOMCommand):
     This class extends TOMCommand to provide a setup wizard for new GOATS
     projects.
     """
+
     help = "🐐 GOATS setup wizard."
 
     def welcome_banner(self) -> None:
         """Displays a welcome banner."""
-        welcome_text = ("🐐 Welcome to the GOATS setup wizard. This will assist you with your "
-                        "new GOATS project.\n")
+        welcome_text = (
+            "🐐 Welcome to the GOATS setup wizard. This will assist you with your "
+            "new GOATS project.\n"
+        )
         prompt = "Proceed with GOATS setup? [y/N] "
         self.stdout.write(self.style.MIGRATE_HEADING(welcome_text))
 
@@ -57,7 +61,7 @@ class Command(TOMCommand):
         parser.add_argument(
             "--media-dir",
             type=str,
-            help="Path where the data directory will be created."
+            help="Path where the data directory will be created.",
         )
 
     def check_python(self) -> None:
@@ -65,8 +69,13 @@ class Command(TOMCommand):
         self.status("  Checking Python version... ")
         current_version = f"{sys.version_info.major}.{sys.version_info.minor}"
         if version.parse(current_version) < version.parse(PYTHON_VERSION):
-            self.exit(self.style.ERROR(f"Incompatible Python version found. Please install Python >= "
-                                       f"{PYTHON_VERSION}"), return_code=1)
+            self.exit(
+                self.style.ERROR(
+                    f"Incompatible Python version found. Please install Python >= "
+                    f"{PYTHON_VERSION}"
+                ),
+                return_code=1,
+            )
         self.ok()
 
     def complete(self) -> None:
@@ -81,8 +90,10 @@ class Command(TOMCommand):
 
         settings_location = settings.BASE_DIR / settings.BASE_DIR.name / "settings.py"
         if not settings_location.exists():
-            msg = ("Could not determine settings.py location. Writing settings.py out to "
-                   f"{settings_location}. Please copy file to the proper location after script finishes.")
+            msg = (
+                "Could not determine settings.py location. Writing settings.py out to "
+                f"{settings_location}. Please copy file to the proper location after script finishes."
+            )
             self.stdout.write(self.style.WARNING(msg))
         with open(settings_location, "w+") as settings_file:
             settings_file.write(rendered)
@@ -97,8 +108,10 @@ class Command(TOMCommand):
 
         urls_location = settings.BASE_DIR / settings.BASE_DIR.name / "urls.py"
         if not urls_location.exists():
-            msg = (f"Could not determine urls.py location. Writing urls.py out to {urls_location}. Please "
-                   "copy file to the proper location after script finishes.")
+            msg = (
+                f"Could not determine urls.py location. Writing urls.py out to {urls_location}. Please "
+                "copy file to the proper location after script finishes."
+            )
             self.stdout.write(self.style.WARNING(msg))
         with open(urls_location, "w+") as urls_file:
             urls_file.write(rendered)
@@ -169,7 +182,11 @@ class Command(TOMCommand):
 
     def create_pi(self) -> None:
         """Creates a Principal Investigator (PI) superuser."""
-        self.stdout.write(self.style.MIGRATE_HEADING("Principal Investigator (PI) and public user creation:"))
+        self.stdout.write(
+            self.style.MIGRATE_HEADING(
+                "Principal Investigator (PI) and public user creation:"
+            )
+        )
         call_command("createsuperuser", verbosity=0)
         self.status("  PI Superuser created... ")
         self.ok()

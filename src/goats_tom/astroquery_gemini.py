@@ -8,103 +8,90 @@ Query public and proprietary data from GOA.
 """
 import bz2
 import os
-from pathlib import Path
+import tarfile
 from datetime import date, datetime
 from multiprocessing import Pool
-import tarfile
+from pathlib import Path
 from typing import Any
-from gevent.threadpool import ThreadPool
 
 import astropy
 import astropy.units as u
-from astropy.table import Table, MaskedColumn
 import numpy as np
-
+from astropy.table import MaskedColumn, Table
 from astroquery import log
 from astroquery.query import QueryWithLogin
 from astroquery.utils.class_or_instance import class_or_instance
-from .astroquery_urlhelper import URLHelper
-from .astroquery_conf import conf
+from gevent.threadpool import ThreadPool
 
+from .astroquery_conf import conf
+from .astroquery_urlhelper import URLHelper
 
 __all__ = ["Observations", "ObservationsClass"]  # specifies what to import
 
 
 __valid_instruments__ = [
-    'GMOS',
-    'GMOS-N',
-    'GMOS-S',
-    'GNIRS',
-    'GRACES',
-    'NIRI',
-    'NIFS',
-    'GSAOI',
-    'F2',
-    'GPI',
-    'NICI',
-    'MICHELLE',
-    'TRECS',
-    'BHROS',
-    'HRWFS',
-    'OSCIR',
-    'FLAMINGOS',
-    'HOKUPAA+QUIRC',
-    'PHOENIX',
-    'TEXES',
-    'ABU',
-    'CIRPASS'
+    "GMOS",
+    "GMOS-N",
+    "GMOS-S",
+    "GNIRS",
+    "GRACES",
+    "NIRI",
+    "NIFS",
+    "GSAOI",
+    "F2",
+    "GPI",
+    "NICI",
+    "MICHELLE",
+    "TRECS",
+    "BHROS",
+    "HRWFS",
+    "OSCIR",
+    "FLAMINGOS",
+    "HOKUPAA+QUIRC",
+    "PHOENIX",
+    "TEXES",
+    "ABU",
+    "CIRPASS",
 ]
 
 
 __valid_observation_class__ = [
-    'science',
-    'acq',
-    'progCal',
-    'dayCal',
-    'partnerCal',
-    'acqCal',
+    "science",
+    "acq",
+    "progCal",
+    "dayCal",
+    "partnerCal",
+    "acqCal",
 ]
 
 __valid_observation_types__ = [
-    'OBJECT',
-    'BIAS',
-    'DARK',
-    'FLAT',
-    'ARC',
-    'PINHOLE',
-    'RONCHI',
-    'CAL',
-    'FRINGE',
-    'MASK'
+    "OBJECT",
+    "BIAS",
+    "DARK",
+    "FLAT",
+    "ARC",
+    "PINHOLE",
+    "RONCHI",
+    "CAL",
+    "FRINGE",
+    "MASK",
 ]
 
-__valid_modes__ = [
-    'imaging',
-    'spectroscopy',
-    'LS',
-    'MOS',
-    'IFS'
-]
+__valid_modes__ = ["imaging", "spectroscopy", "LS", "MOS", "IFS"]
 
-__valid_adaptive_optics__ = [
-    'NOTAO',
-    'AO',
-    'NGS',
-    'LGS'
-]
+__valid_adaptive_optics__ = ["NOTAO", "AO", "NGS", "LGS"]
 
 __valid_raw_reduced__ = [
-    'RAW',
-    'PREPARED',
-    'PROCESSED_BIAS',
-    'PROCESSED_FLAT',
-    'PROCESSED_FRINGE',
-    'PROCESSED_ARC'
+    "RAW",
+    "PREPARED",
+    "PROCESSED_BIAS",
+    "PROCESSED_FLAT",
+    "PROCESSED_FRINGE",
+    "PROCESSED_ARC",
 ]
 
 
 class ObservationsClass(QueryWithLogin):
-
     url_helper = URLHelper()
 
     def __init__(self, *args):
@@ -138,10 +125,10 @@ class ObservationsClass(QueryWithLogin):
         """
         url = self.url_helper.get_login_url()
         params = {"username": username, "password": password}
-        r = self._session.request('POST', url, params=params)
+        r = self._session.request("POST", url, params=params)
 
-        if b'<P>Welcome, you are sucessfully logged in' not in r.content:
-            log.error('Unable to login, please check your credentials')
+        if b"<P>Welcome, you are sucessfully logged in" not in r.content:
+            log.error("Unable to login, please check your credentials")
             return False
 
         return True
@@ -202,10 +189,25 @@ class ObservationsClass(QueryWithLogin):
         return self.query_criteria(objectname=objectname, radius=radius)
 
     @class_or_instance
-    def query_criteria(self, *rawqueryargs, coordinates=None, radius=None, pi_name=None, program_id=None,
-                       utc_date=None, instrument=None, observation_class=None, observation_type=None,
-                       mode=None, adaptive_optics=None, program_text=None, objectname=None, raw_reduced=None,
-                       orderby=None, **rawquerykwargs):
+    def query_criteria(
+        self,
+        *rawqueryargs,
+        coordinates=None,
+        radius=None,
+        pi_name=None,
+        program_id=None,
+        utc_date=None,
+        instrument=None,
+        observation_class=None,
+        observation_type=None,
+        mode=None,
+        adaptive_optics=None,
+        program_text=None,
+        objectname=None,
+        raw_reduced=None,
+        orderby=None,
+        **rawquerykwargs,
+    ):
         """
         Search a variety of known parameters against the Gemini observations.
 
@@ -346,7 +348,7 @@ class ObservationsClass(QueryWithLogin):
             for arg in rawqueryargs:
                 args.append(arg)
         if rawquerykwargs:
-            for (k, v) in rawquerykwargs.items():
+            for k, v in rawquerykwargs.items():
                 kwargs[k] = v
 
         # If coordinates is set but we have no radius, set a default
@@ -367,7 +369,9 @@ class ObservationsClass(QueryWithLogin):
             elif isinstance(utc_date, tuple):
                 if len(utc_date) != 2:
                     raise ValueError("utc_date tuple should have two values")
-                if not isinstance(utc_date[0], date) or not isinstance(utc_date[1], date):
+                if not isinstance(utc_date[0], date) or not isinstance(
+                    utc_date[1], date
+                ):
                     raise ValueError("utc_date tuple should have date values in it")
                 args.append(f"{utc_date[0]:%Y%m%d}-{utc_date[1]:%Y%m%d}")
         if instrument is not None:
@@ -447,7 +451,9 @@ class ObservationsClass(QueryWithLogin):
         """
         url = self.url_helper.get_summary_url(*args, **kwargs)
 
-        response = self._request(method="GET", url=url, data={}, timeout=conf.GOA_TIMEOUT, cache=False)
+        response = self._request(
+            method="GET", url=url, data={}, timeout=conf.GOA_TIMEOUT, cache=False
+        )
 
         js = response.json()
         return _gemini_json_to_table(js)
@@ -455,12 +461,14 @@ class ObservationsClass(QueryWithLogin):
     def get_file_list(self, *query_args, **query_kwargs):
         url = self.url_helper.get_file_list_url(*query_args, **query_kwargs)
 
-        response = self._request(method="GET", url=url, data={}, timeout=conf.GOA_TIMEOUT, cache=False)
+        response = self._request(
+            method="GET", url=url, data={}, timeout=conf.GOA_TIMEOUT, cache=False
+        )
 
         js = response.json()
         return _gemini_json_to_table(js)
 
-    def get_file(self, filename, *, download_dir='.', timeout=None):
+    def get_file(self, filename, *, download_dir=".", timeout=None):
         """
         Download the requested file to the current directory
 
@@ -475,7 +483,9 @@ class ObservationsClass(QueryWithLogin):
         local_filepath = os.path.join(download_dir, filename)
         self._download_file(url=url, local_filepath=local_filepath, timeout=timeout)
 
-    def _download_file_content(self, url, timeout=None, auth=None, method="GET", **kwargs):
+    def _download_file_content(
+        self, url, timeout=None, auth=None, method="GET", **kwargs
+    ):
         """Download content from a URL and return it. Resembles
         `_download_file` but returns the content instead of saving it to a
         local file.
@@ -498,13 +508,15 @@ class ObservationsClass(QueryWithLogin):
             The downloaded content.
         """
 
-        response = self._session.request(method, url, timeout=timeout, auth=auth, **kwargs)
+        response = self._session.request(
+            method, url, timeout=timeout, auth=auth, **kwargs
+        )
         response.raise_for_status()
 
-        if 'content-length' in response.headers:
-            length = int(response.headers['content-length'])
+        if "content-length" in response.headers:
+            length = int(response.headers["content-length"])
             if length == 0:
-                log.warn(f'URL {url} has length=0')
+                log.warn(f"URL {url} has length=0")
 
         blocksize = astropy.utils.data.conf.download_block_size
         content = b""
@@ -528,7 +540,9 @@ class ObservationsClass(QueryWithLogin):
         # Update authentication state.
         self._authenticated = False
 
-    def get_file_content(self, filename, timeout=None, auth=None, method="GET", **kwargs):
+    def get_file_content(
+        self, filename, timeout=None, auth=None, method="GET", **kwargs
+    ):
         """Wrapper around `_download_file_content`.
 
         Parameters
@@ -549,7 +563,9 @@ class ObservationsClass(QueryWithLogin):
             The downloaded content.
         """
         url = self.get_file_url(filename)
-        return self._download_file_content(url, timeout=timeout, auth=auth, method=method, **kwargs)
+        return self._download_file_content(
+            url, timeout=timeout, auth=auth, method=method, **kwargs
+        )
 
     def get_file_url(self, filename):
         """Generate the file URL based on the filename.
@@ -581,8 +597,14 @@ class ObservationsClass(QueryWithLogin):
         """
         return self.url_helper.get_search_url(program_id)
 
-    def get_calibration_files(self, dest_folder, *query_args, decompress_fits=True,
-                              remove_readme=True, **query_kwargs) -> dict[str, Any]:
+    def get_calibration_files(
+        self,
+        dest_folder,
+        *query_args,
+        decompress_fits=True,
+        remove_readme=True,
+        **query_kwargs,
+    ) -> dict[str, Any]:
         """Download all associated calibrations files as a tar archive. Will
         untar folder after download.
 
@@ -612,11 +634,22 @@ class ObservationsClass(QueryWithLogin):
         # Assign argument to get calibrations.
         args = query_args + ("associated_calibrations",)
 
-        return self.get_files(dest_folder, *args, decompress_fits=decompress_fits,
-                              remove_readme=remove_readme, **query_kwargs)
+        return self.get_files(
+            dest_folder,
+            *args,
+            decompress_fits=decompress_fits,
+            remove_readme=remove_readme,
+            **query_kwargs,
+        )
 
-    def get_files(self, dest_folder, *query_args, decompress_fits=True, remove_readme=True,
-                  **query_kwargs) -> dict[str, Any]:
+    def get_files(
+        self,
+        dest_folder,
+        *query_args,
+        decompress_fits=True,
+        remove_readme=True,
+        **query_kwargs,
+    ) -> dict[str, Any]:
         """
         Download all files associated with a GOA query as a tar
         archive and optionally decompress bz2 files.
@@ -660,7 +693,7 @@ class ObservationsClass(QueryWithLogin):
                 "num_files_omitted": 0,
                 "message": "No available files to download. Verify search is valid.",
                 "search_url": url,
-                "success": False
+                "success": False,
             }
 
         # Generate tar_filename based on current time.
@@ -694,7 +727,10 @@ class ObservationsClass(QueryWithLogin):
 
         # Decompress inner files.
         if decompress_fits:
-            file_paths = [(dest_folder / filename) for filename in download_info["downloaded_files"]]
+            file_paths = [
+                (dest_folder / filename)
+                for filename in download_info["downloaded_files"]
+            ]
             parallize = True
             if parallize:
                 self._gevent_decompress_bz2_parallel(file_paths)
@@ -704,7 +740,8 @@ class ObservationsClass(QueryWithLogin):
 
             # Update file names in download_info.
             download_info["downloaded_files"] = [
-                filename.replace(".bz2", "") for filename in download_info["downloaded_files"]
+                filename.replace(".bz2", "")
+                for filename in download_info["downloaded_files"]
             ]
 
         return download_info
@@ -768,7 +805,7 @@ class ObservationsClass(QueryWithLogin):
             "num_files_omitted": num_files_omitted,
             "message": message,
             "search_url": search_url,
-            "success": True
+            "success": True,
         }
 
         return download_info
@@ -797,8 +834,10 @@ class ObservationsClass(QueryWithLogin):
         """
         decompressed_file_path = file_path.with_suffix("")
 
-        with bz2.open(file_path, "rb") as in_file, open(decompressed_file_path, "wb") as out_file:
-            while (chunk := in_file.read(conf.GOA_CHUNK_SIZE)):
+        with bz2.open(file_path, "rb") as in_file, open(
+            decompressed_file_path, "wb"
+        ) as out_file:
+            while chunk := in_file.read(conf.GOA_CHUNK_SIZE):
                 out_file.write(chunk)
 
         file_path.unlink()
@@ -846,7 +885,9 @@ def _gemini_json_to_table(json):
         atype = str  # Define type if necessary; default is string
         col_mask = np.equal(col_data, None)
 
-        data_table.add_column(MaskedColumn(col_data.astype(atype), name=key, mask=col_mask))
+        data_table.add_column(
+            MaskedColumn(col_data.astype(atype), name=key, mask=col_mask)
+        )
 
     return data_table
 

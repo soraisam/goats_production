@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 from goats_tom.ocs_parser import OCSParser
 
 

@@ -1,5 +1,5 @@
-from typing import Any
 import xml.etree.ElementTree as ET
+from typing import Any
 
 
 class OCSParser:
@@ -44,10 +44,7 @@ class OCSParser:
         root = ET.fromstring(xml_data)
 
         # Initialize the dictionary to store parsed data.
-        parsed_data = {
-            "version": root.attrib.get("version", ""),
-            "steps": {}
-        }
+        parsed_data = {"version": root.attrib.get("version", ""), "steps": {}}
 
         # Iterate over each "step" element found in the XML.
         for step in root.findall("step"):
@@ -135,6 +132,7 @@ class OCSParser:
         `dict[str, Any]`
             A dictionary representation of the parsed XML program data.
         """
+
         def parse_odb_element(element: ET.Element) -> Any:
             """Recursively parses an XML element into a dictionary.
 
