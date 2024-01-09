@@ -11,13 +11,13 @@ from .plugins import Plugin, GOATSPlugin
 SETTINGS_FILENAME = "settings.py"
 
 
-def modify_settings(file_path: Path | str, add_goats: bool | None = False, verbose: bool | None = False
+def modify_settings(file_path: Path, add_goats: bool | None = False, verbose: bool | None = False
                     ) -> None:
     """Modify Django settings to include additional apps.
 
     Parameters
     ----------
-    file_path : `Path | str`
+    file_path : `Path`
         The path to the settings file that needs to be modified.
     add_goats : `bool`, optional
         Flag indicating if GOATS plugin should be added to settings.

@@ -1,5 +1,6 @@
 from tom_setup.management.commands.tom_setup import Command as TOMCommand
 import sys
+from pathlib import Path
 from packaging import version
 from django.conf import settings
 from django.template.loader import get_template
@@ -49,6 +50,15 @@ class Command(TOMCommand):
         """
         self.stdout.write(f"🐐 {msg}")
         sys.exit(return_code)
+
+    def add_arguments(self, parser):
+        """Add custom command arguments."""
+        super().add_arguments(parser)
+        parser.add_argument(
+            "--media-dir",
+            type=str,
+            help="Path where the data directory will be created."
+        )
 
     def check_python(self) -> None:
         """Checks the Python version, exits if not compatible."""
@@ -109,7 +119,7 @@ class Command(TOMCommand):
         self.welcome_banner()
         self.stdout.write(self.style.MIGRATE_HEADING("Initial setup:"))
         self.check_python()
-        self.create_project_dirs()
+        self.create_project_dirs(media_dir=options.get("media_dir"))
         self.generate_secret_key()
         self.get_target_type()
         # self.get_hint_preference()
@@ -127,12 +137,22 @@ class Command(TOMCommand):
         call_command("migrate", interactive=False, verbosity=0)
         self.ok()
 
-    def create_project_dirs(self) -> None:
+    def create_project_dirs(self, media_dir) -> None:
         """Creates necessary project directories."""
         self.status("  Creating project directories... ")
 
+        # Determine the base directory for the 'data' directory
+        if media_dir:
+            self.status("  Using custom path for media...")
+            base_dir = Path(media_dir)
+        else:
+            base_dir = settings.BASE_DIR
+
         # Create a list of directories to be created
-        directories = ["data", "templates", "static", "tmp"]
+        directories = ["templates", "static", "tmp"]
+        data_dir = base_dir / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+        self.context["MEDIA_ROOT"] = data_dir
 
         for dir_name in directories:
             dir_path = settings.BASE_DIR / dir_name
