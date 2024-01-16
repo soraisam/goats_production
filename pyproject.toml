@@ -6,9 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "goats"
 description = "Gemini Observation and Analysis of Targets System."
 readme = "README.md"
-authors = [
-    {name="GOATS Team"},
-]
+authors = [{ name = "GOATS Team" }]
 classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
@@ -25,7 +23,7 @@ dependencies = [
     "django-cors-headers",
     "huey>=2.5.0",
     "greenlet>=3.0.2",
-    "fontawesomefree==6.5.1"
+    "fontawesomefree==6.5.1",
 ]
 
 version = "23.12.0"
@@ -39,6 +37,9 @@ test = [
     "flake8",
     "pytest-xdist",
     "pytest-cov",
+    "pytest-django",
+    "factory_boy",
+    "pytest-remotedata",
 ]
 
 [tool.setuptools.packages.find]
@@ -54,34 +55,35 @@ goats = "goats_cli:cli"
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
+DJANGO_SETTINGS_MODULE = "goats_tom.tests.settings"
 
 [tool.towncrier]
-    version = ""
-    package_dir = "goats"
-    filename = "CHANGES.md"
-    directory = "doc/changes"
-    start_string = "<!-- towncrier release notes start -->\n"
-    underlines = ["", "", ""]
-    title_format = "## GOATS {version} ({project_date})"
-    issue_format = "[[#{issue}](https://noirlab.atlassian.net/browse/{issue})]"
-    template = "doc/changes/template.jinja"
-    [[tool.towncrier.type]]
-        directory = "new"
-        name = "New Features"
-        showcontent = true
-    [[tool.towncrier.type]]
-        directory = "change"
-        name = "Changes"
-        showcontent = true
-    [[tool.towncrier.type]]
-        directory = "bugfix"
-        name = "Bug Fixes"
-        showcontent = true
-    [[tool.towncrier.type]]
-        directory = "perf"
-        name = "Enhancements"
-        showcontent = true
-    [[tool.towncrier.type]]
-        directory = "other"
-        name = "Other"
-        showcontent = true
+version = ""
+package_dir = "goats"
+filename = "CHANGES.md"
+directory = "doc/changes"
+start_string = "<!-- towncrier release notes start -->\n"
+underlines = ["", "", ""]
+title_format = "## GOATS {version} ({project_date})"
+issue_format = "[[#{issue}](https://noirlab.atlassian.net/browse/{issue})]"
+template = "doc/changes/template.jinja"
+[[tool.towncrier.type]]
+directory = "new"
+name = "New Features"
+showcontent = true
+[[tool.towncrier.type]]
+directory = "change"
+name = "Changes"
+showcontent = true
+[[tool.towncrier.type]]
+directory = "bugfix"
+name = "Bug Fixes"
+showcontent = true
+[[tool.towncrier.type]]
+directory = "perf"
+name = "Enhancements"
+showcontent = true
+[[tool.towncrier.type]]
+directory = "other"
+name = "Other"
+showcontent = true

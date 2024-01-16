@@ -8,20 +8,20 @@ Query public and proprietary data from GOA.
 """
 from astropy import units
 from astropy.coordinates import Angle
-
 from astroquery.utils import commons
+
 from .astroquery_conf import conf
 
 
 def handle_keyword_arg(key, value):
     """Handler function for generic keyword argument."""
-    return f'{key}={value}'
+    return f"{key}={value}"
 
 
 def handle_radius(key, radius):
     """Handler function for radius keyword with smart conversion to a degrees
     value."""
-    if key != 'radius':
+    if key != "radius":
         raise ValueError('Handler only works for "radius" keywords.')
 
     if isinstance(radius, (int, float)):
@@ -29,16 +29,16 @@ def handle_radius(key, radius):
 
     radius = Angle(radius)
 
-    return f'sr={radius.deg}d'
+    return f"sr={radius.deg}d"
 
 
 def handle_coordinates(key, coordinates):
     """Handler function for coordinates."""
-    if key != 'coordinates':
+    if key != "coordinates":
         raise ValueError('Handler only works for "coordinates" keywords.')
 
     coordinates = commons.parse_coordinates(coordinates)
-    return f'ra={coordinates.ra.deg}/dec={coordinates.dec.deg}'
+    return f"ra={coordinates.ra.deg}/dec={coordinates.dec.deg}"
 
 
 """
@@ -49,29 +49,37 @@ they are present. By default, the url will use "handle_keyword_arg" to
 add the key/value pair to the URL.
 """
 handlers = {
-    'radius': handle_radius,
-    'coordinates': handle_coordinates,
-    'default': handle_keyword_arg
+    "radius": handle_radius,
+    "coordinates": handle_coordinates,
+    "default": handle_keyword_arg,
 }
 
 
 class URLHelper:
-
-    ENGINEERING_PARAMETERS = {'notengineering', 'engineering', 'includeengineering'}
-    QA_PARAMETERS = {'NotFail', 'AnyQA', 'Pass', 'Lucky', 'Win', 'Usable', 'Undefind', 'Fail'}
-    FILE_CURATION_PARAMETERS = {'present', 'canonical', 'notpresent', 'notcanonical'}
+    ENGINEERING_PARAMETERS = {"notengineering", "engineering", "includeengineering"}
+    QA_PARAMETERS = {
+        "NotFail",
+        "AnyQA",
+        "Pass",
+        "Lucky",
+        "Win",
+        "Usable",
+        "Undefind",
+        "Fail",
+    }
+    FILE_CURATION_PARAMETERS = {"present", "canonical", "notpresent", "notcanonical"}
     ENDPOINTS = {
-        'summary': '/jsonsummary',
-        'file_list': '/jsonfilelist',
-        'tar_file': '/download',
-        'file': '/file',
-        'login': '/login',
-        'search': '/searchform'
+        "summary": "/jsonsummary",
+        "file_list": "/jsonfilelist",
+        "tar_file": "/download",
+        "file": "/file",
+        "login": "/login",
+        "search": "/searchform",
     }
     VALID_ENDPOINTS = set(ENDPOINTS.keys())
 
     def __init__(self):
-        """ Make a URL Helper for building URLs to the Gemini Archive REST
+        """Make a URL Helper for building URLs to the Gemini Archive REST
         service."""
         self.server = conf.GOA_SERVER
 
@@ -81,15 +89,15 @@ class URLHelper:
 
     def get_summary_url(self, *args, **kwargs):
         """Wrapper for getting JSON summary URL."""
-        return self.build_url(*args, endpoint='summary', **kwargs)
+        return self.build_url(*args, endpoint="summary", **kwargs)
 
     def get_file_list_url(self, *args, **kwargs):
         """Wrapper for getting JSON file list URL."""
-        return self.build_url(*args, endpoint='file_list', **kwargs)
+        return self.build_url(*args, endpoint="file_list", **kwargs)
 
     def get_tar_file_url(self, *args, **kwargs):
         """Wrapper for getting tar file URL."""
-        return self.build_url(*args, endpoint='tar_file', **kwargs)
+        return self.build_url(*args, endpoint="tar_file", **kwargs)
 
     def get_file_url(self, filename):
         """Wrapper for getting single file URL."""
@@ -116,26 +124,32 @@ class URLHelper:
         response : `string` url to execute the query
         """
         if endpoint is not None and endpoint not in self.VALID_ENDPOINTS:
-            raise ValueError(f'GOA URL endpoint ({endpoint}) must be: {", ".join(self.VALID_ENDPOINTS)}')
+            raise ValueError(
+                f'GOA URL endpoint ({endpoint}) must be: {", ".join(self.VALID_ENDPOINTS)}'
+            )
 
         if endpoint is None:
-            endpoint = 'summary'
-        elif endpoint == 'file':
+            endpoint = "summary"
+        elif endpoint == "file":
             # Must handle file url differently.
             return self.get_file_url(args[0])
-        elif endpoint == 'login':
+        elif endpoint == "login":
             return self.get_login_url()
-        elif endpoint == 'search':
+        elif endpoint == "search":
             return self.get_search_url(args[0])
 
         url_endpoint = self.ENDPOINTS[endpoint]
 
         # Get default values that are needed in API.
-        eng_parm = next((a for a in args if a in self.ENGINEERING_PARAMETERS), 'notengineering')
+        eng_parm = next(
+            (a for a in args if a in self.ENGINEERING_PARAMETERS), "notengineering"
+        )
 
-        qa_parm = next((a for a in args if a in self.QA_PARAMETERS), 'NotFail')
+        qa_parm = next((a for a in args if a in self.QA_PARAMETERS), "NotFail")
 
-        file_curation_param = next((a for a in args if a in self.FILE_CURATION_PARAMETERS), 'canonical')
+        file_curation_param = next(
+            (a for a in args if a in self.FILE_CURATION_PARAMETERS), "canonical"
+        )
 
         # Filter out defaults from args.
         args = [a for a in args if a not in [eng_parm, qa_parm, file_curation_param]]
@@ -144,15 +158,15 @@ class URLHelper:
         path_parts.extend(args)
 
         # Include kwargs in the URL path.
-        orderby = kwargs.pop('orderby', None)
+        orderby = kwargs.pop("orderby", None)
         for key, value in kwargs.items():
             handler = handlers.get(key, handle_keyword_arg)
             path_parts.append(handler(key, value))
 
-        path = '/'.join(path_parts)
+        path = "/".join(path_parts)
 
-        query_string = ''
+        query_string = ""
         if orderby is not None:
-            query_string = f'?orderby={orderby}'
+            query_string = f"?orderby={orderby}"
 
-        return f'{self.server}{path}{query_string}'
+        return f"{self.server}{path}{query_string}"

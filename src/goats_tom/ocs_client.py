@@ -1,8 +1,9 @@
 import ssl
+import xmlrpc
 from typing import Any
+
 import requests
 import urllib3
-import xmlrpc
 
 from .ocs_parser import OCSParser
 
@@ -35,17 +36,11 @@ class OCSClient:
 
     method_names = {
         "get_sequence": "WDBA_Exec.getSequence",
-        "get_coordinates": "WDBA_Tcc.getCoordinates"
+        "get_coordinates": "WDBA_Tcc.getCoordinates",
     }
     site_urls = {
-        "GS": {
-            "host": "https://gsodb.gemini.edu",
-            "port": 8443
-        },
-        "GN": {
-            "host": "https://gnodb.gemini.edu",
-            "port": 8443
-        }
+        "GS": {"host": "https://gsodb.gemini.edu", "port": 8443},
+        "GN": {"host": "https://gnodb.gemini.edu", "port": 8443},
     }
     odb_url = "/odbbrowser/observations?programReference="
     wdba_url = "/wdba"
@@ -53,7 +48,9 @@ class OCSClient:
     def __init__(self):
         self.parser = OCSParser()
 
-    def _get_site_url(self, program_or_observation_id: str) -> dict[str, dict[str, Any]]:
+    def _get_site_url(
+        self, program_or_observation_id: str
+    ) -> dict[str, dict[str, Any]]:
         """Determines the site URL based on the program or observation ID.
 
         Parameters
@@ -193,8 +190,9 @@ class OCSClient:
 
         return response.text
 
-    def _find_observation_summary(self, parsed_response: dict[str, Any], observation_id: str
-                                  ) -> dict[str, Any]:
+    def _find_observation_summary(
+        self, parsed_response: dict[str, Any], observation_id: str
+    ) -> dict[str, Any]:
         """Extracts a specific observation chunk from the parsed program data.
 
         Parameters
@@ -264,7 +262,9 @@ class OCSClient:
         `dict[str, Any]`
             The response from the server.
         """
-        response = self._send_wdba_request(self.method_names["get_sequence"], observation_id)
+        response = self._send_wdba_request(
+            self.method_names["get_sequence"], observation_id
+        )
         return self.parser.parse_sequence_response(response)
 
     def get_coordinates(self, observation_id: str) -> dict[str, Any]:
@@ -280,5 +280,7 @@ class OCSClient:
         `dict[str, Any]`
             The response from the server.
         """
-        response = self._send_wdba_request(self.method_names["get_coordinates"], observation_id)
+        response = self._send_wdba_request(
+            self.method_names["get_coordinates"], observation_id
+        )
         return self.parser.parse_coordinates_response(response)

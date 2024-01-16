@@ -110,49 +110,35 @@ class GOAQueryForm(forms.Form):
     # Need input for hidden field.
     facility = forms.CharField(widget=forms.HiddenInput(), required=False)
 
-    def is_valid(self) -> bool:
-        """Validate the form.
-
-        Returns
-        -------
-        `bool`
-            ``True`` if the form is valid, ``False`` otherwise.
-        """
-        # Call the parent class's is_valid first.
-        valid = super().is_valid()
-
-        return valid
-
     def clean(self) -> None:
         """Create query_params from cleaned_data."""
         cleaned_data = super().clean()
 
-        # Check the optional arguments.
-        filename_prefix = cleaned_data.get("filename_prefix", "")
+        filename_prefix = cleaned_data.get("filename_prefix")
+        qa_state = cleaned_data.get("qa_state")
+        observation_class = cleaned_data.get("observation_class")
+        observation_type = cleaned_data.get("observation_type")
+        raw_reduced = cleaned_data.get("raw_reduced")
+        download_calibrations = cleaned_data.get("download_calibrations")
 
-        args_list = [cleaned_data["qa_state"]]
-
-        if cleaned_data["observation_class"]:
-            args_list.append(cleaned_data["observation_class"])
-
-        if cleaned_data["observation_type"]:
-            args_list.append(cleaned_data["observation_type"])
-
-        if cleaned_data["raw_reduced"]:
-            args_list.append(cleaned_data["raw_reduced"])
+        args_list = []
+        if qa_state:
+            args_list.append(qa_state)
+        if observation_class:
+            args_list.append(observation_class)
+        if observation_type:
+            args_list.append(observation_type)
+        if raw_reduced:
+            args_list.append(raw_reduced)
 
         query_params = {
             "args": tuple(args_list),
             "kwargs": {}
         }
-
         if filename_prefix:
             query_params["kwargs"]["filepre"] = filename_prefix
-
-        query_params["kwargs"]["download_calibrations"] = cleaned_data["download_calibrations"]
-
-        # TODO: Switch to this when astroquery gets updated.
-        # query_params["kwargs"]["raw_reduced"] = cleaned_data["raw_reduced"]
+        if download_calibrations:
+            query_params["kwargs"]["download_calibrations"] = download_calibrations
 
         cleaned_data["query_params"] = query_params
         self.cleaned_data = cleaned_data

@@ -1,5 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -19,10 +21,28 @@ class GOALogin(models.Model):
         The GOA login password, stored as a securely hashed value.
     """
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='goa_login')
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="goa_login"
+    )
     username = models.CharField(max_length=100)
     # Making this 128 to store encrypted passwords.
     password = models.CharField(max_length=128)
+
+    def clean(self) -> None:
+        """Custom validation.
+
+        Exceptions
+        ----------
+        ValidatorError
+            Raised if 'username' is empty.
+        ValidationError
+            Raised if 'password' is empty.
+        """
+        if not self.username.strip():
+            raise ValidationError("Username cannot be empty")
+
+        if not self.password.strip():
+            raise ValidationError("Password cannot be empty")
 
     def set_password(self, raw_password: str) -> None:
         """Sets the user's password to the given raw string, taking care of the
@@ -42,7 +62,9 @@ class GOALogin(models.Model):
 
 class TaskProgress(models.Model):
     task_id = models.CharField(max_length=255)
-    progress = models.IntegerField(default=0)
+    progress = models.IntegerField(
+        default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
     status = models.CharField(max_length=50, default="running")
     done = models.BooleanField(default=False)
     start_time = models.DateTimeField(auto_now_add=True)
@@ -54,8 +76,8 @@ class TaskProgress(models.Model):
         return f"Task {self.task_id} ({self.status})"
 
     def finish(self, error_message: str | None = None) -> None:
-        """Update the end time of the task, mark it as done, and optionally
-        record an error message.
+        """Update the end time of the task and optionally record an error
+        message.
 
         Parameters
         ----------
@@ -71,6 +93,10 @@ class TaskProgress(models.Model):
         self.progress = 100
         self.save()
 
+    def finalize(self) -> None:
+        """Sets 'done' to `True`."""
+        self.done = True
+
     @property
     def total_time(self) -> str:
         """
@@ -80,18 +106,22 @@ class TaskProgress(models.Model):
         Returns
         -------
         `str`
-            The total time taken for the task formatted as "Xh Ym Zs" or "N/A"
-            if not available.
+            The total time taken for the task formatted as "Wd Xh Ym Zs" or
+            "N/A" if not available.
         """
         if self.end_time and self.start_time and self.done:
             duration = self.end_time - self.start_time
             seconds = duration.total_seconds()
 
-            hours = int(seconds // 3600)
+            # Calculate days, hours, minutes, and seconds.
+            days = int(seconds // 86400)
+            hours = int((seconds % 86400) // 3600)
             minutes = int((seconds % 3600) // 60)
             seconds = int(seconds % 60)
 
             time_parts = []
+            if days > 0:
+                time_parts.append(f"{days}d")
             if hours > 0:
                 time_parts.append(f"{hours}h")
             if minutes > 0:

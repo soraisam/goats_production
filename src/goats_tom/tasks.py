@@ -1,14 +1,14 @@
 import logging
-from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.core import serializers
 from huey.contrib.djhuey import db_task
-
+from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
+
 from .astroquery_gemini import Observations as GOA
-from .utils import create_name_reduction_map
 from .models import GOALogin, TaskProgress
+from .utils import create_name_reduction_map
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 @db_task()
 def download_goa_files(serialized_observation_record, query_params, user: int):
     # Only ever one observation record passed.
-    observation_record = list(serializers.deserialize("json", serialized_observation_record))[0].object
+    observation_record = list(
+        serializers.deserialize("json", serialized_observation_record)
+    )[0].object
     target = observation_record.target
     facility = observation_record.facility
     observation_id = observation_record.observation_id
@@ -66,20 +68,23 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
             file_list = GOA.query_criteria(*args, **kwargs)
             # Create the mapping.
             name_reduction_map = create_name_reduction_map(file_list)
-            sci_out = GOA.get_files(target_facility_path, *args,
-                                    decompress_fits=True, **kwargs)
+            sci_out = GOA.get_files(
+                target_facility_path, *args, decompress_fits=True, **kwargs
+            )
             sci_files = sci_out["downloaded_files"]
             task_progress.progress += 45
             task_progress.save()
 
         if not download_calibration == "no":
-            print(f"{observation_record.observation_id}: Downloading calibration files...")
+            print(
+                f"{observation_record.observation_id}: Downloading calibration files..."
+            )
             # Query GOA for calibration tarfile.
             # Only need to specify program ID.
             calibration_kwargs = {"progid": observation_record.observation_id}
-            cal_out = GOA.get_calibration_files(target_facility_path, *args,
-                                                decompress_fits=True,
-                                                **calibration_kwargs)
+            cal_out = GOA.get_calibration_files(
+                target_facility_path, *args, decompress_fits=True, **calibration_kwargs
+            )
             cal_files = cal_out["downloaded_files"]
 
         task_progress.progress = 90
@@ -116,12 +121,14 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
             dp = candidates.first()
         else:
             # Otherwise, create a new DataProduct.
-            data_product_name = f"{target.name}/{facility}/{observation_id}/{file_path.name}"
+            data_product_name = (
+                f"{target.name}/{facility}/{observation_id}/{file_path.name}"
+            )
             dp = DataProduct.objects.create(
                 product_id=product_id,
                 target=target,
                 observation_record=observation_record,
-                data_product_type=data_product_type
+                data_product_type=data_product_type,
             )
             dp.data.name = data_product_name
             dp.save()
