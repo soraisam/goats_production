@@ -31,47 +31,81 @@ def sequence_xml():
         return file.read()
 
 
-def test_get_program_summary(client, odb_xml):
+@pytest.fixture
+def observation_id():
+    return "GS-2023B-Q-102-3"
+
+
+@pytest.fixture
+def program_id():
+    return "GS-2023B-Q-102"
+
+
+def test_get_program_summary_with_observation_id(client, odb_xml, observation_id):
     # Mock the _send_odb_request method to return the fixture data.
     client._send_odb_request = lambda _: odb_xml
 
-    result = client.get_program_summary("GS-2023B-Q-102-3")
+    result = client.get_program_summary(observation_id)
     assert isinstance(result, dict)
 
 
-def test_get_observation_summary(client, odb_xml):
+def test_get_program_summary_with_program_id(client, odb_xml, program_id):
     # Mock the _send_odb_request method to return the fixture data.
     client._send_odb_request = lambda _: odb_xml
 
-    result = client.get_observation_summary("GS-2023B-Q-102-3")
+    result = client.get_program_summary(program_id)
     assert isinstance(result, dict)
 
 
-def test_get_sequence(client, sequence_xml):
+def test_get_observation_summary(client, odb_xml, observation_id):
+    # Mock the _send_odb_request method to return the fixture data.
+    client._send_odb_request = lambda _: odb_xml
+
+    result = client.get_observation_summary(observation_id)
+    assert isinstance(result, dict)
+
+
+def test_get_sequence(client, sequence_xml, observation_id):
     # Mock the _send_wdba_request method to return the fixture data.
     client._send_wdba_request = lambda _, __: sequence_xml
 
-    result = client.get_sequence("GS-2023B-Q-102-3")
+    result = client.get_sequence(observation_id)
     assert isinstance(result, dict)
 
 
-def test_get_coordinates(client, coordinates_xml):
+def test_get_coordinates(client, coordinates_xml, observation_id):
     # Mock the _send_wdba_request method to return the fixture data.
     client._send_wdba_request = lambda _, __: coordinates_xml
 
-    result = client.get_coordinates("GS-2023B-Q-102-3")
+    result = client.get_coordinates(observation_id)
     assert isinstance(result, dict)
 
 
-def test__get_site_url_valid(client):
-    """Test get_site_url with valid observation ID."""
-    assert client._get_site_url("GS-2023B-Q-102-3") == client.site_urls["GS"]
+@pytest.mark.remote_data
+def test_get_coordinates_remote(client, observation_id):
+    coordinates_response = client.get_coordinates(observation_id)
+    assert coordinates_response
 
 
-def test__get_site_url_invalid(client):
-    """Test get_site_url with invalid observation ID."""
-    with pytest.raises(ValueError):
-        client._get_site_url("Invalid-ID")
+@pytest.mark.remote_data
+def test_get_sequence_remote(client, observation_id):
+    sequence_response = client.get_sequence(observation_id)
+    assert sequence_response
 
 
-# TODO: Write tests for xmlrpc requests and odb requests.
+@pytest.mark.remote_data
+def test_get_observation_summary_remote(client, observation_id):
+    observation_id_response = client.get_observation_summary(observation_id)
+    assert observation_id_response
+
+
+@pytest.mark.remote_data
+def test_get_program_summary_with_observation_id_remote(client, observation_id):
+    program_id_response = client.get_program_summary(observation_id)
+    assert program_id_response
+
+
+@pytest.mark.remote_data
+def test_get_program_summary_with_program_id_remote(client, program_id):
+    program_id_response = client.get_program_summary(program_id)
+    assert program_id_response
