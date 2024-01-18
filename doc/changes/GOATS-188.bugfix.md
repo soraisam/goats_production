@@ -1,0 +1,1 @@
+Fixed client availability for xmlrpc: Resolved an issue where the client was not correctly set up for XML-RPC communication, ensuring proper functioning of remote procedure calls. Expanded testing with remote data to avoid more issues.
