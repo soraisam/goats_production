@@ -1,9 +1,13 @@
+from typing import Any
+
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
+
+from .gemini_id import GeminiID
 
 
 class GOALogin(models.Model):
@@ -131,3 +135,81 @@ class TaskProgress(models.Model):
 
             return " ".join(time_parts)
         return "N/A"
+
+
+def validate_program_id(value: str) -> None:
+    """Validates that the provided value is a valid program ID.
+
+    Parameters
+    ----------
+    value : `str`
+        The program ID to validate.
+
+    Raises
+    ------
+    ValidationError
+        Raised if the program ID is not valid.
+    """
+    if not GeminiID.is_valid_program_id(value):
+        raise ValidationError(f"{value} is not a valid Gemini program ID.")
+
+
+class Key(models.Model):
+    """Abstract base class for representing a key, either a user or program
+    key.
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    password = models.CharField(max_length=100)
+    site = models.CharField(
+        max_length=2, choices=[("GS", "Gemini South"), ("GN", "Gemini North")]
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+    def activate(self) -> None:
+        """Activates this key, ensuring that no other keys for the same entity
+        are active.
+        """
+        # TODO: Want to allow active keys for both sites?
+        type(self).objects.filter(user=self.user, site=self.site).update(
+            is_active=False
+        )
+        self.is_active = True
+        self.save()
+
+    def deactivate(self) -> None:
+        """Deactivates this key."""
+        self.is_active = False
+        self.save()
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Saves the instance."""
+        self.password = make_password(self.password)
+        super().save(*args, **kwargs)
+
+
+class UserKey(Key):
+    """Key associated with a user, granting access to all programs linked to
+    the email.
+    """
+
+    email = models.EmailField()
+
+    def __str__(self) -> str:
+        return f"Key for User {self.user.username}"
+
+
+class ProgramKey(Key):
+    """Key that allows access to a specific program, requiring a
+    program-specific password.
+    """
+
+    program_id = models.CharField(max_length=100, validators=[validate_program_id])
+
+    def __str__(self) -> str:
+        return f"Key for Program {self.program_id} for User {self.user.username}"
