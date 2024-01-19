@@ -71,3 +71,75 @@ def test_gemini_id_immutable_properties():
         gemini_id.program_id = "GS-2023A-DD-101"
     with pytest.raises(AttributeError):
         gemini_id.observation_id = "GS-2023A-DD-101-1"
+
+
+def test_is_valid_program_id():
+    """Test the class method for validating program IDs."""
+    valid_program_ids = [
+        "GS-2023B-Q-101",
+        "GN-2024A-DD-1",
+        "GS-2025B-FT-42",
+    ]
+    invalid_program_ids = [
+        "GT-2023B-Q-101",
+        "GS-2023-FT-101",
+        "GS-23B-Q-101",
+        "XYZ-2023B-Q-101",
+    ]
+
+    for program_id in valid_program_ids:
+        assert GeminiID.is_valid_program_id(
+            program_id
+        ), f"Program ID '{program_id}' should be valid"
+
+    for program_id in invalid_program_ids:
+        assert not GeminiID.is_valid_program_id(
+            program_id
+        ), f"Program ID '{program_id}' should be invalid"
+
+
+def test_is_valid_observation_id():
+    """Test the class method for validating observation IDs."""
+    valid_observation_ids = [
+        "GS-2023B-Q-101-2",
+        "GN-2024A-DD-1-1",
+        "GS-2025B-FT-42-5",
+    ]
+    invalid_observation_ids = [
+        "GT-2023B-Q-101-2",
+        "GS-2023-Q-101-2",
+        "GS-23B-Q-101-2",
+        "XYZ-2023B-Q-101-2",
+    ]
+
+    for observation_id in valid_observation_ids:
+        assert GeminiID.is_valid_observation_id(
+            observation_id
+        ), f"Observation ID '{observation_id}' should be valid"
+
+    for observation_id in invalid_observation_ids:
+        assert not GeminiID.is_valid_observation_id(
+            observation_id
+        ), f"Observation ID '{observation_id}' should be invalid"
+
+
+def test_is_valid():
+    """Test the class method for validating either program or observation
+    IDs.
+    """
+    valid_ids = [
+        "GS-2023B-Q-101",
+        "GN-2024A-DD-1-1",
+        "GS-2025B-FT-42-5",
+    ]
+    invalid_ids = [
+        "GT-2023B-Q-101-2",
+        "GS-23B-Q-101-2",
+        "XYZ-2023B-Q-101-2",
+    ]
+
+    for gemini_id in valid_ids:
+        assert GeminiID.is_valid(gemini_id), f"ID '{gemini_id}' should be valid"
+
+    for gemini_id in invalid_ids:
+        assert not GeminiID.is_valid(gemini_id), f"ID '{gemini_id}' should be invalid"

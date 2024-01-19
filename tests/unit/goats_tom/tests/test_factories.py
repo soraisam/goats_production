@@ -1,10 +1,17 @@
 # test_models.py
 import pytest
 from django.contrib.auth.hashers import check_password
-from django.utils import timezone
-from goats_tom.tests.factories import (GOALoginFactory, TaskProgressFactory, ReducedDatumFactory,
-                                       DataProductFactory)
 from django.core.exceptions import ValidationError
+from django.test import TestCase
+from django.utils import timezone
+from goats_tom.tests.factories import (
+    DataProductFactory,
+    GOALoginFactory,
+    ProgramKeyFactory,
+    ReducedDatumFactory,
+    TaskProgressFactory,
+    UserKeyFactory,
+)
 
 
 @pytest.mark.django_db
@@ -82,3 +89,20 @@ class TestReducedDatumFactory:
         with pytest.raises(ValidationError):
             invalid_reduced_datum = ReducedDatumFactory(data_type="invalid_type")
             invalid_reduced_datum.full_clean()
+
+
+@pytest.mark.django_db
+class KeyFactoryTest(TestCase):
+    def test_user_key_factory(self):
+        user_key = UserKeyFactory()
+        self.assertIsNotNone(user_key.id)
+        self.assertTrue(user_key.email.endswith("@example.com"))
+        self.assertIn(user_key.site, ["GS", "GN"])
+        self.assertFalse(user_key.is_active)
+
+    def test_program_key_factory(self):
+        program_key = ProgramKeyFactory()
+        self.assertIsNotNone(program_key.id)
+        self.assertTrue(program_key.program_id.startswith("GN-2024A-Q-"))
+        self.assertIn(program_key.site, ["GS", "GN"])
+        self.assertFalse(program_key.is_active)

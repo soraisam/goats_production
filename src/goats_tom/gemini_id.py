@@ -26,6 +26,9 @@ class GeminiID:
         The entire observation ID if it is an observation ID.
     """
 
+    program_pattern = r"^(GN|GS)-(\d{4}[AB])-([A-Za-z]+)-(\d+)$"
+    observation_pattern = r"^(GN|GS)-(\d{4}[AB])-([A-Za-z]+)-(\d+)-(\d+)$"
+
     def __init__(self, gemini_id: str):
         """Initializes with a Gemini ID.
 
@@ -70,14 +73,11 @@ class GeminiID:
         ValueError
             Raised if the Gemini ID does not match the expected format.
         """
-        program_pattern = r"^(GN|GS)-(\d{4}[AB])-([A-Za-z]+)-(\d+)$"
-        observation_pattern = r"^(GN|GS)-(\d{4}[AB])-([A-Za-z]+)-(\d+)-(\d+)$"
-
-        observation_match = re.match(observation_pattern, gemini_id)
+        observation_match = re.match(self.observation_pattern, gemini_id)
         if observation_match:
             return observation_match
 
-        program_match = re.match(program_pattern, gemini_id)
+        program_match = re.match(self.program_pattern, gemini_id)
         if program_match:
             return program_match
 
@@ -169,3 +169,55 @@ class GeminiID:
             The full observation ID string if available.
         """
         return self._observation_id
+
+    @classmethod
+    def is_valid_program_id(cls, program_id: str) -> bool:
+        """Checks if the given string is a valid Gemini program ID.
+
+        Parameters
+        ----------
+        program_id : `str`
+            The program ID to validate.
+
+        Returns
+        -------
+        `bool`
+            `True` if the program ID is valid, `False` otherwise.
+        """
+        return re.match(cls.program_pattern, program_id) is not None
+
+    @classmethod
+    def is_valid_observation_id(cls, observation_id: str) -> bool:
+        """Checks if the given string is a valid Gemini observation ID.
+
+        Parameters
+        ----------
+        observation_id : `str`
+            The observation ID to validate.
+
+        Returns
+        -------
+        `bool`
+            `True` if the observation ID is valid, `False` otherwise.
+        """
+        return re.match(cls.observation_pattern, observation_id) is not None
+
+    @classmethod
+    def is_valid(cls, gemini_id: str) -> bool:
+        """Checks if the given string is a valid Gemini program or observation
+        ID.
+
+        Parameters
+        ----------
+        gemini_id : `str`
+            The Gemini ID to validate.
+
+        Returns
+        -------
+        `bool`
+            `True` if the ID is valid (either a program or observation ID),
+            `False` otherwise.
+        """
+        return cls.is_valid_program_id(gemini_id) or cls.is_valid_observation_id(
+            gemini_id
+        )

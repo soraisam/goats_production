@@ -1,13 +1,16 @@
+"""
+This module contains factory classes for creating instances of various models
+used in the application, particularly for testing purposes.
+"""
 import factory
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.utils import timezone
+from goats_tom.models import GOALogin, Key, ProgramKey, TaskProgress, UserKey
 from tom_dataproducts.models import DataProduct, ReducedDatum
 from tom_observations.tests.factories import ObservingRecordFactory
 from tom_targets.tests.factories import SiderealTargetFactory
-
-from ..models import GOALogin, TaskProgress
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -95,3 +98,34 @@ class ReducedDatumFactory(factory.django.DjangoModelFactory):
         if extracted:
             for message in extracted:
                 self.message.add(message)
+
+
+class KeyFactory(factory.django.DjangoModelFactory):
+    """Base factory for keys."""
+
+    class Meta:
+        model = Key
+        abstract = True
+
+    user = factory.SubFactory(UserFactory)
+    password = "default_password"
+    site = factory.Iterator(["GS", "GN"])
+    is_active = False
+
+
+class UserKeyFactory(KeyFactory):
+    """Factory for UserKey model."""
+
+    class Meta:
+        model = UserKey
+
+    email = factory.LazyAttribute(lambda obj: f"{obj.user.username}@example.com")
+
+
+class ProgramKeyFactory(KeyFactory):
+    """Factory for ProgramKey model."""
+
+    class Meta:
+        model = ProgramKey
+
+    program_id = factory.Sequence(lambda n: f"GN-2024A-Q-{n}")
