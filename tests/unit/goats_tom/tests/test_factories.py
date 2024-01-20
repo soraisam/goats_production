@@ -105,4 +105,3 @@ class KeyFactoryTest(TestCase):
         self.assertIsNotNone(program_key.id)
         self.assertTrue(program_key.program_id.startswith("GN-2024A-Q-"))
         self.assertIn(program_key.site, ["GS", "GN"])
-        self.assertFalse(program_key.is_active)

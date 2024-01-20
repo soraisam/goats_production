@@ -1,4 +1,5 @@
 from django import forms
+from goats_tom.models import ProgramKey, UserKey
 
 
 class GOAQueryForm(forms.Form):
@@ -15,7 +16,7 @@ class GOAQueryForm(forms.Form):
         ("PROCESSED_ARC", "Processed Arcs Only"),
         ("PROCESSED_DARK", "Processed Darks Only"),
         ("PROCESSED_STANDARD", "Processed Standards Only"),
-        ("PROCESSED_SLITILLUM", "Processed Slit Illuminations Only")
+        ("PROCESSED_SLITILLUM", "Processed Slit Illuminations Only"),
     ]
 
     QA_STATE_CHOICES = [
@@ -26,7 +27,7 @@ class GOAQueryForm(forms.Form):
         ("Win", "Pass or Usable"),
         ("Usable", "Usable"),
         ("UndefinedQA", "Undefined"),
-        ("Fail", "Fail")
+        ("Fail", "Fail"),
     ]
 
     OBSERVATION_TYPES = [
@@ -51,27 +52,27 @@ class GOAQueryForm(forms.Form):
         ("progCal", "Program Calibration"),
         ("dayCal", "Day Calibration"),
         ("partnerCal", "Partner Calibration"),
-        ("acqCal", "Acquisition Calibration")
+        ("acqCal", "Acquisition Calibration"),
     ]
 
     DOWNLOAD_CALIBRATION_CHOICES = [
         ("yes", "Yes"),
         ("no", "No"),
-        ("only", "Only Calibrations")
+        ("only", "Only Calibrations"),
     ]
 
     observation_class = forms.ChoiceField(
         label="Observation Class",
         choices=OBSERVATION_CLASSES,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'}),
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     observation_type = forms.ChoiceField(
         label="Observation Type",
         choices=OBSERVATION_TYPES,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'}),
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     raw_reduced = forms.ChoiceField(
@@ -79,7 +80,7 @@ class GOAQueryForm(forms.Form):
         label="Raw/Reduced",
         widget=forms.Select(attrs={"class": "form-control"}),
         required=False,
-        help_text="(Select data by processing state)"
+        help_text="(Select data by processing state)",
     )
 
     qa_state = forms.ChoiceField(
@@ -87,24 +88,23 @@ class GOAQueryForm(forms.Form):
         label="QA State",
         widget=forms.Select(attrs={"class": "form-control"}),
         required=False,
-        help_text="(Quality of results you wish to access)"
+        help_text="(Quality of results you wish to access)",
     )
 
     filename_prefix = forms.CharField(
         label="Filename Prefix",
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Leave empty for any"
-        }),
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Leave empty for any"}
+        ),
         required=False,
-        help_text="(Specify the first part of the filename to match by)"
+        help_text="(Specify the first part of the filename to match by)",
     )
 
     download_calibrations = forms.ChoiceField(
         choices=DOWNLOAD_CALIBRATION_CHOICES,
         label="Download Associated Calibrations",
-        widget=forms.RadioSelect(attrs={'class': 'form-control'}),
-        required=True
+        widget=forms.RadioSelect(attrs={"class": "form-control"}),
+        required=True,
     )
 
     # Need input for hidden field.
@@ -131,10 +131,7 @@ class GOAQueryForm(forms.Form):
         if raw_reduced:
             args_list.append(raw_reduced)
 
-        query_params = {
-            "args": tuple(args_list),
-            "kwargs": {}
-        }
+        query_params = {"args": tuple(args_list), "kwargs": {}}
         if filename_prefix:
             query_params["kwargs"]["filepre"] = filename_prefix
         if download_calibrations:
@@ -158,16 +155,35 @@ class GOALoginForm(forms.Form):
 
     username = forms.CharField(
         label="Username",
-        widget=forms.TextInput(attrs={
-            "class": "form-control"
-        }),
-        required=True
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+        required=True,
     )
 
     password = forms.CharField(
         label="Password",
-        widget=forms.PasswordInput(attrs={
-            "class": "form-control"
-        }),
-        required=True
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+        required=True,
     )
+
+
+class UserKeyForm(forms.ModelForm):
+    class Meta:
+        model = UserKey
+        fields = ["email", "site", "password"]
+        widgets = {
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "site": forms.Select(attrs={"class": "form-control"}),
+            "password": forms.PasswordInput(attrs={"class": "form-control"}),
+        }
+
+
+class ProgramKeyForm(forms.ModelForm):
+    class Meta:
+        model = ProgramKey
+        fields = ["program_id", "site", "password"]
+        widgets = {
+            "program_id": forms.TextInput(attrs={"class": "form-control"}),
+            "site": forms.Select(attrs={"class": "form-control"}),
+            "password": forms.PasswordInput(attrs={"class": "form-control"}),
+        }
+        labels = {"program_id": "Program ID:"}

@@ -166,10 +166,26 @@ class Key(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Saves the instance."""
+        self.password = make_password(self.password)
+        super().save(*args, **kwargs)
+
+
+class UserKey(Key):
+    """Key associated with a user, granting access to all programs linked to
+    the email.
+    """
+
+    email = models.EmailField()
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return f"Key for User {self.user.username}"
 
     def activate(self) -> None:
         """Activates this key, ensuring that no other keys for the same entity
@@ -187,22 +203,6 @@ class Key(models.Model):
         self.is_active = False
         self.save()
 
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        """Saves the instance."""
-        self.password = make_password(self.password)
-        super().save(*args, **kwargs)
-
-
-class UserKey(Key):
-    """Key associated with a user, granting access to all programs linked to
-    the email.
-    """
-
-    email = models.EmailField()
-
-    def __str__(self) -> str:
-        return f"Key for User {self.user.username}"
-
 
 class ProgramKey(Key):
     """Key that allows access to a specific program, requiring a
@@ -213,3 +213,17 @@ class ProgramKey(Key):
 
     def __str__(self) -> str:
         return f"Key for Program {self.program_id} for User {self.user.username}"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Saves the instance after ensuring uniqueness of program_id and
+        site.
+        """
+        # Check if a key with the same program_id and site already exists.
+        existing_key = ProgramKey.objects.filter(
+            program_id=self.program_id, site=self.site
+        )
+        if existing_key.exists():
+            # Delete the existing key
+            existing_key.delete()
+
+        super().save(*args, **kwargs)

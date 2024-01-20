@@ -110,7 +110,6 @@ class KeyFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     password = "default_password"
     site = factory.Iterator(["GS", "GN"])
-    is_active = False
 
 
 class UserKeyFactory(KeyFactory):
@@ -120,6 +119,7 @@ class UserKeyFactory(KeyFactory):
         model = UserKey
 
     email = factory.LazyAttribute(lambda obj: f"{obj.user.username}@example.com")
+    is_active = False
 
 
 class ProgramKeyFactory(KeyFactory):

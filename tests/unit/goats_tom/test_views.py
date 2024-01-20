@@ -9,13 +9,15 @@ from django.db.models import Q
 from django.http import HttpRequest, HttpResponseRedirect, JsonResponse
 from django.test import Client, TestCase
 from django.urls import reverse
-from goats_tom.models import GOALogin, TaskProgress
+from goats_tom.models import GOALogin, ProgramKey, TaskProgress, UserKey
 from goats_tom.tests.factories import (
     DataProductFactory,
     GOALoginFactory,
+    ProgramKeyFactory,
     ReducedDatumFactory,
     TaskProgressFactory,
     UserFactory,
+    UserKeyFactory,
 )
 from goats_tom.views import (
     GOATSDataProductDeleteView,
@@ -452,13 +454,15 @@ class GOAQueryFormViewTest(TestCase):
         self.assertIn("Downloading data in background. Check back soon!", messages)
 
     @patch("goats_tom.views.GOA")
-    def test_missing_goa_credentials(self, mock_goa):
+    @patch("goats_tom.views.download_goa_files")
+    def test_missing_goa_credentials(self, mock_download, mock_goa):
         """Test form submission with missing GOA credentials."""
         self.client.login(username="testuser", password="password")
 
         response = self.client.post(self.url, self.form_data)
 
         self.assertEqual(response.status_code, 302)
+        mock_download.assert_called_once()
         messages = [msg.message for msg in get_messages(response.wsgi_request)]
         self.assertIn(
             "GOA login credentials not found. Proprietary data will not be downloaded.",
@@ -466,7 +470,8 @@ class GOAQueryFormViewTest(TestCase):
         )
 
     @patch("goats_tom.views.GOA")
-    def test_failed_goa_authentication(self, mock_goa):
+    @patch("goats_tom.views.download_goa_files")
+    def test_failed_goa_authentication(self, mock_download, mock_goa):
         """Test form submission with failed GOA authentication."""
         GOALoginFactory.create(
             user=self.user, username="goauser", password="goapassword"
@@ -479,6 +484,7 @@ class GOAQueryFormViewTest(TestCase):
         response = self.client.post(self.url, self.form_data)
 
         self.assertEqual(response.status_code, 302)
+        mock_download.assert_called_once()
         messages_list = [msg.message for msg in get_messages(response.wsgi_request)]
         self.assertIn(
             "GOA login failed. Re-enter login credentials. "
@@ -520,3 +526,165 @@ class GOATSDataProductDeleteViewTest(TestCase):
         self.client.post(self.url)
 
         self.assertFalse(file_path.exists())
+
+
+@pytest.mark.django_db
+class TestActivateUserKeyView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = UserFactory()
+        self.other_user = UserFactory()
+        self.user_key = UserKeyFactory(user=self.user)
+        self.url = reverse("activate-user-key", args=[self.user.pk, self.user_key.pk])
+
+    def test_activate_user_key_success(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.url)
+        self.user_key.refresh_from_db()
+        self.assertTrue(self.user_key.is_active)
+        self.assertRedirects(response, reverse("manage-keys", args=[self.user.pk]))
+
+    def test_activate_user_key_unauthorized(self):
+        self.client.force_login(self.other_user)
+        response = self.client.get(self.url)
+        self.user_key.refresh_from_db()
+        self.assertFalse(self.user_key.is_active)
+        self.assertRedirects(
+            response, reverse("manage-keys", args=[self.other_user.pk])
+        )
+
+
+@pytest.mark.django_db
+class TestCreateKeyView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = UserFactory()
+        self.other_user = UserFactory()
+        self.user_key_url = reverse("create-user-key", args=[self.user.pk])
+        self.program_key_url = reverse("create-program-key", args=[self.user.pk])
+        self.user_key_data = {
+            "user_key-email": "test@example.com",
+            "user_key-site": "GS",
+            "user_key-password": "pass",
+        }
+        self.program_key_data = {
+            "program_key-program_id": "GS-2023B-Q-101",
+            "program_key-site": "GN",
+            "program_key-password": "pass",
+        }
+
+    def test_create_user_key_success(self):
+        self.client.force_login(self.user)
+        response = self.client.post(self.user_key_url, data=self.user_key_data)
+        self.assertEqual(UserKey.objects.count(), 1)
+        self.assertRedirects(response, reverse("manage-keys", args=[self.user.pk]))
+
+    def test_create_user_key_unauthorized(self):
+        self.client.force_login(self.other_user)
+        response = self.client.post(
+            self.user_key_url,
+            data=self.user_key_data,
+        )
+        self.assertEqual(UserKey.objects.count(), 0)
+        self.assertRedirects(
+            response, reverse("manage-keys", args=[self.other_user.pk])
+        )
+
+    def test_create_program_key_success(self):
+        """Test successful creation of a program key."""
+        self.client.force_login(self.user)
+        response = self.client.post(self.program_key_url, data=self.program_key_data)
+        self.assertEqual(ProgramKey.objects.count(), 1)
+        self.assertRedirects(response, reverse("manage-keys", args=[self.user.pk]))
+
+    def test_replace_existing_program_key(self):
+        """Test that an existing program key is replaced by a new one with the
+        same program_id and site."""
+        # Create initial program key
+        ProgramKeyFactory(user=self.user, program_id="GS-2023B-Q-101", site="GN")
+
+        # Attempt to create a new key with the same program_id and site
+        self.client.force_login(self.user)
+        response = self.client.post(self.program_key_url, data=self.program_key_data)
+        self.assertEqual(ProgramKey.objects.count(), 1)
+        self.assertRedirects(response, reverse("manage-keys", args=[self.user.pk]))
+
+        # Ensure the new key replaced the old one
+        new_key = ProgramKey.objects.first()
+        self.assertEqual(new_key.program_id, "GS-2023B-Q-101")
+        self.assertEqual(new_key.site, "GN")
+
+    def test_create_program_key_unauthorized(self):
+        """Test unauthorized attempt to create a program key."""
+        other_user = UserFactory()
+        self.client.force_login(other_user)
+        response = self.client.post(self.program_key_url, data=self.program_key_data)
+        self.assertEqual(ProgramKey.objects.count(), 0)
+        self.assertRedirects(response, reverse("manage-keys", args=[other_user.pk]))
+
+
+@pytest.mark.django_db
+class TestDeleteKeyView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = UserFactory()
+        self.other_user = UserFactory()
+        self.user_key = UserKeyFactory(user=self.user)
+        self.program_key = ProgramKeyFactory(user=self.user)
+        self.user_key_url = reverse(
+            "delete-user-key", args=[self.user.pk, self.user_key.pk]
+        )
+        self.program_key_url = reverse(
+            "delete-program-key", args=[self.user.pk, self.user_key.pk]
+        )
+
+    def test_delete_user_key_success(self):
+        self.client.force_login(self.user)
+        self.assertEqual(UserKey.objects.count(), 1)
+        response = self.client.get(self.user_key_url)
+        self.assertEqual(UserKey.objects.count(), 0)
+        self.assertRedirects(response, reverse("manage-keys", args=[self.user.pk]))
+
+    def test_delete_user_key_unauthorized(self):
+        self.client.force_login(self.other_user)
+        response = self.client.get(self.user_key_url)
+        self.assertEqual(UserKey.objects.count(), 1)
+        self.assertRedirects(
+            response, reverse("manage-keys", args=[self.other_user.pk])
+        )
+
+    def test_delete_program_key_success(self):
+        self.client.force_login(self.user)
+        self.assertEqual(ProgramKey.objects.count(), 1)
+        response = self.client.get(self.program_key_url)
+        self.assertEqual(ProgramKey.objects.count(), 0)
+        self.assertRedirects(response, reverse("manage-keys", args=[self.user.pk]))
+
+    def test_delete_program_key_unauthorized(self):
+        self.client.force_login(self.other_user)
+        response = self.client.get(self.program_key_url)
+        self.assertEqual(ProgramKey.objects.count(), 1)
+        self.assertRedirects(
+            response, reverse("manage-keys", args=[self.other_user.pk])
+        )
+
+
+@pytest.mark.django_db
+class TestManageKeysView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = UserFactory()
+        self.url = reverse("manage-keys", args=[self.user.pk])
+
+    def test_manage_keys_view(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("user_key_form", response.context)
+        self.assertIn("program_key_form", response.context)
+        self.assertIn("user_keys", response.context)
+        self.assertIn("program_keys", response.context)
+
+    def test_manage_keys_view_unauthorized(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)  # Redirects to login page
