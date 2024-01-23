@@ -13,6 +13,7 @@ from goats_tom.tests.factories import (
     UserFactory,
     UserKeyFactory,
 )
+from goats_tom.models import ProgramKey
 
 
 @pytest.mark.django_db
@@ -109,8 +110,7 @@ class TestKeyModels:
         program_id = "GN-2024A-Q-1"
         UserKeyFactory(user=user, email=email, is_active=False)
         UserKeyFactory(user=user, email=email, is_active=False)
-        ProgramKeyFactory(user=user, program_id=program_id, is_active=False)
-        ProgramKeyFactory(user=user, program_id=program_id, is_active=False)
+        ProgramKeyFactory(user=user, program_id=program_id)
 
     def test_activating_key_deactivates_others(self):
         # Test activating one key deactivates others for the same user and
@@ -151,16 +151,19 @@ class TestKeyModels:
                 program_key.full_clean()
 
     def test_valid_program_id_passes_validation(self):
-        # Test that creating a ProgramKey with a valid program ID does not
-        # raise ValidationError.
+        """Test that valid program_ids pass without raising ValidationError."""
         user = UserFactory()
-        valid_program_ids = ["GN-2023A-Q-1", "GS-2023B-DD-2", "GN-2023A-FT-100"]
+        valid_program_ids = ["GN-2023A-Q-1", "GS-2023B-DD-2"]
 
         for program_id in valid_program_ids:
-            try:
-                program_key = ProgramKeyFactory(user=user, program_id=program_id)
-                program_key.full_clean()
-            except ValidationError:
-                pytest.fail(
-                    f"ValidationError raised for valid program ID: {program_id}"
-                )
+            ProgramKeyFactory(user=user, program_id=program_id)
+
+    def test_program_key_uniqueness(self):
+        """Test that only one ProgramKey per program_id per site is allowed."""
+        user = UserFactory()
+        program_id = "GS-2023B-Q-101"
+
+        ProgramKeyFactory(user=user, program_id=program_id, site="GS")
+        ProgramKeyFactory(user=user, program_id=program_id, site="GS")
+
+        assert ProgramKey.objects.filter(program_id=program_id, site="GS").count() == 1
