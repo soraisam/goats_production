@@ -1,3 +1,25 @@
+## GOATS 24.01.0 (2024-01-26)
+
+
+### New Features
+
+- Add CLI data product save location: Implemented a new option in the CLI to specify the save directory `--media-dir` for data products. [[#GOATS-174](https://noirlab.atlassian.net/browse/GOATS-174)]
+- Implemented Gemini OCS communication client: Added XML-RPC and URL endpoint handling in the OCS client and created a parser to convert XML data into dictionaries suitable for web view presentation. [[#GOATS-179](https://noirlab.atlassian.net/browse/GOATS-179)]
+- Implemented Gemini ID parsing: Added `GeminiID` class to parse and handle both program and observation IDs for use in `OCSClient`, enhancing ID management and validation. [[#GOATS-187](https://noirlab.atlassian.net/browse/GOATS-187)]
+- Implemented key models for OCS API access: Added UserKey and ProgramKey models to manage API keys for OCS queries. Extended GeminiID to include class methods for validating program and observation IDs. [[#GOATS-189](https://noirlab.atlassian.net/browse/GOATS-189)]
+- Implemented key management frontend: Enhanced the Gemini OT interface with new views and forms for key management. [[#GOATS-191](https://noirlab.atlassian.net/browse/GOATS-191)]
+
+
+### Changes
+
+- Switched to temporary directory usage: `GOATS` now downloads and unpacks archive data into a temporary directory, preventing collisions during decompression. Additionally, optimized the process of moving downloaded files to the destination folder by implementing parallelization. [[#GOATS-169](https://noirlab.atlassian.net/browse/GOATS-169)]
+
+
+### Bug Fixes
+
+- Fixed client availability for xmlrpc: Resolved an issue where the client was not correctly set up for XML-RPC communication, ensuring proper functioning of remote procedure calls. Expanded testing with remote data to avoid more issues. [[#GOATS-188](https://noirlab.atlassian.net/browse/GOATS-188)]
+
+
 ## GOATS 23.12.0 (2023-12-22)
 
 

@@ -1,1 +1,0 @@
-Switched to temporary directory usage: `GOATS` now downloads and unpacks archive data into a temporary directory, preventing collisions during decompression. Additionally, optimized the process of moving downloaded files to the destination folder by implementing parallelization.
