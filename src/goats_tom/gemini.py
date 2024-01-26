@@ -1,29 +1,28 @@
 from __future__ import annotations
+
 # Standard library imports.
-import bz2
 import logging
-from pathlib import Path
 from typing import Any
+
 import requests
-from requests.exceptions import HTTPError
+from astropy import units as u
 
 # Related third party imports.
-from astropy.table import Table
 from astropy.time import Time
-from astropy import units as u
-from crispy_forms.layout import Div, HTML
-from django.conf import settings
-from django import forms
-from django.core.files.base import ContentFile
-from django.contrib import messages
-from django.http import HttpRequest
+from crispy_forms.layout import HTML, Div
 from dateutil.parser import parse
+from django import forms
+from django.conf import settings
+from django.http import HttpRequest
+from requests.exceptions import HTTPError
 from tom_common.exceptions import ImproperCredentialsException
-from tom_targets.models import Target
-from tom_observations.facility import BaseRoboticObservationFacility, BaseRoboticObservationForm
-from tom_observations.models import ObservationRecord
 from tom_dataproducts.models import DataProduct
-from tom_dataproducts.utils import create_image_dataproduct
+from tom_observations.facility import (
+    BaseRoboticObservationFacility,
+    BaseRoboticObservationForm,
+)
+from tom_observations.models import ObservationRecord
+from tom_targets.models import Target
 
 # Local application/library specific imports.
 from .astroquery_gemini import Observations as GOA
@@ -37,51 +36,51 @@ except AttributeError:
 logger = logging.getLogger(__name__)
 
 try:
-    GEM_SETTINGS = settings.FACILITIES['GEM']
+    GEM_SETTINGS = settings.FACILITIES["GEM"]
 except KeyError:
     GEM_SETTINGS = {
-        'portal_url': {
-            'GS': 'https://gsodb.gemini.edu:8443',
-            'GN': 'https://gnodb.gemini.edu:8443',
+        "portal_url": {
+            "GS": "https://gsodb.gemini.edu:8443",
+            "GN": "https://gnodb.gemini.edu:8443",
         },
-        'api_key': {
-            'GS': '',
-            'GN': '',
+        "api_key": {
+            "GS": "",
+            "GN": "",
         },
-        'user_email': '',
-        'programs': {
-            'GS-YYYYS-T-NNN': {
-                'MM': 'Std: Some descriptive text',
-                'NN': 'Rap: Some descriptive text'
+        "user_email": "",
+        "programs": {
+            "GS-YYYYS-T-NNN": {
+                "MM": "Std: Some descriptive text",
+                "NN": "Rap: Some descriptive text",
             },
-            'GN-YYYYS-T-NNN': {
-                'QQ': 'Std: Some descriptive text',
-                'PP': 'Rap: Some descriptive text',
+            "GN-YYYYS-T-NNN": {
+                "QQ": "Std: Some descriptive text",
+                "PP": "Rap: Some descriptive text",
             },
         },
     }
 
-PORTAL_URL = GEM_SETTINGS['portal_url']
-VALID_OBSERVING_STATES = ['TRIGGERED', 'ON_HOLD']
-TERMINAL_OBSERVING_STATES = ['TRIGGERED', 'ON_HOLD']
+PORTAL_URL = GEM_SETTINGS["portal_url"]
+VALID_OBSERVING_STATES = ["TRIGGERED", "ON_HOLD"]
+TERMINAL_OBSERVING_STATES = ["TRIGGERED", "ON_HOLD"]
 
 # Units of flux and wavelength for converting to Specutils Spectrum1D objects
-FLUX_CONSTANT = (1 * u.erg) / (u.cm ** 2 * u.second * u.angstrom)
+FLUX_CONSTANT = (1 * u.erg) / (u.cm**2 * u.second * u.angstrom)
 WAVELENGTH_UNITS = u.angstrom
 
 SITES = {
-    'Cerro Pachon': {
-        'sitecode': 'cpo',
-        'latitude': -30.24075,
-        'longitude': -70.736694,
-        'elevation': 2722.
+    "Cerro Pachon": {
+        "sitecode": "cpo",
+        "latitude": -30.24075,
+        "longitude": -70.736694,
+        "elevation": 2722.0,
     },
-    'Maunakea': {
-        'sitecode': 'mko',
-        'latitude': 19.8238,
-        'longitude': -155.46905,
-        'elevation': 4213.
-    }
+    "Maunakea": {
+        "sitecode": "mko",
+        "latitude": 19.8238,
+        "longitude": -155.46905,
+        "elevation": 4213.0,
+    },
 }
 
 ocs_client = OCSClient()
@@ -91,8 +90,8 @@ def make_request(*args, **kwargs):
     response = requests.request(*args, **kwargs)
     print(response.url)
     if 400 <= response.status_code < 500:
-        logger.log(msg=f'Gemini request failed: {response.content}', level=logging.WARN)
-        raise ImproperCredentialsException('GEM')
+        logger.log(msg=f"Gemini request failed: {response.content}", level=logging.WARN)
+        raise ImproperCredentialsException("GEM")
     response.raise_for_status()
     return response
 
@@ -106,14 +105,14 @@ def flatten_error_dict(form, error_dict):
                     if k in form.fields:
                         form.add_error(k, i)
                     else:
-                        non_field_errors.append('{}: {}'.format(k, i))
+                        non_field_errors.append("{}: {}".format(k, i))
                 if isinstance(i, dict):
                     non_field_errors.append(flatten_error_dict(form, i))
         elif isinstance(v, str):
             if k in form.fields:
                 form.add_error(k, v)
             else:
-                non_field_errors.append('{}: {}'.format(k, v))
+                non_field_errors.append("{}: {}".format(k, v))
         elif isinstance(v, dict):
             non_field_errors.append(flatten_error_dict(form, v))
 
@@ -122,26 +121,34 @@ def flatten_error_dict(form, error_dict):
 
 def proposal_choices():
     choices = []
-    for p in GEM_SETTINGS['programs']:
+    for p in GEM_SETTINGS["programs"]:
         choices.append((p, p))
     return choices
 
 
 def obs_choices():
     choices = []
-    for p in GEM_SETTINGS['programs']:
-        for obs in GEM_SETTINGS['programs'][p]:
-            obsid = p + '-' + obs
-            val = p.split('-')
-            showtext = val[0][1] + val[1][2:] + val[2] + val[3] + '[' + obs + '] ' \
-                + GEM_SETTINGS['programs'][p][obs]
+    for p in GEM_SETTINGS["programs"]:
+        for obs in GEM_SETTINGS["programs"][p]:
+            obsid = p + "-" + obs
+            val = p.split("-")
+            showtext = (
+                val[0][1]
+                + val[1][2:]
+                + val[2]
+                + val[3]
+                + "["
+                + obs
+                + "] "
+                + GEM_SETTINGS["programs"][p][obs]
+            )
             choices.append((obsid, showtext))
     return choices
 
 
 def get_site(progid, location=False):
-    values = progid.split('-')
-    gemloc = {'GS': 'gemini_south', 'GN': 'gemini_north'}
+    values = progid.split("-")
+    gemloc = {"GS": "gemini_south", "GN": "gemini_north"}
     site = values[0].upper()
     if location:
         site = gemloc[site]
@@ -174,126 +181,179 @@ class GEMObservationForm(BaseRoboticObservationForm):
 
     # Form fields
     obsid = forms.MultipleChoiceField(choices=obs_choices())
-    ready = forms.ChoiceField(initial='true', choices=(('true', 'Yes'), ('false', 'No')))
-    brightness = forms.FloatField(required=False, label='Target Brightness')
-    brightness_system = forms.ChoiceField(required=False,
-                                          initial='AB',
-                                          label='Brightness System',
-                                          choices=(('Vega', 'Vega'), ('AB', 'AB'), ('Jy', 'Jy')))
-    brightness_band = forms.ChoiceField(required=False,
-                                        initial='r',
-                                        label='Brightness Band',
-                                        choices=(('u', 'u'), ('U', 'U'), ('B', 'B'), ('g', 'g'), ('V', 'V'),
-                                                 ('UC', 'UC'), ('r', 'r'), ('R', 'R'), ('i', 'i'), ('I', 'I'),
-                                                 ('z', 'z'), ('Y', 'Y'), ('J', 'J'), ('H', 'H'), ('K', 'K'),
-                                                 ('L', 'L'), ('M', 'M'), ('N', 'N'), ('Q', 'Q'),
-                                                 ('AP', 'AP')))
-    posangle = forms.FloatField(min_value=0.,
-                                max_value=360.,
-                                required=False,
-                                initial=0.0,
-                                label='Position Angle')
+    ready = forms.ChoiceField(
+        initial="true", choices=(("true", "Yes"), ("false", "No"))
+    )
+    brightness = forms.FloatField(required=False, label="Target Brightness")
+    brightness_system = forms.ChoiceField(
+        required=False,
+        initial="AB",
+        label="Brightness System",
+        choices=(("Vega", "Vega"), ("AB", "AB"), ("Jy", "Jy")),
+    )
+    brightness_band = forms.ChoiceField(
+        required=False,
+        initial="r",
+        label="Brightness Band",
+        choices=(
+            ("u", "u"),
+            ("U", "U"),
+            ("B", "B"),
+            ("g", "g"),
+            ("V", "V"),
+            ("UC", "UC"),
+            ("r", "r"),
+            ("R", "R"),
+            ("i", "i"),
+            ("I", "I"),
+            ("z", "z"),
+            ("Y", "Y"),
+            ("J", "J"),
+            ("H", "H"),
+            ("K", "K"),
+            ("L", "L"),
+            ("M", "M"),
+            ("N", "N"),
+            ("Q", "Q"),
+            ("AP", "AP"),
+        ),
+    )
+    posangle = forms.FloatField(
+        min_value=0.0,
+        max_value=360.0,
+        required=False,
+        initial=0.0,
+        label="Position Angle",
+    )
 
-    exptimes = forms.CharField(required=False, label='Exptime(s) [s]')
+    exptimes = forms.CharField(required=False, label="Exptime(s) [s]")
 
-    group = forms.CharField(required=False, label='Group Name')
-    notetitle = forms.CharField(required=False, initial='Finding Chart', label='Note Title')
-    note = forms.CharField(required=False, label='Note Text')
+    group = forms.CharField(required=False, label="Group Name")
+    notetitle = forms.CharField(
+        required=False, initial="Finding Chart", label="Note Title"
+    )
+    note = forms.CharField(required=False, label="Note Text")
 
-    eltype = forms.ChoiceField(required=False, label='Airmass/Hour Angle',
-                               choices=(('none', 'None'), ('airmass', 'Airmass'),
-                                        ('hourAngle', 'Hour Angle')))
-    elmin = forms.FloatField(required=False, min_value=-5.0, max_value=5.0, label='Min Airmass/HA',
-                             initial=1.0)
-    elmax = forms.FloatField(required=False, min_value=-5.0, max_value=5.0, label='Max Airmass/HA',
-                             initial=2.0)
+    eltype = forms.ChoiceField(
+        required=False,
+        label="Airmass/Hour Angle",
+        choices=(("none", "None"), ("airmass", "Airmass"), ("hourAngle", "Hour Angle")),
+    )
+    elmin = forms.FloatField(
+        required=False,
+        min_value=-5.0,
+        max_value=5.0,
+        label="Min Airmass/HA",
+        initial=1.0,
+    )
+    elmax = forms.FloatField(
+        required=False,
+        min_value=-5.0,
+        max_value=5.0,
+        label="Max Airmass/HA",
+        initial=2.0,
+    )
 
-    gstarg = forms.CharField(required=False, label='Guide Star Name')
-    gsra = forms.CharField(required=False, label='Guide Star RA')
-    gsdec = forms.CharField(required=False, label='Guide Star Dec')
-    gsbrightness = forms.FloatField(required=False, label='Guide Star Brightness')
-    gsbrightness_system = forms.ChoiceField(required=False,
-                                            initial='Vega',
-                                            label='Brightness System',
-                                            choices=(('Vega', 'Vega'), ('AB', 'AB'), ('Jy', 'Jy')))
-    gsbrightness_band = forms.ChoiceField(required=False,
-                                          initial='UC',
-                                          label='Brightness Band',
-                                          choices=(('UP', 'u'), ('U', 'U'), ('B', 'B'), ('GP', 'g'),
-                                                   ('V', 'V'),
-                                                   ('UC', 'UC'), ('RP', 'r'), ('R', 'R'), ('IP', 'i'),
-                                                   ('I', 'I'),
-                                                   ('ZP', 'z'), ('Y', 'Y'), ('J', 'J'), ('H', 'H'),
-                                                   ('K', 'K'),
-                                                   ('L', 'L'), ('M', 'M'), ('N', 'N'), ('Q', 'Q'),
-                                                   ('AP', 'AP')))
-    gsprobe = forms.ChoiceField(required=False,
-                                label='Guide Probe',
-                                initial='OIWFS',
-                                choices=(('OIWFS', 'OIWFS'),
-                                         ('PWFS1', 'PWFS1'),
-                                         ('PWFS2', 'PWFS2'),
-                                         ('AOWFS', 'AOWFS')))
-    window_start = forms.CharField(required=False,
-                                   widget=forms.DateTimeInput(attrs={'type': 'datetime'},
-                                                              format='%Y-%m-%d %H:%M:%S'),
-                                   label='Timing Window')
-    window_duration = forms.IntegerField(required=False, min_value=1, label='Window Duration [hr]')
+    gstarg = forms.CharField(required=False, label="Guide Star Name")
+    gsra = forms.CharField(required=False, label="Guide Star RA")
+    gsdec = forms.CharField(required=False, label="Guide Star Dec")
+    gsbrightness = forms.FloatField(required=False, label="Guide Star Brightness")
+    gsbrightness_system = forms.ChoiceField(
+        required=False,
+        initial="Vega",
+        label="Brightness System",
+        choices=(("Vega", "Vega"), ("AB", "AB"), ("Jy", "Jy")),
+    )
+    gsbrightness_band = forms.ChoiceField(
+        required=False,
+        initial="UC",
+        label="Brightness Band",
+        choices=(
+            ("UP", "u"),
+            ("U", "U"),
+            ("B", "B"),
+            ("GP", "g"),
+            ("V", "V"),
+            ("UC", "UC"),
+            ("RP", "r"),
+            ("R", "R"),
+            ("IP", "i"),
+            ("I", "I"),
+            ("ZP", "z"),
+            ("Y", "Y"),
+            ("J", "J"),
+            ("H", "H"),
+            ("K", "K"),
+            ("L", "L"),
+            ("M", "M"),
+            ("N", "N"),
+            ("Q", "Q"),
+            ("AP", "AP"),
+        ),
+    )
+    gsprobe = forms.ChoiceField(
+        required=False,
+        label="Guide Probe",
+        initial="OIWFS",
+        choices=(
+            ("OIWFS", "OIWFS"),
+            ("PWFS1", "PWFS1"),
+            ("PWFS2", "PWFS2"),
+            ("AOWFS", "AOWFS"),
+        ),
+    )
+    window_start = forms.CharField(
+        required=False,
+        widget=forms.DateTimeInput(
+            attrs={"type": "datetime"}, format="%Y-%m-%d %H:%M:%S"
+        ),
+        label="Timing Window",
+    )
+    window_duration = forms.IntegerField(
+        required=False, min_value=1, label="Window Duration [hr]"
+    )
 
     def layout(self):
         return Div(
-            HTML('<big>Observation Parameters</big>'),
-            HTML('<p>Select the Obsids of one or more templates. <br>'),
-            HTML('Setting Ready=No will keep the new observation(s) On Hold. <br>'),
-            HTML('If a value is not set, then the template default is used. <br>'),
-            HTML('If setting Exptime, then provide a list of values if selecting more than one Obsid.</p>'),
-            Div(
-                Div(
-                    'obsid',
-                    css_class='col'
-                ),
-                Div(
-                    'ready',
-                    css_class='col'
-                ),
-                Div(
-                    'notetitle',
-                    css_class='col'
-                ),
-                css_class='form-row'
+            HTML("<big>Observation Parameters</big>"),
+            HTML("<p>Select the Obsids of one or more templates. <br>"),
+            HTML("Setting Ready=No will keep the new observation(s) On Hold. <br>"),
+            HTML("If a value is not set, then the template default is used. <br>"),
+            HTML(
+                "If setting Exptime, then provide a list of values if selecting more than one Obsid.</p>"
             ),
             Div(
-                Div(
-                    'posangle', 'brightness', 'eltype', 'group',
-                    css_class='col'
-                ),
-                Div(
-                    'exptimes', 'brightness_band', 'elmin', 'window_start',
-                    css_class='col'
-                ),
-                Div(
-                    'note', 'brightness_system', 'elmax', 'window_duration',
-                    css_class='col'
-                ),
-                css_class='form-row'
+                Div("obsid", css_class="col"),
+                Div("ready", css_class="col"),
+                Div("notetitle", css_class="col"),
+                css_class="form-row",
             ),
-            HTML('<big>Optional Guide Star Parameters</big>'),
-            HTML('<p>If any one of Name/RA/Dec is given, then all must be.</p>'),
             Div(
+                Div("posangle", "brightness", "eltype", "group", css_class="col"),
                 Div(
-                    'gstarg', 'gsbrightness', 'gsprobe',
-                    css_class='col'
+                    "exptimes",
+                    "brightness_band",
+                    "elmin",
+                    "window_start",
+                    css_class="col",
                 ),
                 Div(
-                    'gsra', 'gsbrightness_band',
-                    css_class='col'
+                    "note",
+                    "brightness_system",
+                    "elmax",
+                    "window_duration",
+                    css_class="col",
                 ),
-                Div(
-                    'gsdec', 'gsbrightness_system',
-                    css_class='col'
-                ),
-                css_class='form-row',
-            )
+                css_class="form-row",
+            ),
+            HTML("<big>Optional Guide Star Parameters</big>"),
+            HTML("<p>If any one of Name/RA/Dec is given, then all must be.</p>"),
+            Div(
+                Div("gstarg", "gsbrightness", "gsprobe", css_class="col"),
+                Div("gsra", "gsbrightness_band", css_class="col"),
+                Div("gsdec", "gsbrightness_system", css_class="col"),
+                css_class="form-row",
+            ),
         )
 
     def is_valid(self):
@@ -304,26 +364,31 @@ class GEMObservationForm(BaseRoboticObservationForm):
         return not errors
 
     def observation_payload(self):
-
         def isodatetime(value):
             isostring = parse(value).isoformat()
-            ii = isostring.find('T')
+            ii = isostring.find("T")
+            time_ii = ii + 1
             date = isostring[0:ii]
-            time = isostring[ii + 1:]
+            time = isostring[time_ii:]
             return date, time
 
         payloads = []
 
-        target = Target.objects.get(pk=self.cleaned_data['target_id'])
-        spa = str(self.cleaned_data['posangle']).strip()
+        target = Target.objects.get(pk=self.cleaned_data["target_id"])
+        spa = str(self.cleaned_data["posangle"]).strip()
 
-        nobs = len(self.cleaned_data['obsid'])
-        if self.cleaned_data['exptimes'] != '':
-            expvalues = self.cleaned_data['exptimes'].split(',')
+        nobs = len(self.cleaned_data["obsid"])
+        if self.cleaned_data["exptimes"] != "":
+            expvalues = self.cleaned_data["exptimes"].split(",")
             if len(expvalues) != nobs:
                 payloads.append(
-                    {"error": ("If exptimes given, the number of values must equal the number of obsids "
-                               "selected.")})
+                    {
+                        "error": (
+                            "If exptimes given, the number of values must equal the number of obsids "
+                            "selected."
+                        )
+                    }
+                )
                 return payloads
 
             # Convert exposure times to integers
@@ -335,68 +400,82 @@ class GEMObservationForm(BaseRoboticObservationForm):
                 return payloads
 
         for jj in range(nobs):
-            obs = self.cleaned_data['obsid'][jj]
-            ii = obs.rfind('-')
+            obs = self.cleaned_data["obsid"][jj]
+            ii = obs.rfind("-")
+            obsnum_ii = ii + 1
             progid = obs[0:ii]
-            obsnum = obs[ii+1:]
+            obsnum = obs[obsnum_ii:]
             payload = {
                 "prog": progid,
-                "password": GEM_SETTINGS['api_key'][get_site(obs)],
-                "email": GEM_SETTINGS['user_email'],
+                "password": GEM_SETTINGS["api_key"][get_site(obs)],
+                "email": GEM_SETTINGS["user_email"],
                 "obsnum": obsnum,
                 "target": target.name,
                 "ra": target.ra,
                 "dec": target.dec,
-                "ready": self.cleaned_data['ready']
+                "ready": self.cleaned_data["ready"],
             }
 
-            if self.cleaned_data['notetitle'] != 'Finding Chart' or self.cleaned_data['note'] != '':
-                payload["noteTitle"] = self.cleaned_data['notetitle']
-                payload["note"] = self.cleaned_data['note']
+            if (
+                self.cleaned_data["notetitle"] != "Finding Chart"
+                or self.cleaned_data["note"] != ""
+            ):
+                payload["noteTitle"] = self.cleaned_data["notetitle"]
+                payload["note"] = self.cleaned_data["note"]
 
-            if self.cleaned_data['brightness'] is not None:
-                smags = str(self.cleaned_data['brightness']).strip() + '/' + \
-                    self.cleaned_data['brightness_band'] + '/' + \
-                    self.cleaned_data['brightness_system']
+            if self.cleaned_data["brightness"] is not None:
+                smags = (
+                    str(self.cleaned_data["brightness"]).strip()
+                    + "/"
+                    + self.cleaned_data["brightness_band"]
+                    + "/"
+                    + self.cleaned_data["brightness_system"]
+                )
                 payload["mags"] = smags
 
-            if self.cleaned_data['exptimes'] != '':
-                payload['exptime'] = exptimes[jj]
+            if self.cleaned_data["exptimes"] != "":
+                payload["exptime"] = exptimes[jj]
 
-            if self.cleaned_data['group'].strip() != '':
-                payload['group'] = self.cleaned_data['group'].strip()
+            if self.cleaned_data["group"].strip() != "":
+                payload["group"] = self.cleaned_data["group"].strip()
 
             # timing window?
-            if self.cleaned_data['window_start'].strip() != '':
-                wdate, wtime = isodatetime(self.cleaned_data['window_start'])
-                payload['windowDate'] = wdate
-                payload['windowTime'] = wtime
-                payload['windowDuration'] = str(self.cleaned_data['window_duration']).strip()
+            if self.cleaned_data["window_start"].strip() != "":
+                wdate, wtime = isodatetime(self.cleaned_data["window_start"])
+                payload["windowDate"] = wdate
+                payload["windowTime"] = wtime
+                payload["windowDuration"] = str(
+                    self.cleaned_data["window_duration"]
+                ).strip()
 
             # elevation/airmass
-            if self.cleaned_data['eltype'] is not None:
-                payload['elevationType'] = self.cleaned_data['eltype']
-                payload['elevationMin'] = str(self.cleaned_data['elmin']).strip()
-                payload['elevationMax'] = str(self.cleaned_data['elmax']).strip()
+            if self.cleaned_data["eltype"] is not None:
+                payload["elevationType"] = self.cleaned_data["eltype"]
+                payload["elevationMin"] = str(self.cleaned_data["elmin"]).strip()
+                payload["elevationMax"] = str(self.cleaned_data["elmax"]).strip()
 
             # Guide star
-            gstarg = self.cleaned_data['gstarg']
-            if gstarg != '':
-                gsra = self.cleaned_data['gsra']
-                gsdec = self.cleaned_data['gsdec']
-                if self.cleaned_data['gsbrightness'] is not None:
-                    sgsmag = str(self.cleaned_data['gsbrightness']).strip() + '/' + \
-                        self.cleaned_data['gsbrightness_band'] + '/' + \
-                        self.cleaned_data['gsbrightness_system']
+            gstarg = self.cleaned_data["gstarg"]
+            if gstarg != "":
+                gsra = self.cleaned_data["gsra"]
+                gsdec = self.cleaned_data["gsdec"]
+                if self.cleaned_data["gsbrightness"] is not None:
+                    sgsmag = (
+                        str(self.cleaned_data["gsbrightness"]).strip()
+                        + "/"
+                        + self.cleaned_data["gsbrightness_band"]
+                        + "/"
+                        + self.cleaned_data["gsbrightness_system"]
+                    )
 
-            if gstarg != '':
-                payload['gstarget'] = gstarg
-                payload['gsra'] = gsra
-                payload['gsdec'] = gsdec
-                payload['gsmags'] = sgsmag
-                payload['gsprobe'] = self.cleaned_data['gsprobe']
+            if gstarg != "":
+                payload["gstarget"] = gstarg
+                payload["gsra"] = gsra
+                payload["gsdec"] = gsdec
+                payload["gsmags"] = sgsmag
+                payload["gsprobe"] = self.cleaned_data["gsprobe"]
 
-            payload['posangle'] = spa
+            payload["posangle"] = spa
 
             payloads.append(payload)
 
@@ -410,10 +489,8 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
     see https://www.gemini.edu/observing/start-here
     """
 
-    name = 'GEM'
-    observation_forms = {
-        'OBSERVATION': GEMObservationForm
-    }
+    name = "GEM"
+    observation_forms = {"OBSERVATION": GEMObservationForm}
 
     def get_form(self, observation_type):
         """Always returns the Gemini Observation Form for now."""
@@ -423,13 +500,13 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         obsids = []
         for payload in observation_payload:
             response = make_request(
-                'POST',
-                PORTAL_URL[get_site(payload['prog'])] + '/too',
+                "POST",
+                PORTAL_URL[get_site(payload["prog"])] + "/too",
                 verify=False,
-                params=payload
+                params=payload,
             )
             # Return just observation number
-            obsid = response.text.split('-')
+            obsid = response.text.split("-")
             obsids.append(obsid[-1])
         return obsids
 
@@ -437,21 +514,21 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
     def validate_observation(clz, observation_payload):
         # Gemini doesn't have an API for validation, but run some checks
         errors = {}
-        if 'elevationType' in observation_payload[0].keys():
-            if observation_payload[0]['elevationType'] == 'airmass':
-                if float(observation_payload[0]['elevationMin']) < 1.0:
-                    errors['elevationMin'] = 'Airmass must be >= 1.0'
-                if float(observation_payload[0]['elevationMax']) > 2.5:
-                    errors['elevationMax'] = 'Airmass must be <= 2.5'
+        if "elevationType" in observation_payload[0].keys():
+            if observation_payload[0]["elevationType"] == "airmass":
+                if float(observation_payload[0]["elevationMin"]) < 1.0:
+                    errors["elevationMin"] = "Airmass must be >= 1.0"
+                if float(observation_payload[0]["elevationMax"]) > 2.5:
+                    errors["elevationMax"] = "Airmass must be <= 2.5"
 
         for payload in observation_payload:
-            if 'error' in payload.keys():
-                errors['exptimes'] = payload['error']
-            if 'exptime' in payload.keys():
-                if payload['exptime'] <= 0:
-                    errors['exptimes'] = 'Exposure time must be >= 1'
-                if payload['exptime'] > 1200:
-                    errors['exptimes'] = 'Exposure time must be <= 1200'
+            if "error" in payload.keys():
+                errors["exptimes"] = payload["error"]
+            if "exptime" in payload.keys():
+                if payload["exptime"] <= 0:
+                    errors["exptimes"] = "Exposure time must be >= 1"
+                if payload["exptime"] > 1200:
+                    errors["exptimes"] = "Exposure time must be <= 1200"
 
         return errors
 
@@ -459,7 +536,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         return GOA.get_search_url(observation_id)
 
     def get_start_end_keywords(self):
-        return ('window_start', 'window_end')
+        return ("window_start", "window_end")
 
     def get_terminal_observing_states(self):
         return TERMINAL_OBSERVING_STATES
@@ -474,7 +551,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         except Exception as e:
             logger.error(e)
             state = "Error"
-        return {'state': state, 'scheduled_start': None, 'scheduled_end': None}
+        return {"state": state, "scheduled_start": None, "scheduled_end": None}
 
     def get_flux_constant(self) -> u:
         """
@@ -540,12 +617,16 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         If the cancellation was successful, return True. Otherwise, return
         False.
         """
-        raise NotImplementedError('This facility has not implemented cancel observation.')
+        raise NotImplementedError(
+            "This facility has not implemented cancel observation."
+        )
 
     def get_date_obs_from_fits_header(self, header):
         return None
 
-    def all_data_products(self, observation_record: ObservationRecord) -> list[dict[str, Any]]:
+    def all_data_products(
+        self, observation_record: ObservationRecord
+    ) -> list[dict[str, Any]]:
         """Grabs all the data products.
 
         Parameters
@@ -580,179 +661,20 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             products["saved"].append(product)
         return products
 
-    def save_data_products(self, observation_record: ObservationRecord, product_id: str | None = None,
-                           request: HttpRequest | None = None, query_params: dict[str, Any] | None = None
-                           ) -> list[DataProduct]:
-        """Save data products related to an observation record.
+    def save_data_products(
+        self,
+        observation_record: ObservationRecord,
+        product_id: str | None = None,
+        request: HttpRequest | None = None,
+        query_params: dict[str, Any] | None = None,
+    ) -> list[DataProduct]:
+        raise NotImplementedError(
+            "Data products should be downloaded by background task from GOA."
+        )
 
-        Parameters
-        ----------
-        observation_record : `ObservationRecord`
-            The observation record object.
-        product_id : `str | None`
-            The ID of the product to download, by default ``None``.
-        request : `HttpRequest`
-            The request to attach messages to.
-        query_params : `dict[str, Any] | None`
-            Query parameters to refine the data product search, by default
-            ``None``.
-
-        Returns
-        -------
-        `list[DataProduct]`
-            List of saved DataProduct objects.
-
-        Notes
-        -----
-        Skips downloading if the data is proprietary and the user is not
-        authenticated.
-        """
-        # TODO: Extract this out to TOMToolkit.
-        final_products = []
-        target = observation_record.target
-        facility = observation_record.facility
-        # Query params only provided if GOA query is true.
-        if query_params:
-            # Get target path.
-            target_path = Path(f"{settings.MEDIA_ROOT}/{target.name}")
-
-            # Set default args and kwargs if not provided in query_params.
-            args = query_params.get("args", ())
-            kwargs = query_params.get("kwargs", {})
-
-            # Pass in the observation ID to query only for this observation.
-            kwargs["progid"] = observation_record.observation_id
-
-            # Determine what to do with calibration data.
-            download_calibration = kwargs.pop("download_calibrations", None)
-
-            # Create blank mapping.
-            name_reduction_map = {}
-            try:
-                # Query GOA for science tarfile.
-                if not download_calibration == "only":
-                    print("downloading science files")
-                    file_list = GOA.query_criteria(*args, **kwargs)
-                    # Create the mapping.
-                    name_reduction_map = _create_name_reduction_map(file_list)
-
-                    science_download_info = GOA.get_files(target_path, *args, tar_name=facility,
-                                                          decompress_fits=True, **kwargs)
-
-                    if request:
-                        if science_download_info["success"]:
-                            message_type = messages.success
-                        else:
-                            message_type = messages.error
-                        message_type(request, f"Observation Files: {science_download_info['message']}")
-
-                if not download_calibration == "no":
-                    print("downloading calibration files")
-                    # Query GOA for calibration tarfile.
-                    # Only need to specify program ID.
-                    calibration_kwargs = {"progid": observation_record.observation_id}
-                    calibration_download_info = GOA.get_calibration_files(
-                        target_path, *args, tar_name=facility, decompress_fits=True, **calibration_kwargs)
-
-                    if request:
-                        if calibration_download_info["success"]:
-                            message_type = messages.success
-                        else:
-                            message_type = messages.error
-                        message_type(request, f"Calibration Files: {calibration_download_info['message']}")
-
-            except HTTPError as e:
-                if e.response.status_code == 403:
-                    logger.error("You are not authorized to download this data.")
-                else:
-                    logger.error("HTTP Error occured: %s", e)
-
-            # Handle case if GOA found nothing and did not create folder.
-            target_facility_path = target_path / facility
-            if not target_facility_path.exists():
-                return final_products
-
-            # Now lead by the files in the folder.
-            for file_path in target_facility_path.iterdir():
-                if file_path.suffix != ".fits":
-                    continue
-                product_id = file_path.stem
-
-                # Use the mapping to get the data product type.
-                # If not found, return default for calibration.
-                data_product_type = name_reduction_map.get(file_path.name, "RAW")
-
-                # Query DataProduct by product_id and target.
-                candidates = DataProduct.objects.filter(product_id=product_id, target=target)
-
-                if candidates.exists():
-                    # If we have candidates, just grab the first one.
-                    dp = candidates.first()
-                else:
-                    # Otherwise, create a new DataProduct.
-                    data_product_name = f"{target.name}/{facility}/{file_path.name}"
-                    dp = DataProduct.objects.create(
-                        product_id=product_id,
-                        target=target,
-                        observation_record=observation_record,
-                        data_product_type=data_product_type
-                    )
-                    dp.data.name = data_product_name
-                    dp.save()
-                    logger.info("Saved new dataproduct from tarfile: %s", dp.data)
-
-                if AUTO_THUMBNAILS:
-                    create_image_dataproduct(dp)
-                    dp.get_preview()
-
-                final_products.append(dp)
-            return final_products
-
-        # Handle case for specific file download.
-        # TODO: Should download compressed then uncompress?
-        products = self.data_products(observation_record, product_id)
-
-        for product in products:
-            if product["is_proprietary"] and not GOA.authenticated():
-                # Skip downloading if proprietary and not authenticated.
-                logger.info("Skipping proprietary file %s", product["filename"])
-                continue
-
-            # Only proceed if the file content was successfully downloaded.
-            dp, created = DataProduct.objects.get_or_create(
-                product_id=product["id"],
-                target=target,
-                observation_record=observation_record,
-                data_product_type=product["data_product_type"]
-            )
-
-            if created:
-                try:
-                    # Users can still try to download proprietary data that
-                    # does not belong to their account.
-                    product_data = GOA.get_file_content(product["compressed_filename"])
-                    # Decompress the data
-                    decompressed_product_data = bz2.decompress(product_data)
-                    dfile = ContentFile(decompressed_product_data)
-                    dp.data.save(product["filename"], dfile)
-                    dp.save()
-                    logger.info("Saved new dataproduct: %s", dp.data)
-                except HTTPError as e:
-                    if e.response.status_code == 403:
-                        logger.error("You are not authorized to download this data.")
-                    else:
-                        logger.error("HTTP Error occured: %s", e)
-
-            if AUTO_THUMBNAILS:
-                create_image_dataproduct(dp)
-                dp.get_preview()
-
-            final_products.append(dp)
-
-        return final_products
-
-    def data_products(self, observation_record: ObservationRecord, product_id: str | None = None
-                      ) -> list[dict[str, Any]]:
+    def data_products(
+        self, observation_record: ObservationRecord, product_id: str | None = None
+    ) -> list[dict[str, Any]]:
         """Gets the products to save to the observation.
 
         Parameters
@@ -788,9 +710,19 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
 
         # Generate calibration files by performing a set difference between
         # filenames and file names returned from GOA.
-        cal_files = [{"name": name, "created": product.created, "release": None,
-                      "lastmod": product.modified, "filename": f"{name}.bz2", "reduction": "RAW"}
-                     for product, name in zip(all_products, filenames - {f["name"] for f in files})]
+        cal_files = [
+            {
+                "name": name,
+                "created": product.created,
+                "release": None,
+                "lastmod": product.modified,
+                "filename": f"{name}.bz2",
+                "reduction": "RAW",
+            }
+            for product, name in zip(
+                all_products, filenames - {f["name"] for f in files}
+            )
+        ]
 
         # Look for the product ID if it exists.
         if product_id is not None:
@@ -842,21 +774,5 @@ def _create_data_product_entry(product: Any) -> dict[str, Any]:
         "created": product["lastmod"],
         "url": GOA.get_file_url(product["name"]),
         "is_proprietary": is_proprietary,
-        "data_product_type": product["reduction"]
+        "data_product_type": product["reduction"],
     }
-
-
-def _create_name_reduction_map(file_list: Table) -> dict[str, str]:
-    """Create a mapping from file "name" to "reduction" values from GOA.
-
-    Parameters
-    ----------
-    file_list : `Table`
-        Astropy `Table` containing file information.
-
-    Returns
-    -------
-    `dict[str, str]`
-        A dictionary mapping file 'name' to their 'reduction' values.
-    """
-    return {row['name']: row['reduction'] for row in file_list}
