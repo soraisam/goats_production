@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.core import serializers
+from django.db import IntegrityError
 from huey.contrib.djhuey import db_task
 from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
@@ -24,7 +25,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
     observation_id = observation_record.observation_id
     # Create TaskProgress record at the start
     task_progress = TaskProgress.objects.create(
-        task_id=observation_record.observation_id,
+        task_id=observation_id,
         progress=1,
         status="running",
     )
@@ -51,7 +52,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
     kwargs = query_params.get("kwargs", {})
 
     # Pass in the observation ID to query only for this observation.
-    kwargs["progid"] = observation_record.observation_id
+    kwargs["progid"] = observation_id
 
     # Determine what to do with calibration data.
     download_calibration = kwargs.pop("download_calibrations", None)
@@ -64,7 +65,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
 
         # Query GOA for science tarfile.
         if not download_calibration == "only":
-            print(f"{observation_record.observation_id}: Downloading science files...")
+            print(f"{observation_id}: Downloading science files...")
             file_list = GOA.query_criteria(*args, **kwargs)
             # Create the mapping.
             name_reduction_map = create_name_reduction_map(file_list)
@@ -76,12 +77,10 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
             task_progress.save()
 
         if not download_calibration == "no":
-            print(
-                f"{observation_record.observation_id}: Downloading calibration files..."
-            )
+            print(f"{observation_id}: Downloading calibration files...")
             # Query GOA for calibration tarfile.
             # Only need to specify program ID.
-            calibration_kwargs = {"progid": observation_record.observation_id}
+            calibration_kwargs = {"progid": observation_id}
             cal_out = GOA.get_calibration_files(
                 target_facility_path, *args, decompress_fits=True, **calibration_kwargs
             )
@@ -113,26 +112,36 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
         # Use the mapping to get the data product type.
         # If not found, return default for calibration.
         data_product_type = name_reduction_map.get(file_path.name, "RAW")
-        # Query DataProduct by product_id and target.
-        candidates = DataProduct.objects.filter(product_id=product_id, target=target)
+        # Query DataProduct by product_id.
+        candidates = DataProduct.objects.filter(
+            product_id=product_id,
+            observation_record=observation_record,
+            target=target,
+        )
 
         if candidates.exists():
             # If we have candidates, just grab the first one.
             dp = candidates.first()
         else:
             # Otherwise, create a new DataProduct.
-            data_product_name = (
-                f"{target.name}/{facility}/{observation_id}/{file_path.name}"
-            )
-            dp = DataProduct.objects.create(
-                product_id=product_id,
-                target=target,
-                observation_record=observation_record,
-                data_product_type=data_product_type,
-            )
-            dp.data.name = data_product_name
-            dp.save()
-            logger.info("Saved new dataproduct from tarfile: %s", dp.data)
+            try:
+                data_product_name = (
+                    f"{target.name}/{facility}/{observation_id}/{file_path.name}"
+                )
+                dp = DataProduct.objects.create(
+                    product_id=product_id,
+                    target=target,
+                    observation_record=observation_record,
+                    data_product_type=data_product_type,
+                )
+                dp.data.name = data_product_name
+                dp.save()
+                logger.info("Saved new dataproduct from tarfile: %s", dp.data)
+            except IntegrityError:
+                logger.error(
+                    "There already exists a data product '%s', skipping.",
+                    file_path.name,
+                )
 
     GOA.logout()
     task_progress.finish()
