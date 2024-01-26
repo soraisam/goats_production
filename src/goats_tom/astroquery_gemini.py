@@ -8,8 +8,10 @@ Query public and proprietary data from GOA.
 """
 import bz2
 import os
+import shutil
 import tarfile
-from datetime import date, datetime
+import tempfile
+from datetime import date
 from multiprocessing import Pool
 from pathlib import Path
 from typing import Any
@@ -675,6 +677,7 @@ class ObservationsClass(QueryWithLogin):
             A dictionary containing the number of files downloaded, the number
             of files omitted, a human-readable message, and boolean success.
         """
+        parallize = True
         # Convert destination folder.
         dest_folder = Path(dest_folder).expanduser()
         url = self.url_helper.get_tar_file_url(*query_args, **query_kwargs)
@@ -696,57 +699,73 @@ class ObservationsClass(QueryWithLogin):
                 "success": False,
             }
 
-        # Generate tar_filename based on current time.
-        tar_name = f"goaquery-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}.tar"
         dest_folder.mkdir(parents=True, exist_ok=True)
-        tar_path = dest_folder / tar_name
 
-        # Stream download.
-        with open(tar_path, "wb") as f:
-            f.write(first_chunk)
-            for chunk in data:
-                f.write(chunk)
-        response.close()
+        # Use a temporary directory to unpack.
+        with tempfile.TemporaryDirectory(dir=dest_folder) as temp_dir:
+            temp_dir = Path(temp_dir)
+            # Generate tar_filename based on current time.
+            tar_path = temp_dir / "goa-query.tar"
 
-        # Extract the tar archive.
-        with tarfile.open(tar_path, "r") as tar:
-            tar.extractall(path=dest_folder)
+            # Stream download.
+            with open(tar_path, "wb") as f:
+                f.write(first_chunk)
+                for chunk in data:
+                    f.write(chunk)
+            response.close()
 
-        # Remove tarfile.
-        tar_path.unlink()
+            # Extract the tar archive.
+            with tarfile.open(tar_path, "r") as tar:
+                tar.extractall(path=temp_dir)
 
-        # Build download statistics.
-        download_info = self._generate_download_info(dest_folder)
+            # Delete the tar file after extraction.
+            tar_path.unlink()
 
-        # Delete additional files if wanted.
-        if remove_readme:
-            for file_name in ["README.txt", "md5sums.txt"]:
-                file_path = dest_folder / file_name
-                if file_path.exists():
-                    file_path.unlink()
+            # Build download statistics.
+            download_info = self._generate_download_info(temp_dir)
 
-        # Decompress inner files.
-        if decompress_fits:
-            file_paths = [
-                (dest_folder / filename)
-                for filename in download_info["downloaded_files"]
+            # Delete additional files if wanted.
+            if remove_readme:
+                for file_name in ["README.txt", "md5sums.txt"]:
+                    file_path = temp_dir / file_name
+                    if file_path.exists():
+                        file_path.unlink()
+
+            # Decompress inner files.
+            if decompress_fits:
+                file_paths = [
+                    (temp_dir / filename)
+                    for filename in download_info["downloaded_files"]
+                ]
+
+                if parallize:
+                    self._gevent_decompress_bz2_parallel(file_paths)
+                else:
+                    for f in file_paths:
+                        self._decompress_bz2(f)
+
+                # Update file names in download_info.
+                download_info["downloaded_files"] = [
+                    filename.replace(".bz2", "")
+                    for filename in download_info["downloaded_files"]
+                ]
+
+            # Prepare file paths for moving.
+            move_file_paths = [
+                (file_path, dest_folder / file_path.name)
+                for file_path in temp_dir.iterdir()
             ]
-            parallize = True
+
             if parallize:
-                self._gevent_decompress_bz2_parallel(file_paths)
+                # Use gevent to move files in parallel.
+                self._gevent_move_files_parallel(move_file_paths)
             else:
-                for f in file_paths:
-                    self._decompress_bz2(f)
-
-            # Update file names in download_info.
-            download_info["downloaded_files"] = [
-                filename.replace(".bz2", "")
-                for filename in download_info["downloaded_files"]
-            ]
+                for move_file_path in move_file_paths:
+                    self._move_file(move_file_path)
 
         return download_info
 
-    def _generate_download_info(self, extract_dir: Path) -> dict[str, int]:
+    def _generate_download_info(self, extract_dir: Path) -> dict[str, Any]:
         """Generate download information.
 
         Parameters
@@ -756,7 +775,7 @@ class ObservationsClass(QueryWithLogin):
 
         Returns
         -------
-        `dict[str, int]`
+        `dict[str, Any]`
             A dictionary containing the number of files downloaded, the number
             of files omitted, a human-readable message, and boolean success.
         """
@@ -854,6 +873,33 @@ class ObservationsClass(QueryWithLogin):
         pool = ThreadPool(10)
         pool.map(self._decompress_bz2, file_paths)
         pool.join()
+
+    def _gevent_move_files_parallel(self, file_paths: list[tuple[Path, Path]]) -> None:
+        """Parallelize moving files using gevent's pool.map.
+
+        Parameters
+        ----------
+        file_paths : `list[tuple[Path, Path]]`
+            List of tuples containing source and destination paths for files
+            to be moved.
+        """
+        pool = ThreadPool(10)
+        pool.map(self._move_file, file_paths)
+        pool.join()
+
+    def _move_file(self, src_dest_paths: tuple[Path, Path]) -> None:
+        """Move a file from source to destination.
+
+        Parameters
+        ----------
+        src_dest_paths : tuple[Path, Path]
+            Tuple containing the source and destination file paths.
+        """
+        src_path, dest_path = src_dest_paths
+
+        if dest_path.exists():
+            dest_path.unlink()
+        shutil.move(src_path, dest_path)
 
 
 def _gemini_json_to_table(json):
