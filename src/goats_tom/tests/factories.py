@@ -41,7 +41,7 @@ class GOALoginFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     username = factory.Sequence(lambda n: f"testuser{n}")
-    password = factory.PostGenerationMethodCall("set_password", "defaultpassword")
+    password = "default_password"
 
 
 class TaskProgressFactory(factory.django.DjangoModelFactory):

@@ -24,6 +24,7 @@ dependencies = [
     "huey>=2.5.0",
     "greenlet>=3.0.2",
     "fontawesomefree==6.5.1",
+    "django-cryptography==1.1"
 ]
 
 version = "24.01.0"
