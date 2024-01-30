@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
+from django_cryptography.fields import encrypt
 
 from .gemini_id import GeminiID
 
@@ -30,7 +31,7 @@ class GOALogin(models.Model):
     )
     username = models.CharField(max_length=100)
     # Making this 128 to store encrypted passwords.
-    password = models.CharField(max_length=128)
+    password = encrypt(models.CharField(max_length=128))
 
     def clean(self) -> None:
         """Custom validation.
@@ -47,17 +48,6 @@ class GOALogin(models.Model):
 
         if not self.password.strip():
             raise ValidationError("Password cannot be empty")
-
-    def set_password(self, raw_password: str) -> None:
-        """Sets the user's password to the given raw string, taking care of the
-        password hashing.
-
-        Parameters
-        ----------
-        raw_password : `str`
-            The plaintext password to set, which will be hashed before storage.
-        """
-        self.password = make_password(raw_password)
 
     class Meta:
         verbose_name = "GOA Login"
@@ -160,7 +150,7 @@ class Key(models.Model):
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    password = models.CharField(max_length=100)
+    password = encrypt(models.CharField(max_length=100))
     site = models.CharField(
         max_length=2, choices=[("GS", "Gemini South"), ("GN", "Gemini North")]
     )

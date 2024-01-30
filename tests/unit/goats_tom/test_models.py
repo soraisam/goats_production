@@ -1,11 +1,10 @@
 from datetime import timedelta
 
 import pytest
-from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
-from django.utils.crypto import get_random_string
+from goats_tom.models import ProgramKey
 from goats_tom.tests.factories import (
     GOALoginFactory,
     ProgramKeyFactory,
@@ -13,7 +12,6 @@ from goats_tom.tests.factories import (
     UserFactory,
     UserKeyFactory,
 )
-from goats_tom.models import ProgramKey
 
 
 @pytest.mark.django_db
@@ -25,18 +23,6 @@ class TestGOALoginModel(TestCase):
         self.goa_login.password = ""
         with pytest.raises(ValidationError):
             self.goa_login.clean()
-
-    def test_long_password(self):
-        long_password = get_random_string(1000)
-        self.goa_login.set_password(long_password)
-        self.goa_login.save()
-        assert check_password(long_password, self.goa_login.password)
-
-    def test_special_characters_in_password(self):
-        special_password = "!@#$%^&*()_+|"
-        self.goa_login.set_password(special_password)
-        self.goa_login.save()
-        assert check_password(special_password, self.goa_login.password)
 
 
 @pytest.mark.django_db

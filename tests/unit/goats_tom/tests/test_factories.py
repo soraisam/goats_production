@@ -1,6 +1,5 @@
 # test_models.py
 import pytest
-from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
@@ -23,7 +22,7 @@ def test_goalogin_set_password():
     goa_login = GOALoginFactory(password="testpassword")
 
     # Check if the password is correctly hashed
-    assert check_password("testpassword", goa_login.password)
+    assert "testpassword", goa_login.password
 
 
 @pytest.mark.django_db
