@@ -1,14 +1,13 @@
-__all__ = [
-    "delete_associated_data_products",
-    "create_name_reduction_map",
-    "custom_data_product_path",
-    "build_json_response",
-]
+"""Utility functions."""
 from astropy.table import Table
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from rest_framework import status
 from tom_dataproducts.models import DataProduct, ReducedDatum
 from tom_observations.models import ObservationRecord
+
+from .gemini_id import GeminiID
+from .models import ProgramKey, UserKey
 
 
 def delete_associated_data_products(
@@ -110,3 +109,104 @@ def build_json_response(
         )
 
     return JsonResponse({"status": "success", "message": ""}, status=error_status)
+
+
+def get_key(user: User, identifier: str) -> UserKey | ProgramKey | None:
+    """Gets the key if exists for a user and either a site or a
+    program/observation ID.
+
+    Parameters
+    ----------
+    user : `User`
+        The user the key belongs to.
+    identifier : `str`
+        The site (GN/GS) or the program/observation ID.
+
+    Returns
+    -------
+    `UserKey | ProgramKey | None`
+        The first found key (ProgramKey or UserKey), or `None` if not found.
+    """
+    # Check if identifier is a site.
+    if identifier in GeminiID.sites:
+        # Retrieve an active UserKey for the site.
+        user_key = UserKey.objects.filter(
+            user=user, is_active=True, site=identifier
+        ).first()
+        return user_key
+
+    # Handle as program/observation ID.
+    try:
+        gemini_id = GeminiID(identifier)
+    except ValueError:
+        return None
+
+    # Attempt to retrieve a ProgramKey.
+    program_key = ProgramKey.objects.filter(
+        user=user, program_id=gemini_id.program_id, site=gemini_id.site
+    ).first()
+    return program_key
+
+
+def get_key_info(user: User, identifier: str) -> dict[str, str]:
+    """Generates a dictionary of key information used for observation payload.
+
+    Parameters
+    ----------
+    user : `User`
+        The user the key belongs to.
+    identifier : `str`
+        The site (GN/GS) or the program/observation ID.
+
+    Returns
+    -------
+    `dict[str, str]`
+        A payload meant to be merged with the observation payload.
+    """
+    key = get_key(user, identifier=identifier)
+    if key is None:
+        return {}
+
+    # Build key info.
+    key_info = {"password": key.password}
+
+    if isinstance(key, UserKey):
+        key_info["email"] = key.email
+
+    return key_info
+
+
+def has_key(user: User, identifier: str) -> bool:
+    """Checks if a key exists for a user for either a site or a
+    program/observation ID.
+
+    Parameters
+    ----------
+    user : `User`
+        The user the key belongs to.
+    identifier : `str`
+        The site (GN/GS) or the program/observation ID.
+
+    Returns
+    -------
+    `bool`
+        `True` if a key exists, `False` otherwise.
+    """
+    if identifier in GeminiID.sites:
+        # Check for the existence of an active UserKey for the site.
+        user_key_exists = UserKey.objects.filter(
+            user=user, is_active=True, site=identifier
+        ).exists()
+        return user_key_exists
+
+    # Handle as program/observation ID.
+    try:
+        gemini_id = GeminiID(identifier)
+    except ValueError:
+        return False
+
+    # Check for the existence of a ProgramKey.
+    program_key_exists = ProgramKey.objects.filter(
+        user=user, program_id=gemini_id.program_id, site=gemini_id.site
+    ).exists()
+    return program_key_exists

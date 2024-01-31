@@ -26,6 +26,7 @@ class GeminiID:
         The entire observation ID if it is an observation ID.
     """
 
+    sites = ["GS", "GN"]
     program_pattern = r"^(GN|GS)-(\d{4}[AB])-([A-Za-z]+)-(\d+)$"
     observation_pattern = r"^(GN|GS)-(\d{4}[AB])-([A-Za-z]+)-(\d+)-(\d+)$"
 
