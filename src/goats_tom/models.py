@@ -1,6 +1,5 @@
 from typing import Any
 
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -159,11 +158,6 @@ class Key(models.Model):
 
     class Meta:
         abstract = True
-
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        """Saves the instance."""
-        self.password = make_password(self.password)
-        super().save(*args, **kwargs)
 
 
 class UserKey(Key):

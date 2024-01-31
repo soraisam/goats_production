@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+"""Gemini facility."""
 # Standard library imports.
 import logging
 from typing import Any
@@ -20,13 +19,16 @@ from tom_dataproducts.models import DataProduct
 from tom_observations.facility import (
     BaseRoboticObservationFacility,
     BaseRoboticObservationForm,
+    get_service_class,
 )
 from tom_observations.models import ObservationRecord
 from tom_targets.models import Target
 
 # Local application/library specific imports.
 from .astroquery_gemini import Observations as GOA
+from .gemini_id import GeminiID
 from .ocs_client import OCSClient
+from .utils import get_key_info
 
 try:
     AUTO_THUMBNAILS = settings.AUTO_THUMBNAILS
@@ -356,9 +358,20 @@ class GEMObservationForm(BaseRoboticObservationForm):
             ),
         )
 
+    def validate_at_facility(self) -> dict:
+        """Calls validation for the facility.
+
+        Returns
+        -------
+        `dict`
+            Errors, if any.
+        """
+        obs_module = get_service_class(self.cleaned_data["facility"])
+        return obs_module().validate_observation(self.observation_payload())
+
     def is_valid(self):
         super().is_valid()
-        errors = GOATSGEMFacility.validate_observation(self.observation_payload())
+        errors = self.validate_at_facility()
         if errors:
             self.add_error(None, flatten_error_dict(self, errors))
         return not errors
@@ -407,8 +420,6 @@ class GEMObservationForm(BaseRoboticObservationForm):
             obsnum = obs[obsnum_ii:]
             payload = {
                 "prog": progid,
-                "password": GEM_SETTINGS["api_key"][get_site(obs)],
-                "email": GEM_SETTINGS["user_email"],
                 "obsnum": obsnum,
                 "target": target.name,
                 "ra": target.ra,
@@ -499,6 +510,15 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
     def submit_observation(self, observation_payload: list[dict[str, Any]]):
         obsids = []
         for payload in observation_payload:
+            # TODO: Remove after work to the OCS.
+            payload["email"] = "ocs@test.com"
+
+            # Get the correct key to use in the request.
+            # TODO: Add in retry with user key if these fail, need to
+            # investigate how gemini rejects.
+            key_info = get_key_info(self.user, identifier=payload["prog"])
+            payload.update(key_info)
+
             response = make_request(
                 "POST",
                 PORTAL_URL[get_site(payload["prog"])] + "/too",
@@ -510,9 +530,20 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             obsids.append(obsid[-1])
         return obsids
 
-    @classmethod
-    def validate_observation(clz, observation_payload):
-        # Gemini doesn't have an API for validation, but run some checks
+    def validate_observation(self, observation_payload: dict) -> dict:
+        """Validates the observation payload.
+
+        Parameters
+        ----------
+        observation_payload : `dict`
+            The observation payload.
+
+        Returns
+        -------
+        `dict`
+            Errors, if any.
+        """
+        # Gemini doesn't have an API for validation, but run some checks.
         errors = {}
         if "elevationType" in observation_payload[0].keys():
             if observation_payload[0]["elevationType"] == "airmass":
@@ -529,6 +560,13 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                     errors["exptimes"] = "Exposure time must be >= 1"
                 if payload["exptime"] > 1200:
                     errors["exptimes"] = "Exposure time must be <= 1200"
+
+        # Validate the program ID.
+        observation_id = (
+            f"{observation_payload[0]['prog']}-{observation_payload[0]['obsnum']}"
+        )
+        if not GeminiID.is_valid_observation_id(observation_id):
+            errors["obs"] = f"Observation ID {observation_id} is not valid."
 
         return errors
 

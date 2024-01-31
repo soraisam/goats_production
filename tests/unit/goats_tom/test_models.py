@@ -129,7 +129,7 @@ class TestKeyModels:
         # Test that creating a ProgramKey with an invalid program ID raises
         # ValidationError.
         user = UserFactory()
-        invalid_program_ids = ["GT-2023B-X-100", "Invalid-Id", "GN-2023A-QQ-A", ""]
+        invalid_program_ids = ["Invalid-Id", "GN-2023A-QQ-A", "GQ-2023A-QQ-10"]
 
         for program_id in invalid_program_ids:
             program_key = ProgramKeyFactory(user=user, program_id=program_id)
