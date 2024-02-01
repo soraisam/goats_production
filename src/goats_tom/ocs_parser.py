@@ -1,10 +1,21 @@
+"""Module for OCSParser class, a specialized parser for handling XML data from
+the Observation Control System (OCS).
+
+This parser is designed to interpret and convert various XML response formats
+from the OCS into structured Python dictionaries. It is capable of parsing data
+related to sequences, telescope configurations, and observation database (ODB)
+information.
+
+Each method converts the XML data into a structured dictionary, facilitating
+easier access and manipulation of the data in Python.
+"""
+__all__ = ["OCSParser"]
 import xml.etree.ElementTree as ET
 from typing import Any
 
 
 class OCSParser:
-    def __init__(self):
-        pass
+    """Class to parse response from OCS."""
 
     def parse_sequence_response(self, xml_data: str) -> dict[str, Any]:
         """Parses the XML data of a sequence and converts it into a dictionary.
@@ -89,16 +100,23 @@ class OCSParser:
             `dict[str, Any]`
                 A dictionary representation of the XML element.
             """
-            # Parse "param" elements directly into key-value pairs.
+            # For "param" elements, return a dictionary with its name and
+            # value.
             if element.tag == "param":
-                return {element.attrib["name"]: element.attrib["value"]}
+                return {element.attrib["name"]: element.attrib.get("value", "")}
 
             parsed_data = {}
-            # Iterate through children to process nested structures.
             for child in element:
                 if child.tag == "paramset":
+                    # Determine the key using "type" and "name" attributes.
+                    # If "type" is missing, use "name" as the key.
+                    key = child.attrib.get("type") or child.attrib.get("name", "")
+                    if "name" in child.attrib and "type" in child.attrib:
+                        key = f"{key}_{child.attrib['name']}"
+
                     # Recursively parse nested "paramset" elements.
-                    parsed_data[child.attrib["name"]] = parse_coordinates_element(child)
+                    child_data = parse_coordinates_element(child)
+                    parsed_data[key] = child_data
                 elif child.tag == "param":
                     # Update parsed data with parsed "param" elements.
                     child_data = parse_coordinates_element(child)
@@ -106,16 +124,14 @@ class OCSParser:
 
             return parsed_data
 
-        # Convert the XML string into an ElementTree object and get the root.
+        # Parse the XML string into an ElementTree object and get the root.
         root = ET.fromstring(xml_data)
 
-        # Initialize a dictionary to hold parsed data.
         parsed_dict = {}
-
-        # Process each "paramset" element at the root level.
         for paramset in root.findall("paramset"):
-            paramset_name = paramset.attrib.get("name", "")
-            parsed_dict[paramset_name] = parse_coordinates_element(paramset)
+            # Use "type" or "name" as the key for each "paramset".
+            key = paramset.attrib.get("type") or paramset.attrib.get("name", "")
+            parsed_dict[key] = parse_coordinates_element(paramset)
 
         return parsed_dict
 
