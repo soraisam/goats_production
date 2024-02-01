@@ -585,7 +585,12 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
     def get_observation_status(self, observation_id):
         try:
             observation_summary = ocs_client.get_observation_summary(observation_id)
-            state = observation_summary["status"]
+
+            if not observation_summary["success"]:
+                raise Exception(f"{observation_summary['error']}")
+
+            state = observation_summary["data"]["status"]
+
         except Exception as e:
             logger.error(e)
             state = "Error"
