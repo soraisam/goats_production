@@ -47,6 +47,7 @@ def test_get_program_summary_with_observation_id(client, odb_xml, observation_id
 
     result = client.get_program_summary(observation_id)
     assert isinstance(result, dict)
+    assert result["success"]
 
 
 def test_get_program_summary_with_program_id(client, odb_xml, program_id):
@@ -55,6 +56,7 @@ def test_get_program_summary_with_program_id(client, odb_xml, program_id):
 
     result = client.get_program_summary(program_id)
     assert isinstance(result, dict)
+    assert result["success"]
 
 
 def test_get_observation_summary(client, odb_xml, observation_id):
@@ -63,6 +65,7 @@ def test_get_observation_summary(client, odb_xml, observation_id):
 
     result = client.get_observation_summary(observation_id)
     assert isinstance(result, dict)
+    assert result["success"]
 
 
 def test_get_sequence(client, sequence_xml, observation_id):
@@ -71,6 +74,7 @@ def test_get_sequence(client, sequence_xml, observation_id):
 
     result = client.get_sequence(observation_id)
     assert isinstance(result, dict)
+    assert result["success"]
 
 
 def test_get_coordinates(client, coordinates_xml, observation_id):
@@ -79,33 +83,39 @@ def test_get_coordinates(client, coordinates_xml, observation_id):
 
     result = client.get_coordinates(observation_id)
     assert isinstance(result, dict)
+    assert result["success"]
 
 
 @pytest.mark.remote_data
 def test_get_coordinates_remote(client, observation_id):
     coordinates_response = client.get_coordinates(observation_id)
-    assert coordinates_response
+    assert coordinates_response["data"]
+    assert coordinates_response["success"]
 
 
 @pytest.mark.remote_data
 def test_get_sequence_remote(client, observation_id):
     sequence_response = client.get_sequence(observation_id)
-    assert sequence_response
+    assert sequence_response["data"]
+    assert sequence_response["success"]
 
 
 @pytest.mark.remote_data
 def test_get_observation_summary_remote(client, observation_id):
     observation_id_response = client.get_observation_summary(observation_id)
-    assert observation_id_response
+    assert observation_id_response["data"]
+    assert observation_id_response["success"]
 
 
 @pytest.mark.remote_data
 def test_get_program_summary_with_observation_id_remote(client, observation_id):
     program_id_response = client.get_program_summary(observation_id)
-    assert program_id_response
+    assert program_id_response["data"]
+    assert program_id_response["success"]
 
 
 @pytest.mark.remote_data
 def test_get_program_summary_with_program_id_remote(client, program_id):
     program_id_response = client.get_program_summary(program_id)
-    assert program_id_response
+    assert program_id_response["data"]
+    assert program_id_response["success"]
