@@ -1,3 +1,10 @@
+"""This module contains the OCSClient class, a dedicated client for interacting
+with the Gemini Observatory's Observation Control Software (OCS).
+
+The OCSClient class is designed to facilitate the retrieval and parsing of data
+from the Gemini Observatory's databases.
+"""
+__all__ = ["OCSClient"]
 import ssl
 import xmlrpc.client
 from typing import Any
@@ -23,7 +30,7 @@ class OCSClient:
     - success (bool): Indicates whether the request was successful.
     - data (dict[str, Any] | None): Contains the parsed data if the request
       was successful. Structure varies depending on the method.
-    - raw_data (str | None): Contains the raw XML data if 'return_raw_data'
+    - raw_data (str | None): Contains the raw XML data if 'skip_parsing'
       is True.
     - error (str | None): Contains the error message if the request failed.
 
@@ -130,7 +137,7 @@ class OCSClient:
             return {"success": False, "error": str(e)}
 
     def get_program_summary(
-        self, program_or_observation_id: str, return_raw_data: bool | None = False
+        self, program_or_observation_id: str, skip_parsing: bool | None = False
     ) -> dict[str, Any]:
         """Fetches summary for a program ID.
 
@@ -138,8 +145,8 @@ class OCSClient:
         ----------
         program_or_observation_id : `str`
             The program or observation ID.
-        return_raw_data : `bool | None`
-            Returns the raw XML data along with parsed data.
+        skip_parsing : `bool | None`
+            Skips parsing and returns the raw XML data.
 
         Returns
         -------
@@ -147,17 +154,16 @@ class OCSClient:
             Program summary.
         """
         response = self._send_request(program_or_observation_id)
-        if not response["success"]:
+        if not response["success"] or skip_parsing:
             return response
-        response["data"] = self.parser.parse_odb_response(response["raw_data"])
 
-        if not return_raw_data:
-            del response["raw_data"]
+        response["data"] = self.parser.parse_odb_response(response["raw_data"])
+        del response["raw_data"]
 
         return response
 
     def get_observation_summary(
-        self, observation_id: str, return_raw_data: bool | None = False
+        self, observation_id: str, skip_parsing: bool | None = False
     ) -> dict[str, Any]:
         """Fetches summary for an observation ID.
 
@@ -165,8 +171,8 @@ class OCSClient:
         ----------
         observation_id : `str`
             The observation ID.
-        return_raw_data : `bool | None`
-            Returns the raw XML data along with parsed data.
+        skip_parsing : `bool | None`
+            Skips parsing and returns the raw XML data.
 
         Returns
         -------
@@ -174,12 +180,10 @@ class OCSClient:
             Observation summary.
         """
         response = self._send_request(observation_id)
-        if not response["success"]:
+        if not response["success"] or skip_parsing:
             return response
         parsed_response = self.parser.parse_odb_response(response["raw_data"])
-
-        if not return_raw_data:
-            del response["raw_data"]
+        del response["raw_data"]
 
         observations = parsed_response.get("observations", {}).get("observation", [])
 
@@ -200,7 +204,7 @@ class OCSClient:
         }
 
     def get_sequence(
-        self, observation_id: str, return_raw_data: bool | None = False
+        self, observation_id: str, skip_parsing: bool | None = False
     ) -> dict[str, Any]:
         """Fetches the sequence data for a given observation ID.
 
@@ -208,8 +212,8 @@ class OCSClient:
         ----------
         observation_id : `str`
             The observation ID to query.
-        return_raw_data : `bool | None`
-            Returns the raw XML data along with parsed data.
+        skip_parsing : `bool | None`
+            Skips parsing and returns the raw XML data.
 
         Returns
         -------
@@ -219,17 +223,15 @@ class OCSClient:
         response = self._send_request(
             observation_id, method_name=self.method_names["get_sequence"]
         )
-        if not response["success"]:
+        if not response["success"] or skip_parsing:
             return response
         response["data"] = self.parser.parse_sequence_response(response["raw_data"])
-
-        if not return_raw_data:
-            del response["raw_data"]
+        del response["raw_data"]
 
         return response
 
     def get_coordinates(
-        self, observation_id: str, return_raw_data: bool | None = False
+        self, observation_id: str, skip_parsing: bool | None = False
     ) -> dict[str, Any]:
         """Fetches the coordinates for a given observation ID.
 
@@ -237,8 +239,8 @@ class OCSClient:
         ----------
         observation_id : `str`
             The observation ID to query.
-        return_raw_data : `bool | None`
-            Returns the raw XML data along with parsed data.
+        skip_parsing : `bool | None`
+            Skips parsing and returns the raw XML data.
 
         Returns
         -------
@@ -248,11 +250,9 @@ class OCSClient:
         response = self._send_request(
             observation_id, method_name=self.method_names["get_coordinates"]
         )
-        if not response["success"]:
+        if not response["success"] or skip_parsing:
             return response
         response["data"] = self.parser.parse_coordinates_response(response["raw_data"])
-
-        if not return_raw_data:
-            del response["raw_data"]
+        del response["raw_data"]
 
         return response
