@@ -43,7 +43,7 @@ class OCSClient:
         "GS": {"host": "https://gsodb.gemini.edu", "port": 8443},
         "GN": {"host": "https://gnodb.gemini.edu", "port": 8443},
     }
-    odb_url = "/odbbrowser/observations?programReference="
+    odb_url = "/odbbrowser/targets?programReference="
     wdba_url = "/wdba"
 
     def __init__(self):
