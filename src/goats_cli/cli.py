@@ -1,18 +1,20 @@
 __all__ = ["cli"]
 # Standard library imports.
-from pathlib import Path
+import re
 import shutil
 import subprocess
 import threading
+from pathlib import Path
 from typing import IO, Any
 
 # Related third party imports.
 import click
 from click._compat import get_text_stderr
 
+from .modify_manage import modify_manage
+
 # Local application/library specific imports.
 from .modify_settings import modify_settings
-from .modify_manage import modify_manage
 
 
 class GOATSClickException(click.ClickException):
@@ -32,7 +34,20 @@ class GOATSClickException(click.ClickException):
         if file is None:
             file = get_text_stderr()
 
-        click.echo(click.style(f"🐐 Error: {self.format_message()}", fg="red", bold=True), file=file)
+        click.echo(
+            click.style(f"🐐 Error: {self.format_message()}", fg="red", bold=True),
+            file=file,
+        )
+
+
+def validate_addrport(ctx, param, value):
+    """Validate IP address and port."""
+    pattern = r"^((\d{1,3}\.){3}\d{1,3}:)?\d{1,5}$"
+    if not re.match(pattern, value):
+        raise click.BadParameter(
+            "The address and port must be in format 'IP:PORT' or 'PORT'."
+        )
+    return value
 
 
 @click.group(invoke_without_command=True)
@@ -48,15 +63,38 @@ def cli(ctx):
 
 
 @click.command(help=("Installs GOATS."))
-@click.option("-p", "--project-name", default="GOATS", type=str,
-              help="Specify a custom project name. Default is 'GOATS'.")
-@click.option("-d", "--directory", default=Path.cwd(), type=Path,
-              help=("Specify the parent directory where GOATS will be installed. "
-                    "Default is the current directory."))
-@click.option("--overwrite", is_flag=True,
-              help="Overwrite the existing project, if it exists. Default is False.")
-@click.option("-m", "--media-dir", type=Path, help="Path for saving downloaded media.", default=None)
-def install(project_name: str, directory: Path, overwrite: bool, media_dir: Path | None) -> None:
+@click.option(
+    "-p",
+    "--project-name",
+    default="GOATS",
+    type=str,
+    help="Specify a custom project name. Default is 'GOATS'.",
+)
+@click.option(
+    "-d",
+    "--directory",
+    default=Path.cwd(),
+    type=Path,
+    help=(
+        "Specify the parent directory where GOATS will be installed. "
+        "Default is the current directory."
+    ),
+)
+@click.option(
+    "--overwrite",
+    is_flag=True,
+    help="Overwrite the existing project, if it exists. Default is False.",
+)
+@click.option(
+    "-m",
+    "--media-dir",
+    type=Path,
+    help="Path for saving downloaded media.",
+    default=None,
+)
+def install(
+    project_name: str, directory: Path, overwrite: bool, media_dir: Path | None
+) -> None:
     """Installs GOATS with a specified or default name in a specified or
     default directory.
 
@@ -86,8 +124,10 @@ def install(project_name: str, directory: Path, overwrite: bool, media_dir: Path
     # If directory and project exist, ask to remove.
     if (project_path).is_dir():
         if not overwrite:
-            raise GOATSClickException(f"'{project_path.absolute()}' already exists. Use the "
-                                      "'--overwrite' option to overwrite it.")
+            raise GOATSClickException(
+                f"'{project_path.absolute()}' already exists. Use the "
+                "'--overwrite' option to overwrite it."
+            )
         shutil.rmtree(project_path)
 
     # If directory is provided, make sure it exists.
@@ -95,7 +135,9 @@ def install(project_name: str, directory: Path, overwrite: bool, media_dir: Path
 
     try:
         # Run the startproject command in the specified directory.
-        subprocess.run(["django-admin", "startproject", project_name], cwd=directory, check=True)
+        subprocess.run(
+            ["django-admin", "startproject", project_name], cwd=directory, check=True
+        )
 
         # Get the path for the 'settings.py' file.
         settings_file = project_path / project_name / "settings.py"
@@ -112,8 +154,10 @@ def install(project_name: str, directory: Path, overwrite: bool, media_dir: Path
         if media_dir:
             full_media_dir = media_dir / "data"
             if full_media_dir.exists():
-                display_warning("Media root directory already exists, proceeding but existing data might "
-                                "conflict.")
+                display_warning(
+                    "Media root directory already exists, proceeding but existing data might "
+                    "conflict."
+                )
 
         # Setup the TOM Toolkit.
         goats_setup_command = [f"{manage_file}", "goats_setup"]
@@ -124,32 +168,70 @@ def install(project_name: str, directory: Path, overwrite: bool, media_dir: Path
         # Migrate the webpage.
         display_message("Wrapping up:", show_goats_emoji=False)
         display_info("Running final migrations... ")
-        subprocess.run([f"{manage_file}", "makemigrations"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                       check=True)
-        subprocess.run([f"{manage_file}", "migrate"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                       check=True)
+        subprocess.run(
+            [f"{manage_file}", "makemigrations"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+        subprocess.run(
+            [f"{manage_file}", "migrate"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
         display_ok()
 
         display_message("GOATS installed!", color="green")
 
     except subprocess.CalledProcessError as error:
         cmd_str = " ".join(error.cmd)
-        raise GOATSClickException(f"An error occurred while running the command: '{cmd_str}'. Exit status:"
-                                  f" {error.returncode}.")
+        raise GOATSClickException(
+            f"An error occurred while running the command: '{cmd_str}'. Exit status:"
+            f" {error.returncode}."
+        )
 
     except Exception as error:
         raise GOATSClickException(str(error))
 
 
 @click.command(help=("Starts the server and workers for GOATS."))
-@click.option("-p", "--project-name", default="GOATS", type=str,
-              help="Specify a custom project name. Default is 'GOATS'.")
-@click.option("-d", "--directory", default=Path.cwd(), type=Path,
-              help=("Specify the parent directory where GOATS is installed. "
-                    "Default is the current directory."))
-@click.option("-w", "--workers", default=3, type=int,
-              help="Number of workers to spawn for background tasks.")
-def run(project_name: str, directory: Path, workers: int) -> None:
+@click.option(
+    "-p",
+    "--project-name",
+    default="GOATS",
+    type=str,
+    help="Specify a custom project name. Default is 'GOATS'.",
+)
+@click.option(
+    "-d",
+    "--directory",
+    default=Path.cwd(),
+    type=Path,
+    help=(
+        "Specify the parent directory where GOATS is installed. "
+        "Default is the current directory."
+    ),
+)
+@click.option(
+    "-w",
+    "--workers",
+    default=3,
+    type=int,
+    help="Number of workers to spawn for background tasks.",
+)
+@click.option(
+    "--addrport",
+    default="127.0.0.1:8000",
+    type=str,
+    help=(
+        "Specify the IP address and port number to serve GOATS. "
+        "Examples: '8000', '0.0.0.0:8000', '192.168.1.5:8000'. "
+        "Providing only a port number (e.g., '8000') binds to 127.0.0.1."
+    ),
+    callback=validate_addrport,
+)
+def run(project_name: str, directory: Path, workers: int, addrport: str) -> None:
     """Starts the server and workers for GOATS.
 
     Parameters
@@ -176,17 +258,23 @@ def run(project_name: str, directory: Path, workers: int) -> None:
     manage_file = project_path / "manage.py"
     if not manage_file.is_file():
         display_failed()
-        raise GOATSClickException(f"The 'manage.py' file for the project '{project_name}' does not at exist "
-                                  f"at '{manage_file.absolute()}'.")
+        raise GOATSClickException(
+            f"The 'manage.py' file for the project '{project_name}' does not at exist "
+            f"at '{manage_file.absolute()}'."
+        )
     display_ok()
 
     display_message("Starting GOATS and background workers:", show_goats_emoji=False)
     # Start Huey consumer in a separate thread
-    huey_thread = threading.Thread(target=start_huey_consumer, args=(str(manage_file), workers))
+    huey_thread = threading.Thread(
+        target=start_huey_consumer, args=(str(manage_file), workers)
+    )
     huey_thread.start()
 
     # Start Django server in a separate thread
-    django_thread = threading.Thread(target=start_django_server, args=(str(manage_file),))
+    django_thread = threading.Thread(
+        target=start_django_server, args=(str(manage_file), addrport)
+    )
     django_thread.start()
 
     # Keep the main thread running while sub-threads are working
@@ -194,13 +282,15 @@ def run(project_name: str, directory: Path, workers: int) -> None:
     huey_thread.join()
 
 
-def start_django_server(manage_file: Path) -> None:
+def start_django_server(manage_file: Path, addrport: str) -> None:
     """Starts the Django development server.
 
     Parameters
     ----------
     manage_file : `Path`
         Path to the GOATS manage file.
+    addrport: `str`
+        IP address and port to serve on.
 
     Raises
     ------
@@ -208,10 +298,12 @@ def start_django_server(manage_file: Path) -> None:
         Raised if issue starting Django server.
     """
     try:
-        subprocess.run([f"{manage_file}", "runserver"], check=True)
+        subprocess.run([f"{manage_file}", "runserver", addrport], check=True)
     except subprocess.CalledProcessError as error:
-        raise GOATSClickException(f"Error running Django server: '{error.cmd}'. "
-                                  f"Exit status: {error.returncode}.")
+        raise GOATSClickException(
+            f"Error running Django server: '{error.cmd}'. "
+            f"Exit status: {error.returncode}."
+        )
 
 
 def start_huey_consumer(manage_file: Path, workers: int) -> None:
@@ -229,13 +321,18 @@ def start_huey_consumer(manage_file: Path, workers: int) -> None:
     """
     try:
         subprocess.run(
-            [f"{manage_file}", "run_huey", "--workers", f"{workers}"], check=True)
+            [f"{manage_file}", "run_huey", "--workers", f"{workers}"], check=True
+        )
     except subprocess.CalledProcessError as error:
-        raise GOATSClickException(f"Error running Huey consumer: '{error.cmd}'. "
-                                  f"Exit status: {error.returncode}.")
+        raise GOATSClickException(
+            f"Error running Huey consumer: '{error.cmd}'. "
+            f"Exit status: {error.returncode}."
+        )
 
 
-def display_message(message: str, show_goats_emoji: bool = True, color: str = "cyan") -> None:
+def display_message(
+    message: str, show_goats_emoji: bool = True, color: str = "cyan"
+) -> None:
     """Displays a styled message to the console.
 
     Parameters
@@ -285,7 +382,9 @@ def display_warning(message: str, indent: int = 0) -> None:
     indent : `int`, optional
         The number of spaces for indentation, by default 0.
     """
-    click.echo(click.style(f"🐐 WARNING: {' ' * indent}{message}", fg="yellow", bold=True))
+    click.echo(
+        click.style(f"🐐 WARNING: {' ' * indent}{message}", fg="yellow", bold=True)
+    )
 
 
 cli.add_command(install)
