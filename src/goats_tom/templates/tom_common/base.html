@@ -20,16 +20,16 @@
   </head>
   <body>
     <header>
-      <div class="banner">{% include 'banner.html' %}</div>
+      <div class="banner container-fluid">{% include 'banner.html' %}</div>
       <nav>{% include 'navbar.html' %}</nav>
     </header>
 
-    <main role="main" class="container">
+    <main role="main" class="{% if request.path == '/' %}container-fluid img-container{% else %}container{% endif %} pt-5 pb-5">
       {% bootstrap_messages %}
       {% block content %}{% endblock %}
     </main>
 
-    <footer>{% include 'footer.html' %}</footer>
+    <footer class="container-fluid">{% include 'footer.html' %}</footer>
 
     {% block javascript %}
     <script src="{% static 'js/download_progress.js' %}"></script>
