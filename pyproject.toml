@@ -17,7 +17,7 @@ requires-python = ">=3.10.0"
 dependencies = [
     "tom-antares",
     "tom-gemini-community",
-    "tomtoolkit>=2.15.17",
+    "tomtoolkit==2.15.19",
     "click",
     "werkzeug",
     "django-cors-headers",
