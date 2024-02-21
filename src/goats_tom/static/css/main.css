@@ -1,17 +1,18 @@
 :root {
   --white: #fff;
-  --gray-50: #FAFAFA;
-	--gray-100: #C9C9C9;
-	--gray-200: #B8B8B8;
-	--gray-300: #828282;
-	--gray-400: #696969;
-	--gray-500: #3B3B3B;
-	--gray-600: #2E2E2E;
-	--gray-700: #242424;
-	--gray-800: #1F1F1F;
-	--gray-900: #141414;
+  --gray-50: #fafafa;
+  --gray-100: #c9c9c9;
+  --gray-200: #b8b8b8;
+  --gray-300: #828282;
+  --gray-400: #696969;
+  --gray-500: #3b3b3b;
+  --gray-600: #2e2e2e;
+  --gray-700: #242424;
+  --gray-800: #1f1f1f;
+  --gray-900: #141414;
   --black: #000;
-  --gemini: #F2AC14;
+  --gemini: #f2ac14;
+  --gemini-alt: #f5bb3d;
 
   font-size: 14px;
   font-family: arial, sans-serif;
@@ -29,74 +30,13 @@
   border: 1px solid red;
 } */
 
-.goats-footer {
-  background-color: var(--black);
-  color: var(--gray-100);
-  padding: .5rem 1rem;
-}
-
-.goats-footer img {
-  height: 40px;
-  width: auto;
-  object-fit: scale-down;
-}
-
-.goats-navbar {
-  background-color: var(--gray-800);;
-  padding: .25rem 1rem;
-}
-
-main.container {
-  padding: 3rem 0;
-}
-
 input {
   accent-color: var(--primary);
   color-scheme: dark;
 }
 
-.accent-bar {
-  background-color: var(--primary-800);
-  height: 5px;
-}
-
 .dropdown-menu {
   box-shadow: 0 5px 15px hsla(0deg 0% 0% / 20%);
-}
-
-.goats-banner {
-  background: var(--gemini);
-  background: linear-gradient(
-    90deg,
-    rgb(242 172 20 / 100%) 0%,
-    rgb(242 120 12 / 100%) 50%,
-    rgb(166 75 41 / 100%) 100%
-  );
-
-}
-
-/* .background {
-  background: hsl(42deg 87% 57% / 100%);
-  background: linear-gradient(180deg, hsl(42deg 87% 57% / 100%) 0%, hsl(0deg 0% 0% / 100%) 100%);
-} */
-
-.background {
-  background-color: var(--white);
-}
-
-.goats-subtitle {
-  color: var(--gemini);
-  font-size: 3.25rem;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.goats-slogan {
-  color: var(--gray-300);
-}
-
-.goats-emoji {
-  cursor: default;
 }
 
 body {
@@ -107,10 +47,18 @@ body {
 
 .banner {
   grid-row: 1;
+  background: var(--gemini);
+  background: linear-gradient(
+    90deg,
+    rgb(242 172 20 / 100%) 0%,
+    rgb(242 120 12 / 100%) 50%,
+    rgb(166 75 41 / 100%) 100%
+  );
 }
 
 nav {
   grid-row: 2;
+  background-color: var(--gray-800);
 }
 
 main {
@@ -119,6 +67,8 @@ main {
 
 footer {
   grid-row: 4;
+  background-color: var(--black);
+  color: var(--gray-100);
 }
 
 .shadow-xs {
@@ -155,4 +105,23 @@ footer {
   align-items: center;
   justify-content: center;
   font-size: 14px;
+}
+
+.banner-slogan {
+  font-weight: 700;
+  color: rgba(0 0 0 / 50%);
+  cursor: default;
+}
+
+.title {
+  font-weight: 700;
+}
+
+.img-container {
+  width: 100%;
+  height: 100%;
+  background-image: url("../img/landing-dark.png");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }

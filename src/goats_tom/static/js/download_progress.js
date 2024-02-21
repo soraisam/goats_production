@@ -25,7 +25,6 @@ const updateNavbarDownloadLink = (activeDownloads) => {
   }
 };
 
-
 /**
  * Updates the tasks banner with the provided tasks information.
  *
@@ -39,18 +38,18 @@ const updateDownloadTasksBanner = (tasks) => {
   const banner = document.getElementById("downloadTasksBanner");
 
   // Track the current task IDs from the tasks list
-  const currentTaskIds = tasks.map(task => `task-${task.task_id}`);
+  const currentTaskIds = tasks.map((task) => `task-${task.task_id}`);
 
   // Remove task divs that are no longer in the updated tasks list
   const taskDivs = banner.getElementsByClassName("task-progress");
-  Array.from(taskDivs).forEach(div => {
+  Array.from(taskDivs).forEach((div) => {
     if (!currentTaskIds.includes(div.id)) {
       banner.removeChild(div);
     }
   });
 
   // Process each task in the tasks array
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     let taskDiv = document.getElementById(`task-${task.task_id}`);
 
     if (!taskDiv) {
@@ -66,7 +65,6 @@ const updateDownloadTasksBanner = (tasks) => {
   // Update the navbar download link with the number of tasks
   updateNavbarDownloadLink(tasks.length);
 };
-
 
 /**
  * Creates a new task element for the banner.
@@ -88,7 +86,7 @@ function createTaskElement(task) {
   taskInfoDiv.className = "col-md-3";
   const taskInfo = document.createElement("p");
   taskInfo.id = `info-${task.task_id}`;
-  taskInfo.classList.add("mt-3")
+  taskInfo.classList.add("mt-3");
   taskInfo.textContent = `${task.task_id}`;
   taskInfoDiv.appendChild(taskInfo);
   taskDiv.appendChild(taskInfoDiv);
@@ -99,7 +97,6 @@ function createTaskElement(task) {
 
   return taskDiv;
 }
-
 
 /**
  * Creates a progress bar element for a task.
@@ -113,7 +110,12 @@ function createProgressBar(task) {
   const progressBarDiv = document.createElement("div");
   progressBarDiv.className = "progress";
   const progressBar = document.createElement("div");
-  progressBar.classList.add("progress-bar", "progress-bar-striped", "progress-bar-animated", "bg-info");
+  progressBar.classList.add(
+    "progress-bar",
+    "progress-bar-striped",
+    "progress-bar-animated",
+    "bg-primary"
+  );
   progressBar.id = `progress-${task.task_id}`;
   progressBar.setAttribute("role", "progressbar");
   progressBar.setAttribute("aria-valuenow", task.progress);
@@ -127,7 +129,6 @@ function createProgressBar(task) {
 
   return progressBarDivCol;
 }
-
 
 /**
  * Updates an existing task element with new progress and status.
@@ -146,7 +147,6 @@ function updateTaskElement(task) {
   progressBar.textContent = `${task.progress}%`;
 }
 
-
 /**
  * Asynchronously fetches ongoing tasks from the server.
  *
@@ -163,8 +163,8 @@ const fetchOngoingTasks = async () => {
 
     // Check if the HTTP request was successful
     if (!response.ok) {
-        // If not successful, throw an error with the status code
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // If not successful, throw an error with the status code
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     // Parse the JSON response to get tasks data
@@ -173,13 +173,11 @@ const fetchOngoingTasks = async () => {
 
     // Set a timeout to re-fetch the tasks every second
     setTimeout(fetchOngoingTasks, 1000);
-
   } catch (error) {
     // Log any errors to the console
     console.error("Error:", error);
   }
 };
-
 
 // Start the polling when the page loads
 document.addEventListener("DOMContentLoaded", fetchOngoingTasks);

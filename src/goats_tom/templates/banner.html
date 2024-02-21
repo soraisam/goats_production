@@ -4,16 +4,24 @@
 This is the site banner, which includes the site logo on the left and sponsor logos on the right.
 {% endcomment %}
 
-<div class="goats-banner d-flex justify-content-between align-items-center">
-  <a href="/">
-    <img class="img-fluid" src="{% static 'img/goats-outline.png' %}" style="height: 45px;" alt="">
-  </a>
-  <div class="d-flex">
+<div class="row align-items-center" style="height: 80px;">
+  <div class="col-auto pr-0">
+    <a href="/">
+      <img src="{% static 'img/goats-dark-dark.png' %}" style="height: 80px;" alt="">
+    </a>
+  </div>
+  <div class="col d-md-flex d-none align-items-center pl-0">
+    <div class="banner-slogan">
+      <p class="mb-0">Time-domain astronomy</p>
+      <p class="mb-0">made time efficient</p>
+    </div>
+  </div>
+  <div class="col text-right">
     <a href="https://www.gemini.edu/" target="_blank">
-      <img class="img-fluid" src="{% static 'img/gemini-dark.png' %}" style="height: 30px;" alt="">
+      <img src="{% static 'img/gemini-light.png' %}" style="height: 45px;" alt="">
     </a>
     <a href="https://noirlab.edu/public/" target="_blank">
-      <img class="img-fluid" src="{% static 'img/nsf-noirlab-dark.png' %}" style="height: 30px;" alt="">
+      <img src="{% static 'img/nsf-noirlab-light.png' %}" style="height: 45px;" alt="">
     </a>
   </div>
 </div>
