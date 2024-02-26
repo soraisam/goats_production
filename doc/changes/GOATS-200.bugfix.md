@@ -1,1 +1,0 @@
-Correctly handle missing "value" in parameter set from XML data from OCS: The OCSParser received enhancements to effectively handle missing values in nested XML elements and improved its key naming strategy to utilize both the value and type of parameter sets for clearer and more accurate data representation.

@@ -1,3 +1,19 @@
+## GOATS 24.02.0 (2024-02-26)
+
+
+### New Features
+
+- Extended error handling in OCSClient: The update introduces a dictionary return type for OCSClient methods, now including a 'success' key to clearly indicate the outcome of requests. Additionally, a 'return_raw_data' option has been implemented, allowing the inclusion of raw XML responses in the returned payload. [[#GOATS-180](https://noirlab.atlassian.net/browse/GOATS-180)]
+- Passwords for external services are securely stored using encryption to enhance data security. [[#GOATS-194](https://noirlab.atlassian.net/browse/GOATS-194)]
+- Implement key retrieval in Gemini facility: Added utility functions to retrieve keys based on user and identifier. [[#GOATS-196](https://noirlab.atlassian.net/browse/GOATS-196)]
+- Customizable server address and port: Users can now specify the address and port to run GOATS, accepting formats like '8000', '0.0.0.0:8000', or '192.168.1.5:8000'. [[#GOATS-88](https://noirlab.atlassian.net/browse/GOATS-88)]
+
+
+### Bug Fixes
+
+- Correctly handle missing "value" in parameter set from XML data from OCS: The OCSParser received enhancements to effectively handle missing values in nested XML elements and improved its key naming strategy to utilize both the value and type of parameter sets for clearer and more accurate data representation. [[#GOATS-200](https://noirlab.atlassian.net/browse/GOATS-200)]
+
+
 ## GOATS 24.01.0 (2024-01-26)
 
 

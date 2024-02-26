@@ -1,1 +1,0 @@
-Extended error handling in OCSClient: The update introduces a dictionary return type for OCSClient methods, now including a 'success' key to clearly indicate the outcome of requests. Additionally, a 'return_raw_data' option has been implemented, allowing the inclusion of raw XML responses in the returned payload.

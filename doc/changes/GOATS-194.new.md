@@ -1,1 +1,0 @@
-Passwords for external services are securely stored using encryption to enhance data security.
