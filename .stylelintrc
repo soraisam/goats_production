@@ -3,7 +3,8 @@
     "**/_variables.scss",
     "**/bootstrap.min.css",
     "**/bootstrap.css",
-    "**/custom.sass"
+    "**/custom.sass",
+    "**/halfmoon.min.css"
   ],
   "extends": "stylelint-config-standard"
 }

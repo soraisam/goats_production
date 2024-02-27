@@ -1,10 +1,21 @@
 {% load static bootstrap4 custom_filters %}
 <div class="navbar navbar-expand-md navbar-dark">
+  <a class="navbar-brand" href="{% url 'home' %}">
+    <img src="{% static 'img/goats-outline.png' %}" alt="Logo" height="48" class="d-inline-block align-text-top">
+  </a>
+  <ul class="navbar-nav">
+    <div class="btn-group" role="group">
+      <a class="btn btn-secondary" href="https://github.com/gemini-hlsw/goats" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+      <button id="colorThemeToggle" class="btn btn-secondary" title="Toggle light/dark mode">
+        <i class="fa-solid fa-sun"></i>
+      </button>
+    </div>
+  </ul>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#goatsNavbar" aria-controls="goatsNavbar" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
   <div class="collapse navbar-collapse" id="goatsNavbar">
-    <ul class="navbar-nav mr-auto">
+    <ul class="navbar-nav me-auto">
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle {% if request.resolver_match.namespace == 'alerts' %}active{% endif %}" data-toggle="dropdown">Brokers</a>
         <div class="dropdown-menu">

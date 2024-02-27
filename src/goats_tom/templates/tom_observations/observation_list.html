@@ -3,7 +3,7 @@
 {% block title %}Observations{% endblock %}
 {% block content %}
 <div class="row">
-  <div class="col-md-10">
+  <div class="col-lg-9">
     <div class="row">
       <div class="col-md-6">
         {% bootstrap_pagination page_obj extra=request.GET.urlencode %}
@@ -28,39 +28,33 @@
     <table class="table">
       <thead>
         <tr>
-          <th>Select</th>
-          <th>View</th>
+          <th></th>
+          <th>Observation ID</th>
           <th>Target</th>
           <th>Facility</th>
-          <th>Observation ID</th>
           <th>Status</th>
-          <th>Start</th>
-          <th>End</th>
           <th>Groups</th>
           <th>Saved Data</th>
-          <th>Delete</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         {% for observation in filter.qs %}
         <tr>
           <td><input type="checkbox" name="selected" value="{{observation.id}}"></td>
-          <td><a class="btn btn-success" href="{% url 'tom_observations:detail' observation.id %}">Details</a></td>
+          <td><a href="{% url 'tom_observations:detail' observation.id %}">{{ observation.observation_id }}</a></td>
           <td><a href="{% url 'tom_targets:detail' observation.target.id %}" title="{{ observation.target.id }}">{{ observation.target.names|join:", " }}</a></td>
           <td>{{ observation.facility }}</td>
-          <td>{{ observation.observation_id }}</td>
           <td>{{ observation.status }}</td>
-          <td>{{ observation.scheduled_start }}</td>
-          <td>{{ observation.scheduled_end }}</td>
           <td>{% for o in observation.observationgroup_set.all %}{{ o.name }} {% endfor %}</td>
           <td>{{ observation.dataproduct_set.count }}</td>
           <td>
-            <a href="{% url 'delete' observation.id %}" title="Delete observation" class="btn btn-warning">Delete</a>
+            <a href="{% url 'delete' observation.id %}" title="Delete observation" class="link-light"><i class="fa-solid fa-trash"></i></a>
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="7">
+          <td colspan="8">
             No observations yet. You might want to create an observation from one of
             <a href="{% url 'tom_targets:list' %}">your saved targets</a>.
           </td>

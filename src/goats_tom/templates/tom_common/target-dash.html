@@ -6,29 +6,39 @@
 {% endblock %}
 {% block content %}
   <div class="row">
-    <div class="col-md-4">
+    <div class="col-lg-4 col-12">
       <div id="target-info">
-        <h3>{{ target.name }}</h3>
-        {% target_buttons target %}
+        <div class="d-flex">
+          <p class="h3">{{ target.name }}</p>
+          {% target_buttons target %}
+        </div>
         {% target_data target %}
-        {% recent_photometry target limit=3 %}
+        <div class="row">
+          <div class="col">
+            {% recent_photometry target limit=3 %}
+          </div>
+        </div>
         {% share_data target %}
         {% if target.type == 'SIDEREAL' %}
         {% aladin target %}
         {% endif %}
         {% comments_enabled as comments_are_enabled %}
         <hr/>
-        <h5>Comments</h5>
-          {% if comments_are_enabled %}
-            {% render_comment_list for target %}
-            {% url 'targets:detail' target.id as next %}
-            {% if user.is_authenticated %}
-              {% render_comment_form for target %}
+        <div class="row">
+          <div class="col">
+            <p class="h5">Comments</p>
+            {% if comments_are_enabled %}
+              {% render_comment_list for target %}
+              {% url 'targets:detail' target.id as next %}
+              {% if user.is_authenticated %}
+                {% render_comment_form for target %}
+              {% endif %}
             {% endif %}
-          {% endif %}
+          </div>
+        </div>
       </div>
     </div>
-    <div class="col-md-8">
+    <div class="col-lg-8 col-12">
       {% block target_obs_content %}
       {% endblock %}
     </div>
