@@ -1,25 +1,21 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>Facility</th>
       <th>Observation ID</th>
+      <th>Facility</th>
       <th>Created</th>
       <th>Status</th>
       <th>Saved data</th>
-      <th>View</th>
     </tr>
   </thead>
   <tbody>
     {% for observation in observations %}
     <tr>
+      <td><a href="{% url 'tom_observations:detail' observation.id %}">{{ observation.observation_id }}</a></td>
       <td>{{ observation.facility }}</td>
-      <td>{{ observation.observation_id }}</td>
       <td>{{ observation.created }}</td>
       <td>{{ observation.status }}</td>
       <td>{{ observation.dataproduct_set.count }}</td>
-      <td>
-        <a href="{% url 'tom_observations:detail' observation.id %}">View</a>
-      </td>
     </tr>
     {% empty %}
     <tr>

@@ -1,27 +1,29 @@
 {% load static bootstrap4 tom_common_extras custom_filters %}
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-core="goats" data-bs-theme="dark">
   <head>
     <!-- Meta Tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/halfmoon.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cores/halfmoon.goats.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'img/favicon-32.png' %}" sizes="32x32" />
     <link rel="icon" type="image/x-icon" href="{% static 'img/favicon-16.png' %}" sizes="16x16" />
     <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
     <!-- JavaScript -->
     {% bootstrap_javascript jquery='True' %}
+    <script src="{% static 'js/toggle_mode.js' %}"></script>
+
 
     <title>GOATS</title>
   </head>
   <body>
-    <header>
-      <div class="banner container-fluid">{% include 'banner.html' %}</div>
-      <nav>{% include 'navbar.html' %}</nav>
+    <header class="shadow-sm">
+      <div class="banner container-fluid py-1">{% include 'banner.html' %}</div>
+      <nav class="container-fluid">{% include 'navbar.html' %}</nav>
     </header>
 
     <main role="main" class="{% if request.path == '/' %}container-fluid img-container{% else %}container{% endif %} pt-5 pb-5">
@@ -29,7 +31,7 @@
       {% block content %}{% endblock %}
     </main>
 
-    <footer class="container-fluid">{% include 'footer.html' %}</footer>
+    <footer class="container-fluid py-4 bg-light-subtle">{% include 'footer.html' %}</footer>
 
     {% block javascript %}
     <script src="{% static 'js/download_progress.js' %}"></script>
