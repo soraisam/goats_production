@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from typing import Literal
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -82,39 +83,30 @@ class Command(TOMCommand):
         """Exits with a 0 return code."""
         sys.exit()
 
-    def generate_config(self) -> None:
-        """Generates the settings.py file."""
-        self.status("  Generating settings.py... ")
-        template = get_template("goats_setup/settings.tmpl")
+    def generate_file(self, file_type: Literal["settings", "urls", "asgi"]) -> None:
+        """
+        Generates Django configuration files based on the specified file type.
+
+        Parameters
+        ----------
+        file_type : Literal["settings", "urls", "asgi"]
+            The type of file to generate.
+        """
+        self.status(f"  Generating {file_type}.py... ")
+        template_name = f"goats_setup/{file_type}.tmpl"
+        template = get_template(template_name)
         rendered = template.render(self.context)
 
-        settings_location = settings.BASE_DIR / settings.BASE_DIR.name / "settings.py"
-        if not settings_location.exists():
+        file_location = settings.BASE_DIR / settings.BASE_DIR.name / f"{file_type}.py"
+        if not file_location.exists():
             msg = (
-                "Could not determine settings.py location. Writing settings.py out to "
-                f"{settings_location}. Please copy file to the proper location after script finishes."
+                f"Could not determine {file_type}.py location. Writing {file_type}.py out to "
+                f"{file_location}. Please copy file to the proper location after script finishes."
             )
             self.stdout.write(self.style.WARNING(msg))
-        with open(settings_location, "w+") as settings_file:
-            settings_file.write(rendered)
 
-        self.ok()
-
-    def generate_urls(self) -> None:
-        """Generates the urls.py file."""
-        self.status("  Generating urls.py... ")
-        template = get_template("goats_setup/urls.tmpl")
-        rendered = template.render(self.context)
-
-        urls_location = settings.BASE_DIR / settings.BASE_DIR.name / "urls.py"
-        if not urls_location.exists():
-            msg = (
-                f"Could not determine urls.py location. Writing urls.py out to {urls_location}. Please "
-                "copy file to the proper location after script finishes."
-            )
-            self.stdout.write(self.style.WARNING(msg))
-        with open(urls_location, "w+") as urls_file:
-            urls_file.write(rendered)
+        with open(file_location, "w+") as file:
+            file.write(rendered)
 
         self.ok()
 
@@ -137,8 +129,9 @@ class Command(TOMCommand):
         self.get_target_type()
         # self.get_hint_preference()
         self.stdout.write(self.style.MIGRATE_HEADING("Copying templates:"))
-        self.generate_config()
-        self.generate_urls()
+        self.generate_file("settings")
+        self.generate_file("urls")
+        self.generate_file("asgi")
         self.run_migrations()
         self.create_pi()
         self.create_public_group()

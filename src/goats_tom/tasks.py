@@ -8,6 +8,7 @@ from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
 
 from .astroquery_gemini import Observations as GOA
+from .channels_utils import send_notification
 from .models import GOALogin, TaskProgress
 from .utils import create_name_reduction_map
 
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 @db_task()
 def download_goa_files(serialized_observation_record, query_params, user: int):
+    send_notification("Download started.")
     # Only ever one observation record passed.
     observation_record = list(
         serializers.deserialize("json", serialized_observation_record)

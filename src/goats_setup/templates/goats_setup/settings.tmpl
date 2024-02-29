@@ -31,10 +31,12 @@ ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
-TOM_NAME = 'GOATS'
+TOM_NAME = '{{ PROJECT_NAME }}'
 
 INSTALLED_APPS = [
+    'daphne',
     'goats_tom',
+    'channels',
     'huey.contrib.djhuey',
     'fontawesomefree',
     'corsheaders',
@@ -112,13 +114,32 @@ DATABASES = {
     }
 }
 
+ASGI_APPLICATION = '{{ PROJECT_NAME }}.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
+
 HUEY = {
-    'huey_class': 'huey.SqliteHuey',  # Huey implementation to use.
-    'filename': BASE_DIR / 'huey.sqlite3',
+    'name': '{{ PROJECT_NAME }}_huey',
+    'huey_class': 'huey.RedisHuey',  # Huey implementation to use.
     'results': True,  # Store return values of tasks.
     'store_none': False,  # If a task returns None, do not save to results.
     'immediate': False,  # If DEBUG=True, run synchronously.
     'utc': True,  # Use UTC for all times internally.
+    'connection': {
+        'host': 'localhost',
+        'port': 6379,
+        'db': 0,
+        'connection_pool': None,
+        'read_timeout': 1,  # If not polling (blocking pop), use timeout.
+        'url': None,  # Allow Redis config via a DSN.
+    },
     'consumer': {
         'workers': 3,
         'worker_type': 'greenlet',

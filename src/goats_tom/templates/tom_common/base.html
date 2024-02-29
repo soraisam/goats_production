@@ -36,6 +36,26 @@
     {% block javascript %}
     <script src="{% static 'js/download_progress.js' %}"></script>
     <script src="{% static 'js/get_csrf_token.js' %}"></script>
+    <script>
+      const webSocket = new WebSocket('ws://localhost:8000/ws/notifications/');
+
+      webSocket.onopen = function(event) {
+          console.log('WebSocket connection established');
+      };
+
+      webSocket.onmessage = function(event) {
+          console.log('Message from server ', event.data);
+      };
+
+      webSocket.onclose = function(event) {
+          console.log('WebSocket connection closed', event);
+      };
+
+      webSocket.onerror = function(error) {
+          console.log('WebSocket error', error);
+      };
+    </script>
+
     {% endblock %}
 
     {% block extra_javascript %}{% endblock %}
