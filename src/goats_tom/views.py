@@ -20,13 +20,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import (
-    DeleteView,
-    DetailView,
-    FormView,
-    TemplateView,
-    View,
-)
+from django.views.generic import DeleteView, DetailView, FormView, TemplateView, View
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
@@ -45,8 +39,6 @@ from tom_observations.views import ObservationRecordDetailView
 from tom_targets.views import TargetDeleteView
 
 from .astroquery_gemini import Observations as GOA
-
-# Local application/library specific imports.
 from .forms import GOALoginForm, GOAQueryForm, ProgramKeyForm, UserKeyForm
 from .models import GOALogin, ProgramKey, TaskProgress, UserKey
 from .tasks import download_goa_files
@@ -556,7 +548,6 @@ class GOAQueryFormView(View):
             serialized_observation_record = serializers.serialize(
                 "json", [observation_record]
             )
-
             # Download in background.
             download_goa_files(
                 serialized_observation_record, query_params, request.user
