@@ -120,7 +120,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [("{{ REDIS_HOST }}", {{ REDIS_PORT }})],
         },
     },
 }
@@ -133,8 +133,8 @@ HUEY = {
     'immediate': False,  # If DEBUG=True, run synchronously.
     'utc': True,  # Use UTC for all times internally.
     'connection': {
-        'host': 'localhost',
-        'port': 6379,
+        'host': '{{ REDIS_HOST }}',
+        'port': {{ REDIS_PORT }},
         'db': 0,
         'connection_pool': None,
         'read_timeout': 1,  # If not polling (blocking pop), use timeout.

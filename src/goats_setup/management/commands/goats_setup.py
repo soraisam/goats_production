@@ -1,3 +1,5 @@
+"""Django command to install GOATS."""
+import re
 import sys
 from pathlib import Path
 from typing import Literal
@@ -11,7 +13,10 @@ from django.utils import timezone
 from packaging import version
 from tom_setup.management.commands.tom_setup import Command as TOMCommand
 
-PYTHON_VERSION = "3.10"
+PYTHON_VERSION: str = "3.10"
+REDIS_HOST: str = "localhost"
+REDIS_PORT: int = 6379
+REDIS_ADDRPORT: str = f"{REDIS_HOST}:{REDIS_PORT}"
 
 
 class Command(TOMCommand):
@@ -64,6 +69,17 @@ class Command(TOMCommand):
             type=str,
             help="Path where the data directory will be created.",
         )
+        # Combine Redis host and port into a single argument.
+        parser.add_argument(
+            "--redis-addrport",
+            default=REDIS_ADDRPORT,
+            type=str,
+            help=(
+                "Specify the Redis server IP address and port number. "
+                "Examples: '6379', 'localhost:6379', '192.168.1.5:6379'. "
+                "Providing only a port number (e.g., '6379') binds to localhost."
+            ),
+        )
 
     def check_python(self) -> None:
         """Checks the Python version, exits if not compatible."""
@@ -89,7 +105,7 @@ class Command(TOMCommand):
 
         Parameters
         ----------
-        file_type : Literal["settings", "urls", "asgi"]
+        file_type : `Literal["settings", "urls", "asgi"]`
             The type of file to generate.
         """
         self.status(f"  Generating {file_type}.py... ")
@@ -124,6 +140,7 @@ class Command(TOMCommand):
         self.welcome_banner()
         self.stdout.write(self.style.MIGRATE_HEADING("Initial setup:"))
         self.check_python()
+        self.setup_redis(redis_addrport=options.get("redis_addrport"))
         self.create_project_dirs(media_dir=options.get("media_dir"))
         self.generate_secret_key()
         self.get_target_type()
@@ -136,6 +153,29 @@ class Command(TOMCommand):
         self.create_pi()
         self.create_public_group()
         self.complete()
+
+    def setup_redis(self, redis_addrport: str | None = None) -> None:
+        """Handles the setup Redis process."""
+        self.status("  Setting up Redis...")
+        if redis_addrport is None:
+            redis_addrport = REDIS_ADDRPORT
+
+        # Regex pattern to match host and optionally a port.
+        pattern = re.compile(r"^(?:(?P<host>[^:]+):)?(?P<port>[0-9]+)$")
+        match = pattern.match(redis_addrport)
+
+        if not match:
+            self.exit(
+                self.style.ERROR(
+                    f"Invalid format for --redis-addrport: '{redis_addrport}'"
+                ),
+                return_code=1,
+            )
+
+        # Extract host and port from the regex match groups.
+        self.context["REDIS_HOST"] = match.group("host") or REDIS_HOST
+        self.context["REDIS_PORT"] = int(match.group("port"))
+        self.ok()
 
     def run_migrations(self) -> None:
         """Runs the initial database migrations."""
