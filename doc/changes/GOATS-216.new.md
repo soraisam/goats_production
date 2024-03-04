@@ -1,0 +1,1 @@
+Extend CLI for Redis setup and running: Extended the `install` CLI to allow users to setup the Redis server. Modified the `run` CLI to run the Redis server in a separate thread alongside GOATS and Huey.

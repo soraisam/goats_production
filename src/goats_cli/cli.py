@@ -1,20 +1,23 @@
+"""CLI for installing and running GOATS."""
 __all__ = ["cli"]
-# Standard library imports.
 import re
 import shutil
 import subprocess
 import threading
+import time
 from pathlib import Path
 from typing import IO, Any
 
-# Related third party imports.
 import click
 from click._compat import get_text_stderr
 
 from .modify_manage import modify_manage
-
-# Local application/library specific imports.
 from .modify_settings import modify_settings
+
+REDIS_HOST: str = "localhost"
+REDIS_PORT: int = 6379
+REDIS_ADDRPORT: str = f"{REDIS_HOST}:{REDIS_PORT}"
+REGEX_PATTERN = r"^(?:(?P<host>[^:]+):)?(?P<port>[0-9]+)$"
 
 
 class GOATSClickException(click.ClickException):
@@ -42,10 +45,9 @@ class GOATSClickException(click.ClickException):
 
 def validate_addrport(ctx, param, value):
     """Validate IP address and port."""
-    pattern = r"^((\d{1,3}\.){3}\d{1,3}:)?\d{1,5}$"
-    if not re.match(pattern, value):
+    if not re.match(REGEX_PATTERN, value):
         raise click.BadParameter(
-            "The address and port must be in format 'IP:PORT' or 'PORT'."
+            "The address and port must be in format 'HOST:PORT' or 'PORT'."
         )
     return value
 
@@ -92,8 +94,23 @@ def cli(ctx):
     help="Path for saving downloaded media.",
     default=None,
 )
+@click.option(
+    "--redis-addrport",
+    default=REDIS_ADDRPORT,
+    type=str,
+    help=(
+        "Specify the Redis server IP address and port number. "
+        "Examples: '6379', 'localhost:6379', '192.168.1.5:6379'. "
+        "Providing only a port number (e.g., '6379') binds to localhost."
+    ),
+    callback=validate_addrport,
+)
 def install(
-    project_name: str, directory: Path, overwrite: bool, media_dir: Path | None
+    project_name: str,
+    directory: Path,
+    overwrite: bool,
+    media_dir: Path | None,
+    redis_addrport: str,
 ) -> None:
     """Installs GOATS with a specified or default name in a specified or
     default directory.
@@ -109,6 +126,8 @@ def install(
         `False`.
     media_dir : `Path | None`
         The path to save media files.
+    redis_addrport : `str`
+        The host and port Redis is served on.
 
     Raises
     ------
@@ -160,9 +179,11 @@ def install(
                 )
 
         # Setup the TOM Toolkit.
-        goats_setup_command = [f"{manage_file}", "goats_setup"]
+        goats_setup_command = [f"{manage_file}", "goats_setup", "--redis-addrport", f"{redis_addrport}"]
         if media_dir is not None:
-            goats_setup_command.extend(["--media-dir", f"{media_dir}"])
+            goats_setup_command.extend(
+                ["--media-dir", f"{media_dir}"]
+            )
         subprocess.run(goats_setup_command, check=True)
 
         # Migrate the webpage.
@@ -231,7 +252,20 @@ def install(
     ),
     callback=validate_addrport,
 )
-def run(project_name: str, directory: Path, workers: int, addrport: str) -> None:
+@click.option(
+    "--redis-addrport",
+    default=REDIS_ADDRPORT,
+    type=str,
+    help=(
+        "Specify the Redis server IP address and port number. "
+        "Examples: '6379', 'localhost:6379', '192.168.1.5:6379'. "
+        "Providing only a port number (e.g., '6379') binds to localhost."
+    ),
+    callback=validate_addrport,
+)
+def run(
+    project_name: str, directory: Path, workers: int, addrport: str, redis_addrport: str
+) -> None:
     """Starts the server and workers for GOATS.
 
     Parameters
@@ -242,6 +276,10 @@ def run(project_name: str, directory: Path, workers: int, addrport: str) -> None
         The directory where the project is installed.
     workers : `int`
         The number of workers to spawn for background tasks.
+    addrport : `str`
+        The host and port to serve GOATS on.
+    redis_addrport : `str`
+        The host and port Redis is served on.
 
     Raises
     ------
@@ -250,8 +288,8 @@ def run(project_name: str, directory: Path, workers: int, addrport: str) -> None
     GOATSClickException
         Raised if the 'subprocess' calls fail.
     """
-    display_message("Serving GOATS.")
-    display_message("Finding GOATS installation:", show_goats_emoji=False)
+    display_message("Serving GOATS.\n")
+    display_message("Finding GOATS and Redis installation:", show_goats_emoji=False)
     display_info("Verifying 'manage.py' exists for GOATS...")
     project_path = directory / project_name
     # Get the path for the 'manage.py' file.
@@ -263,23 +301,73 @@ def run(project_name: str, directory: Path, workers: int, addrport: str) -> None
             f"at '{manage_file.absolute()}'."
         )
     display_ok()
+    display_info("Verifing Redis installed...")
+    try:
+        subprocess.run(["redis-server", "--version"], check=True, text=True, capture_output=True)
+        display_ok()
+    except FileNotFoundError:
+        display_failed()
+        raise GOATSClickException(
+            "An error occurred verifying Redis. Is Redis installed?"
+        )
 
-    display_message("Starting GOATS and background workers:", show_goats_emoji=False)
-    # Start Huey consumer in a separate thread
+    display_message(
+        "Starting Redis, GOATS and background workers:", show_goats_emoji=False
+    )
+    display_message(
+        "---------------------------------------------", show_goats_emoji=False
+    )
+    time.sleep(2)
+    # Start the Redis server.
+    redis_thread = threading.Thread(target=start_redis_server, args=(redis_addrport,))
+    redis_thread.start()
+
+    # Start Huey consumer in a separate thread.
     huey_thread = threading.Thread(
         target=start_huey_consumer, args=(str(manage_file), workers)
     )
     huey_thread.start()
 
-    # Start Django server in a separate thread
+    # Start Django server in a separate thread.
     django_thread = threading.Thread(
         target=start_django_server, args=(str(manage_file), addrport)
     )
     django_thread.start()
 
-    # Keep the main thread running while sub-threads are working
-    django_thread.join()
+    # Keep the main thread running while sub-threads are working.
+    redis_thread.join()
     huey_thread.join()
+    django_thread.join()
+
+
+def start_redis_server(addrport: str, disable_rdb: bool = True) -> None:
+    """Starts the Redis server.
+
+    Parameters
+    ----------
+    addrport: `str`
+        IP address and port to serve on.
+
+    Raises
+    ------
+    GOATSClickException
+        Raised if issue starting Redis server.
+    """
+    pattern = pattern = re.compile(REGEX_PATTERN)
+    match = pattern.match(addrport)
+    port = match.group("port")
+    cmd = ["redis-server", "--port", f"{port}"]
+
+    # Don't save snapshot if True.
+    if disable_rdb:
+        cmd.extend(["--save", "''", "--appendonly", "no"])
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as error:
+        raise GOATSClickException(
+            f"Error running Redis server: '{error.cmd}'. "
+            f"Exit status: {error.returncode}."
+        )
 
 
 def start_django_server(manage_file: Path, addrport: str) -> None:
@@ -351,7 +439,9 @@ def display_message(
 
 def display_ok() -> None:
     """Display "OK" in green format."""
-    click.echo(click.style("OK", fg="green", bold=True))
+    time.sleep(.5)
+    click.echo(click.style(" OK", fg="green", bold=True))
+    time.sleep(.5)
 
 
 def display_info(message: str, indent: int = 4) -> None:
@@ -369,7 +459,7 @@ def display_info(message: str, indent: int = 4) -> None:
 
 def display_failed() -> None:
     """Display "FAILED" in red."""
-    click.echo(click.style("FAILED", fg="red", bold=True))
+    click.echo(click.style(" FAILED", fg="red", bold=True))
 
 
 def display_warning(message: str, indent: int = 0) -> None:
