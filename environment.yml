@@ -1,0 +1,35 @@
+# Environment configuration for GOATS (goats-env)
+
+# For ARM (M1/M2) Mac users:
+#  - Ensure you have Rosetta 2 installed to run Intel-based binaries.
+#  - Install an x86 version of Anaconda or Miniconda.
+#  - You need to switch to an x86 terminal for installing and running
+#    Intel-only packages like DRAGONS.
+
+# Creating the environment:
+# conda env create -f environment.yml
+
+name: goats-env
+
+channels:
+  - conda-forge
+  - http://astroconda.gemini.edu/public
+  - defaults
+
+dependencies:
+  - astropy<=5.3.0  # Required to be compatible with DRAGONS and Bokeh.
+  - dragons
+  - ds9
+  - bokeh=2.4.3  # Required due to astropy.
+  - python-confluent-kafka=1.7.0  # Required for linking librdkafka in conda.
+  - librdkafka>=1.7.0  # Required while antares-client upgrades kafka.
+  - pip
+  - python=3.10
+  - redis-server
+
+  # For development, use clone the GOATS repo and "pip install -e ." or
+  # for tests, install with "pip install -e '.[test]'".
+
+  # Uncomment the below lines to install from GitHub (requires repo access).
+  # - pip:
+  #   - git+https://github.com/gemini-hlsw/goats.git#branch=main

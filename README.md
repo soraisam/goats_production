@@ -1,4 +1,4 @@
-# Gemini Observation and Analysis of Targets System (GOATS)
+# 🐐 Gemini Observation and Analysis of Targets System (GOATS)
 
 [![Run Flake8](https://github.com/gemini-hlsw/goats/actions/workflows/run_flake8.yaml/badge.svg?branch=main&event=push)](https://github.com/gemini-hlsw/goats/actions/workflows/run_flake8.yaml)
 [![Run Tests](https://github.com/gemini-hlsw/goats/actions/workflows/run_tests.yaml/badge.svg?branch=main&event=push)](https://github.com/gemini-hlsw/goats/actions/workflows/run_tests.yaml)
@@ -16,52 +16,111 @@ Its objective is to simplify the TDAMM workflow for users by serving as a one-st
   title="Ecosystem of GOATS"
   style="display: inline-block; margin: 0 auto; max-width: 400px">
 
-## Installation
+## System Requirements
+- Python 3.10 or higher
+- Intel Anaconda or Miniconda (works on M1 architecture) >= 4.12
 
-```shell
+### Workaround for ARM (M1/M2) Mac users:
+- Ensure you have Rosetta 2 installed to run Intel-based binaries.
+- Install an x86 version of Anaconda or Miniconda.
+- You need to switch to an x86 terminal for installing and running Intel-only packages like DRAGONS.
+
+## Installation
+```console
 git clone https://github.com/gemini-hlsw/goats.git
 cd goats
+conda env create -f environment.yml
+conda activate goats-env
 pip install .
 ```
+This installs the `goats` CLI which can be used to install and run GOATS.
+```console
+goats install
+goats run
+```
 
-# GOATS CLI Guide
+To test:
+```console
+pip install '.[test]'
+pytest
+```
+
+
+## GOATS CLI
 
 The **Gemini Observation and Analysis of Targets System (GOATS)** CLI provides an efficient way to install and manage the GOATS project along with the antares2goats browser extension. You can get detailed help on each command using the `--help` option. Below, find the breakdown of the primary commands and options:
 
-## Getting Started
-
+### `goats`
 Use the following command to get an overview of available options and commands:
+```console
+$ goats --help
 
-`goats --help`
+Usage: goats [OPTIONS] COMMAND [ARGS]...
 
-### Available Commands
+  Gemini Observation and Analysis of Targets System (GOATS).
 
-1. `install`: Installs GOATS along with the optional antares2goats browser extension.
+  You can run each subcommand with its own options and arguments. For
+  details on a specific command, type 'goats COMMAND --help'.
 
-   `goats install [OPTIONS]`
+Options:
+  --help  Show this message and exit.
 
-   #### Options
-   - `-p, --project-name TEXT`: Specify a custom project name (default: 'GOATS').
-   - `-d, --directory PATH`: Specify the parent directory where GOATS will be installed (default: current directory).
-   - `--overwrite`: Overwrite the existing project, if it exists (default: False).
-   - `--browser [chrome|safari|firefox]`: Specify the browser for which to install the extension.
+Commands:
+  install  Installs GOATS and configures Redis server.
+  run      Starts the webserver, Redis server, and workers for GOATS.
+```
 
-   Get more information with:
+### `goats install`
+```console
+$ goats install --help
 
-   `goats install --help`
+Usage: goats install [OPTIONS]
 
-2. `run`: Starts the server for the GOATS project.
+  Installs GOATS and configures Redis Server.
 
-   `goats run [OPTIONS]`
+Options:
+  -p, --project-name TEXT  Specify a custom project name. Default is 'GOATS'.
+  -d, --directory PATH     Specify the parent directory where GOATS will be
+                           installed. Default is the current directory.
 
-   #### Options
-   - `-p, --project-name TEXT`: Specify a custom project name (default: 'GOATS').
-   - `-d, --directory PATH`: Specify the parent directory where GOATS is installed (default: current directory).
-   - `--reloader`: Runs the server with a reloader for active development.
+  --overwrite              Overwrite the existing project, if it exists.
+                           Default is False.
 
-   Get more information with:
+  -m, --media-dir PATH     Path for saving downloaded media.
+  --redis-addrport TEXT    Specify the Redis server IP address and port
+                           number. Examples: '6379', 'localhost:6379',
+                           '192.168.1.5:6379'. Providing only a port number
+                           (e.g., '6379') binds to localhost.
 
-   `goats run --help`
+  --help                   Show this message and exit.
+```
+
+### `goats run`
+```console
+$ goats run --help
+
+Usage: goats run [OPTIONS]
+
+  Starts the webserver, Redis server, and workers for GOATS.
+
+Options:
+  -p, --project-name TEXT  Specify a custom project name. Default is 'GOATS'.
+  -d, --directory PATH     Specify the parent directory where GOATS is
+                           installed. Default is the current directory.
+
+  -w, --workers INTEGER    Number of workers to spawn for background tasks.
+  --addrport TEXT          Specify the IP address and port number to serve
+                           GOATS. Examples: '8000', '0.0.0.0:8000',
+                           '192.168.1.5:8000'. Providing only a port number
+                           (e.g., '8000') binds to 127.0.0.1.
+
+  --redis-addrport TEXT    Specify the Redis server IP address and port
+                           number. Examples: '6379', 'localhost:6379',
+                           '192.168.1.5:6379'. Providing only a port number
+                           (e.g., '6379') binds to localhost.
+
+  --help                   Show this message and exit.
+```
 
 ## References and Documentation
 
