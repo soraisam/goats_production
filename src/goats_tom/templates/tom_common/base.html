@@ -29,22 +29,35 @@
     <main role="main" class="{% if request.path == '/' %}container-fluid img-container{% else %}container{% endif %} pt-5 pb-5">
       {% bootstrap_messages %}
       {% block content %}{% endblock %}
+      <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3">
+      </div>
     </main>
 
     <footer class="container-fluid py-4 bg-light-subtle">{% include 'footer.html' %}</footer>
 
     {% block javascript %}
-    <script src="{% static 'js/download_progress.js' %}"></script>
     <script src="{% static 'js/get_csrf_token.js' %}"></script>
-    <script>
-      const webSocket = new WebSocket('ws://localhost:8000/ws/notifications/');
+    <script type="module">
+      import { createAndShowToast } from "{% static 'js/toast_utils.js' %}";
+      import { updateDownloadProgress } from "{% static 'js/download_progress.js' %}";
+
+      const webSocket = new WebSocket('ws://localhost:8000/ws/updates/');
 
       webSocket.onopen = function(event) {
           console.log('WebSocket connection established');
       };
 
       webSocket.onmessage = function(event) {
-          console.log('Message from server ', event.data);
+          const data = JSON.parse(event.data);
+
+          if (data.update === "notification") {
+            console.log("Creating toast.");
+            createAndShowToast(data);
+          }
+          else if (data.update == "download") {
+            console.log("Updating download progress.");
+            updateDownloadProgress(data);
+          }
       };
 
       webSocket.onclose = function(event) {

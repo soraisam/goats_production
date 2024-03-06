@@ -1,23 +1,30 @@
 __all__ = ["download_goa_files"]
 
 import logging
+import time
 
 from django.conf import settings
 from django.core import serializers
 from django.db import IntegrityError
 from goats_tom.astroquery import Observations as GOA
-from goats_tom.models import GOALogin, TaskProgress
-from goats_tom.utils import create_name_reduction_map, send_notification
+from goats_tom.consumers import DownloadState, NotificationInstance
+from goats_tom.models import Download, GOALogin
+from goats_tom.utils import create_name_reduction_map
 from huey.contrib.djhuey import db_task
 from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
+
 
 logger = logging.getLogger(__name__)
 
 
 @db_task()
 def download_goa_files(serialized_observation_record, query_params, user: int):
-    send_notification("Download started.")
+    # Allow page to refresh before displaying notification.
+    time.sleep(2)
+
+    download_state = DownloadState()
+
     # Only ever one observation record passed.
     observation_record = list(
         serializers.deserialize("json", serialized_observation_record)
@@ -25,12 +32,18 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
     target = observation_record.target
     facility = observation_record.facility
     observation_id = observation_record.observation_id
-    # Create TaskProgress record at the start
-    task_progress = TaskProgress.objects.create(
-        task_id=observation_id,
-        progress=1,
-        status="running",
+
+    # Create Download record at the start
+    download = Download.objects.create(
+        observation_id=observation_id,
+        status="Running",
+        unique_id=download_state.unique_id,
     )
+
+    NotificationInstance.create_and_send(
+        message="Download started.", label=f"{observation_id}"
+    )
+    download_state.update_and_send(label=observation_id, status="Starting...")
 
     # Have to handle logging in for each task.
     prop_data_msg = "Proprietary data will not be downloaded."
@@ -61,6 +74,8 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
 
     # Create blank mapping.
     name_reduction_map = {}
+    num_files_downloaded = 0
+    num_files_omitted = 0
     try:
         sci_files = []
         cal_files = []
@@ -68,28 +83,48 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
         # Query GOA for science tarfile.
         if not download_calibration == "only":
             print(f"{observation_id}: Downloading science files...")
+
+            download_state.update_and_send(
+                status="Downloading science files...", downloaded_bytes=0
+            )
+
             file_list = GOA.query_criteria(*args, **kwargs)
             # Create the mapping.
             name_reduction_map = create_name_reduction_map(file_list)
             sci_out = GOA.get_files(
-                target_facility_path, *args, decompress_fits=True, **kwargs
+                target_facility_path,
+                *args,
+                decompress_fits=True,
+                download_state=download_state,
+                **kwargs,
             )
             sci_files = sci_out["downloaded_files"]
-            task_progress.progress += 45
-            task_progress.save()
+            num_files_downloaded += sci_out["num_files_downloaded"]
+            num_files_omitted += sci_out["num_files_omitted"]
 
         if not download_calibration == "no":
             print(f"{observation_id}: Downloading calibration files...")
+            download_state.update_and_send(
+                status="Downloading calibration files...", downloaded_bytes=0
+            )
+
             # Query GOA for calibration tarfile.
             # Only need to specify program ID.
             calibration_kwargs = {"progid": observation_id}
             cal_out = GOA.get_calibration_files(
-                target_facility_path, *args, decompress_fits=True, **calibration_kwargs
+                target_facility_path,
+                *args,
+                decompress_fits=True,
+                download_state=download_state,
+                **calibration_kwargs,
             )
             cal_files = cal_out["downloaded_files"]
+            num_files_downloaded = cal_out["num_files_downloaded"]
+            num_files_omitted += cal_out["num_files_omitted"]
 
-        task_progress.progress = 90
-        task_progress.save()
+        download_state.update_and_send(
+            status="Finished downloads...", downloaded_bytes=None
+        )
 
     except HTTPError as e:
         if e.response.status_code == 403:
@@ -99,7 +134,7 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
 
     # Handle case if GOA found nothing and did not create folder.
     if not target_facility_path.exists():
-        task_progress.finish()
+        download.finish()
         return
 
     downloaded_files = sci_files + cal_files
@@ -146,4 +181,18 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
                 )
 
     GOA.logout()
-    task_progress.finish()
+
+    # Update downloaded and omitted data.
+    download.num_files_downloaded = num_files_downloaded
+    download.num_files_omitted = num_files_omitted
+    download.finish()
+    download_state.update_and_send(status="Done.", done=True)
+
+    # Build message for notificaiton.
+    message = f"Downloaded {num_files_downloaded} files."
+    if num_files_omitted > 0:
+        message += f" {num_files_omitted} proprietary files were omitted."
+
+    NotificationInstance.create_and_send(
+        message=f"{message}", label=f"{observation_id}", color="success"
+    )

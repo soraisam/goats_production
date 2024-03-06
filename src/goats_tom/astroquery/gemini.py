@@ -14,6 +14,7 @@ import os
 import shutil
 import tarfile
 import tempfile
+import time
 from datetime import date
 from multiprocessing import Pool
 from pathlib import Path
@@ -605,6 +606,7 @@ class ObservationsClass(QueryWithLogin):
         *query_args,
         decompress_fits=True,
         remove_readme=True,
+        download_state=None,
         **query_kwargs,
     ) -> dict[str, Any]:
         """Download all associated calibrations files as a tar archive. Will
@@ -624,6 +626,8 @@ class ObservationsClass(QueryWithLogin):
         remove_readme : bool, optional
             Remove README and MD5 text files included in download, default is
             `True`.
+        download_state : DownloadProgressState, optional
+            State of the current download, by default `None`.
         query_kwargs : dict
             Query keyword arguments to pass to GOA query.
 
@@ -641,6 +645,7 @@ class ObservationsClass(QueryWithLogin):
             *args,
             decompress_fits=decompress_fits,
             remove_readme=remove_readme,
+            download_state=download_state,
             **query_kwargs,
         )
 
@@ -650,6 +655,7 @@ class ObservationsClass(QueryWithLogin):
         *query_args,
         decompress_fits=True,
         remove_readme=True,
+        download_state=None,
         **query_kwargs,
     ) -> dict[str, Any]:
         """
@@ -668,6 +674,8 @@ class ObservationsClass(QueryWithLogin):
         remove_readme : bool, optional
             Remove README and MD5 text files included in download, default is
             `True`.
+        download_state : str, optional
+            State of the current download, by default `None`.
         query_kwargs : dict
             Query keyword arguments to pass to GOA query.
 
@@ -677,7 +685,8 @@ class ObservationsClass(QueryWithLogin):
             A dictionary containing the number of files downloaded, the number
             of files omitted, a human-readable message, and boolean success.
         """
-        parallize = True
+        last_update_time = time.time()
+        parallize = False
         # Convert destination folder.
         dest_folder = Path(dest_folder).expanduser()
         url = self.url_helper.get_tar_file_url(*query_args, **query_kwargs)
@@ -688,6 +697,7 @@ class ObservationsClass(QueryWithLogin):
         # Check if data is good.
         data = response.iter_content(chunk_size=conf.GOA_CHUNK_SIZE)
         first_chunk = next(data)
+        downloaded_bytes = len(first_chunk)
         if b"No files to download." in first_chunk:
             response.close()
             return {
@@ -712,7 +722,24 @@ class ObservationsClass(QueryWithLogin):
                 f.write(first_chunk)
                 for chunk in data:
                     f.write(chunk)
+                    downloaded_bytes += len(chunk)
+
+                    # Check if enough time passed to update.
+                    if download_state is not None:
+                        current_time = time.time()
+                        if current_time - last_update_time > 1:
+                            download_state.update_and_send(
+                                downloaded_bytes=downloaded_bytes
+                            )
+                            last_update_time = current_time
+
             response.close()
+
+            if download_state is not None:
+                download_state.update_and_send(
+                    status="Extracting and decompressing...",
+                    downloaded_bytes=downloaded_bytes,
+                )
 
             # Extract the tar archive.
             with tarfile.open(tar_path, "r") as tar:

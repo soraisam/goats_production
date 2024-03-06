@@ -7,7 +7,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from goats_tom.models import GOALogin, Key, ProgramKey, TaskProgress, UserKey
+from goats_tom.models import GOALogin, Key, ProgramKey, Download, UserKey
 from tom_dataproducts.models import DataProduct, ReducedDatum
 from tom_observations.tests.factories import ObservingRecordFactory
 from tom_targets.tests.factories import SiderealTargetFactory
@@ -44,19 +44,20 @@ class GOALoginFactory(factory.django.DjangoModelFactory):
     password = "default_password"
 
 
-class TaskProgressFactory(factory.django.DjangoModelFactory):
+class DownloadFactory(factory.django.DjangoModelFactory):
     # Factory for creating TaskProgress instances for testing.
     class Meta:
-        model = TaskProgress
+        model = Download
 
-    task_id = factory.Faker("uuid4")
-    progress = factory.Sequence(lambda n: n % 100)
+    observation_id = "GN-2024A-Q-1-1"
+    unique_id = factory.Faker("uuid4")
     status = "running"
     done = False
     start_time = factory.LazyFunction(timezone.now)
     end_time = None
-    error_message = None
     user = factory.SubFactory(UserFactory)
+    num_files_downloaded = 1
+    num_files_omitted = 2
 
 
 class DataProductFactory(factory.django.DjangoModelFactory):

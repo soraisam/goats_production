@@ -1,21 +1,20 @@
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
-from django.db.models import Q
 from django.http import HttpRequest, HttpResponseRedirect, JsonResponse
 from django.test import Client, TestCase
 from django.urls import reverse
-from goats_tom.models import GOALogin, ProgramKey, TaskProgress, UserKey
+from goats_tom.models import GOALogin, ProgramKey, Download, UserKey
 from goats_tom.tests.factories import (
     DataProductFactory,
     GOALoginFactory,
     ProgramKeyFactory,
     ReducedDatumFactory,
-    TaskProgressFactory,
+    DownloadFactory,
     UserFactory,
     UserKeyFactory,
 )
@@ -98,11 +97,11 @@ class TestUpdateBrokerQueryName:
 @pytest.mark.django_db
 class TestRecentDownloadsView(TestCase):
     def test_recent_downloads(self):
-        # Create completed TaskProgress instances using the factory.
-        completed_tasks = TaskProgressFactory.create_batch(5, done=True)
+        # Create completed Download instances using the factory.
+        completed_downloads = DownloadFactory.create_batch(5, done=True)
 
-        # Create incomplete TaskProgress instances for control.
-        incomplete_tasks = TaskProgressFactory.create_batch(3, done=False)
+        # Create incomplete Download instances for control.
+        incomplete_downloads = DownloadFactory.create_batch(3, done=False)
 
         # Use reverse to get the URL.
         url = reverse("recent_downloads")
@@ -111,12 +110,12 @@ class TestRecentDownloadsView(TestCase):
         response = self.client.get(url)
 
         # Get the tasks from the context of the response.
-        tasks_in_context = response.context["tasks"]
+        downloads_in_context = response.context["downloads"]
 
         # Assertions
-        self.assertTrue(all(task.done for task in tasks_in_context))
-        self.assertEqual(set(tasks_in_context), set(completed_tasks))
-        self.assertTrue(set(incomplete_tasks).isdisjoint(set(tasks_in_context)))
+        self.assertTrue(all(task.done for task in downloads_in_context))
+        self.assertEqual(set(downloads_in_context), set(completed_downloads))
+        self.assertTrue(set(incomplete_downloads).isdisjoint(set(downloads_in_context)))
 
 
 class TestOngoingTasks:
@@ -128,12 +127,12 @@ class TestOngoingTasks:
 
         Returns a MagicMock object that simulates Django's QuerySet.
         """
-        mock = MagicMock(spec=TaskProgress.objects.none())
+        mock = MagicMock(spec=Download.objects.none())
         mock.filter.return_value = mock
         mock.values.return_value = list(args) if args else []
         return mock
 
-    @patch("goats_tom.views.TaskProgress")
+    @patch("goats_tom.views.Download")
     def test_ongoing_tasks_no_tasks(self, mock_task_progress, mock_request):
         """Test the ongoing_tasks view with no ongoing tasks."""
         mock_task_progress.objects.filter.return_value = self.mock_queryset()
@@ -143,12 +142,12 @@ class TestOngoingTasks:
         assert json.loads(response.content) == []
 
     @pytest.mark.django_db
-    @patch("goats_tom.views.TaskProgress")
+    @patch("goats_tom.views.Download")
     def test_ongoing_tasks_with_tasks(self, mock_task_progress, mock_request):
         """Test the ongoing_tasks view with some ongoing tasks."""
         test_tasks = [
-            {"task_id": task.task_id, "progress": task.progress, "status": task.status}
-            for task in TaskProgressFactory.create_batch(
+            {"unique_id": task.unique_id, "status": task.status}
+            for task in DownloadFactory.create_batch(
                 5, status="running", done=False
             )
         ]
@@ -157,30 +156,6 @@ class TestOngoingTasks:
         response = ongoing_tasks(mock_request)
         assert response.status_code == 200
         assert json.loads(response.content) == test_tasks
-
-    @pytest.mark.django_db
-    @patch("goats_tom.views.TaskProgress")
-    def test_ongoing_tasks_update_done_status(self, mock_task_progress, mock_request):
-        """Test the ongoing_tasks view for updating the 'done' status of
-        tasks.
-        """
-        mock_task_progress.objects.filter.return_value = self.mock_queryset()
-
-        ongoing_tasks(mock_request)
-
-        # Construct the call chain as it occurs in the view function.
-        completed_or_failed_filter_call = call.filter(
-            Q(status="completed") | Q(status="failed")
-        )
-        update_call = call.filter(Q(status="completed") | Q(status="failed")).update(
-            done=True
-        )
-
-        # Check if the filter call was executed.
-        assert completed_or_failed_filter_call in mock_task_progress.objects.mock_calls
-
-        # Check if the entire chain (filter followed by update) was executed.
-        assert update_call in mock_task_progress.objects.mock_calls
 
 
 class TestGOATSDataProductDeleteView(APITestCase):

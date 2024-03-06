@@ -8,7 +8,7 @@ from goats_tom.tests.factories import (
     GOALoginFactory,
     ProgramKeyFactory,
     ReducedDatumFactory,
-    TaskProgressFactory,
+    DownloadFactory,
     UserKeyFactory,
 )
 
@@ -28,22 +28,19 @@ def test_goalogin_set_password():
 @pytest.mark.django_db
 def test_task_progress_factory():
     # Test the TaskProgress factory.
-    task = TaskProgressFactory.create()
+    task = DownloadFactory.create()
 
-    assert task.task_id is not None
-    assert 0 <= task.progress < 100
+    assert task.unique_id is not None
     assert task.status == "running"
     assert not task.done
     assert task.start_time <= timezone.now()
     assert task.end_time is None
-    assert task.error_message is None
     assert task.user is not None
 
     # Test the finish method.
-    task.finish(error_message="Test error")
-    assert task.status == "failed"
-    assert task.error_message == "Test error"
-    assert task.progress == 100
+    task.finish(message="Test error", error=True)
+    assert task.status == "Failed"
+    assert task.message == "Test error"
     task.done = True
     assert task.total_time != "N/A"
 
