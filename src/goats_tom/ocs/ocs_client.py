@@ -4,7 +4,9 @@ with the Gemini Observatory's Observation Control Software (OCS).
 The OCSClient class is designed to facilitate the retrieval and parsing of data
 from the Gemini Observatory's databases.
 """
+
 __all__ = ["OCSClient"]
+
 import ssl
 import xmlrpc.client
 from typing import Any

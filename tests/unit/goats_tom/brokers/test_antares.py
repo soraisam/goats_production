@@ -2,7 +2,7 @@ from collections.abc import Iterator
 
 import pytest
 from django.core.exceptions import ValidationError
-from goats_tom.antares import GOATSANTARESBroker, GOATSANTARESBrokerForm
+from goats_tom.brokers import GOATSANTARESBroker, GOATSANTARESBrokerForm
 
 
 @pytest.mark.django_db

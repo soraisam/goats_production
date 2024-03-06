@@ -1,5 +1,6 @@
 from django import forms
-from goats_tom.models import ProgramKey, UserKey
+
+from .models import ProgramKey, UserKey
 
 
 class GOAQueryForm(forms.Form):

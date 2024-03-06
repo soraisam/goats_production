@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from goats_tom.ocs_parser import OCSParser
+from goats_tom.ocs import OCSParser
 
 
 @pytest.fixture
@@ -11,21 +11,21 @@ def ocs_parser():
 
 @pytest.fixture
 def odb_xml():
-    file_path = Path(__file__).parent.parent / "data" / "odb.xml"
+    file_path = Path(__file__).parent.parent.parent / "data" / "odb.xml"
     with open(file_path, "r") as file:
         return file.read()
 
 
 @pytest.fixture
 def coordinates_xml():
-    file_path = Path(__file__).parent.parent / "data" / "coordinates.xml"
+    file_path = Path(__file__).parent.parent.parent / "data" / "coordinates.xml"
     with open(file_path, "r") as file:
         return file.read()
 
 
 @pytest.fixture
 def sequence_xml():
-    file_path = Path(__file__).parent.parent / "data" / "sequence.xml"
+    file_path = Path(__file__).parent.parent.parent / "data" / "sequence.xml"
     with open(file_path, "r") as file:
         return file.read()
 

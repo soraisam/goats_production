@@ -1,6 +1,7 @@
 """Tests for parsing Gemini IDs."""
+
 import pytest
-from goats_tom.gemini_id import GeminiID
+from goats_tom.ocs import GeminiID
 
 
 def test_parse_valid_program_id():

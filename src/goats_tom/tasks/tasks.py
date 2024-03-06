@@ -1,16 +1,16 @@
+__all__ = ["download_goa_files"]
+
 import logging
 
 from django.conf import settings
 from django.core import serializers
 from django.db import IntegrityError
+from goats_tom.astroquery import Observations as GOA
+from goats_tom.models import GOALogin, TaskProgress
+from goats_tom.utils import create_name_reduction_map, send_notification
 from huey.contrib.djhuey import db_task
 from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
-
-from .astroquery_gemini import Observations as GOA
-from .channels_utils import send_notification
-from .models import GOALogin, TaskProgress
-from .utils import create_name_reduction_map
 
 logger = logging.getLogger(__name__)
 

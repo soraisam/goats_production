@@ -38,7 +38,7 @@ from tom_observations.models import ObservationRecord
 from tom_observations.views import ObservationRecordDetailView
 from tom_targets.views import TargetDeleteView
 
-from .astroquery_gemini import Observations as GOA
+from .astroquery import Observations as GOA
 from .forms import GOALoginForm, GOAQueryForm, ProgramKeyForm, UserKeyForm
 from .models import GOALogin, ProgramKey, TaskProgress, UserKey
 from .tasks import download_goa_files

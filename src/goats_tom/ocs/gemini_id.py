@@ -1,4 +1,5 @@
 """Parsing Gemini IDs."""
+
 __all__ = ["GeminiID"]
 
 import re

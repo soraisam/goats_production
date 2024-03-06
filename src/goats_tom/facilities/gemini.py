@@ -1,18 +1,21 @@
 """Gemini facility."""
-# Standard library imports.
+
+__all__ = ["GEMObservationForm", "GOATSGEMFacility"]
+
 import logging
 from typing import Any
 
 import requests
 from astropy import units as u
-
-# Related third party imports.
 from astropy.time import Time
 from crispy_forms.layout import HTML, Div
 from dateutil.parser import parse
 from django import forms
 from django.conf import settings
 from django.http import HttpRequest
+from goats_tom.astroquery import Observations as GOA
+from goats_tom.ocs import GeminiID, OCSClient
+from goats_tom.utils import get_key_info
 from requests.exceptions import HTTPError
 from tom_common.exceptions import ImproperCredentialsException
 from tom_dataproducts.models import DataProduct
@@ -23,12 +26,6 @@ from tom_observations.facility import (
 )
 from tom_observations.models import ObservationRecord
 from tom_targets.models import Target
-
-# Local application/library specific imports.
-from .astroquery_gemini import Observations as GOA
-from .gemini_id import GeminiID
-from .ocs_client import OCSClient
-from .utils import get_key_info
 
 try:
     AUTO_THUMBNAILS = settings.AUTO_THUMBNAILS

@@ -6,11 +6,14 @@ Gemini Observatory Archive (GOA) URL Helper
 
 Query public and proprietary data from GOA.
 """
+
+__all__ = ["URLHelper"]
+
 from astropy import units
 from astropy.coordinates import Angle
 from astroquery.utils import commons
 
-from .astroquery_conf import conf
+from .conf import conf
 
 
 def handle_keyword_arg(key, value):
