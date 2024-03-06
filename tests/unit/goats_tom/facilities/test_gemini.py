@@ -1,6 +1,7 @@
-import pytest
-from goats_tom.gemini import GOATSGEMFacility, GEMObservationForm
 from unittest.mock import patch
+
+import pytest
+from goats_tom.facilities import GEMObservationForm, GOATSGEMFacility
 
 
 @pytest.mark.django_db
@@ -96,8 +97,8 @@ class TestGOATSGEMFacility:
         errors = self.facility.validate_observation(invalid_payload)
         assert "obs" in errors
 
-    @patch("goats_tom.gemini.get_key_info")
-    @patch("goats_tom.gemini.make_request")
+    @patch("goats_tom.facilities.gemini.get_key_info")
+    @patch("goats_tom.facilities.gemini.make_request")
     def test_submit_observation_with_user_key(
         self, mock_make_request, mock_get_key_info
     ):
@@ -120,8 +121,8 @@ class TestGOATSGEMFacility:
         expected_payload.update({"email": "user@test.com", "password": "userkey123"})
         assert sent_payload == expected_payload
 
-    @patch("goats_tom.gemini.get_key_info")
-    @patch("goats_tom.gemini.make_request")
+    @patch("goats_tom.facilities.gemini.get_key_info")
+    @patch("goats_tom.facilities.gemini.make_request")
     def test_submit_observation_with_program_key(
         self, mock_make_request, mock_get_key_info
     ):

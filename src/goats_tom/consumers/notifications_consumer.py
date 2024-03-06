@@ -1,6 +1,7 @@
 """Class for notifications through websocket."""
 
 __all__ = ["NotificationsConsumer"]
+
 import json
 
 from channels.generic.websocket import AsyncWebsocketConsumer

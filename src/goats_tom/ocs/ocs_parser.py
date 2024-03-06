@@ -9,7 +9,9 @@ information.
 Each method converts the XML data into a structured dictionary, facilitating
 easier access and manipulation of the data in Python.
 """
+
 __all__ = ["OCSParser"]
+
 import xml.etree.ElementTree as ET
 from typing import Any
 

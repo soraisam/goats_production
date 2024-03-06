@@ -6,6 +6,9 @@ Gemini Observatory Archive (GOA) Astroquery Module
 
 Query public and proprietary data from GOA.
 """
+
+__all__ = ["Observations", "ObservationsClass"]
+
 import bz2
 import os
 import shutil
@@ -25,11 +28,8 @@ from astroquery.query import QueryWithLogin
 from astroquery.utils.class_or_instance import class_or_instance
 from gevent.threadpool import ThreadPool
 
-from .astroquery_conf import conf
-from .astroquery_urlhelper import URLHelper
-
-__all__ = ["Observations", "ObservationsClass"]  # specifies what to import
-
+from .conf import conf
+from .urlhelper import URLHelper
 
 __valid_instruments__ = [
     "GMOS",
@@ -853,9 +853,10 @@ class ObservationsClass(QueryWithLogin):
         """
         decompressed_file_path = file_path.with_suffix("")
 
-        with bz2.open(file_path, "rb") as in_file, open(
-            decompressed_file_path, "wb"
-        ) as out_file:
+        with (
+            bz2.open(file_path, "rb") as in_file,
+            open(decompressed_file_path, "wb") as out_file,
+        ):
             while chunk := in_file.read(conf.GOA_CHUNK_SIZE):
                 out_file.write(chunk)
 

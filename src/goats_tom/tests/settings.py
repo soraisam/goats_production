@@ -11,8 +11,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'adii_5c%scafhpybyp9h1gi=(7(ym#+vj^gj)ftqr#%fw-$vhh'
+SECRET_KEY = "adii_5c%scafhpybyp9h1gi=(7(ym#+vj^gj)ftqr#%fw-$vhh"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -31,107 +31,106 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-TOM_NAME = 'GOATS'
+TOM_NAME = "GOATS"
 
 INSTALLED_APPS = [
-    'goats_tom',
-    'huey.contrib.djhuey',
-    'fontawesomefree',
-    'corsheaders',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sites',
-    'django_extensions',
-    'guardian',
-    'tom_common',
-    'django_comments',
-    'bootstrap4',
-    'crispy_bootstrap4',
-    'crispy_forms',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'django_filters',
-    'django_gravatar',
-    'tom_targets',
-    'tom_alerts',
-    'tom_catalogs',
-    'tom_observations',
-    'tom_dataproducts',
+    "goats_tom",
+    "huey.contrib.djhuey",
+    "fontawesomefree",
+    "corsheaders",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.sites",
+    "django_extensions",
+    "guardian",
+    "tom_common",
+    "django_comments",
+    "bootstrap4",
+    "crispy_bootstrap4",
+    "crispy_forms",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "django_filters",
+    "django_gravatar",
+    "tom_targets",
+    "tom_alerts",
+    "tom_catalogs",
+    "tom_observations",
+    "tom_dataproducts",
 ]
 
 SITE_ID = 1
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'tom_common.middleware.Raise403Middleware',
-    'tom_common.middleware.ExternalServiceMiddleware',
-    'tom_common.middleware.AuthStrategyMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "tom_common.middleware.Raise403Middleware",
+    "tom_common.middleware.ExternalServiceMiddleware",
+    "tom_common.middleware.AuthStrategyMiddleware",
 ]
 
-ROOT_URLCONF = 'goats_tom.tests.urls'
+ROOT_URLCONF = "goats_tom.tests.urls"
 
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [(BASE_DIR / 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [(BASE_DIR / "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-WSGI_APPLICATION = 'goats_tom.wsgi.application'
+WSGI_APPLICATION = "goats_tom.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
     }
 }
 
 HUEY = {
-    'huey_class': 'huey.MemoryHuey',  # Use in-memory storage for testing
-    'results': True,  # Store return values of tasks.
-    'store_none': False,  # If a task returns None, do not save to results.
-    'immediate': True,  # Run tasks synchronously for testing.
-    'utc': True,  # Use UTC for all times internally.
-    'consumer': {
-        'workers': 1,  # Only one worker needed for synchronous execution
-        'worker_type': 'thread',
-        'initial_delay': 0.1,
-        'backoff': 1.15,
-        'max_delay': 10.0,
-        'scheduler_interval': 1,
-        'periodic': False,  # Disable crontab feature for testing
-        'check_worker_health': False,  # Disable health checks for testing
-        'health_check_interval': 1,
+    "huey_class": "huey.MemoryHuey",  # Use in-memory storage for testing
+    "results": True,  # Store return values of tasks.
+    "store_none": False,  # If a task returns None, do not save to results.
+    "immediate": True,  # Run tasks synchronously for testing.
+    "utc": True,  # Use UTC for all times internally.
+    "consumer": {
+        "workers": 1,  # Only one worker needed for synchronous execution
+        "worker_type": "thread",
+        "initial_delay": 0.1,
+        "backoff": 1.15,
+        "max_delay": 10.0,
+        "scheduler_interval": 1,
+        "periodic": False,  # Disable crontab feature for testing
+        "check_worker_health": False,  # Disable health checks for testing
+        "health_check_interval": 1,
     },
 }
-
 
 
 # Password validation
@@ -139,34 +138,34 @@ HUEY = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
-LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-    'guardian.backends.ObjectPermissionBackend',
+    "django.contrib.auth.backends.ModelBackend",
+    "guardian.backends.ObjectPermissionBackend",
 )
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -174,78 +173,73 @@ USE_L10N = False
 
 USE_TZ = True
 
-DATETIME_FORMAT = 'Y-m-d H:i:s'
-DATE_FORMAT = 'Y-m-d'
+DATETIME_FORMAT = "Y-m-d H:i:s"
+DATE_FORMAT = "Y-m-d"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / '_static'
-STATICFILES_DIRS = [(BASE_DIR /'static')]
-MEDIA_ROOT = BASE_DIR / 'data'
-MEDIA_URL = '/data/'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "_static"
+STATICFILES_DIRS = [(BASE_DIR / "static")]
+MEDIA_ROOT = BASE_DIR / "data"
+MEDIA_URL = "/data/"
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         }
     },
-    'loggers': {
-        '': {
-            'handlers': ['console'],
-            'level': 'WARNING'
-        }
-    }
+    "loggers": {"": {"handlers": ["console"], "level": "WARNING"}},
 }
 
 # Caching
 # https://docs.djangoproject.com/en/dev/topics/cache/#filesystem-caching
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': tempfile.gettempdir()
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": tempfile.gettempdir(),
     }
 }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 
 # TOM Specific configuration
-TARGET_TYPE = 'SIDEREAL'
+TARGET_TYPE = "SIDEREAL"
 
-DATA_PRODUCT_PATH = 'goats_tom.utils.custom_data_product_path'
+DATA_PRODUCT_PATH = "goats_tom.utils.custom_data_product_path"
 
 FACILITIES = {
-    'LCO': {
-        'portal_url': 'https://observe.lco.global',
-        'api_key': '',
+    "LCO": {
+        "portal_url": "https://observe.lco.global",
+        "api_key": "",
     },
-    'GEM': {
-        'portal_url': {
-            'GS': 'https://139.229.34.15:8443',
-            'GN': 'https://128.171.88.221:8443',
+    "GEM": {
+        "portal_url": {
+            "GS": "https://139.229.34.15:8443",
+            "GN": "https://128.171.88.221:8443",
         },
-        'api_key': {
-            'GS': '',
-            'GN': '',
+        "api_key": {
+            "GS": "",
+            "GN": "",
         },
-        'user_email': '',
-        'programs': {
-            'GS-YYYYS-T-NNN': {
-                'MM': 'Std: Some descriptive text',
-                'NN': 'Rap: Some descriptive text'
+        "user_email": "",
+        "programs": {
+            "GS-YYYYS-T-NNN": {
+                "MM": "Std: Some descriptive text",
+                "NN": "Rap: Some descriptive text",
             },
-            'GN-YYYYS-T-NNN': {
-                'QQ': 'Std: Some descriptive text',
-                'PP': 'Rap: Some descriptive text',
+            "GN-YYYYS-T-NNN": {
+                "QQ": "Std: Some descriptive text",
+                "PP": "Rap: Some descriptive text",
             },
         },
     },
@@ -254,63 +248,59 @@ FACILITIES = {
 # Define the valid data product types for your TOM. Be careful when removing items, as previously valid types will no
 # longer be valid, and may cause issues unless the offending records are modified.
 DATA_PRODUCT_TYPES = {
-    'photometry': ('photometry', 'Photometry'),
-    'fits_file': ('fits_file', 'FITS File'),
-    'spectroscopy': ('spectroscopy', 'Spectroscopy'),
-    'image_file': ('image_file', 'Image File'),
-    'RAW': ('RAW', 'RAW'),
-    'PREPARED': ('PREPARED', 'PREPARED'),
-    'PROCESSED_BIAS': ('PROCESSED_BIAS', 'PROCESSED_BIAS'),
-    'PROCESSED_FLAT': ('PROCESSED_FLAT', 'PROCESSED_FLAT'),
-    'PROCESSED_SCIENCE': ('PROCESSED_SCIENCE', 'PROCESSED_SCIENCE'),
-    'PROCESSED_FRINGE': ('PROCESSED_FRINGE', 'PROCESSED_FRINGE'),
-    'PROCESSED_ARC': ('PROCESSED_ARC', 'PROCESSED_ARC'),
-    'PROCESSED_DARK': ('PROCESSED_DARK', 'PROCESSED_DARK'),
-    'PROCESSED_STANDARD': ('PROCESSED_STANDARD', 'PROCESSED_STANDARD'),
-    'PROCESSED_SLITILLUM': ('PROCESSED_SLITILLUM', 'PROCESSED_SLITILLUM'),
+    "photometry": ("photometry", "Photometry"),
+    "fits_file": ("fits_file", "FITS File"),
+    "spectroscopy": ("spectroscopy", "Spectroscopy"),
+    "image_file": ("image_file", "Image File"),
+    "RAW": ("RAW", "RAW"),
+    "PREPARED": ("PREPARED", "PREPARED"),
+    "PROCESSED_BIAS": ("PROCESSED_BIAS", "PROCESSED_BIAS"),
+    "PROCESSED_FLAT": ("PROCESSED_FLAT", "PROCESSED_FLAT"),
+    "PROCESSED_SCIENCE": ("PROCESSED_SCIENCE", "PROCESSED_SCIENCE"),
+    "PROCESSED_FRINGE": ("PROCESSED_FRINGE", "PROCESSED_FRINGE"),
+    "PROCESSED_ARC": ("PROCESSED_ARC", "PROCESSED_ARC"),
+    "PROCESSED_DARK": ("PROCESSED_DARK", "PROCESSED_DARK"),
+    "PROCESSED_STANDARD": ("PROCESSED_STANDARD", "PROCESSED_STANDARD"),
+    "PROCESSED_SLITILLUM": ("PROCESSED_SLITILLUM", "PROCESSED_SLITILLUM"),
 }
 
 DATA_PROCESSORS = {
-    'photometry': 'tom_dataproducts.processors.photometry_processor.PhotometryProcessor',
-    'spectroscopy': 'tom_dataproducts.processors.spectroscopy_processor.SpectroscopyProcessor',
+    "photometry": "tom_dataproducts.processors.photometry_processor.PhotometryProcessor",
+    "spectroscopy": "tom_dataproducts.processors.spectroscopy_processor.SpectroscopyProcessor",
 }
 
 TOM_FACILITY_CLASSES = [
-    'goats_tom.gemini.GOATSGEMFacility',
-    'tom_observations.facilities.lco.LCOFacility',
+    "goats_tom.facilities.GOATSGEMFacility",
+    "tom_observations.facilities.lco.LCOFacility",
     # 'tom_observations.facilities.gemini.GEMFacility',
-    'tom_observations.facilities.soar.SOARFacility',
-    'tom_observations.facilities.lt.LTFacility',
+    "tom_observations.facilities.soar.SOARFacility",
+    "tom_observations.facilities.lt.LTFacility",
     # 'tom_gemini_community.gemini_gsselect.GEMFacility',
 ]
 
 TOM_ALERT_CLASSES = [
-    'goats_tom.antares.GOATSANTARESBroker',
-    'tom_alerts.brokers.alerce.ALeRCEBroker',
-    'tom_alerts.brokers.gaia.GaiaBroker',
-    'tom_alerts.brokers.scout.ScoutBroker',
+    "goats_tom.brokers.GOATSANTARESBroker",
+    "tom_alerts.brokers.alerce.ALeRCEBroker",
+    "tom_alerts.brokers.gaia.GaiaBroker",
+    "tom_alerts.brokers.scout.ScoutBroker",
 ]
 
 BROKERS = {
-    'TNS': {
-        'api_key': '',
-        'bot_id': '',
-        'bot_name': '',
+    "TNS": {
+        "api_key": "",
+        "bot_id": "",
+        "bot_name": "",
     }
 }
 
 TOM_HARVESTER_CLASSES = [
-    'tom_catalogs.harvesters.simbad.SimbadHarvester',
-    'tom_catalogs.harvesters.ned.NEDHarvester',
-    'tom_catalogs.harvesters.jplhorizons.JPLHorizonsHarvester',
-    'tom_catalogs.harvesters.tns.TNSHarvester',
+    "tom_catalogs.harvesters.simbad.SimbadHarvester",
+    "tom_catalogs.harvesters.ned.NEDHarvester",
+    "tom_catalogs.harvesters.jplhorizons.JPLHorizonsHarvester",
+    "tom_catalogs.harvesters.tns.TNSHarvester",
 ]
 
-HARVESTERS = {
-    'TNS': {
-        'api_key': ''
-    }
-}
+HARVESTERS = {"TNS": {"api_key": ""}}
 
 # Define extra target fields here. Types can be any of "number", "string", "boolean" or "datetime"
 # See https://tomtoolkit.github.io/docs/target_fields for documentation on this feature
@@ -325,7 +315,7 @@ EXTRA_FIELDS = []
 
 # Authentication strategy can either be LOCKED (required login for all views)
 # or READ_ONLY (read only access to views)
-AUTH_STRATEGY = 'READ_ONLY'
+AUTH_STRATEGY = "READ_ONLY"
 
 # Row-level data permissions restrict users from viewing certain objects unless they are a member of the group to which
 # the object belongs. Setting this value to True will allow all `ObservationRecord`, `DataProduct`, and `ReducedDatum`
@@ -338,11 +328,11 @@ TARGET_PERMISSIONS_ONLY = True
 OPEN_URLS = []
 
 HOOKS = {
-    'target_post_save': 'tom_common.hooks.target_post_save',
-    'observation_change_state': 'tom_common.hooks.observation_change_state',
-    'data_product_post_upload': 'tom_dataproducts.hooks.data_product_post_upload',
-    'data_product_post_save': 'tom_dataproducts.hooks.data_product_post_save',
-    'multiple_data_products_post_save': 'tom_dataproducts.hooks.multiple_data_products_post_save',
+    "target_post_save": "tom_common.hooks.target_post_save",
+    "observation_change_state": "tom_common.hooks.observation_change_state",
+    "data_product_post_upload": "tom_dataproducts.hooks.data_product_post_upload",
+    "data_product_post_save": "tom_dataproducts.hooks.data_product_post_save",
+    "multiple_data_products_post_save": "tom_dataproducts.hooks.multiple_data_products_post_save",
 }
 
 AUTO_THUMBNAILS = False
@@ -355,14 +345,13 @@ HINTS_ENABLED = False
 HINT_LEVEL = 20
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': [
-    ],
-    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100
+    "DEFAULT_PERMISSION_CLASSES": [],
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 100,
 }
 
 CORS_ORIGIN_REGEX_WHITELIST = [
@@ -372,9 +361,9 @@ CORS_ORIGIN_REGEX_WHITELIST = [
 
 # Default Plotly theme setting, can set to any valid theme:
 # 'plotly', 'plotly_white', 'plotly_dark', 'ggplot2', 'seaborn', 'simple_white', 'none'
-PLOTLY_THEME = 'plotly_dark'
+PLOTLY_THEME = "plotly_dark"
 
 try:
-    from local_settings import * # noqa
+    from local_settings import *  # noqa
 except ImportError:
     pass
