@@ -64,7 +64,7 @@ def cli(ctx):
         click.echo(ctx.get_help())
 
 
-@click.command(help=("Installs GOATS."))
+@click.command(help=("Installs GOATS and configures Redis server."))
 @click.option(
     "-p",
     "--project-name",
@@ -113,7 +113,7 @@ def install(
     redis_addrport: str,
 ) -> None:
     """Installs GOATS with a specified or default name in a specified or
-    default directory.
+    default directory and configures Redis server.
 
     Parameters
     ----------
@@ -216,7 +216,7 @@ def install(
         raise GOATSClickException(str(error))
 
 
-@click.command(help=("Starts the server and workers for GOATS."))
+@click.command(help=("Starts the webserver, Redis server, and workers for GOATS."))
 @click.option(
     "-p",
     "--project-name",
@@ -266,7 +266,7 @@ def install(
 def run(
     project_name: str, directory: Path, workers: int, addrport: str, redis_addrport: str
 ) -> None:
-    """Starts the server and workers for GOATS.
+    """Starts the webserver, Redis server, and workers for GOATS.
 
     Parameters
     ----------
