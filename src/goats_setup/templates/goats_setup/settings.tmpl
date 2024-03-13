@@ -135,14 +135,14 @@ HUEY = {
     'connection': {
         'host': '{{ REDIS_HOST }}',
         'port': {{ REDIS_PORT }},
-        'db': 0,
+        'db': 1,
         'connection_pool': None,
         'read_timeout': 1,  # If not polling (blocking pop), use timeout.
         'url': None,  # Allow Redis config via a DSN.
     },
     'consumer': {
         'workers': 3,
-        'worker_type': 'greenlet',
+        'worker_type': 'thread',
         'initial_delay': 0.1,  # Smallest polling interval, same as -d.
         'backoff': 1.15,  # Exponential backoff using this rate, -b.
         'max_delay': 10.0,  # Max possible polling interval, -m.

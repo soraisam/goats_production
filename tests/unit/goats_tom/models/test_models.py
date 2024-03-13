@@ -8,7 +8,7 @@ from goats_tom.models import ProgramKey
 from goats_tom.tests.factories import (
     GOALoginFactory,
     ProgramKeyFactory,
-    TaskProgressFactory,
+    DownloadFactory,
     UserFactory,
     UserKeyFactory,
 )
@@ -26,23 +26,12 @@ class TestGOALoginModel(TestCase):
 
 
 @pytest.mark.django_db
-class TestTaskProgressModel(TestCase):
+class TestDownloadModel(TestCase):
     def setUp(self):
-        self.task = TaskProgressFactory()
-
-    def test_negative_progress(self):
-        self.task.progress = -10
-        with pytest.raises(ValidationError):
-            self.task.full_clean()
-
-    def test_progress_over_100(self):
-        self.task.progress = 110
-        with pytest.raises(ValidationError):
-            self.task.full_clean()
+        self.task = DownloadFactory()
 
     def test_immediate_task_completion(self):
         self.task.finish()
-        self.task.finalize()
         assert self.task.total_time == "0s"
 
     def test_long_duration_task(self):
@@ -50,7 +39,6 @@ class TestTaskProgressModel(TestCase):
             days=1
         )  # Simulate a long-running task
         self.task.finish()
-        self.task.finalize()
         assert "1d" in self.task.total_time
 
 

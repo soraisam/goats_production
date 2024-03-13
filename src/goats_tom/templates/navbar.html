@@ -55,12 +55,8 @@
         <a class="nav-link dropdown-toggle" href="#" id="navbarDownloadLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           <span id="downloadBadge" class="badge badge-pill badge-primary d-none mt-0">0</span> Downloads
         </a>
-        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDownloadDropdown">
-          <div id="downloadTasksBanner" class="download-tasks-container"></div>
-          <div id="noDownloadsMessage" class="text-center d-none">
-            <p>No current downloads.</p>
-          </div>
-          <div class="dropdown-divider"></div>
+        <div class="dropdown-menu dropdown-menu-right download-tasks-container" aria-labelledby="navbarDownloadDropdown">
+          <div id="downloadTasksBanner"></div>
           <a href="{% url 'recent_downloads' %}" class="dropdown-item">View Previous Downloads</a>
         </div>
       </li>

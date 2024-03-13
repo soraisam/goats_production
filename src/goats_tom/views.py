@@ -9,7 +9,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core import serializers
 from django.db import IntegrityError
-from django.db.models import Q
 from django.forms import Form
 from django.http import (
     HttpRequest,
@@ -40,7 +39,7 @@ from tom_targets.views import TargetDeleteView
 
 from .astroquery import Observations as GOA
 from .forms import GOALoginForm, GOAQueryForm, ProgramKeyForm, UserKeyForm
-from .models import GOALogin, ProgramKey, TaskProgress, UserKey
+from .models import Download, GOALogin, ProgramKey, UserKey
 from .tasks import download_goa_files
 from .utils import build_json_response, delete_associated_data_products
 
@@ -271,9 +270,9 @@ def update_brokerquery_name(request: HttpRequest, pk: int) -> JsonResponse:
 
 def recent_downloads(request: HttpRequest) -> HttpResponse:
     """Handle requests to the recent downloads page, displaying a list of
-    completed tasks.
+    completed downloads.
 
-    Fetches all completed `TaskProgress` instances, sorted by start time in
+    Fetches all completed `Download` instances, sorted by start time in
     descending order, and renders them to the 'recent_downloads.html' template.
 
     Parameters
@@ -286,20 +285,18 @@ def recent_downloads(request: HttpRequest) -> HttpResponse:
     `HttpResponse`
         The rendered HTML response containing the recent downloads.
     """
-    # Fetch all TaskProgress instances
-    tasks = TaskProgress.objects.filter(done=True).order_by("-start_time")
+    # Fetch all Download instances
+    downloads = Download.objects.filter(done=True).order_by("-start_time")
 
     # Pass the tasks to the template
-    context = {"tasks": tasks}
+    context = {"downloads": downloads}
     return render(request, "recent_downloads.html", context)
 
 
 def ongoing_tasks(request: HttpRequest) -> JsonResponse:
-    """Provide a JSON response with a list of ongoing tasks.
+    """Provide a JSON response with a list of ongoing downloads.
 
-    Fetches all ongoing `TaskProgress` instances that are not marked as done.
-    Additionally, updates the "done" status of tasks that are completed or
-    failed.
+    Fetches all ongoing `Download` instances that are not marked as done.
 
     Parameters
     ----------
@@ -313,12 +310,7 @@ def ongoing_tasks(request: HttpRequest) -> JsonResponse:
     """
     # First, evaluate the QuerySet and get the current tasks data
     tasks = list(
-        TaskProgress.objects.filter(done=False).values("task_id", "progress", "status")
-    )
-
-    # Now update "done" to True for tasks that are completed or failed
-    TaskProgress.objects.filter(Q(status="completed") | Q(status="failed")).update(
-        done=True
+        Download.objects.filter(done=False).values("unique_id", "observation_id")
     )
 
     # Return the evaluated tasks list

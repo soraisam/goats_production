@@ -9,23 +9,27 @@
       <tr>
         <th>Observation ID</th>
         <th>Status</th>
+        <th>Files Downloaded</th>
+        <th>Files Omitted</th>
         <th>Start Time</th>
         <th>Total Time</th>
         <th>Error Message</th>
       </tr>
     </thead>
     <tbody>
-      {% for task in tasks %}
+      {% for download in downloads %}
       <tr>
-        <td>{{ task.task_id }}</td>
-        <td class="text-capitalize">{{ task.status }}</td>
-        <td>{{ task.start_time }}</td>
-        <td>{{ task.total_time }}</td>
-        <td>{{ task.error_message|default:"" }}</td>
+        <td>{{ download.observation_id }}</td>
+        <td class="text-capitalize">{{ download.status }}</td>
+        <td>{{ download.num_files_downloaded }}</td>
+        <td>{{ download.num_files_omitted }}</td>
+        <td>{{ download.start_time }}</td>
+        <td>{{ download.total_time }}</td>
+        <td>{{ download.error_message|default:"" }}</td>
       </tr>
       {% empty %}
       <tr>
-        <td colspan="8" class="text-center">No downloads found.</td>
+        <td colspan="7" class="text-center">No downloads found.</td>
       </tr>
       {% endfor %}
     </tbody>

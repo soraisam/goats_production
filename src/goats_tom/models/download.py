@@ -1,58 +1,56 @@
-__all__ = ["TaskProgress"]
+__all__ = ["Download"]
+
 
 from django.contrib.auth.models import User
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
 
-class TaskProgress(models.Model):
-    task_id = models.CharField(max_length=255)
-    progress = models.IntegerField(
-        default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    status = models.CharField(max_length=50, default="running")
+class Download(models.Model):
+    unique_id = models.CharField(max_length=255)
+    observation_id = models.CharField(max_length=255)
+    status = models.CharField(max_length=50, default="Running")
     done = models.BooleanField(default=False)
+    error = models.BooleanField(default=False)
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)
-    error_message = models.TextField(null=True, blank=True)
+    message = models.TextField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    num_files_downloaded = models.IntegerField(blank=True, null=True)
+    num_files_omitted = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return f"Task {self.task_id} ({self.status})"
+        return f"Download {self.observation_id}: ({self.status})"
 
-    def finish(self, error_message: str | None = None) -> None:
-        """Update the end time of the task and optionally record an error
+    def finish(self, message: str | None = None, error: bool = False) -> None:
+        """Update the end time of the download and optionally record an error
         message.
 
         Parameters
         ----------
-        error_message : `str`, optional
-            An error message if the task failed. Default is `None`.
+        message : `str`, optional
+            A message about the download, by default `None`.
         """
         self.end_time = timezone.now()
-        if error_message:
-            self.status = "failed"
-            self.error_message = error_message
+        if error:
+            self.error = error
+            self.status = "Failed"
         else:
-            self.status = "completed"
-        self.progress = 100
-        self.save()
-
-    def finalize(self) -> None:
-        """Sets 'done' to `True`."""
+            self.status = "Completed"
+        self.message = message
         self.done = True
+        self.save()
 
     @property
     def total_time(self) -> str:
         """
-        Calculate and return the total time taken for the task in a
+        Calculate and return the total time taken for the download in a
         human-readable format.
 
         Returns
         -------
         `str`
-            The total time taken for the task formatted as "Wd Xh Ym Zs" or
+            The total time taken for the download formatted as "Wd Xh Ym Zs" or
             "N/A" if not available.
         """
         if self.end_time and self.start_time and self.done:

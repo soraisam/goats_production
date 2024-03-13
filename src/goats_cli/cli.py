@@ -11,7 +11,7 @@ from typing import IO, Any
 import click
 from click._compat import get_text_stderr
 
-from .modify_manage import modify_manage
+# from .modify_manage import modify_manage
 from .modify_settings import modify_settings
 
 REDIS_HOST: str = "localhost"
@@ -167,7 +167,7 @@ def install(
         manage_file = project_path / "manage.py"
 
         # Modify the manage file for Huey.
-        modify_manage(manage_file)
+        # modify_manage(manage_file)
 
         # Change the MEDIA_ROOT if provided.
         if media_dir:

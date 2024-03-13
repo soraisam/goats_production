@@ -238,9 +238,10 @@ footer {
 }
 
 .download-tasks-container {
-  max-height: 300px; /* Adjust as needed */
+  max-height: 400px; /* Adjust as needed */
   padding: 10px;
-  width: 700px;
+  width: 400px;
+  overflow: hidden auto;
 }
 
 [data-bs-core="goats"]:not([data-bs-theme="dark"]) .img-container {
