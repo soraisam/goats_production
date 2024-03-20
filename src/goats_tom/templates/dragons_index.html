@@ -1,0 +1,190 @@
+{% extends "tom_common/base.html" %}
+{% block content %}
+{% csrf_token %}
+
+<div class="row g-3">
+  <div class="col-12">
+    <p class="h3">{{ observation_record.observation_id }}</p>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header">
+    Setup and Configuration
+  </div>
+  <div class="card-body">
+    <div class="row g-3 mb-3">
+      <div class="col-12">
+        <label class="form-label">Configure DRAGONS Run</label>
+        <div class="btn-group d-flex" role="group" aria-label="DRAGONS Run Configuration Options">
+          <input type="radio" name="run-configuration" class="btn-check" id="existing-run" autocomplete="off" checked>
+          <label class="btn btn-outline-primary" for="existing-run">Use Existing Run</label>
+          <input type="radio" name="run-configuration" class="btn-check" id="new-run" autocomplete="off">
+          <label class="btn btn-outline-primary" for="new-run">Start New Run</label>
+        </div>
+      </div>
+    </div>
+    <form id="dragonsSetupForm" method="post" class="d-none">
+      <div class="row g-3">
+        <input type="hidden" name="observation_record" value="{{ observation_record.pk }}">
+        <div class="col-12">
+          <label for="runId" class="form-label">Run ID</label>
+          <input type="text" class="form-control" id="runId" name="run_id" placeholder="run-YYYYMMDDhhmmss">
+        </div>
+        <div class="col-12">
+          <label for="configFilename" class="form-label">Configuration Filename</label>
+          <input type="text" class="form-control" id="configFilename" name="config_filename" readonly value="dragonsrc">
+        </div>
+        <div class="col-12">
+          <label for="outputDirectory" class="form-label">Output Directory</label>
+          <input type="text" class="form-control" id="outputDirectory" name="output_directory" placeholder="reduced-YYYYMMDDhhmmss">
+        </div>
+        <div class="col-12">
+          <label for="calManagerFilename" class="form-label">Calibration Manager Filename</label>
+          <input type="text" class="form-control" id="calManagerFilename" readonly name="cal_manager_filename" value="cal_manager.db">
+        </div>
+        <div class="col-12">
+          <label for="logFilename" class="form-label">Log Filename</label>
+          <input type="text" class="form-control" id="logFilename" name="log_filename" value="log.log" readonly>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn d-block w-100 btn-primary">Initialize DRAGONS Run</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="card-footer">
+    <div class="row g-3">
+      <div class="col-12">
+        <label for="dragonsRun" class="form-label">Select a DRAGONS Run</label>
+        <select class="form-select" id="dragonsRunsSelect">
+          <option value="" selected hidden>---</option>
+          {% for dragons_run in dragons_runs %}
+            <option value="{{ dragons_run.id }}">{{ dragons_run.run_id }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    /**
+     * Initialize variables to reference form elements and groups.
+     */
+    const runConfigurationRadios = document.getElementsByName("run-configuration");
+    const dragonsSetupForm = document.querySelector("#dragonsSetupForm");
+    const formElements = dragonsSetupForm.querySelectorAll("input");
+
+    /**
+     * Toggles visibility of the run settings and form elements.
+     * @param {boolean} show - Determines whether to show or hide elements.
+     */
+    const toggleFormVisibility = (show) => {
+        if (show) {
+            dragonsSetupForm.classList.remove("d-none");
+        } else {
+            dragonsSetupForm.classList.add("d-none");
+        }
+    };
+
+    /**
+     * Sets the readonly attribute on form fields.
+     * @param {boolean} isReadonly - If true, sets fields to readonly. Removes readonly if false.
+     */
+    const setFormReadonly = (isReadonly) => {
+        formElements.forEach(el => {
+            // Always readonly fields are excluded from toggling
+            if (!["logFilename", "configFilename", "calManagerFilename"].includes(el.id)) {
+                el.readOnly = isReadonly;
+            }
+        });
+    };
+
+    // Listen for changes on run configuration radios
+    runConfigurationRadios.forEach(radio => {
+        radio.addEventListener("change", () => {
+            if (radio.id === "new-run") {
+                toggleFormVisibility(true);
+            } else {
+                toggleFormVisibility(false);
+            }
+        });
+    });
+});
+  document.getElementById('dragonsSetupForm').addEventListener('submit', async (event) => {
+    event.preventDefault(); // Prevent the form from submitting traditionally
+
+    // Prepare form data
+    const rawFormData = new FormData(event.target);
+
+    // Convert formData to JSON
+    const formData = Object.fromEntries(rawFormData);
+
+    console.log(formData);
+    try {
+      // Use fetchWrapper for the request, incorporating CSRF token in headers
+      const data = await fetchWrapper(`/api/dragons/${formData.observation_record}/setup/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': "{{ csrf_token }}",
+        },
+        body: JSON.stringify(formData),
+      })
+      // Update select with new options
+      const selectElement = document.getElementById('dragonsRunsSelect');
+      // Clear existing options (except the first "Choose..." option)
+      selectElement.length = 1;
+
+      // Populate the select element with new options
+      data.dragons_runs.forEach(run => {
+        const option = new Option(`${run.run_id}`, run.id);
+        selectElement.add(option);
+      });
+      toggleFormVisibility(false);
+
+    } catch (error) {
+      console.error('There has been a problem with your fetch operation:', error);
+    }
+
+  });
+
+/**
+ * A generic fetch wrapper to simplify making fetch requests.
+ *
+ * @param {string} url - The URL to fetch.
+ * @param {Object} options - The options for the fetch request.
+ * @returns {Promise<Object>} The JSON response.
+ */
+  const fetchWrapper = async (url, options = {}) => {
+    // Default headers to include in every request
+    const defaultHeaders = {
+      'Content-Type': 'application/json',
+      // Example: 'Authorization': 'Bearer <Your-Token-Here>',
+      // Include other default headers here
+    };
+
+    // If a 'headers' option is provided, merge it with the default headers
+    const headers = options.headers
+      ? { ...defaultHeaders, ...options.headers }
+      : defaultHeaders;
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: 'same-origin', // Include credentials for CSRF protection
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      return await response.json(); // Parse and return the JSON response
+    } catch (error) {
+      console.error('There has been a problem with your fetch operation:', error);
+      throw error; // Rethrow the error for further handling if necessary
+    }
+  };
+
+</script>
+{% endblock %}

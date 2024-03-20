@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 
 from .models import ProgramKey, UserKey
@@ -188,3 +190,48 @@ class ProgramKeyForm(forms.ModelForm):
             "password": forms.PasswordInput(attrs={"class": "form-control"}),
         }
         labels = {"program_id": "Program ID:"}
+
+
+class DRAGONSSetupForm(forms.Form):
+    configuration_file = forms.CharField(
+        label="Configuration File",
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+        required=True,
+        disabled=True,
+    )
+    log_file = forms.CharField(
+        label="Log File",
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+        required=False,
+        help_text="(Leave empty for default: YYYYMMDDHHMMSS.log)",
+    )
+    calibration_manager = forms.CharField(
+        label="Calibration Manager DB",
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+        required=True,
+        disabled=True,
+    )
+    reduced_dir = forms.CharField(
+        label="Reduced Directory",
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+        required=False,
+        help_text="(Leave empty for default: reduced-YYYYMMDDHHMMSS)",
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+        # Set default for log_file if not provided.
+        log_file = cleaned_data.get("log_file")
+        if not log_file:
+            log_file = f"{current_time}.log"
+            cleaned_data["log_file"] = log_file
+
+        # Set default for reduced_dir if not provided.
+        reduced_dir = cleaned_data.get("reduced_dir")
+        if not reduced_dir:
+            reduced_dir = f"reduced-{current_time}"
+            cleaned_data["reduced_dir"] = reduced_dir
+
+        return cleaned_data

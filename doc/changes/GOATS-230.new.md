@@ -1,0 +1,1 @@
+Implemented DRAGONS setup and config: Added a new Django model and serializer for DRAGONS run setup, enhancing the platform's ability to handle DRAGONS reduction configurations asynchronously through the web interface. Initiated REST framework setup to streamline data exchange.

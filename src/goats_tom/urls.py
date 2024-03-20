@@ -84,4 +84,10 @@ urlpatterns = [
         views.activate_user_key,
         name="activate-user-key",
     ),
+    path(
+        "api/dragons/<int:pk>/setup/",
+        views.DRAGONSSetupAPIView.as_view(),
+        name="dragons-setup",
+    ),
+    path("observations/<int:pk>/dragons/", views.DRAGONSView.as_view(), name="dragons"),
 ]
