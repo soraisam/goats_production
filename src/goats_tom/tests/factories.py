@@ -2,12 +2,13 @@
 This module contains factory classes for creating instances of various models
 used in the application, particularly for testing purposes.
 """
+
 import factory
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from goats_tom.models import GOALogin, Key, ProgramKey, Download, UserKey
+from goats_tom.models import Download, DRAGONSRun, GOALogin, Key, ProgramKey, UserKey
 from tom_dataproducts.models import DataProduct, ReducedDatum
 from tom_observations.tests.factories import ObservingRecordFactory
 from tom_targets.tests.factories import SiderealTargetFactory
@@ -135,3 +136,17 @@ class ProgramKeyFactory(KeyFactory):
     def site(self):
         """Determine the site based on the program_id."""
         return self.program_id.split("-")[0]
+
+
+class DRAGONSRunFactory(factory.django.DjangoModelFactory):
+    """Factory for creating DRAGONSRun instances for testing."""
+
+    class Meta:
+        model = DRAGONSRun
+
+    observation_record = factory.SubFactory(ObservingRecordFactory, target_id=1)
+    run_id = ""
+    config_filename = "dragonsrc"
+    output_directory = ""
+    cal_manager_filename = "cal_manager.db"
+    log_filename = "log.log"

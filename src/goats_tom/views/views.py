@@ -20,6 +20,11 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DeleteView, DetailView, FormView, TemplateView, View
+from goats_tom.astroquery import Observations as GOA
+from goats_tom.forms import GOALoginForm, GOAQueryForm, ProgramKeyForm, UserKeyForm
+from goats_tom.models import Download, GOALogin, ProgramKey, UserKey
+from goats_tom.tasks import download_goa_files
+from goats_tom.utils import build_json_response, delete_associated_data_products
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
@@ -36,12 +41,6 @@ from tom_observations.facility import (
 from tom_observations.models import ObservationRecord
 from tom_observations.views import ObservationRecordDetailView
 from tom_targets.views import TargetDeleteView
-
-from .astroquery import Observations as GOA
-from .forms import GOALoginForm, GOAQueryForm, ProgramKeyForm, UserKeyForm
-from .models import Download, GOALogin, ProgramKey, UserKey
-from .tasks import download_goa_files
-from .utils import build_json_response, delete_associated_data_products
 
 
 @login_required
