@@ -1,1 +1,0 @@
-DRAGONS integration and conda environment creation: DRAGONS is now part of the GOATS stack. A dedicated Conda environment file, `environment.yml`, is available for easy installation by users cloning the repository. Additionally, the stack now includes a Redis server to support the latest changes in GOATS infrastructure.

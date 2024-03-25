@@ -1,1 +1,0 @@
-Switched to Django Channels: Enhanced downloads and notifications using WebSocket communication. The download user interface was refactored to improve the overall user experience. Toast popups were introduced for real-time notifications. Gevent was removed to address and resolve asynchronous operation issues encountered with Django Channels.

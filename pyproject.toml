@@ -29,7 +29,7 @@ dependencies = [
     "django>=4,<5"
 ]
 
-version = "24.02.0"
+version = "24.03.0"
 
 [project.urls]
 "Homepage" = "https://github.com/gemini-hlsw/goats"

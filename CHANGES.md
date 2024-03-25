@@ -1,3 +1,15 @@
+## GOATS 24.03.0 (2024-03-25)
+
+
+### New Features
+
+- DRAGONS integration and conda environment creation: DRAGONS is now part of the GOATS stack. A dedicated Conda environment file, `environment.yml`, is available for easy installation by users cloning the repository. Additionally, the stack now includes a Redis server to support the latest changes in GOATS infrastructure. [[#GOATS-210](https://noirlab.atlassian.net/browse/GOATS-210)]
+- Add dark mode toggle to navbar: Added a dark mode toggle to the navbar using Halfmoon UI as a CSS dependency. [[#GOATS-212](https://noirlab.atlassian.net/browse/GOATS-212)]
+- Real-time communication enhanced: Implemented real-time communication between the backend and frontend using Django Channels and Redis. [[#GOATS-213](https://noirlab.atlassian.net/browse/GOATS-213)]
+- Extend CLI for Redis setup and running: Extended the `install` CLI to allow users to setup the Redis server. Modified the `run` CLI to run the Redis server in a separate thread alongside GOATS and Huey. [[#GOATS-216](https://noirlab.atlassian.net/browse/GOATS-216)]
+- Switched to Django Channels: Enhanced downloads and notifications using WebSocket communication. The download user interface was refactored to improve the overall user experience. Toast popups were introduced for real-time notifications. Gevent was removed to address and resolve asynchronous operation issues encountered with Django Channels. [[#GOATS-219](https://noirlab.atlassian.net/browse/GOATS-219)]
+- Implemented DRAGONS setup and config: Added a new Django model and serializer for DRAGONS run setup, enhancing the platform's ability to handle DRAGONS reduction configurations asynchronously through the web interface. Initiated REST framework setup to streamline data exchange. [[#GOATS-230](https://noirlab.atlassian.net/browse/GOATS-230)]
+
 ## GOATS 24.02.0 (2024-02-26)
 
 

@@ -1,1 +1,0 @@
-Add dark mode toggle to navbar: Added a dark mode toggle to the navbar using Halfmoon UI as a CSS dependency.
