@@ -206,7 +206,6 @@ body {
 
 nav {
   grid-row: 2;
-  background-color: var(--bs-content-bg);
 }
 
 main {
