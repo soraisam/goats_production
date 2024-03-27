@@ -90,4 +90,9 @@ urlpatterns = [
         name="dragons-setup",
     ),
     path("observations/<int:pk>/dragons/", views.DRAGONSView.as_view(), name="dragons"),
+    path(
+        "api/dragons/<int:pk>/dragons-file-list/",
+        views.DRAGONSFileListView.as_view(),
+        name="dragons-file-list",
+    ),
 ]

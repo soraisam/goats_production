@@ -37,6 +37,8 @@
 
     {% block javascript %}
     <script src="{% static 'js/get_csrf_token.js' %}"></script>
+    <script src="{% static 'js/fetch_wrapper.js' %}"></script>
+    <script src="{% static 'js/file_list_mvc.js' %}"></script>
     <script type="module">
       import { createAndShowToast } from "{% static 'js/toast_utils.js' %}";
       import { updateDownloadProgress } from "{% static 'js/download_progress.js' %}";
@@ -71,7 +73,6 @@
 
     {% endblock %}
 
-    {% block extra_javascript %}{% endblock %}
   </body>
 </html>
 

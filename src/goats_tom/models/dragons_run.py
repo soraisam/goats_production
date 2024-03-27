@@ -37,6 +37,8 @@ class DRAGONSRun(models.Model):
         The time at which this object was created.
     modified : `models.DateTimeField`
         The time at which this object was last modified.
+    directory_hash : `models.CharField`
+        Hash of the directory contents to detect changes in the file list.
 
     Methods
     -------
@@ -72,6 +74,7 @@ class DRAGONSRun(models.Model):
     log_filename = models.CharField(max_length=30, default="log.log", editable=False)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+    directory_hash = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
         # Ensure run_id is unique within the scope of each
