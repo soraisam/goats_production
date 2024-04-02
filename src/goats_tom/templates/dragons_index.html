@@ -7,7 +7,7 @@
     <p class="h3">{{ observation_record.observation_id }}</p>
   </div>
 </div>
-<div class="card">
+<div class="card mb-3">
   <div class="card-header">
     Setup and Configuration
   </div>
@@ -66,26 +66,37 @@
     </div>
   </div>
 </div>
+<div class="card" id="fileListCard">
+  <div class="card-header">
+    Files List
+  </div>
+  <div class="card-body">
+    <div id="filesAccordionContainer" class="accordion accordion-flush"></div>
+  </div>
+  <div class="card-footer">
+    <a href="#" class="btn d-block w-100 btn-primary" id="generateFilesListBtn">Generate Files List</a>
+  </div>
+</div>
+
 <script>
+
+  const toggleVisibility = (element, show) => {
+    if (show) {
+      element.classList.remove("d-none");
+    } else {
+      element.classList.add("d-none");
+    }
+  };
+
   document.addEventListener("DOMContentLoaded", () => {
     /**
      * Initialize variables to reference form elements and groups.
      */
+    const generateFilesListBtn = document.getElementById('generateFilesListBtn');
     const runConfigurationRadios = document.getElementsByName("run-configuration");
     const dragonsSetupForm = document.querySelector("#dragonsSetupForm");
     const formElements = dragonsSetupForm.querySelectorAll("input");
-
-    /**
-     * Toggles visibility of the run settings and form elements.
-     * @param {boolean} show - Determines whether to show or hide elements.
-     */
-    const toggleFormVisibility = (show) => {
-        if (show) {
-            dragonsSetupForm.classList.remove("d-none");
-        } else {
-            dragonsSetupForm.classList.add("d-none");
-        }
-    };
+    const dragonsRunsSelect = document.getElementById("dragonsRunsSelect");
 
     /**
      * Sets the readonly attribute on form fields.
@@ -104,87 +115,51 @@
     runConfigurationRadios.forEach(radio => {
         radio.addEventListener("change", () => {
             if (radio.id === "new-run") {
-                toggleFormVisibility(true);
+                toggleVisibility(dragonsSetupForm, true);
             } else {
-                toggleFormVisibility(false);
+                toggleVisibility(dragonsSetupForm, false);
             }
         });
     });
-});
-  document.getElementById('dragonsSetupForm').addEventListener('submit', async (event) => {
-    event.preventDefault(); // Prevent the form from submitting traditionally
 
-    // Prepare form data
-    const rawFormData = new FormData(event.target);
+    document.getElementById('dragonsSetupForm').addEventListener('submit', async (event) => {
+      event.preventDefault(); // Prevent the form from submitting traditionally
 
-    // Convert formData to JSON
-    const formData = Object.fromEntries(rawFormData);
+      // Prepare form data
+      const rawFormData = new FormData(event.target);
 
-    console.log(formData);
-    try {
-      // Use fetchWrapper for the request, incorporating CSRF token in headers
-      const data = await fetchWrapper(`/api/dragons/${formData.observation_record}/setup/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': "{{ csrf_token }}",
-        },
-        body: JSON.stringify(formData),
-      })
-      // Update select with new options
-      const selectElement = document.getElementById('dragonsRunsSelect');
-      // Clear existing options (except the first "Choose..." option)
-      selectElement.length = 1;
+      // Convert formData to JSON
+      const formData = Object.fromEntries(rawFormData);
 
-      // Populate the select element with new options
-      data.dragons_runs.forEach(run => {
-        const option = new Option(`${run.run_id}`, run.id);
-        selectElement.add(option);
-      });
-      toggleFormVisibility(false);
+      try {
+        const api = new FetchWrapper("/api/dragons/")
+        api.setCsrfToken("{{ csrf_token }}")
 
-    } catch (error) {
-      console.error('There has been a problem with your fetch operation:', error);
-    }
+        // Use fetchWrapper for the request, incorporating CSRF token in headers
+        const data = await api.post(`${formData.observation_record}/setup/`, formData)
+        // Update select with new options
+        const selectElement = document.getElementById('dragonsRunsSelect');
+        // Clear existing options (except the first "Choose..." option)
+        selectElement.length = 1;
 
-  });
+        // Populate the select element with new options
+        data.dragons_runs.forEach(run => {
+          const option = new Option(`${run.run_id}`, run.id);
+          selectElement.add(option);
+        });
+        toggleVisibility(dragonsSetupForm, false);
 
-/**
- * A generic fetch wrapper to simplify making fetch requests.
- *
- * @param {string} url - The URL to fetch.
- * @param {Object} options - The options for the fetch request.
- * @returns {Promise<Object>} The JSON response.
- */
-  const fetchWrapper = async (url, options = {}) => {
-    // Default headers to include in every request
-    const defaultHeaders = {
-      'Content-Type': 'application/json',
-      // Example: 'Authorization': 'Bearer <Your-Token-Here>',
-      // Include other default headers here
-    };
-
-    // If a 'headers' option is provided, merge it with the default headers
-    const headers = options.headers
-      ? { ...defaultHeaders, ...options.headers }
-      : defaultHeaders;
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-        credentials: 'same-origin', // Include credentials for CSRF protection
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      } catch (error) {
+        console.error('There has been a problem with your fetch operation:', error);
       }
 
-      return await response.json(); // Parse and return the JSON response
-    } catch (error) {
-      console.error('There has been a problem with your fetch operation:', error);
-      throw error; // Rethrow the error for further handling if necessary
-    }
-  };
+    });
 
+    const api = new FetchWrapper("/api/dragons/");
+    api.setCsrfToken("{{ csrf_token }}")
+    const model = new FileListModel(api);
+    const view = new FileListView();
+    const controller = new FileListController(model, view);
+  })
 </script>
 {% endblock %}

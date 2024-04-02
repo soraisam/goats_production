@@ -1,4 +1,5 @@
 from .download import *
+from .dragons_file_metadata_model import *
 from .dragons_run import *
 from .goa_login import *
 from .key import *
