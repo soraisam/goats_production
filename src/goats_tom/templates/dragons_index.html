@@ -7,12 +7,12 @@
     <p class="h3">{{ observation_record.observation_id }}</p>
   </div>
 </div>
-<div class="card mb-3">
+<div class="card mb-5" id="dragonsRunsCard">
   <div class="card-header">
     Setup and Configuration
   </div>
   <div class="card-body">
-    <div class="row g-3 mb-3">
+    <div class="row g-3">
       <div class="col-12">
         <label class="form-label">Configure DRAGONS Run</label>
         <div class="btn-group d-flex" role="group" aria-label="DRAGONS Run Configuration Options">
@@ -52,7 +52,7 @@
       </div>
     </form>
   </div>
-  <div class="card-footer">
+  <div class="card-footer mb-3">
     <div class="row g-3">
       <div class="col-12">
         <label for="dragonsRun" class="form-label">Select a DRAGONS Run</label>
@@ -73,93 +73,23 @@
   <div class="card-body">
     <div id="filesAccordionContainer" class="accordion accordion-flush"></div>
   </div>
-  <div class="card-footer">
+  <div class="card-footer mb-3">
     <a href="#" class="btn d-block w-100 btn-primary" id="generateFilesListBtn">Generate Files List</a>
   </div>
 </div>
 
 <script>
-
-  const toggleVisibility = (element, show) => {
-    if (show) {
-      element.classList.remove("d-none");
-    } else {
-      element.classList.add("d-none");
-    }
-  };
-
   document.addEventListener("DOMContentLoaded", () => {
-    /**
-     * Initialize variables to reference form elements and groups.
-     */
-    const generateFilesListBtn = document.getElementById('generateFilesListBtn');
-    const runConfigurationRadios = document.getElementsByName("run-configuration");
-    const dragonsSetupForm = document.querySelector("#dragonsSetupForm");
-    const formElements = dragonsSetupForm.querySelectorAll("input");
-    const dragonsRunsSelect = document.getElementById("dragonsRunsSelect");
-
-    /**
-     * Sets the readonly attribute on form fields.
-     * @param {boolean} isReadonly - If true, sets fields to readonly. Removes readonly if false.
-     */
-    const setFormReadonly = (isReadonly) => {
-        formElements.forEach(el => {
-            // Always readonly fields are excluded from toggling
-            if (!["logFilename", "configFilename", "calManagerFilename"].includes(el.id)) {
-                el.readOnly = isReadonly;
-            }
-        });
-    };
-
-    // Listen for changes on run configuration radios
-    runConfigurationRadios.forEach(radio => {
-        radio.addEventListener("change", () => {
-            if (radio.id === "new-run") {
-                toggleVisibility(dragonsSetupForm, true);
-            } else {
-                toggleVisibility(dragonsSetupForm, false);
-            }
-        });
-    });
-
-    document.getElementById('dragonsSetupForm').addEventListener('submit', async (event) => {
-      event.preventDefault(); // Prevent the form from submitting traditionally
-
-      // Prepare form data
-      const rawFormData = new FormData(event.target);
-
-      // Convert formData to JSON
-      const formData = Object.fromEntries(rawFormData);
-
-      try {
-        const api = new FetchWrapper("/api/dragons/")
-        api.setCsrfToken("{{ csrf_token }}")
-
-        // Use fetchWrapper for the request, incorporating CSRF token in headers
-        const data = await api.post(`${formData.observation_record}/setup/`, formData)
-        // Update select with new options
-        const selectElement = document.getElementById('dragonsRunsSelect');
-        // Clear existing options (except the first "Choose..." option)
-        selectElement.length = 1;
-
-        // Populate the select element with new options
-        data.dragons_runs.forEach(run => {
-          const option = new Option(`${run.run_id}`, run.id);
-          selectElement.add(option);
-        });
-        toggleVisibility(dragonsSetupForm, false);
-
-      } catch (error) {
-        console.error('There has been a problem with your fetch operation:', error);
-      }
-
-    });
-
     const api = new FetchWrapper("/api/dragons/");
     api.setCsrfToken("{{ csrf_token }}")
-    const model = new FileListModel(api);
-    const view = new FileListView();
-    const controller = new FileListController(model, view);
+
+    const setupModel = new SetupModel(api);
+    const setupView = new SetupView();
+    const setupController = new SetupController(setupModel, setupView);
+
+    const fileListModel = new FileListModel(api);
+    const fileListView = new FileListView();
+    const fileListController = new FileListController(fileListModel, fileListView);
   })
 </script>
 {% endblock %}
