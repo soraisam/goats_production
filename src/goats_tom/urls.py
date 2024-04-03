@@ -85,14 +85,19 @@ urlpatterns = [
         name="activate-user-key",
     ),
     path(
-        "api/dragons/<int:pk>/setup/",
-        views.DRAGONSSetupAPIView.as_view(),
-        name="dragons-setup",
+        "api/observations/<int:observation_record_pk>/dragons/",
+        views.DRAGONSRunsAPIView.as_view(),
+        name="dragons-runs",
     ),
     path("observations/<int:pk>/dragons/", views.DRAGONSView.as_view(), name="dragons"),
     path(
-        "api/dragons/<int:pk>/dragons-file-list/",
-        views.DRAGONSFileListView.as_view(),
-        name="dragons-file-list",
+        "api/observations/<int:observation_record_pk>/dragons/<int:dragons_run_pk>/files/",
+        views.DRAGONSFilesAPIView.as_view(),
+        name="dragons-files",
+    ),
+    path(
+        "api/observations/<int:observation_record_pk>/dragons/<int:dragons_run_pk>/files/<int:dragons_run_data_product_pk>/",
+        views.DRAGONSRunDataProductAPIView.as_view(),
+        name="dragons-file",
     ),
 ]

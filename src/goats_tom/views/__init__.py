@@ -1,4 +1,9 @@
-from .dragons_views import DRAGONSFileListView, DRAGONSSetupAPIView, DRAGONSView
+from .dragons_views import (
+    DRAGONSFilesAPIView,
+    DRAGONSRunDataProductAPIView,
+    DRAGONSRunsAPIView,
+    DRAGONSView,
+)
 from .views import (
     DeleteObservationDataProductsView,
     GOALoginView,
@@ -20,8 +25,9 @@ from .views import (
 )
 
 __all__ = [
-    "DRAGONSFileListView",
-    "DRAGONSSetupAPIView",
+    "DRAGONSRunsAPIView",
+    "DRAGONSFilesAPIView",
+    "DRAGONSRunDataProductAPIView",
     "DRAGONSView",
     "DeleteObservationDataProductsView",
     "GOALoginView",

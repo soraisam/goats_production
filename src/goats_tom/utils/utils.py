@@ -8,8 +8,12 @@ __all__ = [
     "get_key",
     "has_key",
     "get_key_info",
+    "extract_metadata",
 ]
 
+from pathlib import Path
+
+import astrodata
 from astropy.table import Table
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -220,3 +224,75 @@ def has_key(user: User, identifier: str) -> bool:
         user=user, program_id=gemini_id.program_id, site=gemini_id.site
     ).exists()
     return program_key_exists
+
+
+def extract_metadata(file_path: Path) -> dict | None:
+    """Extract metadata from a file using astrodata.
+
+    Parameters
+    ----------
+    file_path : `Path`
+        The path to the file from which to extract metadata.
+
+    Returns
+    -------
+    `dict | None`
+        A dictionary containing extracted metadata, or `None` if the file is
+        marked as "PREPARED" or does not meet criteria for metadata extraction.
+
+    Notes
+    -----
+    This function utilizes the astrodata library to open and extract relevant
+    metadata from files. It identifies the file type based on specific tags
+    and observation classes present in the file's metadata. Currently handles
+    "BIAS", "DARK", "FLAT", "ARC", "PINHOLE", "RONCHI", "FRINGE", and
+    "standard" file types, with a fallback to "unknown" or "object" types based
+    on observation class.
+    """
+    # Define calibration file tags for identification.
+    cal_file_tags = ["BIAS", "DARK", "FLAT", "ARC", "PINHOLE", "RONCHI", "FRINGE"]
+
+    # Open the file using astrodata.
+    ad = astrodata.open(file_path)
+
+    # Determine file type based on tags and observation class.
+    file_type = "unknown"
+    if "BPM" in ad.tags:
+        file_type = "BPM"
+    elif "PREPARED" in ad.tags:
+        # Skip files marked as "PREPARED".
+        return None
+    elif (
+        (
+            "STANDARD" in ad.tags
+            or ad.observation_class() == "partnerCal"
+            or ad.observation_class() == "progCal"
+        )
+        and "UNPREPARED" in ad.tags
+        and ad.observation_type() == "OBJECT"
+    ):
+        file_type = "standard"
+    elif "CAL" in ad.tags and "UNPREPARED" in ad.tags:
+        # Check against a list of calibration file tags.
+        for tag in cal_file_tags:
+            if tag in ad.tags:
+                file_type = tag
+                break
+    elif ad.observation_class() == "science" and "UNPREPARED" in ad.tags:
+        file_type = "object"
+
+    # Construct the metadata dictionary.
+    metadata_dict = {
+        "file_type": file_type,
+        "group_id": (
+            ad.group_id() if "GNIRS" not in ad.instrument() else None
+        ),  # GNIRS not implemented yet with groups.
+        "exposure_time": ad.exposure_time(),
+        "object_name": ad.object(),
+        "central_wavelength": ad.central_wavelength(),
+        "wavelength_band": ad.wavelength_band(),
+        "observation_date": ad.ut_date().isoformat(),
+        "roi_setting": ad.detector_roi_setting(),
+    }
+
+    return metadata_dict

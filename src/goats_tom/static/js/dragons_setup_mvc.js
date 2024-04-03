@@ -1,28 +1,25 @@
 /**
- * Manages setup data and interactions with the API for DRAGONS runs.
+ * Manages setup data and interactions with the API for run configuration.
  */
 class SetupModel {
   constructor(api) {
     this.api = api;
     this.runs = [];
+    this.files = [];
   }
 
   /**
    * Submits setup data to initialize a new DRAGONS run and updates runs.
    * @param {FormData} formData - Setup data from the form.
    */
-  async formSubmit(formData) {
+  async formSubmit(observationRecordPk, formData) {
     const formDataObject = Object.fromEntries(formData);
 
     try {
       const response = await this.api.post(
-        `${formDataObject.observation_record}/setup/`,
+        `observations/${observationRecordPk}/dragons/`,
         formDataObject
       );
-      this.runs = response.dragons_runs;
-
-      // Notify of changes.
-      this.onRunsChanged(this.runs);
     } catch (error) {
       console.error("Error initializing DRAGONS run:", error);
       throw error;
@@ -36,22 +33,85 @@ class SetupModel {
   bindRunsChanged(callback) {
     this.onRunsChanged = callback;
   }
+
+  /**
+   * Registers a callback to be called when the file list changes.
+   * @param {Function} callback - The callback function to register.
+   */
+  bindFileListChanged(callback) {
+    this.onFileListChanged = callback;
+  }
+
+  /**
+   * Fetches the file list for a given run ID and updates the model.
+   * @param {string} observationRecordPk - The ID for the observation.
+   * @param {string} runId - The ID of the run for which to fetch the file list.
+   */
+  async fetchFileList(observationRecordPk, runId) {
+    try {
+      const response = await this.api.get(
+        `observations/${observationRecordPk}/dragons/${runId}/files/?sort_by_file_type=true`
+      );
+      this.files = response.dragons_files || [];
+      this.onFileListChanged(this.files);
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    }
+  }
+
+  /**
+   * Fetches the runs for a given observation record and updates the model.
+   * @param {string} observationRecordPk - The ID for the observation.
+   */
+  async fetchRuns(observationRecordPk) {
+    try {
+      const response = await this.api.get(
+        `observations/${observationRecordPk}/dragons/`
+      );
+      this.runs = response.runs || [];
+      this.onRunsChanged(this.runs);
+    } catch (error) {
+      console.error("Error fetching runs:", error);
+    }
+  }
 }
 
 /**
- * Manages the UI for DRAGONS run setup, handling form submission and dynamic updates.
+ * Manages the UI for a run setup, handling form submission and dynamic updates.
  */
 class SetupView {
   constructor() {
     // Initialize UI elements.
-    this.card = document.getElementById("dragonsRunsCard");
-    this.form = this.card.querySelector("#dragonsSetupForm");
-    this.runsSelect = this.card.querySelector("#dragonsRunsSelect");
-    this.newRunRadio = this.card.querySelector("#new-run");
-    this.existingRunRadio = this.card.querySelector("#existing-run");
+    this.card = document.getElementById("setupCard");
+    this.form = this.card.querySelector("#setupForm");
+    this.runSelect = this.card.querySelector("#runSelect");
+    this.startNewRun = this.card.querySelector("#startNewRun");
+    this.useExistingRun = this.card.querySelector("#useExistingRun");
+    this.filesContainer = this.card.querySelector("#filesContainer");
+    this.observationRecordPk = this.card.dataset.observationRecordPk;
+    this.deleteRun = this.card.querySelector("#deleteRun");
+    this.refreshRuns = this.card.querySelector("#refreshRuns");
 
     // Set up event listeners for UI interactions.
     this._initLocalListeners();
+  }
+
+  /**
+   * Creates a new HTML element with optional class names.
+   * @param {string} tag - The tag name of the element to create.
+   * @param {string | string[]} classNames - The class name(s) to add to the element.
+   * @returns {Element} The newly created element.
+   */
+  createElement(tag, classNames) {
+    const element = document.createElement(tag);
+    if (classNames) {
+      if (Array.isArray(classNames)) {
+        element.classList.add(...classNames);
+      } else {
+        element.classList.add(classNames);
+      }
+    }
+    return element;
   }
 
   /**
@@ -60,10 +120,44 @@ class SetupView {
    */
   displayRuns(runs) {
     // Reset the dropdown for new data.
-    this.runsSelect.innerHTML = '<option value="" selected hidden>---</option>';
+    this.runSelect.innerHTML = '<option value="" selected hidden>Select A Run</option>';
     runs.forEach((run) => {
       const option = new Option(run.run_id, run.id);
-      this.runsSelect.add(option);
+      this.runSelect.add(option);
+    });
+  }
+
+  /**
+   * Renders the files within the UI.
+   * @param {Object[]} files - Object of file metadata.
+   */
+  displayFiles(files) {
+    this.filesContainer.innerHTML = "";
+
+    const filesContainerP = this.createElement("p", "mb-0");
+
+    if (Object.keys(files).length === 0) {
+      filesContainerP.textContent = "No Files Found";
+      this.filesContainer.appendChild(filesContainerP);
+    } else {
+      filesContainerP.textContent = "Available Files";
+      this.filesContainer.appendChild(filesContainerP);
+      // Create accordion for each file type
+      Object.entries(files).forEach(([fileType, file], index) => {
+        const accordionItem = this.createAccordionItem(fileType, file, index);
+        filesContainer.appendChild(accordionItem);
+      });
+    }
+  }
+
+  /**
+   * Binds the action to fetch files when the fetch button is clicked.
+   * @param {Function} handler - The function to call when fetching files.
+   */
+  bindFetchFiles(handler) {
+    this.runSelect.addEventListener("change", (event) => {
+      let selectedRun = event.target.value;
+      handler(this.observationRecordPk, selectedRun);
     });
   }
 
@@ -73,22 +167,105 @@ class SetupView {
   resetForm() {
     this.form.reset();
     this.toggleFormVisibility(false);
-    this.existingRunRadio.checked = true;
+    this.useExistingRun.checked = true;
+    this.setRunControlsDisabledState(false);
+  }
+
+  /**
+   * Sets the disabled state for run-related control elements.
+   * @param {boolean} disable - If true, disables the control elements; if false, enables them.
+   */
+  setRunControlsDisabledState(disable) {
+    this.runSelect.disabled = disable;
+    this.refreshRuns.disabled = disable;
+    this.deleteRun.disabled = disable;
+  }
+
+  /**
+   * Creates an accordion item for a specific file type.
+   * @param {string} fileType - The file type to create an accordion for.
+   * @param {Object[]} files - The files associated with the file type.
+   * @param {number} index - The index of the accordion item.
+   * @returns {Element} The accordion item element.
+   */
+  createAccordionItem(fileType, files, index) {
+    // Create the outer container for the accordion item with the 'accordion-item' class.
+    const accordionItem = this.createElement("div", "accordion-item");
+
+    // Generate unique IDs for the header and collapse elements based on the index.
+    const headerId = `heading-${index}`;
+    const collapseId = `collapse-${index}`;
+
+    // Create the header for the accordion item with a button that toggles the collapse.
+    const header = this.createElement("h2", "accordion-header");
+    header.id = headerId;
+    const button = this.createElement("button", [
+      "accordion-button",
+      "text-capitalize",
+      "collapsed",
+    ]);
+    button.setAttribute("type", "button");
+    button.setAttribute("data-toggle", "collapse");
+    button.setAttribute("data-target", `#${collapseId}`);
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-controls", collapseId);
+    button.textContent = fileType;
+    header.appendChild(button);
+
+    // Create the collapsible body section that will contain the file details.
+    const collapse = this.createElement("div", ["accordion-collapse", "collapse"]);
+    collapse.id = collapseId;
+    collapse.setAttribute("aria-labelledby", headerId);
+    collapse.setAttribute("data-parent", "#filesContainer");
+
+    // Create the body content area for the collapsible section.
+    const body = this.createElement("div", "accordion-body");
+    // Loop through each file and create a detailed view for it.
+    files.forEach((file) => {
+      const fileDiv = this.createFileEntry(file);
+      body.appendChild(fileDiv);
+    });
+    collapse.appendChild(body);
+
+    // Construct the complete accordion item by adding both header and collapse sections.
+    accordionItem.appendChild(header);
+    accordionItem.appendChild(collapse);
+
+    // Return the fully constructed accordion item.
+    return accordionItem;
+  }
+
+  /**
+   * Creates a single file entry within the accordion.
+   * @param {Object} file - The file metadata object.
+   * @returns {Element} The file entry element.
+   */
+  createFileEntry(file) {
+    const fileDiv = this.createElement("div");
+    fileDiv.textContent = `${file.product_id}`;
+    return fileDiv;
   }
 
   /**
    * Sets up event listeners for form submission and radio button changes.
    */
   _initLocalListeners() {
-    this.newRunRadio.addEventListener("change", () => this.toggleFormVisibility(true));
-    this.existingRunRadio.addEventListener("change", () =>
-      this.toggleFormVisibility(false)
-    );
+    this.startNewRun.addEventListener("change", () => {
+      this.toggleFormVisibility(true);
+      this.runSelect.options[0].selected = true;
+      this.filesContainer.innerHTML = "";
+      this.setRunControlsDisabledState(true);
+    });
+
+    this.useExistingRun.addEventListener("change", () => {
+      this.toggleFormVisibility(false);
+      this.setRunControlsDisabledState(false);
+    });
 
     this.form.addEventListener("submit", (event) => {
       event.preventDefault();
       const formData = new FormData(this.form);
-      this.formSubmitHandler(formData);
+      this.formSubmitHandler(this.observationRecordPk, formData);
     });
   }
 
@@ -122,6 +299,14 @@ class SetupController {
 
     // When the model's run data changes, update the view with the new runs
     this.model.bindRunsChanged(this.onRunsChanged);
+
+    // Bind the model's change event to the controller's method to update the view.
+    // This ensures the view gets updated when the model's data changes.
+    this.model.bindFileListChanged(this.onFileListChanged);
+
+    // Bind the view's request to fetch files to the controller's method.
+    // This allows the controller to respond to user actions triggered in the view.
+    this.view.bindFetchFiles(this.handleFetchFiles);
   }
 
   /**
@@ -129,10 +314,11 @@ class SetupController {
    *
    * @param {FormData} formData The data from the setup form.
    */
-  handleFormSubmit = async (formData) => {
+  handleFormSubmit = async (observationRecordPk, formData) => {
     try {
-      await this.model.formSubmit(formData);
+      await this.model.formSubmit(observationRecordPk, formData);
       this.view.resetForm();
+      await this.model.fetchRuns(observationRecordPk);
     } catch (error) {
       console.error("Setup form submission failed:", error);
     }
@@ -146,5 +332,33 @@ class SetupController {
    */
   onRunsChanged = (runs) => {
     this.view.displayRuns(runs);
+  };
+
+  /**
+   * Callback to be executed when the model notifies of a file list change.
+   *
+   * @param {Array} fileList - The updated list of files.
+   */
+  onFileListChanged = (fileList) => {
+    this.view.displayFiles(fileList);
+  };
+
+  /**
+   * Handles requests to fetch files based on a run ID.
+   *
+   * @param {string} observationRecordPk - The ID for the observation record.
+   * @param {string} runId - The run ID for which files should be fetched.
+   */
+  handleFetchFiles = async (observationRecordPk, runId) => {
+    await this.model.fetchFileList(observationRecordPk, runId);
+  };
+
+  /**
+   * Handles requests to fetch runs based on a observation record ID.
+   *
+   * @param {string} observationRecordPk - The ID for the observation record.
+   */
+  handleFetchRuns = async (observationRecordPk) => {
+    await this.model.fetchRuns(observationRecordPk);
   };
 }
