@@ -3,9 +3,11 @@
 # Related third party imports.
 
 # Local application/library specific imports.
-from django import template
-from ..forms import GOAQueryForm
 from typing import Any
+
+from django import template
+
+from ..forms import GOAQueryForm
 
 register = template.Library()
 
@@ -31,7 +33,7 @@ def render_goa_query_form(context: template.context.RequestContext) -> dict[str,
         "form": form,
         "observationrecord": observationrecord,
         "object": observationrecord,
-        "target": observationrecord.target
+        "target": observationrecord.target,
     }
 
 

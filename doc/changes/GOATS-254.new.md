@@ -1,0 +1,1 @@
+Switched to `ruff` for faster linting and formatting.

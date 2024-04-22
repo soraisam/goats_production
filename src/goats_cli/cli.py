@@ -1,4 +1,5 @@
 """CLI for installing and running GOATS."""
+
 __all__ = ["cli"]
 import re
 import shutil
@@ -179,11 +180,14 @@ def install(
                 )
 
         # Setup the TOM Toolkit.
-        goats_setup_command = [f"{manage_file}", "goats_setup", "--redis-addrport", f"{redis_addrport}"]
+        goats_setup_command = [
+            f"{manage_file}",
+            "goats_setup",
+            "--redis-addrport",
+            f"{redis_addrport}",
+        ]
         if media_dir is not None:
-            goats_setup_command.extend(
-                ["--media-dir", f"{media_dir}"]
-            )
+            goats_setup_command.extend(["--media-dir", f"{media_dir}"])
         subprocess.run(goats_setup_command, check=True)
 
         # Migrate the webpage.
@@ -303,7 +307,9 @@ def run(
     display_ok()
     display_info("Verifing Redis installed...")
     try:
-        subprocess.run(["redis-server", "--version"], check=True, text=True, capture_output=True)
+        subprocess.run(
+            ["redis-server", "--version"], check=True, text=True, capture_output=True
+        )
         display_ok()
     except FileNotFoundError:
         display_failed()
@@ -439,9 +445,9 @@ def display_message(
 
 def display_ok() -> None:
     """Display "OK" in green format."""
-    time.sleep(.5)
+    time.sleep(0.5)
     click.echo(click.style(" OK", fg="green", bold=True))
-    time.sleep(.5)
+    time.sleep(0.5)
 
 
 def display_info(message: str, indent: int = 4) -> None:
