@@ -2,8 +2,9 @@
 
 __all__ = ["DRAGONSRunSerializer"]
 
-from goats_tom.models import DRAGONSRun
 from rest_framework import serializers
+
+from goats_tom.models import DRAGONSRun
 
 
 class DRAGONSRunSerializer(serializers.ModelSerializer):

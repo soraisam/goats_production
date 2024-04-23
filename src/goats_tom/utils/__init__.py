@@ -3,6 +3,7 @@ from .utils import (
     create_name_reduction_map,
     custom_data_product_path,
     delete_associated_data_products,
+    extract_metadata,
     get_key,
     get_key_info,
     has_key,
@@ -16,4 +17,5 @@ __all__ = [
     "get_key",
     "has_key",
     "get_key_info",
+    "extract_metadata",
 ]

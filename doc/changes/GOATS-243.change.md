@@ -1,0 +1,1 @@
+Refactored frontend for efficiency: Combined setup steps and streamlined file listing for DRAGONS runs. Changed the timing of metadata extraction from data products to occur during downloading from GOA. This update ensures that metadata is always refreshed in tandem with data product updates, leading to faster loading and listing of file metadata.

@@ -7,89 +7,78 @@
     <p class="h3">{{ observation_record.observation_id }}</p>
   </div>
 </div>
-<div class="card mb-5" id="dragonsRunsCard">
+<div class="card mb-5" id="setupCard" data-observation-record-pk="{{ observation_record.id }}">
   <div class="card-header">
-    Setup and Configuration
+    DRAGONS Reduction Setup and Configure
   </div>
   <div class="card-body">
-    <div class="row g-3">
+    <div class="row g-3 mb-3">
       <div class="col-12">
-        <label class="form-label">Configure DRAGONS Run</label>
-        <div class="btn-group d-flex" role="group" aria-label="DRAGONS Run Configuration Options">
-          <input type="radio" name="run-configuration" class="btn-check" id="existing-run" autocomplete="off" checked>
-          <label class="btn btn-outline-primary" for="existing-run">Use Existing Run</label>
-          <input type="radio" name="run-configuration" class="btn-check" id="new-run" autocomplete="off">
-          <label class="btn btn-outline-primary" for="new-run">Start New Run</label>
+        <label class="form-label">Choose Run Type</label>
+        <div class="btn-group d-flex" role="group" aria-label="Run Type Options">
+          <input type="radio" name="runType" class="btn-check" id="useExistingRun" autocomplete="off" checked>
+          <label class="btn btn-outline-primary" for="useExistingRun">Existing Run</label>
+          <input type="radio" name="runType" class="btn-check" id="startNewRun" autocomplete="off">
+          <label class="btn btn-outline-primary" for="startNewRun">New Run</label>
         </div>
       </div>
     </div>
-    <form id="dragonsSetupForm" method="post" class="d-none">
+    <form id="setupForm" method="post" class="d-none mb-3">
       <div class="row g-3">
         <input type="hidden" name="observation_record" value="{{ observation_record.pk }}">
         <div class="col-12">
           <label for="runId" class="form-label">Run ID</label>
-          <input type="text" class="form-control" id="runId" name="run_id" placeholder="run-YYYYMMDDhhmmss">
+          <input type="text" class="form-control" id="runId" name="run_id" placeholder="Default: run-YYYYMMDDhhmmss">
         </div>
         <div class="col-12">
-          <label for="configFilename" class="form-label">Configuration Filename</label>
+          <label for="configFilename" class="form-label">Configuration File</label>
           <input type="text" class="form-control" id="configFilename" name="config_filename" readonly value="dragonsrc">
         </div>
         <div class="col-12">
           <label for="outputDirectory" class="form-label">Output Directory</label>
-          <input type="text" class="form-control" id="outputDirectory" name="output_directory" placeholder="reduced-YYYYMMDDhhmmss">
+          <input type="text" class="form-control" id="outputDirectory" name="output_directory" placeholder="Default: reduced-YYYYMMDDhhmmss">
         </div>
         <div class="col-12">
-          <label for="calManagerFilename" class="form-label">Calibration Manager Filename</label>
+          <label for="calManagerFilename" class="form-label">Calibration Manager File</label>
           <input type="text" class="form-control" id="calManagerFilename" readonly name="cal_manager_filename" value="cal_manager.db">
         </div>
         <div class="col-12">
-          <label for="logFilename" class="form-label">Log Filename</label>
+          <label for="logFilename" class="form-label">Log File</label>
           <input type="text" class="form-control" id="logFilename" name="log_filename" value="log.log" readonly>
         </div>
         <div class="col-12">
-          <button type="submit" class="btn d-block w-100 btn-primary">Initialize DRAGONS Run</button>
+          <button type="submit" class="btn d-block w-100 btn-primary">Create Run</button>
         </div>
       </div>
     </form>
-  </div>
-  <div class="card-footer mb-3">
     <div class="row g-3">
       <div class="col-12">
-        <label for="dragonsRun" class="form-label">Select a DRAGONS Run</label>
-        <select class="form-select" id="dragonsRunsSelect">
-          <option value="" selected hidden>---</option>
-          {% for dragons_run in dragons_runs %}
-            <option value="{{ dragons_run.id }}">{{ dragons_run.run_id }}</option>
-          {% endfor %}
-        </select>
+        <div class="input-group">
+          <button id="refreshRuns" class="btn btn-secondary"><i class="fa-solid fa-arrow-rotate-right"></i></button>
+          <select class="form-select" id="runSelect">
+            <option value="" selected hidden>Select a Run</option>
+            {% for dragons_run in dragons_runs %}
+              <option value="{{ dragons_run.id }}">{{ dragons_run.run_id }}</option>
+            {% endfor %}
+          </select>
+          <button id="deleteRun" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+      </div>
+      <div class="col-12">
+        <div id="filesContainer" class="accordion accordion-flush"></div>
       </div>
     </div>
-  </div>
-</div>
-<div class="card" id="fileListCard">
-  <div class="card-header">
-    Files List
-  </div>
-  <div class="card-body">
-    <div id="filesAccordionContainer" class="accordion accordion-flush"></div>
-  </div>
-  <div class="card-footer mb-3">
-    <a href="#" class="btn d-block w-100 btn-primary" id="generateFilesListBtn">Generate Files List</a>
   </div>
 </div>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const api = new FetchWrapper("/api/dragons/");
+    const api = new FetchWrapper("/api/");
     api.setCsrfToken("{{ csrf_token }}")
 
     const setupModel = new SetupModel(api);
     const setupView = new SetupView();
     const setupController = new SetupController(setupModel, setupView);
-
-    const fileListModel = new FileListModel(api);
-    const fileListView = new FileListView();
-    const fileListController = new FileListController(fileListModel, fileListView);
   })
 </script>
 {% endblock %}

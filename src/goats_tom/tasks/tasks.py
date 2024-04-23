@@ -6,14 +6,14 @@ import time
 from django.conf import settings
 from django.core import serializers
 from django.db import IntegrityError
-from goats_tom.astroquery import Observations as GOA
-from goats_tom.consumers import DownloadState, NotificationInstance
-from goats_tom.models import Download, GOALogin
-from goats_tom.utils import create_name_reduction_map
 from huey.contrib.djhuey import db_task
 from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
 
+from goats_tom.astroquery import Observations as GOA
+from goats_tom.consumers import DownloadState, NotificationInstance
+from goats_tom.models import DataProductMetadata, Download, GOALogin
+from goats_tom.utils import create_name_reduction_map, extract_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @db_task()
 def download_goa_files(serialized_observation_record, query_params, user: int):
     # Allow page to refresh before displaying notification.
+    print("Running background task.")
     time.sleep(2)
 
     download_state = DownloadState()
@@ -179,6 +180,10 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
                     "There already exists a data product '%s', skipping.",
                     file_path.name,
                 )
+        # Extract and save the metadata
+        # TODO: Will this ever be empty?
+        metadata = extract_metadata(file_path)
+        DataProductMetadata.objects.update_or_create(data_product=dp, defaults=metadata)
 
     GOA.logout()
 
