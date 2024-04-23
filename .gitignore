@@ -272,3 +272,6 @@ package-lock.json
 coverage
 
 /TESTGOATS/
+
+# Formatting ruff
+.ruff_cache

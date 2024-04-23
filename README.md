@@ -1,6 +1,6 @@
 # 🐐 Gemini Observation and Analysis of Targets System (GOATS)
 
-[![Run Flake8](https://github.com/gemini-hlsw/goats/actions/workflows/run_flake8.yaml/badge.svg?branch=main&event=push)](https://github.com/gemini-hlsw/goats/actions/workflows/run_flake8.yaml)
+[![Run Ruff](https://github.com/gemini-hlsw/goats/actions/workflows/run_ruff.yaml/badge.svg?branch=main&event=push)](https://github.com/gemini-hlsw/goats/actions/workflows/run_ruff.yaml)
 [![Run Tests](https://github.com/gemini-hlsw/goats/actions/workflows/run_tests.yaml/badge.svg?branch=main&event=push)](https://github.com/gemini-hlsw/goats/actions/workflows/run_tests.yaml)
 [![Run HTMLHint](https://github.com/gemini-hlsw/goats/actions/workflows/run_htmlhint.yaml/badge.svg?branch=main&event=push)](https://github.com/gemini-hlsw/goats/actions/workflows/run_htmlhint.yaml)
 [![Run StyleLint](https://github.com/gemini-hlsw/goats/actions/workflows/run_stylelint.yaml/badge.svg?branch=main&event=push)](https://github.com/gemini-hlsw/goats/actions/workflows/run_stylelint.yaml)

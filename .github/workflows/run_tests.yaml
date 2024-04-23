@@ -1,4 +1,5 @@
 name: Run Tests
+
 on:
   push:
     paths:
@@ -22,32 +23,44 @@ jobs:
         with:
           path: goats
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Setup Mambaforge
+        uses: conda-incubator/setup-miniconda@v3
         with:
+          mamba-version: "*"
           python-version: ${{ matrix.python-version }}
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          activate-environment: goats-env
+          use-mamba: true
+          auto-activate-base: false
 
-      - name: Install confluent-kafka dependencies
-        run: sudo apt-get update && sudo apt-get install -y librdkafka-dev
+      - name: Get date
+        id: get-date
+        run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
+        shell: bash
 
-      - name: Install pip dependencies
-        run: |
-          python -m pip install --upgrade pip
-
-      - name: Cache Python packages
-        uses: actions/cache@v2
+      - name: Cache conda env
+        uses: actions/cache@v3
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          path: ${{ env.CONDA }}/envs
+          key:
+            conda-${{ runner.os }}--${{ runner.arch }}--${{
+            steps.get-date.outputs.today }}-${{
+            hashFiles('goats/environment.yml', 'goats/pyproject.toml') }}-${{
+            env.CACHE_NUMBER }}
+        env:
+          # Increase this value to reset cache if goats/environment.yml has not changed
+          CACHE_NUMBER: 0
+        id: cache
 
-      - name: Build and install
+      - name: Update environment
         run: |
-          cd ${{ github.workspace }}/goats
+          mamba env update -n goats-env -f goats/environment.yml
+          cd goats
           pip install -v -e ".[test]"
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Run tests and calculate coverage
         run: |
-          cd ${{ github.workspace }}/goats
+          cd goats
           pytest -r A -v -n auto --cov=goats --cov-report=term --cov=tests --cov-branch

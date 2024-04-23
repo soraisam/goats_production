@@ -1,0 +1,1 @@
+Updated GitHub action to use conda environment with DRAGONS: The GitHub action for running unit tests has been fixed by using the `goats` conda environment. The environment is cached to reuse builds if it has not changed.

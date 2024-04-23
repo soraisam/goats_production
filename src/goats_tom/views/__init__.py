@@ -1,2 +1,43 @@
-from .dragons_views import *
-from .views import *
+from .dragons_views import DRAGONSFileListView, DRAGONSSetupAPIView, DRAGONSView
+from .views import (
+    DeleteObservationDataProductsView,
+    GOALoginView,
+    GOAQueryFormView,
+    GOATSDataProductDeleteView,
+    GOATSObservationRecordDetailView,
+    GOATSTargetDeleteView,
+    ManageKeysView,
+    ObservationRecord,
+    ObservationRecordDeleteView,
+    UserGenerateTokenView,
+    activate_user_key,
+    create_key,
+    delete_key,
+    ongoing_tasks,
+    receive_query,
+    recent_downloads,
+    update_brokerquery_name,
+)
+
+__all__ = [
+    "DRAGONSFileListView",
+    "DRAGONSSetupAPIView",
+    "DRAGONSView",
+    "DeleteObservationDataProductsView",
+    "GOALoginView",
+    "GOAQueryFormView",
+    "GOATSDataProductDeleteView",
+    "GOATSObservationRecordDetailView",
+    "GOATSTargetDeleteView",
+    "ManageKeysView",
+    "ObservationRecord",
+    "UserGenerateTokenView",
+    "activate_user_key",
+    "create_key",
+    "delete_key",
+    "ongoing_tasks",
+    "receive_query",
+    "recent_downloads",
+    "update_brokerquery_name",
+    "ObservationRecordDeleteView",
+]

@@ -1,5 +1,7 @@
 """Model for DRAGONS runs."""
 
+__all__ = ["DRAGONSRun"]
+
 from datetime import datetime
 from pathlib import Path
 
