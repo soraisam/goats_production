@@ -42,11 +42,6 @@ class FetchWrapper {
 
       const data = await response.json();
 
-      // Check if successful.
-      if (!data.success) {
-        throw data;
-      }
-
       return data;
     } catch (error) {
       console.error("Fetch operation failed:", error);

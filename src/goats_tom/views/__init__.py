@@ -1,11 +1,8 @@
-from .dragons_views import (
-    DRAGONSFilesAPIView,
-    DRAGONSRunDataProductAPIView,
-    DRAGONSRunsAPIView,
-    DRAGONSView,
-)
+from .dragons_files import DRAGONSFilesViewSet
+from .dragons_runs import DRAGONSRunsViewSet
 from .views import (
     DeleteObservationDataProductsView,
+    DRAGONSView,
     GOALoginView,
     GOAQueryFormView,
     GOATSDataProductDeleteView,
@@ -25,9 +22,7 @@ from .views import (
 )
 
 __all__ = [
-    "DRAGONSRunsAPIView",
-    "DRAGONSFilesAPIView",
-    "DRAGONSRunDataProductAPIView",
+    "DRAGONSFilesViewSet",
     "DRAGONSView",
     "DeleteObservationDataProductsView",
     "GOALoginView",
@@ -46,4 +41,5 @@ __all__ = [
     "recent_downloads",
     "update_brokerquery_name",
     "ObservationRecordDeleteView",
+    "DRAGONSRunsViewSet",
 ]

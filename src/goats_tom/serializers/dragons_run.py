@@ -40,3 +40,9 @@ class DRAGONSRunSerializer(serializers.ModelSerializer):
             The "observation_id" of the related `ObservationRecord`.
         """
         return obj.observation_record.observation_id
+
+
+class DRAGONSRunFilterSerializer(serializers.Serializer):
+    observation_record = serializers.IntegerField(
+        required=False, help_text="Primary key for the observation record to filter by"
+    )

@@ -17,7 +17,7 @@ class SetupModel {
 
     try {
       const response = await this.api.post(
-        `observations/${observationRecordPk}/dragons/`,
+        `dragonsruns/?observation_record=${observationRecordPk}`,
         formDataObject
       );
     } catch (error) {
@@ -50,9 +50,9 @@ class SetupModel {
   async fetchFileList(observationRecordPk, runId) {
     try {
       const response = await this.api.get(
-        `observations/${observationRecordPk}/dragons/${runId}/files/?sort_by_file_type=true`
+        `dragonsfiles/?group_by_file_type=true&dragons_run=${runId}`
       );
-      this.files = response.dragons_files || [];
+      this.files = response.results || [];
       this.onFileListChanged(this.files);
     } catch (error) {
       console.error("Error fetching files:", error);
@@ -66,9 +66,9 @@ class SetupModel {
   async fetchRuns(observationRecordPk) {
     try {
       const response = await this.api.get(
-        `observations/${observationRecordPk}/dragons/`
+        `dragonsruns/?observation_record=${observationRecordPk}`
       );
-      this.runs = response.runs || [];
+      this.runs = response.results || [];
       this.onRunsChanged(this.runs);
     } catch (error) {
       console.error("Error fetching runs:", error);
