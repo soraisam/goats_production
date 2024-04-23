@@ -122,6 +122,49 @@ Options:
   --help                   Show this message and exit.
 ```
 
+## Troubleshooting
+
+### Redis - Memory Overcommit Issue
+On Linux platforms, if you encounter a warning regarding memory overcommitment, especially when running Redis, it may cause failures under low memory conditions. To resolve this, enable memory overcommitment.
+
+Edit `/ect/sysctl.conf` as root:
+
+```console
+$ nano /etc/sysctl.conf
+```
+
+Add the configuration to the file:
+
+```console
+vm.overcommit_memory = 1
+```
+
+Save and exit. Then apply the configuration:
+
+```console
+$ sudo sysctl -p
+```
+
+For more information on memory overcommitment and its implications, see the [jemalloc issue tracker](https://github.com/jemalloc/jemalloc/issues/1328).
+
+### Redis - Transparent Huge Pages (THP)
+You may see a warning when starting redis about THP. THP can create latency and memory usage issues with Redis. It's recommended to disable THP on systems that run Redis.
+
+Edit `/etc/rc.local` as root:
+
+```console
+$ nano /etc/rc.local
+```
+
+Add the configuration to the file:
+
+```console
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+```
+
+Save and exit. Redis must be restarted for it to take effect.
+
+
 ## References and Documentation
 
 - [GOATS Confluence](https://noirlab.atlassian.net/wiki/spaces/GOATS/overview)
