@@ -1,12 +1,20 @@
-from django.urls import path
+from django.urls import include, path
 from tom_alerts.views import BrokerQueryListView
+from tom_common.api_router import SharedAPIRootRouter
 
 from . import views
+
+router = SharedAPIRootRouter()
+router.register(r"dragonsruns", views.DRAGONSRunsViewSet)
+router.register(r"dragonsfiles", views.DRAGONSFilesViewSet)
+
 
 # TODO: Add app_name and update paths and URL lookups.
 # TODO: Make unified path formats.
 
+
 urlpatterns = [
+    path("api/", include(router.urls)),
     path(
         "targets/<int:pk>/delete/",
         views.GOATSTargetDeleteView.as_view(),
@@ -84,20 +92,5 @@ urlpatterns = [
         views.activate_user_key,
         name="activate-user-key",
     ),
-    path(
-        "api/observations/<int:observation_record_pk>/dragons/",
-        views.DRAGONSRunsAPIView.as_view(),
-        name="dragons-runs",
-    ),
     path("observations/<int:pk>/dragons/", views.DRAGONSView.as_view(), name="dragons"),
-    path(
-        "api/observations/<int:observation_record_pk>/dragons/<int:dragons_run_pk>/files/",
-        views.DRAGONSFilesAPIView.as_view(),
-        name="dragons-files",
-    ),
-    path(
-        "api/observations/<int:observation_record_pk>/dragons/<int:dragons_run_pk>/files/<int:dragons_run_data_product_pk>/",
-        views.DRAGONSRunDataProductAPIView.as_view(),
-        name="dragons-file",
-    ),
 ]
