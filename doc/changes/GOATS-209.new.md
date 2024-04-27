@@ -1,0 +1,1 @@
+Add toggle for file enable/disable: Checkbox functionality was added to allow users to enable or disable files for DRAGONS reduction runs. Additionally, a CSS class was introduced to limit the size of tables when displaying large lists of files.
