@@ -449,3 +449,8 @@ select.form-control[multiple] {
   margin-right: calc(-0.5 * var(--bs-offcanvas-padding-x));
   margin-bottom: calc(-0.5 * var(--bs-offcanvas-padding-y));
 }
+
+.accordian-overflow {
+  max-height: 200px;
+  overflow-y: auto;
+}
