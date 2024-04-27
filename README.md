@@ -150,19 +150,11 @@ For more information on memory overcommitment and its implications, see the [jem
 ### Redis - Transparent Huge Pages (THP)
 You may see a warning when starting redis about THP. THP can create latency and memory usage issues with Redis. It's recommended to disable THP on systems that run Redis.
 
-Edit `/etc/rc.local` as root:
+Issue the command as root:
 
 ```console
-$ nano /etc/rc.local
+$ echo never > /sys/kernel/mm/transparent_hugepage/enabled
 ```
-
-Add the configuration to the file:
-
-```console
-echo never > /sys/kernel/mm/transparent_hugepage/enabled
-```
-
-Save and exit. Redis must be restarted for it to take effect.
 
 
 ## References and Documentation
