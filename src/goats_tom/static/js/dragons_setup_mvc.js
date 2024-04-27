@@ -9,6 +9,22 @@ class SetupModel {
   }
 
   /**
+   * Updates the enabled status of a specific file.
+   * @param {string} filePk - The primary key of the file to update.
+   * @param {boolean} isEnabled - The new enabled state to set for the file.
+   */
+  async updateFile(filePk, isEnabled) {
+    const fileData = { enabled: isEnabled };
+    try {
+      const response = await this.api.patch(`dragonsfiles/${filePk}/`, fileData);
+      this.onFileChanged(response);
+    } catch (error) {
+      console.error("Error updating file state:", error);
+      throw error; // Consider rethrowing to handle in the controller
+    }
+  }
+
+  /**
    * Submits setup data to initialize a new DRAGONS run and updates runs.
    * @param {FormData} formData - Setup data from the form.
    */
@@ -40,6 +56,14 @@ class SetupModel {
    */
   bindFileListChanged(callback) {
     this.onFileListChanged = callback;
+  }
+
+  /**
+   * Registers a callback to be called when the file changes.
+   * @param {Function} callback - The callback function to register.
+   */
+  bindFileChanged(callback) {
+    this.onFileChanged = callback;
   }
 
   /**
@@ -219,12 +243,20 @@ class SetupView {
     collapse.setAttribute("data-parent", "#filesContainer");
 
     // Create the body content area for the collapsible section.
-    const body = this.createElement("div", "accordion-body");
+    const body = this.createElement("div", ["accordion-body", "accordian-overflow"]);
+    const table = this.createElement("table", [
+      "table",
+      "table-sm",
+      "table-borderless",
+    ]);
+    const tbody = this.createElement("tbody");
     // Loop through each file and create a detailed view for it.
     files.forEach((file) => {
-      const fileDiv = this.createFileEntry(file);
-      body.appendChild(fileDiv);
+      const fileRow = this.createFileEntry(file);
+      tbody.appendChild(fileRow);
     });
+    table.appendChild(tbody);
+    body.appendChild(table);
     collapse.appendChild(body);
 
     // Construct the complete accordion item by adding both header and collapse sections.
@@ -236,20 +268,54 @@ class SetupView {
   }
 
   /**
-   * Creates a single file entry within the accordion.
+   * Creates a single file entry within the accordion as a table row.
    * @param {Object} file - The file metadata object.
-   * @returns {Element} The file entry element.
+   * @returns {Element} The file entry element (table row).
    */
   createFileEntry(file) {
-    const fileDiv = this.createElement("div");
-    fileDiv.textContent = `${file.product_id}`;
-    return fileDiv;
+    const row = this.createElement("tr");
+    const cellCheckbox = this.createElement("td", ["form-check", "py-0", "mb-0"]);
+    const checkbox = this.createElement("input", ["form-check-input", "file-checkbox"]);
+    const label = this.createElement("label", "form-check-label");
+
+    // Configure the checkbox
+    checkbox.type = "checkbox";
+    checkbox.id = `file${file.id}`;
+    checkbox.dataset.filePk = file.id; // Store file ID for easy access in event handlers.
+    checkbox.checked = file.enabled;
+
+    // Configure the label.
+    label.htmlFor = checkbox.id; // Connects the label to the checkbox.
+    label.textContent = file.product_id; // Assuming file object has a name property.
+
+    cellCheckbox.appendChild(checkbox);
+    cellCheckbox.appendChild(label); // Appends the label right after the checkbox.
+    row.appendChild(cellCheckbox);
+
+    return row;
+  }
+
+  /**
+   * Binds the file toggle to a handler function.
+   * @param {Function} handler - The function to handle file toggle.
+   */
+  bindFileToggle(handler) {
+    this.onFileToggle = handler;
   }
 
   /**
    * Sets up event listeners for form submission and radio button changes.
    */
   _initLocalListeners() {
+    // Delegate checkbox changes in the files container.
+    this.filesContainer.addEventListener("change", (event) => {
+      if (event.target.classList.contains("file-checkbox")) {
+        const filePk = event.target.dataset.filePk;
+        const isChecked = event.target.checked;
+        this.onFileToggle(filePk, isChecked);
+      }
+    });
+
     this.startNewRun.addEventListener("change", () => {
       this.toggleFormVisibility(true);
       this.runSelect.options[0].selected = true;
@@ -284,6 +350,14 @@ class SetupView {
   bindFormSubmit(handler) {
     this.formSubmitHandler = handler;
   }
+
+  /**
+   * Updates the checked state of a checkbox based on the provided file data.
+   * @param {Object} data - An object containing the file's ID and its enabled state.
+   */
+  updateFile(data) {
+    document.getElementById(`file${data.id}`).checked = data.enabled;
+  }
 }
 
 /**
@@ -294,11 +368,17 @@ class SetupController {
     this.model = model;
     this.view = view;
 
+    // When a file is enabled or disabled.
+    this.view.bindFileToggle(this.handleFileToggle);
+
     // When the form is submitted, handle the data submission.
     this.view.bindFormSubmit(this.handleFormSubmit);
 
     // When the model's run data changes, update the view with the new runs
     this.model.bindRunsChanged(this.onRunsChanged);
+
+    // When the model's file data changes, update the view with the new state.
+    this.model.bindFileChanged(this.onFileChanged);
 
     // Bind the model's change event to the controller's method to update the view.
     // This ensures the view gets updated when the model's data changes.
@@ -308,6 +388,29 @@ class SetupController {
     // This allows the controller to respond to user actions triggered in the view.
     this.view.bindFetchFiles(this.handleFetchFiles);
   }
+
+  /**
+   * Handles the file toggle, invoking the model to update the file.
+   *
+   * @param {string} filePk - The file to update.
+   * @param {boolean} isChecked - If the file is enabled.
+   */
+  handleFileToggle = async (filePk, isChecked) => {
+    try {
+      await this.model.updateFile(filePk, isChecked);
+    } catch (error) {
+      console.error("Error updating file:", error);
+    }
+  };
+
+  /**
+   * Callback to be executed when the model notifies of file change.
+   *
+   * @param {Object} file - Object with file information.
+   */
+  onFileChanged = (file) => {
+    this.view.updateFile(file);
+  };
 
   /**
    * Handles the form submission, invoking the model to submit the form data.

@@ -69,6 +69,7 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = DRAGONSFile
         fields = [
+            "id",
             "dragons_run",
             "product_id",
             "observation_id",
