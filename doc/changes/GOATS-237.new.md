@@ -1,1 +1,0 @@
-Implemented file list generation: Version 1 of generating the file list for users was implemented, focusing on both frontend and backend development. This initial version is set to be revised based on user feedback.

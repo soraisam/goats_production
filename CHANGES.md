@@ -1,3 +1,20 @@
+## GOATS 24.04.0 (2024-04-26)
+
+
+### New Features
+
+- Add toggle for file enable/disable: Checkbox functionality was added to allow users to enable or disable files for DRAGONS reduction runs. Additionally, a CSS class was introduced to limit the size of tables when displaying large lists of files. [[#GOATS-209](https://noirlab.atlassian.net/browse/GOATS-209)]
+- Implemented file list generation: Version 1 of generating the file list for users was implemented, focusing on both frontend and backend development. This initial version is set to be revised based on user feedback. [[#GOATS-237](https://noirlab.atlassian.net/browse/GOATS-237)]
+- Switched to `ruff` for faster linting and formatting. [[#GOATS-254](https://noirlab.atlassian.net/browse/GOATS-254)]
+
+
+### Changes
+
+- Refactored API structure: Updated API endpoints and class names for DRAGONS reduction. The code now uses a flat REST API structure, enabling filtering via query parameters. For more details, access `/api/` in debug mode to explore possible endpoints. [[# GOATS-235](https://noirlab.atlassian.net/browse/ GOATS-235)]
+- Updated GitHub action to use conda environment with DRAGONS: The GitHub action for running unit tests has been fixed by using the `goats` conda environment. The environment is cached to reuse builds if it has not changed. [[#GOATS-240](https://noirlab.atlassian.net/browse/GOATS-240)]
+- Refactored frontend for efficiency: Combined setup steps and streamlined file listing for DRAGONS runs. Changed the timing of metadata extraction from data products to occur during downloading from GOA. This update ensures that metadata is always refreshed in tandem with data product updates, leading to faster loading and listing of file metadata. [[#GOATS-243](https://noirlab.atlassian.net/browse/GOATS-243)]
+- Refactored DRAGONS setup to MVC: Enhanced the DRAGONS run setup process by adopting the Model-View-Controller architecture, improving reactivity and maintainability of components. [[#GOATS-244](https://noirlab.atlassian.net/browse/GOATS-244)]
+
 ## GOATS 24.03.0 (2024-03-25)
 
 
