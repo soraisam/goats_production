@@ -17,11 +17,12 @@ import astrodata
 from astropy.table import Table
 from django.contrib.auth.models import User
 from django.http import JsonResponse
-from goats_tom.models import ProgramKey, UserKey
-from goats_tom.ocs import GeminiID
 from rest_framework import status
 from tom_dataproducts.models import DataProduct, ReducedDatum
 from tom_observations.models import ObservationRecord
+
+from goats_tom.models import ProgramKey, UserKey
+from goats_tom.ocs import GeminiID
 
 
 def delete_associated_data_products(
@@ -256,7 +257,7 @@ def extract_metadata(file_path: Path) -> dict | None:
     ad = astrodata.open(file_path)
 
     # Determine file type based on tags and observation class.
-    file_type = "unknown"
+    file_type = "other"
     if "BPM" in ad.tags:
         file_type = "BPM"
     elif "PREPARED" in ad.tags:
