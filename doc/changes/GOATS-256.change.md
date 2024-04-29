@@ -1,0 +1,1 @@
+Changed "Unknown" to "Other" for the file type when extracting file metadata.
