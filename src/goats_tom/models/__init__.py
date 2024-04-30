@@ -1,6 +1,8 @@
 from .data_product_metadata import DataProductMetadata
 from .download import Download
 from .dragons_file import DRAGONSFile
+from .dragons_primitive import DRAGONSPrimitive
+from .dragons_recipe import DRAGONSRecipe
 from .dragons_run import DRAGONSRun
 from .goa_login import GOALogin
 from .key import Key
@@ -16,4 +18,6 @@ __all__ = [
     "ProgramKey",
     "UserKey",
     "DataProductMetadata",
+    "DRAGONSPrimitive",
+    "DRAGONSRecipe",
 ]
