@@ -1,0 +1,1 @@
+Fixed file count and duplicate entries: Corrected the bug in the total file count calculation and prevented duplicates in the list of files downloaded to ensure an accurate count.
