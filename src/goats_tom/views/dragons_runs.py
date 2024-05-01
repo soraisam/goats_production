@@ -1,8 +1,9 @@
 """Module that handles the DRAGONS run API."""
 
 import re
+from datetime import timedelta
 
-from django.db.models import QuerySet
+from django.db.models import Max, QuerySet
 from gempy.utils.showrecipes import showprims
 from recipe_system import cal_service
 from rest_framework import mixins, permissions
@@ -62,20 +63,71 @@ class DRAGONSRunsViewSet(
         """
         dragons_run = serializer.save()
 
-        self.init_dragons_dir(dragons_run)
+        self._init_dragons_dir(dragons_run)
 
         # Link DataProducts for the run to enable/disable.
         data_products = DataProduct.objects.filter(
             observation_record=dragons_run.observation_record
+        ).select_related("metadata")
+
+        # for dp in data_products:
+        #     DRAGONSFile.objects.update_or_create(
+        #         dragons_run=dragons_run, data_product=dp, defaults={"enabled": True}
+        #     )
+        # Decrease the hits to the db.
+        DRAGONSFile.objects.bulk_create(
+            [
+                DRAGONSFile(dragons_run=dragons_run, data_product=dp, enabled=True)
+                for dp in data_products
+            ],
+            ignore_conflicts=True,
         )
-        for dp in data_products:
-            DRAGONSFile.objects.update_or_create(
-                dragons_run=dragons_run, data_product=dp, defaults={"enabled": True}
+
+        self._disable_old_biases(data_products, dragons_run)
+
+        self._init_recipe_and_primitives(dragons_run)
+
+    def _disable_old_biases(
+        self, data_products: QuerySet, dragons_run: DRAGONSRun, days: float | None = 10
+    ) -> None:
+        """Disables bias `DRAGONSFiles` outside of a defined window around the latest
+        object observation date.
+
+        Parameters
+        ----------
+        data_products : `QuerySet`
+            A queryset of `DataProduct` instances linked to a specific `DRAGONSRun`.
+        dragons_run : `DRAGONSRun`
+            The `DRAGONSRun` instance for which bias files will be evaluated and potentially disabled.
+        days : `float`, optional
+            The number of days before and after the latest object observation date to consider; defaults to 10.
+        """
+        # Determine the latest observation date for 'object' file types.
+        latest_object_date = data_products.filter(
+            metadata__file_type="object"
+        ).aggregate(Max("metadata__observation_date"))[
+            "metadata__observation_date__max"
+        ]
+
+        if latest_object_date:
+            # Calculate the start and end of the 10-day window.
+            start_date = latest_object_date - timedelta(days=days)
+            end_date = latest_object_date + timedelta(days=days)
+            print(start_date, end_date)
+
+            # Disable bias files outside the window.
+            bias_products_to_disable = data_products.filter(
+                metadata__file_type="BIAS"
+            ).exclude(
+                metadata__observation_date__range=(start_date, end_date),
             )
 
-        self.init_recipe_and_primitives(dragons_run)
+            # Update the enabled status for BIAS files outside the window.
+            DRAGONSFile.objects.filter(
+                dragons_run=dragons_run, data_product__in=bias_products_to_disable
+            ).update(enabled=False)
 
-    def init_dragons_dir(self, dragons_run: DRAGONSRun) -> None:
+    def _init_dragons_dir(self, dragons_run: DRAGONSRun) -> None:
         """Initializes the output directory for a given DRAGONSRun instance.
 
         This method sets up the output directory, creates a calibration manager
@@ -103,7 +155,7 @@ class DRAGONSRunsViewSet(
         # Create the calibration manager for DRAGONS.
         cal_service.LocalDB(cal_manager_db_file, force_init=True)
 
-    def init_recipe_and_primitives(self, dragons_run: DRAGONSRun) -> None:
+    def _init_recipe_and_primitives(self, dragons_run: DRAGONSRun) -> None:
         dragons_files = dragons_run.dragons_run_files.all()
 
         processed_file_types = set()
@@ -122,7 +174,7 @@ class DRAGONSRunsViewSet(
             )
             for primitive in recipe_and_primitives["primitives"]:
                 DRAGONSPrimitive.objects.create(
-                    recipe=recipe, name=primitive, is_enabled=True
+                    recipe=recipe, name=primitive, enabled=True
                 )
 
             # Don't add another recipe.
