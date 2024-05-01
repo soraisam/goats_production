@@ -1,5 +1,6 @@
 __all__ = ["DRAGONSFile"]
 
+
 from django.db import models
 from tom_dataproducts.models import DataProduct
 
@@ -16,3 +17,9 @@ class DRAGONSFile(models.Model):
 
     class Meta:
         unique_together = ("dragons_run", "data_product")
+
+    def get_file_path(self) -> str:
+        return self.data_product.data.path
+
+    def get_file_type(self) -> str:
+        return self.data_product.metadata.file_type
