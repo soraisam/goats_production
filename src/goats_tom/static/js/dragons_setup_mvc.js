@@ -292,6 +292,11 @@ class SetupView {
     cellCheckbox.appendChild(label); // Appends the label right after the checkbox.
     row.appendChild(cellCheckbox);
 
+    // Build the additional data to display.
+    const cellObsDate = this.createElement("td", "py-0");
+    cellObsDate.textContent = file.observation_date;
+    row.appendChild(cellObsDate);
+
     return row;
   }
 
