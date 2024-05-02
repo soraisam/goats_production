@@ -75,7 +75,6 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
 
     # Create blank mapping.
     name_reduction_map = {}
-    num_files_downloaded = 0
     num_files_omitted = 0
     try:
         sci_files = []
@@ -100,7 +99,6 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
                 **kwargs,
             )
             sci_files = sci_out["downloaded_files"]
-            num_files_downloaded += sci_out["num_files_downloaded"]
             num_files_omitted += sci_out["num_files_omitted"]
 
         if not download_calibration == "no":
@@ -120,7 +118,6 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
                 **calibration_kwargs,
             )
             cal_files = cal_out["downloaded_files"]
-            num_files_downloaded = cal_out["num_files_downloaded"]
             num_files_omitted += cal_out["num_files_omitted"]
 
         download_state.update_and_send(
@@ -138,7 +135,9 @@ def download_goa_files(serialized_observation_record, query_params, user: int):
         download.finish()
         return
 
-    downloaded_files = sci_files + cal_files
+    downloaded_files = set(sci_files + cal_files)
+    num_files_downloaded = len(downloaded_files)
+
     # Now lead by the files in the folder.
     for file_name in downloaded_files:
         file_path = target_facility_path / file_name

@@ -752,6 +752,7 @@ class ObservationsClass(QueryWithLogin):
             download_info = self._generate_download_info(temp_dir)
 
             # Delete additional files if wanted.
+            # TODO Now that we have this in a temp directory, this does nothing.
             if remove_readme:
                 for file_name in ["README.txt", "md5sums.txt"]:
                     file_path = temp_dir / file_name
