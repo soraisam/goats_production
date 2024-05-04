@@ -2,17 +2,18 @@ from rest_framework import serializers
 
 from goats_tom.models import DRAGONSRecipe
 
-from .dragons_primitive import DRAGONSPrimitiveSerializer
-
 
 class DRAGONSRecipeSerializer(serializers.ModelSerializer):
     """Serializer for `DRAGONSRecipe` models."""
 
-    primitives = DRAGONSPrimitiveSerializer(many=True, read_only=True)
+    short_name = serializers.SerializerMethodField()
 
     class Meta:
         model = DRAGONSRecipe
         fields = "__all__"
+
+    def get_short_name(self, obj):
+        return obj.short_name
 
 
 class DRAGONSRecipeFilterSerializer(serializers.Serializer):

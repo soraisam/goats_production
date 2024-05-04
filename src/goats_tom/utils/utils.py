@@ -9,8 +9,10 @@ __all__ = [
     "has_key",
     "get_key_info",
     "extract_metadata",
+    "get_short_name",
 ]
 
+import re
 from pathlib import Path
 
 import astrodata
@@ -297,3 +299,20 @@ def extract_metadata(file_path: Path) -> dict | None:
     }
 
     return metadata_dict
+
+
+def get_short_name(name: str) -> str | None:
+    """Extracts the short name from the recipe's full name.
+
+    Returns
+    -------
+    `str | None`
+        The short name extracted after "::" if present.
+    """
+    # Regular expression pattern to capture text after "::".
+    pattern = r"::(\w+)$"
+    # Using re.search to find the match.
+    match = re.search(pattern, name)
+    if match:
+        return match.group(1)
+    return None

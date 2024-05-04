@@ -13,6 +13,7 @@ class DRAGONSRecipe(models.Model):
     )
     file_type = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
+    function_definition = models.TextField()
 
     class Meta:
         unique_together = ("dragons_run", "file_type", "name")

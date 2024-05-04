@@ -12,10 +12,12 @@
     <link rel="stylesheet" href="{% static 'css/cores/halfmoon.goats.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'img/favicon-32.png' %}" sizes="32x32" />
     <link rel="icon" type="image/x-icon" href="{% static 'img/favicon-16.png' %}" sizes="16x16" />
+
     <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
     <!-- JavaScript -->
     {% bootstrap_javascript jquery='True' %}
     <script src="{% static 'js/toggle_mode.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.33.1/ace.js" integrity="sha512-WN1CEDE9Js0mEqvtRrNS7GHS+arRJxWVO03zttkQQXEQjwGVcHQ2kMja415m0bNeB3AtYsyjUWJ1BS4wGLta/Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 
     <title>GOATS</title>
@@ -36,9 +38,12 @@
     <footer class="container-fluid py-4 bg-light-subtle">{% include 'footer.html' %}</footer>
 
     {% block javascript %}
+    <script src="{% static 'js/utils.js' %}"></script>
+    <script src="{% static 'js/logger.js' %}"></script>
     <script src="{% static 'js/get_csrf_token.js' %}"></script>
     <script src="{% static 'js/fetch_wrapper.js' %}"></script>
     <script src="{% static 'js/dragons_setup_mvc.js' %}"></script>
+    <script src="{% static 'js/recipes_mvc.js' %}"></script>
     <script type="module">
       import { createAndShowToast } from "{% static 'js/toast_utils.js' %}";
       import { updateDownloadProgress } from "{% static 'js/download_progress.js' %}";

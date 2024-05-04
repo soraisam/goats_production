@@ -6,6 +6,7 @@ from .utils import (
     extract_metadata,
     get_key,
     get_key_info,
+    get_short_name,
     has_key,
 )
 
@@ -18,4 +19,5 @@ __all__ = [
     "has_key",
     "get_key_info",
     "extract_metadata",
+    "get_short_name",
 ]

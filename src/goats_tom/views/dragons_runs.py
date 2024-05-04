@@ -10,8 +10,9 @@ from rest_framework import mixins, permissions
 from rest_framework.viewsets import GenericViewSet
 from tom_dataproducts.models import DataProduct
 
-from goats_tom.models import DRAGONSFile, DRAGONSPrimitive, DRAGONSRecipe, DRAGONSRun
+from goats_tom.models import DRAGONSFile, DRAGONSRecipe, DRAGONSRun
 from goats_tom.serializers import DRAGONSRunFilterSerializer, DRAGONSRunSerializer
+from goats_tom.utils import get_short_name
 
 
 class DRAGONSRunsViewSet(
@@ -166,16 +167,15 @@ class DRAGONSRunsViewSet(
                 continue
 
             # Create a recipe and primitives for the default option for now.
-            recipe_and_primitives = self.get_default_recipe_and_primitives(dragons_file)
+            recipe, function_definition = self.get_default_recipe_and_primitives(
+                dragons_file
+            )
             recipe = DRAGONSRecipe.objects.create(
                 dragons_run=dragons_run,
                 file_type=file_type,
-                name=recipe_and_primitives["recipe"],
+                name=recipe,
+                function_definition=function_definition,
             )
-            for primitive in recipe_and_primitives["primitives"]:
-                DRAGONSPrimitive.objects.create(
-                    recipe=recipe, name=primitive, enabled=True
-                )
 
             # Don't add another recipe.
             processed_file_types.add(file_type)
@@ -185,25 +185,27 @@ class DRAGONSRunsViewSet(
 
         return self.parse_showprims_output(output_text)
 
-    def parse_showprims_output(self, output_text):
-        # Regex to extract the "Input recipe:", "Matched recipe:" and the list of primitives
+    def parse_showprims_output(self, output_text) -> tuple[str, str]:
+        # Regex to extract the "Matched recipe:" and the list of primitives as a
+        # function.
         recipe_pattern = r"Matched recipe:\s*(.+)"
-        primitives_pattern = r"Primitives used:\s*((?:\s*p\.[^\n]+\n)+)"
 
         # Find matched recipe
         recipe_match = re.search(recipe_pattern, output_text)
         recipe = recipe_match.group(1).strip() if recipe_match else None
+        func_name = get_short_name(recipe)
 
-        # Find primitives list
+        # Regex to extract the list of primitives as a function.
+        primitives_pattern = r"Primitives used:\s*((?:\s*p\.[^\n]+\n)+)"
         primitives_match = re.search(primitives_pattern, output_text)
-        primitives_list = []
-        if primitives_match:
-            primitives_block = primitives_match.group(1).strip()
-            # Split lines and strip the 'p.' prefix
-            primitives_list = [
-                line.strip()[2:].strip()
-                for line in primitives_block.split("\n")
-                if line.strip().startswith("p.")
-            ]
+        print(primitives_match)
+        primitives_list = (
+            primitives_match.group(1).strip().split("\n") if primitives_match else []
+        )
 
-        return {"recipe": recipe, "primitives": primitives_list}
+        # Format the function definition.
+        function_definition = f"def {func_name}(p):\n"
+        for primitive in primitives_list:
+            function_definition += f"    {primitive.strip()}\n"
+        print(recipe, function_definition)
+        return recipe, function_definition
