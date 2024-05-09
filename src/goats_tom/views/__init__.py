@@ -1,5 +1,4 @@
 from .dragons_files import DRAGONSFilesViewSet
-from .dragons_primitives import DRAGONSPrimitivesViewSet
 from .dragons_recipes import DRAGONSRecipesViewSet
 from .dragons_runs import DRAGONSRunsViewSet
 from .views import (
@@ -24,7 +23,6 @@ from .views import (
 )
 
 __all__ = [
-    "DRAGONSPrimitivesViewSet",
     "DRAGONSRecipesViewSet",
     "DRAGONSFilesViewSet",
     "DRAGONSView",

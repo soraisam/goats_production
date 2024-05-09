@@ -450,7 +450,18 @@ select.form-control[multiple] {
   margin-bottom: calc(-0.5 * var(--bs-offcanvas-padding-y));
 }
 
-.accordian-overflow {
+.files-overflow {
   max-height: 200px;
   overflow-y: auto;
+}
+
+.log-overflow {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.log-container {
+  font-size: var(--bs-relative-font-size-xs);
+  font-family: monospace;
+  height: 200px;
 }

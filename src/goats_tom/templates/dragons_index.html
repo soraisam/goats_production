@@ -7,78 +7,102 @@
     <p class="h3">{{ observation_record.observation_id }}</p>
   </div>
 </div>
-<div class="card mb-5" id="setupCard" data-observation-record-pk="{{ observation_record.id }}">
-  <div class="card-header">
-    DRAGONS Reduction Setup and Configure
+<div class="row g-3">
+  <div class="col-xl-4 col-lg-6 col-12">
+    <div class="card mb-5" id="setupCard" data-observation-record-pk="{{ observation_record.id }}">
+      <div class="card-header">
+        DRAGONS Reduction Setup and Configure
+      </div>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          <div class="col-12">
+            <label class="form-label">Choose Run Type</label>
+            <div class="btn-group d-flex" role="group" aria-label="Run Type Options">
+              <input type="radio" name="runType" class="btn-check" id="useExistingRun" autocomplete="off" checked>
+              <label class="btn btn-outline-primary" for="useExistingRun">Existing Run</label>
+              <input type="radio" name="runType" class="btn-check" id="startNewRun" autocomplete="off">
+              <label class="btn btn-outline-primary" for="startNewRun">New Run</label>
+            </div>
+          </div>
+        </div>
+        <form id="setupForm" method="post" class="d-none mb-3">
+          <div class="row g-3">
+            <input type="hidden" name="observation_record" value="{{ observation_record.pk }}">
+            <div class="col-12">
+              <label for="runId" class="form-label">Run ID</label>
+              <input type="text" class="form-control" id="runId" name="run_id" placeholder="Default: run-YYYYMMDDhhmmss">
+            </div>
+            <div class="col-12">
+              <label for="configFilename" class="form-label">Configuration File</label>
+              <input type="text" class="form-control" id="configFilename" name="config_filename" readonly value="dragonsrc">
+            </div>
+            <div class="col-12">
+              <label for="outputDirectory" class="form-label">Output Directory</label>
+              <input type="text" class="form-control" id="outputDirectory" name="output_directory" placeholder="Default: reduced-YYYYMMDDhhmmss">
+            </div>
+            <div class="col-12">
+              <label for="calManagerFilename" class="form-label">Calibration Manager File</label>
+              <input type="text" class="form-control" id="calManagerFilename" readonly name="cal_manager_filename" value="cal_manager.db">
+            </div>
+            <div class="col-12">
+              <label for="logFilename" class="form-label">Log File</label>
+              <input type="text" class="form-control" id="logFilename" name="log_filename" value="log.log" readonly>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn d-block w-100 btn-primary">Create Run</button>
+            </div>
+          </div>
+        </form>
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="input-group">
+              <button id="refreshRuns" class="btn btn-secondary"><i class="fa-solid fa-arrow-rotate-right"></i></button>
+              <select class="form-select" id="runSelect">
+                <option value="" selected hidden>Select a Run</option>
+                {% for dragons_run in dragons_runs %}
+                  <option value="{{ dragons_run.id }}">{{ dragons_run.run_id }}</option>
+                {% endfor %}
+              </select>
+              <button id="deleteRun" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+          </div>
+          <div class="col-12">
+            <div id="filesContainer" class="accordion accordion-flush"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="card-body">
-    <div class="row g-3 mb-3">
-      <div class="col-12">
-        <label class="form-label">Choose Run Type</label>
-        <div class="btn-group d-flex" role="group" aria-label="Run Type Options">
-          <input type="radio" name="runType" class="btn-check" id="useExistingRun" autocomplete="off" checked>
-          <label class="btn btn-outline-primary" for="useExistingRun">Existing Run</label>
-          <input type="radio" name="runType" class="btn-check" id="startNewRun" autocomplete="off">
-          <label class="btn btn-outline-primary" for="startNewRun">New Run</label>
-        </div>
-      </div>
-    </div>
-    <form id="setupForm" method="post" class="d-none mb-3">
-      <div class="row g-3">
-        <input type="hidden" name="observation_record" value="{{ observation_record.pk }}">
-        <div class="col-12">
-          <label for="runId" class="form-label">Run ID</label>
-          <input type="text" class="form-control" id="runId" name="run_id" placeholder="Default: run-YYYYMMDDhhmmss">
-        </div>
-        <div class="col-12">
-          <label for="configFilename" class="form-label">Configuration File</label>
-          <input type="text" class="form-control" id="configFilename" name="config_filename" readonly value="dragonsrc">
-        </div>
-        <div class="col-12">
-          <label for="outputDirectory" class="form-label">Output Directory</label>
-          <input type="text" class="form-control" id="outputDirectory" name="output_directory" placeholder="Default: reduced-YYYYMMDDhhmmss">
-        </div>
-        <div class="col-12">
-          <label for="calManagerFilename" class="form-label">Calibration Manager File</label>
-          <input type="text" class="form-control" id="calManagerFilename" readonly name="cal_manager_filename" value="cal_manager.db">
-        </div>
-        <div class="col-12">
-          <label for="logFilename" class="form-label">Log File</label>
-          <input type="text" class="form-control" id="logFilename" name="log_filename" value="log.log" readonly>
-        </div>
-        <div class="col-12">
-          <button type="submit" class="btn d-block w-100 btn-primary">Create Run</button>
-        </div>
-      </div>
-    </form>
-    <div class="row g-3">
-      <div class="col-12">
-        <div class="input-group">
-          <button id="refreshRuns" class="btn btn-secondary"><i class="fa-solid fa-arrow-rotate-right"></i></button>
-          <select class="form-select" id="runSelect">
-            <option value="" selected hidden>Select a Run</option>
-            {% for dragons_run in dragons_runs %}
-              <option value="{{ dragons_run.id }}">{{ dragons_run.run_id }}</option>
-            {% endfor %}
-          </select>
-          <button id="deleteRun" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i></button>
-        </div>
-      </div>
-      <div class="col-12">
-        <div id="filesContainer" class="accordion accordion-flush"></div>
-      </div>
-    </div>
+  <div class="col-xl-8 col-lg-6 col-12">
+    <div id="recipesContainer" class="row g-3"></div>
   </div>
 </div>
 
+
+
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     const api = new FetchWrapper("/api/");
+    const recipesContainer = document.getElementById("recipesContainer");
     api.setCsrfToken("{{ csrf_token }}")
 
     const setupModel = new SetupModel(api);
     const setupView = new SetupView();
     const setupController = new SetupController(setupModel, setupView);
+
+    const recipesModel = new RecipesModel(api);
+    const recipesView = new RecipesView();
+    const recipesController = new RecipesController(recipesModel, recipesView)
+
+    // const recipeCards = await recipesController.handleFetchRecipes(3);
+
+    // recipeCards.forEach(card => {
+      // const col = document.createElement("div");
+      // col.className = "col-lg-6 col-12";
+      // col.appendChild(card);
+      // recipesContainer.append(col);
+
+    // })
   })
 </script>
 {% endblock %}

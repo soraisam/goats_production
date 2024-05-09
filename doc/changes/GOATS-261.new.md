@@ -1,0 +1,1 @@
+Developed interactive DRAGONS recipe cards: Constructed interactive recipe cards for DRAGONS, featuring a built-in code editor for dynamic user customization. Also implemented a logger widget for real-time log monitoring. Created a utility class for common JavaScript functionalities and modified the backend by removing the storage of individual Primitives.

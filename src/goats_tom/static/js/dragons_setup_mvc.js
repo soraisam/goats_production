@@ -121,24 +121,6 @@ class SetupView {
   }
 
   /**
-   * Creates a new HTML element with optional class names.
-   * @param {string} tag - The tag name of the element to create.
-   * @param {string | string[]} classNames - The class name(s) to add to the element.
-   * @returns {Element} The newly created element.
-   */
-  createElement(tag, classNames) {
-    const element = document.createElement(tag);
-    if (classNames) {
-      if (Array.isArray(classNames)) {
-        element.classList.add(...classNames);
-      } else {
-        element.classList.add(classNames);
-      }
-    }
-    return element;
-  }
-
-  /**
    * Populates the run selection dropdown with options based on available runs.
    * @param {Array} runs - DRAGONS run objects to display in the select dropdown.
    */
@@ -158,7 +140,7 @@ class SetupView {
   displayFiles(files) {
     this.filesContainer.innerHTML = "";
 
-    const filesContainerP = this.createElement("p", "mb-0");
+    const filesContainerP = Utils.createElement("p", "mb-0");
 
     if (Object.keys(files).length === 0) {
       filesContainerP.textContent = "No Files Found";
@@ -214,16 +196,16 @@ class SetupView {
    */
   createAccordionItem(fileType, files, index) {
     // Create the outer container for the accordion item with the 'accordion-item' class.
-    const accordionItem = this.createElement("div", "accordion-item");
+    const accordionItem = Utils.createElement("div", "accordion-item");
 
     // Generate unique IDs for the header and collapse elements based on the index.
     const headerId = `heading-${index}`;
     const collapseId = `collapse-${index}`;
 
     // Create the header for the accordion item with a button that toggles the collapse.
-    const header = this.createElement("h2", "accordion-header");
+    const header = Utils.createElement("h2", "accordion-header");
     header.id = headerId;
-    const button = this.createElement("button", [
+    const button = Utils.createElement("button", [
       "accordion-button",
       "text-capitalize",
       "collapsed",
@@ -237,19 +219,19 @@ class SetupView {
     header.appendChild(button);
 
     // Create the collapsible body section that will contain the file details.
-    const collapse = this.createElement("div", ["accordion-collapse", "collapse"]);
+    const collapse = Utils.createElement("div", ["accordion-collapse", "collapse"]);
     collapse.id = collapseId;
     collapse.setAttribute("aria-labelledby", headerId);
     collapse.setAttribute("data-parent", "#filesContainer");
 
     // Create the body content area for the collapsible section.
-    const body = this.createElement("div", ["accordion-body", "accordian-overflow"]);
-    const table = this.createElement("table", [
+    const body = Utils.createElement("div", ["accordion-body", "files-overflow"]);
+    const table = Utils.createElement("table", [
       "table",
       "table-sm",
       "table-borderless",
     ]);
-    const tbody = this.createElement("tbody");
+    const tbody = Utils.createElement("tbody");
     // Loop through each file and create a detailed view for it.
     files.forEach((file) => {
       const fileRow = this.createFileEntry(file);
@@ -273,10 +255,13 @@ class SetupView {
    * @returns {Element} The file entry element (table row).
    */
   createFileEntry(file) {
-    const row = this.createElement("tr");
-    const cellCheckbox = this.createElement("td", ["form-check", "py-0", "mb-0"]);
-    const checkbox = this.createElement("input", ["form-check-input", "file-checkbox"]);
-    const label = this.createElement("label", "form-check-label");
+    const row = Utils.createElement("tr");
+    const cellCheckbox = Utils.createElement("td", ["form-check", "py-0", "mb-0"]);
+    const checkbox = Utils.createElement("input", [
+      "form-check-input",
+      "file-checkbox",
+    ]);
+    const label = Utils.createElement("label", "form-check-label");
 
     // Configure the checkbox
     checkbox.type = "checkbox";
@@ -293,7 +278,7 @@ class SetupView {
     row.appendChild(cellCheckbox);
 
     // Build the additional data to display.
-    const cellObsDate = this.createElement("td", "py-0");
+    const cellObsDate = Utils.createElement("td", "py-0");
     cellObsDate.textContent = file.observation_date;
     row.appendChild(cellObsDate);
 
