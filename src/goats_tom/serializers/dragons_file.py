@@ -93,3 +93,6 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
 class DRAGONSFileFilterSerializer(serializers.Serializer):
     group_by_file_type = serializers.BooleanField(required=False, default=False)
     dragons_run = serializers.IntegerField(required=False)
+    include = serializers.ListField(
+        child=serializers.ChoiceField(choices=["header"]), required=False
+    )

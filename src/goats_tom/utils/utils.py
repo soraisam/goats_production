@@ -10,10 +10,12 @@ __all__ = [
     "get_key_info",
     "extract_metadata",
     "get_short_name",
+    "get_astrodata_header",
 ]
 
 import re
 from pathlib import Path
+from typing import Any
 
 import astrodata
 from astropy.table import Table
@@ -316,3 +318,29 @@ def get_short_name(name: str) -> str | None:
     if match:
         return match.group(1)
     return None
+
+
+def get_astrodata_header(data_product: DataProduct) -> dict[str, Any]:
+    """Gets the header information from astrodata.
+
+    Parameters
+    ----------
+    data_product : `DataProduct`
+        The data product to extract headers.
+
+    Returns
+    -------
+    `dict[str, Any]`
+        Header payload from astrodata.
+    """
+    ad = astrodata.open(data_product.data.path)
+    # Prepare the header information.
+    header = {}
+    for descriptor in ad.descriptors:
+        # Fetch the value of the descriptor.
+        value = getattr(ad, descriptor)()
+
+        # Append the descriptor data to the header list.
+        header[descriptor] = value
+
+    return header
