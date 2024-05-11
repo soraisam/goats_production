@@ -14,6 +14,7 @@ from goats_tom.serializers import (
     DRAGONSFileFilterSerializer,
     DRAGONSFileSerializer,
 )
+from goats_tom.utils import get_astrodata_header
 
 
 class DRAGONSFilesViewSet(
@@ -101,3 +102,33 @@ class DRAGONSFilesViewSet(
             if page is not None
             else Response(serializer.data)
         )
+
+    def retrieve(self, request: HttpRequest, *args, **kwargs) -> Response:
+        """Retrieve a DRAGONS file instance along with optional included data based on
+        query parameters.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The HTTP request object, containing query parameters.
+
+        Returns
+        -------
+        `Response`
+            Contains serialized DRAGONS file data with optional header information.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+
+        # Validate the query parameters.
+        filter_serializer = self.filter_serializer_class(data=request.query_params)
+        # If valid, attach the additional information.
+        if filter_serializer.is_valid(raise_exception=False):
+            includes = filter_serializer.validated_data.get("include", [])
+
+            if "header" in includes:
+                header = get_astrodata_header(instance.data_product)
+                data["header"] = header
+
+        return Response(data)

@@ -4,6 +4,7 @@ from .utils import (
     custom_data_product_path,
     delete_associated_data_products,
     extract_metadata,
+    get_astrodata_header,
     get_key,
     get_key_info,
     get_short_name,
@@ -20,4 +21,5 @@ __all__ = [
     "get_key_info",
     "extract_metadata",
     "get_short_name",
+    "get_astrodata_header",
 ]
