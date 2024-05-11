@@ -50,6 +50,7 @@ class Utils {
       "modal-dialog",
       "modal-dialog-centered",
       "modal-dialog-scrollable",
+      "modal-lg",
     ]);
 
     // Create the modal content container.
