@@ -90,35 +90,11 @@ class SetupModel {
    */
   async fetchHeader(fileId) {
     try {
-      console.log("Fetching header data for file ID:", fileId);
-      // Simulated delay to mimic async behavior
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock response data
-      const mockResponse = {
-        file_id: fileId,
-        product_id: "GS-101-N-109-9",
-        header: {
-          object_name: "wow",
-          another: "cool",
-          final: "amazing",
-        },
-      };
-
-      console.log("Header data retrieved:", mockResponse);
-      return mockResponse;
+      const response = await this.api.get(`dragonsfiles/${fileId}/?include=header`);
+      return response;
     } catch (error) {
       console.error("Error fetching header:", error);
     }
-    // try {
-    //   console.log("called");
-    //   const response = {};
-    //   const response = await this.api.get(`dragonsfiles/${fileId}/?include=header`);
-    //   header = response || {};
-    //   return header;
-    // } catch (error) {
-    //   console.error("Error fetching header:", error);
-    // }
   }
 
   /**
@@ -164,7 +140,7 @@ class SetupView {
    * @param {Object} data Data object containing information to display in the modal.
    */
   updateHeaderModal(data) {
-    this.headerModal.updateTitle(data.product_id);
+    this.headerModal.updateTitle(`Viewing header for ${data.product_id}`);
 
     // Format and apply to body.
     const content = this.formatHeaderData(data);
@@ -192,15 +168,7 @@ class SetupView {
    */
   formatHeaderData(data) {
     // Create the table element with Bootstrap classes
-    const table = Utils.createElement("table", [
-      "table",
-      "table-borderless",
-      "table-sm",
-    ]);
-
-    // Create caption
-    // const caption = Utils.createElement("caption");
-    // caption.textContent = `Header for ${data.product_id}`;
+    const table = Utils.createElement("table", ["table", "table-sm"]);
 
     // Create and append the table body
     const tbody = Utils.createElement("tbody");
@@ -209,12 +177,12 @@ class SetupView {
       const cellKey = Utils.createElement("td");
       cellKey.textContent = key;
       const cellValue = Utils.createElement("td");
-      cellValue.textContent = Utils.escapeHTML(value.toString());
+      cellValue.textContent = value;
       row.appendChild(cellKey);
       row.appendChild(cellValue);
       tbody.appendChild(row);
     }
-    table.append(caption, tbody);
+    table.append(tbody);
 
     return table;
   }
@@ -612,9 +580,13 @@ class SetupController {
    * @param {string} fileId The ID of the file for which to fetch and display the header.
    */
   handleFetchHeader = async (fileId) => {
-    const data = await this.model.fetchHeader(fileId);
-    this.view.updateHeaderModal(data);
-    this.view.showHeaderModal();
+    try {
+      const data = await this.model.fetchHeader(fileId);
+      this.view.updateHeaderModal(data);
+      this.view.showHeaderModal();
+    } catch (error) {
+      console.error("Failed to fetch header:", error);
+    }
   };
 
   /**
