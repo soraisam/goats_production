@@ -67,7 +67,7 @@ class RecipesView {
       },
       classes: {
         recipeAccordion: [],
-        logAccordion: ["log-overflow"],
+        logAccordion: ["log-overflow", "border", "border-top-0", "rounded-bottom"],
       },
     };
     this.editor = null;

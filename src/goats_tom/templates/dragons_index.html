@@ -10,8 +10,8 @@
   </div>
 </div>
 <div class="row g-3">
-  <div class="col-xl-4 col-lg-6 col-12">
-    <div class="card mb-5" id="setupCard" data-observation-record-pk="{{ observation_record.id }}">
+  <div class="col-xl-5 col-lg-6 col-12">
+    <div class="card" id="setupCard" data-observation-record-pk="{{ observation_record.id }}">
       <div class="card-header">
         DRAGONS Reduction Setup and Configure
       </div>
@@ -75,36 +75,59 @@
       </div>
     </div>
   </div>
-  <div class="col-xl-8 col-lg-6 col-12">
+  <div class="col-xl-7 col-lg-6 col-12">
     <div id="recipesContainer" class="row g-3"></div>
   </div>
 </div>
-
-
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
     const api = new FetchWrapper("/api/");
     const recipesContainer = document.getElementById("recipesContainer");
-    api.setCsrfToken("{{ csrf_token }}")
+    api.setCsrfToken("{{ csrf_token }}");
 
+    // Initialize models, views, and controllers.
     const setupModel = new SetupModel(api);
     const setupView = new SetupView();
     const setupController = new SetupController(setupModel, setupView);
 
     const recipesModel = new RecipesModel(api);
     const recipesView = new RecipesView();
-    const recipesController = new RecipesController(recipesModel, recipesView)
+    const recipesController = new RecipesController(recipesModel, recipesView);
 
-    // const recipeCards = await recipesController.handleFetchRecipes(3);
+    /**
+     * Clears the recipes container and repopulates it with new recipe cards.
+     * @param {string} runId The ID of the run for which to fetch and display recipes.
+     */
+    const updateRecipeCards = async (runId) => {
+      recipesContainer.innerHTML = ""; // Clear the existing recipe cards.
+      const recipeCards = await recipesController.handleFetchRecipes(runId);
+      recipeCards.forEach((card) => appendCardToContainer(card));
+    };
 
-    // recipeCards.forEach(card => {
-      // const col = document.createElement("div");
-      // col.className = "col-lg-6 col-12";
-      // col.appendChild(card);
-      // recipesContainer.append(col);
+    /**
+     * Appends a given card element to the recipes container.
+     * @param {HTMLElement} card The card element to be appended to the recipes container.
+     */
+    const appendCardToContainer = (card) => {
+      const col = Utils.createElement("div", ["col-xl-6", "col-12"]);
+      col.appendChild(card);
+      recipesContainer.appendChild(col);
+    };
 
-    // })
-  })
+    /**
+     * Handles the change in run selection by fetching related files and updating recipe cards
+     * accordingly.
+     * @param {string} observationRecordPk The primary key of the observation record.
+     * @param {string} runId The ID of the selected run to fetch files for and to display recipes.
+     */
+    const handleRunSelectionChange = async (observationRecordPk, runId) => {
+      await setupController.handleFetchFiles(observationRecordPk, runId);
+      await updateRecipeCards(runId);
+    };
+
+    // Bind the combined functionality to the run selection change.
+    setupView.bindFetchFiles(handleRunSelectionChange);
+  });
 </script>
 {% endblock %}
