@@ -90,8 +90,10 @@
 <script src="{% static 'js/fetch_wrapper.js' %}"></script>
 <script src="{% static 'js/dragons_setup_mvc.js' %}"></script>
 <script src="{% static 'js/recipes_mvc.js' %}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.33.2/ace.js" integrity="sha512-ppeKocqkhnGjdqlJqj3weg8YlLjWdnedZiCayzrfmQv/v/MoEMMxDXTwBK3CmoUv1oC1NCT2w4P8JnGETEft1w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
+<script src="{% static 'ace-builds/src-noconflict/ace.js' %}"></script>
+<script src="{% static 'ace-builds/src-noconflict/mode-python.js' %}"></script>
+<script src="{% static 'ace-builds/src-noconflict/theme-cloud9_night.js' %}"></script>
+<script src="{% static 'ace-builds/src-noconflict/theme-dawn.js' %}"></script>
 {% include 'tom_dataproducts/partials/js9_scripts.html' %}
 
 <script type="text/javascript">
