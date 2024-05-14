@@ -42,6 +42,7 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
     observation_id = serializers.CharField(
         source="data_product.observation_record.observation_id"
     )
+    url = serializers.CharField(source="data_product.data.url")
     file_type = serializers.CharField(source="data_product.metadata.file_type")
     group_id = serializers.CharField(
         source="data_product.metadata.group_id", allow_null=True
@@ -72,6 +73,7 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
             "id",
             "dragons_run",
             "product_id",
+            "url",
             "observation_id",
             "file_type",
             "group_id",

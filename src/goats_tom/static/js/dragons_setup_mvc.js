@@ -377,10 +377,11 @@ class SetupView {
     button1.textContent = "Header";
     button1.dataset.fileId = file.id;
     const divider = Utils.createElement("hr", "dropdown-divider");
-    const button2 = Utils.createElement("button", "dropdown-item");
+    const button2 = Utils.createElement("button", ["dropdown-item", "js9-button"]);
     button2.setAttribute("type", "button");
     button2.setAttribute("aria-current", "true");
     button2.textContent = "JS9";
+    button2.dataset.url = file.url;
 
     li1.appendChild(button1);
     li2.appendChild(divider);
@@ -444,10 +445,14 @@ class SetupView {
     // Delegate for header button clicks.
     this.filesContainer.addEventListener("click", (event) => {
       if (event.target.classList.contains("header-button")) {
-        console.log("clickeD");
-        // Ensure your button has this class
         const fileId = event.target.dataset.fileId;
         this.onShowHeader(fileId);
+      }
+
+      if (event.target.classList.contains("js9-button")) {
+        console.log("js9");
+        const url = event.target.dataset.url;
+        openJS9Window(url);
       }
     });
   }
