@@ -71,11 +71,6 @@ class DRAGONSRunsViewSet(
             observation_record=dragons_run.observation_record
         ).select_related("metadata")
 
-        # for dp in data_products:
-        #     DRAGONSFile.objects.update_or_create(
-        #         dragons_run=dragons_run, data_product=dp, defaults={"enabled": True}
-        #     )
-        # Decrease the hits to the db.
         DRAGONSFile.objects.bulk_create(
             [
                 DRAGONSFile(dragons_run=dragons_run, data_product=dp, enabled=True)
@@ -114,7 +109,6 @@ class DRAGONSRunsViewSet(
             # Calculate the start and end of the 10-day window.
             start_date = latest_object_date - timedelta(days=days)
             end_date = latest_object_date + timedelta(days=days)
-            print(start_date, end_date)
 
             # Disable bias files outside the window.
             bias_products_to_disable = data_products.filter(
@@ -146,11 +140,11 @@ class DRAGONSRunsViewSet(
         output_dir = dragons_run.get_output_dir()
         output_dir.mkdir(parents=True)
 
-        cal_manager_db_file = output_dir / "cal_manager.db"
-        dragons_rc_file = output_dir / "dragonsrc"
+        cal_manager_db_file = dragons_run.get_cal_manager_db_file()
+        config_file = dragons_run.get_config_file()
 
         # Write the DRAGONS config file.
-        with dragons_rc_file.open("w") as f:
+        with config_file.open("w") as f:
             f.write(f"[calibs]\ndatabases = {cal_manager_db_file} get store")
 
         # Create the calibration manager for DRAGONS.
@@ -198,7 +192,6 @@ class DRAGONSRunsViewSet(
         # Regex to extract the list of primitives as a function.
         primitives_pattern = r"Primitives used:\s*((?:\s*p\.[^\n]+\n)+)"
         primitives_match = re.search(primitives_pattern, output_text)
-        print(primitives_match)
         primitives_list = (
             primitives_match.group(1).strip().split("\n") if primitives_match else []
         )
@@ -207,5 +200,4 @@ class DRAGONSRunsViewSet(
         function_definition = f"def {func_name}(p):\n"
         for primitive in primitives_list:
             function_definition += f"    {primitive.strip()}\n"
-        print(recipe, function_definition)
         return recipe, function_definition

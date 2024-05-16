@@ -61,16 +61,12 @@ class DRAGONSRun(models.Model):
         max_length=255,
         blank=True,
     )
-    config_filename = models.CharField(
-        max_length=30, default="dragonsrc", editable=False
-    )
+    config_filename = models.CharField(max_length=30, default="dragonsrc")
     output_directory = models.CharField(
         max_length=255,
         blank=True,
     )
-    cal_manager_filename = models.CharField(
-        max_length=30, default="cal_manager.db", editable=False
-    )
+    cal_manager_filename = models.CharField(max_length=30, default="cal_manager.db")
     log_filename = models.CharField(max_length=30, default="log.log", editable=False)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -115,6 +111,36 @@ class DRAGONSRun(models.Model):
             The full path to the output directory.
         """
         return self.get_raw_dir() / self.output_directory
+
+    def get_cal_manager_db_file(self) -> Path:
+        """Returns the full path to the calibration manager database file.
+
+        Returns
+        -------
+        `Path`
+            The full path to the calibration manager database file.
+        """
+        return self.get_output_dir() / self.cal_manager_filename
+
+    def get_log_file(self) -> Path:
+        """Returns the full path to the log file.
+
+        Returns
+        -------
+        `Path`
+            The full path to the log file.
+        """
+        return self.get_output_dir() / self.log_filename
+
+    def get_config_file(self) -> Path:
+        """Returns the full path to the configuration file.
+
+        Returns
+        -------
+        `Path`
+            The full path to the configuration file.
+        """
+        return self.get_output_dir() / self.config_filename
 
     def get_raw_dir(self) -> Path:
         """

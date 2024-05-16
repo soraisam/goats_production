@@ -30,6 +30,7 @@ class SetupModel {
    */
   async formSubmit(observationRecordPk, formData) {
     const formDataObject = Object.fromEntries(formData);
+    console.log(formDataObject);
 
     try {
       const response = await this.api.post(
