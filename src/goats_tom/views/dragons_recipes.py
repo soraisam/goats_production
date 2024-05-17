@@ -2,6 +2,7 @@
 
 from django.db.models import QuerySet
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
 from goats_tom.models import DRAGONSRecipe
 from goats_tom.serializers import DRAGONSRecipeFilterSerializer, DRAGONSRecipeSerializer
@@ -11,6 +12,7 @@ class DRAGONSRecipesViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DRAGONSRecipe.objects.all()
     serializer_class = DRAGONSRecipeSerializer
     filter_serializer_class = DRAGONSRecipeFilterSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self) -> QuerySet:
         """Retrieves the queryset based on the filter provided in query parameters.
