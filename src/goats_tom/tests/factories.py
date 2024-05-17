@@ -160,9 +160,9 @@ class DRAGONSRunFactory(factory.django.DjangoModelFactory):
         model = DRAGONSRun
 
     observation_record = factory.SubFactory(ObservingRecordFactory, target_id=1)
-    run_id = ""
+    run_id = factory.Faker("uuid4")
     config_filename = "dragonsrc"
-    output_directory = ""
+    output_directory = factory.Faker("file_path")
     cal_manager_filename = "cal_manager.db"
     log_filename = "log.log"
 
