@@ -1,0 +1,1 @@
+Added workflow to generate releases and update version.
