@@ -1,3 +1,36 @@
+## GOATS 24.5.0 (2024-05-28)
+
+
+### New Features
+
+- Link JS9 button to open file with JS9: Extended the serializer to include data URL for JS9. [[#GOATS-208](https://noirlab.atlassian.net/browse/GOATS-208)]
+- Added serializer tests: Wrote test cases for serializers used to validate API requests. [[#GOATS-234](https://noirlab.atlassian.net/browse/GOATS-234)]
+- Added api view tests: Wrote test cases for API viewsets. [[#GOATS-239](https://noirlab.atlassian.net/browse/GOATS-239)]
+- Enhanced UI with modal to display header: Implemented buttons to display modals with detailed file headers and to eventually trigger JS9 views. Added event listeners for smooth modal interactions and developed a function to build reusable modals. [[#GOATS-246](https://noirlab.atlassian.net/browse/GOATS-246)]
+- Changed DRAGONS run initialization: Extended backend logic to disable all bias files outside a specified day range of the observations during the initialization of a DRAGONS run. Optimized number of database queries when creating a DRAGONS run. [[#GOATS-257](https://noirlab.atlassian.net/browse/GOATS-257)]
+- Enhanced file retrieval with header inclusion: Added a query parameter, `?include=header`, to include header information for files in DRAGONS runs. [[#GOATS-258](https://noirlab.atlassian.net/browse/GOATS-258)]
+- Added DRAGONS recipes and primitives API v1: Implemented REST API endpoints for DRAGONS recipes and primitives. The system now includes serializers for filtering by query parameters. Models were structured to connect recipes with primitives, allowing users to enable or disable individual primitives. This version supports only default recipes. [[#GOATS-259](https://noirlab.atlassian.net/browse/GOATS-259)]
+- Developed interactive DRAGONS recipe cards: Constructed interactive recipe cards for DRAGONS, featuring a built-in code editor for dynamic user customization. Also implemented a logger widget for real-time log monitoring. Created a utility class for common JavaScript functionalities and modified the backend by removing the storage of individual Primitives. [[#GOATS-261](https://noirlab.atlassian.net/browse/GOATS-261)]
+- Linked header API to modal display: Connected backend header API with modal UI to enable header information display when a button is clicked. Improved the header information presentation and error handling. [[#GOATS-263](https://noirlab.atlassian.net/browse/GOATS-263)]
+- Linked run selector to recipe card generator: The DRAGONS run selector now dynamically updates the displayed recipes when a new run is selected. [[#GOATS-264](https://noirlab.atlassian.net/browse/GOATS-264)]
+- Moved Ace editor local: Served Ace editor from app, removing CDN dependency. [[#GOATS-266](https://noirlab.atlassian.net/browse/GOATS-266)]
+- Added daily conda caching: Implemented a GitHub action to create and cache the goats conda environment daily for quicker testing. [[#GOATS-270](https://noirlab.atlassian.net/browse/GOATS-270)]
+- Extended models tests: Added comprehensive tests for newer models in GOATS. [[#GOATS-271](https://noirlab.atlassian.net/browse/GOATS-271)]
+- Added workflow to generate releases and update version. [[#GOATS-278](https://noirlab.atlassian.net/browse/GOATS-278)]
+
+
+### Changes
+
+- Allow changing DRAGONS setup files names: Users can now change the DRAGONS setup files names. Removed the ability to change the log file name and removed from form. Added helper functions to get the path of DRAGONS setup files. [[#GOATS-250](https://noirlab.atlassian.net/browse/GOATS-250)]
+- Changed "Unknown" to "Other" for the file type when extracting file metadata. [[#GOATS-256](https://noirlab.atlassian.net/browse/GOATS-256)]
+
+
+### Bug Fixes
+
+- Fixed bug in JS9 to ensure correct color for labels. [[#GOATS-208](https://noirlab.atlassian.net/browse/GOATS-208)]
+- Fixed file count and duplicate entries: Corrected the bug in the total file count calculation and prevented duplicates in the list of files downloaded to ensure an accurate count. [[#GOATS-247](https://noirlab.atlassian.net/browse/GOATS-247)]
+- Fixed JS9 and Ace conflict: Used no-conflict Ace with own namespace. [[#GOATS-256](https://noirlab.atlassian.net/browse/GOATS-256)]
+
 ## GOATS 24.04.0 (2024-04-26)
 
 

@@ -1,1 +1,0 @@
-Allow changing DRAGONS setup files names: Users can now change the DRAGONS setup files names. Removed the ability to change the log file name and removed from form. Added helper functions to get the path of DRAGONS setup files.

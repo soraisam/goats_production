@@ -1,1 +1,0 @@
-Linked header API to modal display: Connected backend header API with modal UI to enable header information display when a button is clicked. Improved the header information presentation and error handling.

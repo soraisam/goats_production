@@ -1,1 +1,0 @@
-Fixed bug in JS9 to ensure correct color for labels.

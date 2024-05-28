@@ -1,1 +1,0 @@
-Added api view tests: Wrote test cases for API viewsets.

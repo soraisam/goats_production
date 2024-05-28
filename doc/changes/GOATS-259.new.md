@@ -1,1 +1,0 @@
-Added DRAGONS recipes and primitives API v1: Implemented REST API endpoints for DRAGONS recipes and primitives. The system now includes serializers for filtering by query parameters. Models were structured to connect recipes with primitives, allowing users to enable or disable individual primitives. This version supports only default recipes.
