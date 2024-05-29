@@ -17,10 +17,9 @@ channels:
   - defaults
 
 dependencies:
-  - astropy<5.3.0  # Required to be compatible with DRAGONS and Bokeh.
-  - dragons
+  - astropy>=5.3.3,<6  # Required for tomtoolkit.
+  - dragons>=3.2,<4
   - ds9
-  - bokeh=2.4.3  # Required due to astropy.
   - python-confluent-kafka=1.7.0  # Required for linking librdkafka in conda.
   - librdkafka>=1.7.0  # Required while antares-client upgrades kafka.
   - pip
@@ -31,5 +30,5 @@ dependencies:
   # for tests, install with "pip install -e '.[test]'".
 
   # Uncomment the below lines to install from GitHub (requires repo access).
-  # - pip:
+  # - pip:pip in
   #   - git+https://github.com/gemini-hlsw/goats.git#branch=main
