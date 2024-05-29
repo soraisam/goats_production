@@ -16,19 +16,18 @@ classifiers = [
 requires-python = ">=3.10.0"
 dependencies = [
     "tom-antares==1.2.6",
-    "tomtoolkit==2.15.19",
-    "click>=8.1.7",
-    "werkzeug",
-    "django-cors-headers>=4.3.0",
-    "huey",
-    "greenlet>=3.0.2",
-    "fontawesomefree>=6.5.0",
-    "django-cryptography==1.1",
-    "channels[daphne]>=4.0",
-    "channels_redis>=4.0.0",
-    "django>=4,<5"
+    "tomtoolkit>=2.15.19,<3",
+    "click>=8.1.7,<9",
+    "django-cors-headers>=4.3.0,<5",
+    "huey>=2.5,<3",
+    "greenlet>=3.0.2,<4",
+    "fontawesomefree>=6.5.0,<7",
+    "django-cryptography>=1.1,<2",
+    "channels[daphne]>=4.0,<5",
+    "channels_redis>=4.0.0,<5",
+    "django>=4,<5",
+    "djangorestframework>=3.14.0,<4"
 ]
-
 version = "24.5.0"
 
 [project.urls]
@@ -37,12 +36,12 @@ version = "24.5.0"
 [project.optional-dependencies]
 test = [
     "pytest",
-    "flake8",
     "pytest-xdist",
     "pytest-cov",
     "pytest-django",
     "factory_boy",
     "pytest-remotedata",
+    "ruff"
 ]
 
 [tool.setuptools.packages.find]
@@ -61,7 +60,7 @@ testpaths = ["tests/unit"]
 DJANGO_SETTINGS_MODULE = "goats_tom.tests.settings"
 
 [tool.towncrier]
-version = "24.5.0"
+version = ""
 package_dir = "goats"
 filename = "CHANGES.md"
 directory = "doc/changes"
@@ -122,7 +121,7 @@ exclude = [
 ]
 line-length = 88
 indent-width = 4
-target-version = "24.5.0"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F"]
