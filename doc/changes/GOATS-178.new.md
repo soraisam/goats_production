@@ -1,0 +1,1 @@
+Extended pagination to include item count: Overrode bootstrap_pagination to show "Showing x-y of n" message. Updated HTML template to display item counts.

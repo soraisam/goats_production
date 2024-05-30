@@ -30,5 +30,5 @@ dependencies:
   # for tests, install with "pip install -e '.[test]'".
 
   # Uncomment the below lines to install from GitHub (requires repo access).
-  # - pip:pip in
+  # - pip:
   #   - git+https://github.com/gemini-hlsw/goats.git#branch=main
