@@ -1,25 +1,145 @@
-__all__ = ["download_goa_files"]
+"""Module for tasks that run in the background."""
+
+__all__ = ["download_goa_files", "run_dragons_reduce"]
 
 import logging
+import os
 import time
 
 from django.conf import settings
 from django.core import serializers
 from django.db import IntegrityError
+from gempy.utils import logutils
 from huey.contrib.djhuey import db_task
+from recipe_system.reduction.coreReduce import Reduce
 from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
 
 from goats_tom.astroquery import Observations as GOA
 from goats_tom.consumers import DownloadState, NotificationInstance
-from goats_tom.models import DataProductMetadata, Download, GOALogin
+from goats_tom.models import (
+    DataProductMetadata,
+    Download,
+    DRAGONSFile,
+    DRAGONSReduce,
+    GOALogin,
+)
 from goats_tom.utils import create_name_reduction_map, extract_metadata
 
 logger = logging.getLogger(__name__)
 
 
 @db_task()
-def download_goa_files(serialized_observation_record, query_params, user: int):
+def run_dragons_reduce(reduce_id: int) -> None:
+    """Executes a reduction process in the background.
+
+    This function handles the entire process of setting up and executing a reduction,
+    including notification handling, file management, and executing the reduction logic.
+
+    Parameters
+    ----------
+    reduce_id : `int`
+        The ID of the DRAGONSReduce instance to be processed.
+
+    Raises
+    ------
+    `DoesNotExist`
+        Raised if the DRAGONSReduce instance does not exist.
+
+    TODO
+    ----
+    - Integrate actual reduction logic using `function_definition` from the recipe.
+    - Determine and integrate recipes that require `interactive=True`.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    # Get the reduction to run in the background.
+    print("Running background reduce task.")
+    try:
+        # Get the recipe instance.
+        reduce = DRAGONSReduce.objects.get(id=reduce_id)
+    except DRAGONSReduce.DoesNotExist:
+        # Send error to frontend.
+        NotificationInstance.create_and_send(
+            message="Reduction not found.",
+            color="danger",
+        )
+        return
+    reduce.mark_running()
+    run = reduce.recipe.dragons_run
+    recipe = reduce.recipe
+
+    # Send start notification.
+    NotificationInstance.create_and_send(
+        message="Reduction started.",
+        label=f"{run} - {recipe.short_name}",
+    )
+
+    # Change the working directory to save outputs.
+    os.chdir(run.get_output_dir())
+
+    # Filter the files based on the associated DRAGONS run and file type.
+    files = DRAGONSFile.objects.filter(
+        dragons_run=run,
+        data_product__metadata__file_type=recipe.file_type,
+        enabled=True,
+    )
+    file_paths = [file.get_file_path() for file in files]
+
+    # Setup the logger
+    logutils.config(file_name=run.get_log_file())
+
+    r = Reduce()
+
+    # Get error if passing in Path.
+    r.config_file = str(run.get_config_file())
+
+    r.files.extend(file_paths)
+    # Need to pass in short name not long.
+    r.recipename = recipe.short_name
+    # r.uparms = [("interactive", True)]
+    # TODO: Determine what recipes need `interactive = True``.
+    # TODO: Use the function_definition from the recipe in the future.
+    r.runr()
+
+    # Send finished notification.
+    NotificationInstance.create_and_send(
+        message="Reduction finished.",
+        label=f"{run} - {recipe.short_name}",
+        color="success",
+    )
+    reduce.mark_done()
+
+
+@db_task()
+def download_goa_files(
+    serialized_observation_record: str, query_params: dict, user: int
+) -> None:
+    """Downloads observation files associated with a given observation record from the
+    GOA.
+
+    This task logs in to the GOA, queries for relevant files based on the provided
+    observation record, and handles the download and metadata extraction for each file.
+    Notifications are sent at various stages of the process to update the user on the
+    task status.
+
+    Parameters
+    ----------
+    serialized_observation_record : `str`
+        A JSON serialized string of the observation record object.
+    query_params : `dict`
+        A dictionary containing additional parameters for querying and downloading files.
+    user : `int`
+        The user ID used to retrieve credentials for accessing the GOA.
+
+    Raises
+    ------
+    `PermissionError`
+        Raised if the GOA login fails due to incorrect credentials.
+    `HTTPError`
+        Raised if an HTTP error occurs during the download process.
+    """
     # Allow page to refresh before displaying notification.
     print("Running background task.")
     time.sleep(2)

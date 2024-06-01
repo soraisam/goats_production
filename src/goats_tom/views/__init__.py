@@ -1,5 +1,6 @@
 from .dragons_files import DRAGONSFilesViewSet
 from .dragons_recipes import DRAGONSRecipesViewSet
+from .dragons_reduce import DRAGONSReduceViewSet
 from .dragons_runs import DRAGONSRunsViewSet
 from .views import (
     DeleteObservationDataProductsView,
@@ -44,4 +45,5 @@ __all__ = [
     "update_brokerquery_name",
     "ObservationRecordDeleteView",
     "DRAGONSRunsViewSet",
+    "DRAGONSReduceViewSet",
 ]

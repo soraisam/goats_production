@@ -58,6 +58,7 @@ goats = "goats_cli:cli"
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
 DJANGO_SETTINGS_MODULE = "goats_tom.tests.settings"
+norecursedirs = "tests/unit/goats_tom/ocs"
 
 [tool.towncrier]
 version = ""

@@ -3,13 +3,18 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
-from goats_tom.models import DataProductMetadata, DRAGONSFile, DRAGONSRecipe
+from goats_tom.models import (
+    DataProductMetadata,
+    DRAGONSFile,
+    DRAGONSRecipe,
+)
 from goats_tom.tests.factories import (
     DataProductFactory,
     DataProductMetadataFactory,
     DownloadFactory,
     DRAGONSFileFactory,
     DRAGONSRecipeFactory,
+    DRAGONSReduceFactory,
     DRAGONSRunFactory,
     GOALoginFactory,
     ProgramKeyFactory,
@@ -208,3 +213,14 @@ class TestDRAGONSRecipeFactory:
         assert recipe.file_type == "BIAS"
         assert recipe.name == "Test Recipe"
         assert recipe.function_definition == "def test_function(): pass"
+
+
+@pytest.mark.django_db
+class TestDRAGONSReduceFactory:
+    def test_initial_status(self):
+        """Test the initial status of a newly created DRAGONSReduce instance."""
+        reduction = DRAGONSReduceFactory()
+        assert reduction.status == "starting", "Initial status should be 'starting'."
+        assert (
+            reduction.end_time is None
+        ), "end_time should be None when status is 'starting'."
