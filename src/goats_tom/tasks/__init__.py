@@ -1,3 +1,3 @@
-from .tasks import download_goa_files
+from .tasks import download_goa_files, run_dragons_reduce
 
-__all__ = ["download_goa_files"]
+__all__ = ["download_goa_files", "run_dragons_reduce"]

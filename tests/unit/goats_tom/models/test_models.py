@@ -10,6 +10,7 @@ from goats_tom.tests.factories import (
     DownloadFactory,
     DRAGONSFileFactory,
     DRAGONSRecipeFactory,
+    DRAGONSReduceFactory,
     DRAGONSRunFactory,
     GOALoginFactory,
     ProgramKeyFactory,
@@ -298,3 +299,28 @@ class TestDRAGONSRecipe:
         name_without_short = "full_name"
         recipe = DRAGONSRecipeFactory(name=name_without_short)
         assert recipe.short_name is None
+
+
+@pytest.mark.django_db
+class TestDRAGONSReduce:
+    """Tests for the `DRAGONSReduce` model."""
+
+    def test_mark_done(self):
+        """Test marking a reduction as done sets the correct status and end_time."""
+        reduction = DRAGONSReduceFactory(status="running")
+        reduction.mark_done()
+        assert reduction.status == "done"
+        assert reduction.end_time is not None, "Marking done should set end_time."
+
+    def test_mark_error(self):
+        """Test marking a reduction as an error sets the correct status and end_time."""
+        reduction = DRAGONSReduceFactory(status="running")
+        reduction.mark_error()
+        assert reduction.status == "error"
+        assert reduction.end_time is not None, "Marking error should set end_time."
+
+    def test_mark_running(self):
+        """Test changing the status to running."""
+        reduction = DRAGONSReduceFactory(status="starting")
+        reduction.mark_running()
+        assert reduction.status == "running", "Should update status to running."

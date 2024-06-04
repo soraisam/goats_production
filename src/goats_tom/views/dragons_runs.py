@@ -94,9 +94,11 @@ class DRAGONSRunsViewSet(
         data_products : `QuerySet`
             A queryset of `DataProduct` instances linked to a specific `DRAGONSRun`.
         dragons_run : `DRAGONSRun`
-            The `DRAGONSRun` instance for which bias files will be evaluated and potentially disabled.
+            The `DRAGONSRun` instance for which bias files will be evaluated and
+            potentially disabled.
         days : `float`, optional
-            The number of days before and after the latest object observation date to consider; defaults to 10.
+            The number of days before and after the latest object observation date to
+            consider; defaults to 10.
         """
         # Determine the latest observation date for 'object' file types.
         latest_object_date = data_products.filter(

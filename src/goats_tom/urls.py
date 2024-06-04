@@ -8,6 +8,7 @@ router = SharedAPIRootRouter()
 router.register(r"dragonsruns", views.DRAGONSRunsViewSet)
 router.register(r"dragonsfiles", views.DRAGONSFilesViewSet)
 router.register(r"dragonsrecipes", views.DRAGONSRecipesViewSet)
+router.register(r"dragonsreduce", views.DRAGONSReduceViewSet, basename="dragonsreduce")
 
 
 # TODO: Add app_name and update paths and URL lookups.
