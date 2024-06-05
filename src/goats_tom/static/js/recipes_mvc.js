@@ -28,6 +28,7 @@ class RecipesModel {
     this.recipe = null;
     this.editor = null;
     this.recipesUrl = "dragonsrecipes/";
+    this.reduceUrl = "dragonsreduce/";
   }
 
   /**
@@ -44,6 +45,22 @@ class RecipesModel {
       return this.recipes;
     } catch (error) {
       console.error("Error fetching recipes:", error);
+    }
+  }
+
+  /**
+   * Starts the reduction process for a given recipe.
+   * @param {number} recipe The ID of the recipe to be reduced.
+   * @returns {Promise<Object>} A promise that resolves to the response from the server.
+   * @async
+   */
+  async startReduce(recipe) {
+    const data = { recipe_id: recipe };
+    try {
+      const response = await this.api.post(`${this.reduceUrl}`, data);
+      return response;
+    } catch (error) {
+      console.error("Error starting reduce:", error);
     }
   }
 }
@@ -74,8 +91,44 @@ class RecipesView {
     this.recipe = null;
     this.logger = null;
     this.progressBar = null;
+    this.card = null;
+    this.cardHeader = null;
+    this.editor = null;
+    this.reduce = null;
   }
 
+  /**
+   * Binds a handler to be called when the reduction process is initiated.
+   * @param {Function} handler The function to be called when a start reduce event occurs.
+   */
+  bindStartReduce(handler) {
+    this.onStartReduce = handler;
+  }
+
+  /**
+   * Binds a handler to be called when the reduction process needs to be stopped.
+   * @param {Function} handler The function to be called when a stop reduce event occurs.
+   */
+  bindStopReduce(handler) {
+    this.onStopReduce = handler;
+  }
+
+  /**
+   * Initializes event listeners on the card header. Listeners are set up to handle
+   * start and stop reduce actions based on data attributes of the event target.
+   * @private
+   */
+  _initLocalListeners() {
+    this.cardHeader.addEventListener("click", (event) => {
+      if (event.target.dataset.action === "startReduce") {
+        // On start, pass in the recipe to link to.
+        this.onStartReduce(event.target.dataset.recipeId);
+      } else if (event.target.dataset.action === "stopReduce") {
+        // On stop, need to specify what specific reduce to stop.
+        this.onStopReduce(event.target.dataset.recipeId);
+      }
+    });
+  }
   /**
    * Retrieves the display name for a given recipe file type.
    * @param {string} recipeFileType The file type of the recipe.
@@ -95,8 +148,8 @@ class RecipesView {
 
     // Build and append the header.
     const card = Utils.createElement("div", "card");
-    const cardHeader = this.createCardHeader();
-    card.appendChild(cardHeader);
+    this.cardHeader = this.createCardHeader();
+    card.appendChild(this.cardHeader);
 
     // Build and append the body.
     const cardBody = this.createCardBody();
@@ -109,6 +162,10 @@ class RecipesView {
     // Build and append second footer (log viewer).
     const cardFooter2 = this.createCardFooter2();
     card.appendChild(cardFooter2);
+    this.card = card;
+
+    // This is the entry so init the listeners here.
+    this._initLocalListeners();
 
     return card;
   }
@@ -144,11 +201,13 @@ class RecipesView {
     const startButton = Utils.createElement("button", ["btn", "btn-success", "me-1"]);
     const stopButton = Utils.createElement("button", ["btn", "btn-danger"]);
     startButton.id = `startRecipe-${this.recipe.id}`;
-    startButton.setAttribute("recipeId", this.recipe.id);
+    startButton.dataset.recipeId = this.recipe.id;
+    startButton.setAttribute("data-action", "startReduce");
     startButton.textContent = "Start";
     stopButton.id = `stopButton-${this.recipe.id}`;
-    stopButton.setAttribute("recipeId", this.recipe.id);
+    stopButton.setAttribute("data-recipeId", this.recipe.id);
     stopButton.textContent = "Stop";
+    stopButton.setAttribute("data-action", "stopReduce");
     col2.append(startButton, stopButton);
 
     // Build the layout.
@@ -415,6 +474,12 @@ class RecipesController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
+
+    // When starting a recipe reduce.
+    this.view.bindStartReduce(this.handleStartReduce);
+
+    // When stopping a recipe reduce.
+    this.view.bindStopReduce(this.handleStopReduce);
   }
 
   /**
@@ -433,5 +498,25 @@ class RecipesController {
       }
     });
     return cards;
+  };
+
+  /**
+   * Initiates the reduction process for a given recipe ID.
+   * @param {number} recipeId The ID of the recipe to start reducing.
+   * @async
+   */
+  handleStartReduce = async (recipeId) => {
+    const reduce = await this.model.startReduce(recipeId);
+    // TODO: Update the view.
+  };
+
+  /**
+   * Handles the stop reduction process for a given reduce ID.
+   * @param {number} reduceId The ID of the reduce operation to stop.
+   * @async
+   */
+  handleStopReduce = async (reduceId) => {
+    // TODO: After API is written to terminate a running recipe reduce.
+    console.log("Not implemented.");
   };
 }
