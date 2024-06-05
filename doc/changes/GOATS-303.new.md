@@ -1,0 +1,1 @@
+Enabled interactive mode for select file types in recipe reduce: Integrated Bokeh for interactive visualization in ‘arc’, ‘flat’, and ‘object’ file types.

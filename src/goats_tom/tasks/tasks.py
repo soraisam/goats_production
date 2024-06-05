@@ -6,6 +6,7 @@ import logging
 import os
 import time
 
+import matplotlib
 from django.conf import settings
 from django.core import serializers
 from django.db import IntegrityError
@@ -25,6 +26,8 @@ from goats_tom.models import (
     GOALogin,
 )
 from goats_tom.utils import create_name_reduction_map, extract_metadata
+
+matplotlib.use("Agg", force=True)
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +54,6 @@ def run_dragons_reduce(reduce_id: int) -> None:
     - Integrate actual reduction logic using `function_definition` from the recipe.
     - Determine and integrate recipes that require `interactive=True`.
     """
-    import matplotlib
-
-    matplotlib.use("Agg", force=True)
     # Get the reduction to run in the background.
     print("Running background reduce task.")
     try:
@@ -98,8 +98,8 @@ def run_dragons_reduce(reduce_id: int) -> None:
     r.files.extend(file_paths)
     # Need to pass in short name not long.
     r.recipename = recipe.short_name
-    # r.uparms = [("interactive", True)]
-    # TODO: Determine what recipes need `interactive = True``.
+    if recipe.file_type in {"FLAT", "ARC", "object"}:
+        r.uparms = [("interactive", True)]
     # TODO: Use the function_definition from the recipe in the future.
     r.runr()
 
