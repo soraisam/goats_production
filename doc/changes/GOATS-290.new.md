@@ -1,0 +1,1 @@
+Developed DRAGONS WebSocket logging: Developed a Python logging handler for WebSocket communication to provide real-time logs for the DRAGONS system.
