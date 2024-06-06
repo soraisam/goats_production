@@ -139,7 +139,7 @@ def install(
     GOATSClickException
         Raised if the 'media_dir' path is not writable.
     """
-    project_path = directory / project_name
+    project_path = directory.resolve() / project_name
 
     # If directory and project exist, ask to remove.
     if (project_path).is_dir():
@@ -167,15 +167,6 @@ def install(
         # Get the path for the 'manage.py' file.
         manage_file = project_path / "manage.py"
 
-        # Change the MEDIA_ROOT if provided.
-        if media_dir:
-            full_media_dir = media_dir / "data"
-            if full_media_dir.exists():
-                display_warning(
-                    "Media root directory already exists, proceeding but existing data might "
-                    "conflict."
-                )
-
         # Setup the TOM Toolkit.
         goats_setup_command = [
             f"{manage_file}",
@@ -183,8 +174,16 @@ def install(
             "--redis-addrport",
             f"{redis_addrport}",
         ]
-        if media_dir is not None:
-            goats_setup_command.extend(["--media-dir", f"{media_dir}"])
+        # Change the MEDIA_ROOT if provided.
+        if media_dir:
+            resolved_media_dir = media_dir.resolve()
+            if resolved_media_dir.exists():
+                display_warning(
+                    "Media root directory already exists, proceeding but existing data might "
+                    "conflict."
+                )
+            goats_setup_command.extend(["--media-dir", f"{resolved_media_dir}"])
+
         subprocess.run(goats_setup_command, check=True)
 
         # Migrate the webpage.

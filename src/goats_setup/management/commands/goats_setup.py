@@ -189,14 +189,12 @@ class Command(TOMCommand):
 
         # Determine the base directory for the 'data' directory
         if media_dir:
-            self.status("  Using custom path for media...")
-            base_dir = Path(media_dir)
+            data_dir = Path(media_dir).resolve()
         else:
-            base_dir = settings.BASE_DIR
+            data_dir = settings.BASE_DIR / "data"
 
         # Create a list of directories to be created
         directories = ["templates", "static", "tmp"]
-        data_dir = base_dir / "data"
         data_dir.mkdir(parents=True, exist_ok=True)
         self.context["MEDIA_ROOT"] = data_dir
 

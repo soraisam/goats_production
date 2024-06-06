@@ -100,8 +100,8 @@ def custom_data_product_path(data_product: DataProduct, filename: str) -> str:
             f"{data_product.target.name}/{data_product.observation_record.facility}"
             f"/{data_product.observation_record.observation_id}/{filename}"
         )
-    else:
-        return f"{data_product.target.name}/none/none/{filename}"
+
+    return f"{data_product.target.name}/none/none/{filename}"
 
 
 def build_json_response(

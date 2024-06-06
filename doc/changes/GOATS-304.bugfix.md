@@ -1,0 +1,1 @@
+Fixed custom media directory issue: Resolved path handling for custom media directories when running DRAGONS and saving products.
