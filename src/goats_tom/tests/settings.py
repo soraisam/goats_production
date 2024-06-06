@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "goats_tom",
     "huey.contrib.djhuey",
     "fontawesomefree",
+    "daphne",
+    "channels",
     "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -81,6 +83,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "goats_tom.tests.urls"
 
+CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
 
 TEMPLATES = [
     {
@@ -101,7 +108,7 @@ TEMPLATES = [
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 WSGI_APPLICATION = "goats_tom.wsgi.application"
-
+ASGI_APPLICATION = "goats_tom.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases

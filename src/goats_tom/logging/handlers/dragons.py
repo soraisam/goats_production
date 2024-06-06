@@ -15,11 +15,12 @@ class DRAGONSHandler(logging.Handler):
     group_name = "dragons_group"
     func_type = "log.message"
 
-    def __init__(self, recipe_id: int, reduce_id: int) -> None:
+    def __init__(self, recipe_id: int, reduce_id: int, run_id: int) -> None:
         """Initialize the handler with the channel layer."""
         super().__init__()
         self.recipe_id = recipe_id
         self.reduce_id = reduce_id
+        self.run_id = run_id
         self.channel_layer = get_channel_layer()
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -41,6 +42,7 @@ class DRAGONSHandler(logging.Handler):
                     "message": log_entry,
                     "recipe_id": self.recipe_id,
                     "reduce_id": self.reduce_id,
+                    "run_id": self.run_id,
                 },
             )
         except Exception:

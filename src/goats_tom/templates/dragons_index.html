@@ -94,6 +94,28 @@
 
 <script type="text/javascript">
   document.addEventListener("DOMContentLoaded", async () => {
+    // Connect to the websocket.
+    const dragonsWebSocket = new WebSocket("ws://localhost:8000/ws/dragons/");
+    
+    dragonsWebSocket.onopen = function(event) {
+      console.log('DRAGONS WebSocket connection established');
+    };
+
+    dragonsWebSocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+
+        if (data.update === "log") {
+          console.log(data.message)
+        }
+    };
+
+    dragonsWebSocket.onclose = function(event) {
+        console.log('DRAGONS WebSocket connection closed', event);
+    };
+
+    dragonsWebSocket.onerror = function(error) {
+        console.log('DRAGONS WebSocket error', error);
+    };
     const api = new FetchWrapper("/api/");
     const recipesContainer = document.getElementById("recipesContainer");
     api.setCsrfToken("{{ csrf_token }}");

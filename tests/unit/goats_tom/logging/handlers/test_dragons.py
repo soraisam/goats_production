@@ -20,7 +20,7 @@ class TestDRAGONSHandler(TestCase):
         self.mock_channel_layer.group_send = mock.AsyncMock()
 
         # Create an instance of the handler.
-        self.handler = DRAGONSHandler(recipe_id=123, reduce_id=456)
+        self.handler = DRAGONSHandler(recipe_id=123, reduce_id=456, run_id=789)
 
     def tearDown(self):
         self.patcher.stop()
@@ -52,6 +52,7 @@ class TestDRAGONSHandler(TestCase):
             "message": "Test log message",
             "recipe_id": 123,
             "reduce_id": 456,
+            "run_id": 789,
         }
         self.mock_channel_layer.group_send.assert_called_once_with(
             "dragons_group", expected_message
