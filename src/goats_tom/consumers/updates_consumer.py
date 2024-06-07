@@ -21,15 +21,12 @@ class UpdatesConsumer(WebsocketConsumer):
     group_name = "updates_group"
 
     def connect(self) -> None:
-        """Adds this consumer to the notification group upon
-        WebSocket connection.
-        """
+        """Adds this consumer to the updates group upon WebSocket connection."""
         async_to_sync(self.channel_layer.group_add)(self.group_name, self.channel_name)
         self.accept()
 
     def disconnect(self, code: int) -> None:
-        """Removes this consumer from the notification group
-        upon WebSocket disconnection.
+        """Removes this consumer from the updates group upon WebSocket disconnection.
 
         Parameters
         ----------
@@ -41,8 +38,7 @@ class UpdatesConsumer(WebsocketConsumer):
         )
 
     def notification_message(self, event: dict) -> None:
-        """Sends a notification message to the client connected through
-        WebSocket.
+        """Sends a notification message to the client connected through WebSocket.
 
         Parameters
         ----------
@@ -58,12 +54,11 @@ class UpdatesConsumer(WebsocketConsumer):
             "message": event["message"],
         }
 
-        # Send the notification message to the WebSocket
+        # Send the notification message to the WebSocket.
         self.send(text_data=json.dumps(notification))
 
     def download_message(self, event: dict) -> None:
-        """Sends a download update to the client connected through
-        WebSocket.
+        """Sends a download update to the client connected through WebSocket.
 
         Parameters
         ----------

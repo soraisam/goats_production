@@ -1,0 +1,1 @@
+Implemented WebSocket support for DRAGONS logs: Developed a Channels consumer to handle real-time log messages from DRAGONS. Added a new WebSocket endpoint for DRAGONS updates and integrated a WebSocket logging handler. Expanded testing to cover Django Channels consumers.

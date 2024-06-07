@@ -39,6 +39,7 @@ test = [
     "pytest-xdist",
     "pytest-cov",
     "pytest-django",
+    "pytest-asyncio",
     "factory_boy",
     "pytest-remotedata",
     "ruff"

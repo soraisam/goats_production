@@ -18,6 +18,7 @@ from tom_dataproducts.models import DataProduct
 
 from goats_tom.astroquery import Observations as GOA
 from goats_tom.consumers import DownloadState, NotificationInstance
+from goats_tom.logging.handlers import DRAGONSHandler
 from goats_tom.models import (
     DataProductMetadata,
     Download,
@@ -56,6 +57,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
     """
     # Get the reduction to run in the background.
     print("Running background reduce task.")
+
     try:
         # Get the recipe instance.
         reduce = DRAGONSReduce.objects.get(id=reduce_id)
@@ -69,6 +71,12 @@ def run_dragons_reduce(reduce_id: int) -> None:
     reduce.mark_running()
     run = reduce.recipe.dragons_run
     recipe = reduce.recipe
+
+    # Create an instance of the custom handler.
+    dragons_handler = DRAGONSHandler(
+        recipe_id=recipe.id, reduce_id=reduce.id, run_id=run.id
+    )
+    dragons_handler.setLevel(21)
 
     # Send start notification.
     NotificationInstance.create_and_send(
@@ -87,8 +95,12 @@ def run_dragons_reduce(reduce_id: int) -> None:
     )
     file_paths = [file.get_file_path() for file in files]
 
-    # Setup the logger
-    logutils.config(file_name=run.get_log_file())
+    # Setup the logger.
+    logutils.config(
+        mode="standard",
+        file_name=run.get_log_file(),
+        # additional_handlers=dragons_handler,
+    )
 
     r = Reduce()
 
@@ -100,6 +112,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
     r.recipename = recipe.short_name
     if recipe.file_type in {"FLAT", "ARC", "object"}:
         r.uparms = [("interactive", True)]
+
     # TODO: Use the function_definition from the recipe in the future.
     r.runr()
 
