@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from goats_tom.consumers import NotificationInstance
+from goats_tom.realtime import NotificationInstance
 
 
 def test_notification_instance():

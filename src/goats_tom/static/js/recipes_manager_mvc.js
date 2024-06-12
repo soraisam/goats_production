@@ -100,6 +100,13 @@ class RecipeManagerController {
           recipeController.handleLogMessage(data.message);
         }
       }
+      if (data.update === "recipe") {
+        console.log("got recipe update", data);
+        const recipeController = this.getRecipeControllerById(data.recipe_id);
+        if (recipeController) {
+          recipeController.handleUpdateReduce(data);
+        }
+      }
     };
 
     dragonsWebSocket.onopen = () => {

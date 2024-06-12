@@ -55,3 +55,23 @@ class DRAGONSConsumer(WebsocketConsumer):
 
         # Send the log message to the WebSocket.
         self.send(text_data=json.dumps(log))
+
+    def recipe_progress_message(self, event: dict) -> None:
+        """Sends a message about recipe progress to the client through a WebSocket.
+
+        Parameters
+        ----------
+        event : `dict`
+            The event dictionary containing the recipe reduce update.
+        """
+        # Construct the update.
+        recipe_progress = {
+            "update": "recipe",
+            "status": event["status"],
+            "recipe_id": event["recipe_id"],
+            "reduce_id": event["reduce_id"],
+            "run_id": event["run_id"],
+        }
+
+        # Send the update to the WebSocket.
+        self.send(text_data=json.dumps(recipe_progress))
