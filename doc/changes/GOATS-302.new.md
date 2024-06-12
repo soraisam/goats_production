@@ -1,0 +1,1 @@
+Extended DRAGONS consumer for real-time recipe progress updates: Updated the UI to display initial progress information. Added utilities for easier real-time communication and refactored UI progress bars to lay the foundation for future enhancements.

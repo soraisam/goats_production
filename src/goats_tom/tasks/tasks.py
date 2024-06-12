@@ -17,7 +17,7 @@ from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
 
 from goats_tom.astroquery import Observations as GOA
-from goats_tom.consumers import DownloadState, NotificationInstance
+from goats_tom.realtime import DownloadState, NotificationInstance, DRAGONSProgress
 from goats_tom.logging.handlers import DRAGONSHandler
 from goats_tom.models import (
     DataProductMetadata,
@@ -53,7 +53,6 @@ def run_dragons_reduce(reduce_id: int) -> None:
     TODO
     ----
     - Integrate actual reduction logic using `function_definition` from the recipe.
-    - Determine and integrate recipes that require `interactive=True`.
     """
     # Get the reduction to run in the background.
     print("Running background reduce task.")
@@ -68,7 +67,12 @@ def run_dragons_reduce(reduce_id: int) -> None:
             color="danger",
         )
         return
+    # TODO: Overhaul states in next tickets.
+    # Send initial state.
+    DRAGONSProgress.create_and_send(reduce)
+    
     reduce.mark_running()
+    DRAGONSProgress.create_and_send(reduce)
     run = reduce.recipe.dragons_run
     recipe = reduce.recipe
 
@@ -123,6 +127,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
         color="success",
     )
     reduce.mark_done()
+    DRAGONSProgress.create_and_send(reduce)
 
 
 @db_task()

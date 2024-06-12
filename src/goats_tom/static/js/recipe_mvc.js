@@ -12,6 +12,13 @@ const FILE_TYPE_2_DISPLAY = {
   other: "Error",
 };
 
+const STATUS_2_PROGRESS_BAR_COLOR = {
+  starting: "bg-primary",
+  error: "bg-danger",
+  warning: "bg-warning",
+  done: "bg-success",
+};
+
 const EDITOR_DARK_THEME = "ace/theme/cloud9_night";
 const EDITOR_LIGHT_THEME = "ace/theme/dawn";
 
@@ -93,6 +100,8 @@ class RecipeView {
     this.cardHeader = null;
     this.editor = null;
     this.reduce = null;
+    this.progressBar = null;
+    this.progressStatus = null;
   }
 
   /**
@@ -225,8 +234,7 @@ class RecipeView {
     const row = Utils.createElement("div", ["row", "g-3"]);
     const col = Utils.createElement("div", "col-12");
     const progressBar = this.createProgressBar();
-    this.progressBar = progressBar;
-    this.updateProgressBar(0);
+    
 
     col.appendChild(progressBar);
     row.append(col);
@@ -392,40 +400,44 @@ class RecipeView {
     this.editor.setTheme(theme);
   }
 
-  /**
-   * Creates a progress bar for visualizing task completion or status.
-   * @returns {HTMLElement} The div containing the progress bar.
-   */
   createProgressBar() {
+    const progressDiv = Utils.createElement("div");
+    console.log(progressDiv);
     const progressBarDiv = Utils.createElement("div", "progress");
     progressBarDiv.setAttribute("role", "progressbar");
     progressBarDiv.setAttribute("aria-label", "Recipe progress");
     progressBarDiv.setAttribute("aria-valuemin", "0");
     progressBarDiv.setAttribute("aria-valuemax", "100");
 
-    const progressBar = Utils.createElement("div", "progress-bar");
-    progressBarDiv.appendChild(progressBar);
+    this.progressBar = Utils.createElement("div", "progress-bar");
+    this.progressBar.style.width = "0";
 
-    return progressBarDiv;
+    progressBarDiv.appendChild(this.progressBar);
+
+    // Create status bar
+    this.progressStatus = Utils.createElement("p");
+    progressDiv.append(progressBarDiv, this.progressStatus);
+    console.log(progressDiv)
+
+    return progressDiv;
   }
 
-  /**
-   * Updates the progress bar with a given width percentage.
-   *
-   * @param {number} width The new width percentage of the progress bar.
-   */
-  updateProgressBar(width) {
-    // Ensure width is within bounds (0 to 100).
-    const boundedWidth = Math.max(0, Math.min(width, 100));
+  updateProgressBar(status) {
+    const colorClass = STATUS_2_PROGRESS_BAR_COLOR[status] || "bg-primary";
 
-    this.progressBar.setAttribute("aria-valuenow", boundedWidth);
+    // Set the progress bar's width and color based on the status.
+    this.progressBar.style.width = "100%";
+    this.progressBar.className = `progress-bar ${colorClass}`;
 
-    // Find the progress bar element within the parent div.
-    const progressBar = this.progressBar.querySelector(".progress-bar");
-    if (progressBar) {
-      // Set the style.width, special handling if width is 0.
-      progressBar.style.width = boundedWidth === 0 ? "0" : `${boundedWidth}%`;
+    // Optionally, add animation class if not idle.
+    if (status === "running") {
+      this.progressBar.classList.add("placeholder-wave");
+    } else {
+      this.progressBar.classList.remove("placeholder-wave");
     }
+
+    // Update the status text below the progress bar.
+    this.progressStatus.textContent = `${status}`;
   }
 
   /**
@@ -435,7 +447,12 @@ class RecipeView {
    * @returns {HTMLElement} The div element that serves as the container for the logger.
    */
   createLogger() {
-    const div = Utils.createElement("div", ["log-container", "log-overflow", "ps-2", "py-2"]);
+    const div = Utils.createElement("div", [
+      "log-container",
+      "log-overflow",
+      "ps-2",
+      "py-2",
+    ]);
     div.id = `loggerRecipe-${this.recipe.id}`;
     this.logger = new Logger(div);
 
@@ -487,9 +504,10 @@ class RecipeController {
    */
   handleStartReduce = async (recipeId) => {
     // Clear logger before starting.
-    this.view.logger.clear()
+    this.view.logger.clear();
     const reduce = await this.model.startReduce(recipeId);
     // TODO: Update the view.
+    this.handleUpdateReduce(reduce);
   };
 
   /**
@@ -508,5 +526,9 @@ class RecipeController {
    */
   handleLogMessage = (message) => {
     this.view.logger.log(message);
+  };
+
+  handleUpdateReduce = (data) => {
+    this.view.updateProgressBar(data.status);
   };
 }

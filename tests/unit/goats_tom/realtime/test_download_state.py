@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from goats_tom.consumers import DownloadState
+from goats_tom.realtime import DownloadState
 
 
 def test_format_bytes():
