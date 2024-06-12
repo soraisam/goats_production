@@ -486,6 +486,8 @@ class RecipeController {
    * @async
    */
   handleStartReduce = async (recipeId) => {
+    // Clear logger before starting.
+    this.view.logger.clear()
     const reduce = await this.model.startReduce(recipeId);
     // TODO: Update the view.
   };
