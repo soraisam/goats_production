@@ -1,0 +1,1 @@
+Enhanced DRAGONS log autoscroll behavior: Updated logger to conditionally autoscroll based on the user's current scroll position. Methods intended for logger internal use were made private.

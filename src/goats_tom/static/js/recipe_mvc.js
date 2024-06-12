@@ -82,7 +82,7 @@ class RecipeView {
       },
       classes: {
         recipeAccordion: [],
-        logAccordion: ["log-overflow", "border", "border-top-0", "rounded-bottom"],
+        logAccordion: ["p-0", "border", "border-top-0", "rounded-bottom"],
       },
     };
     this.editor = null;
@@ -435,7 +435,7 @@ class RecipeView {
    * @returns {HTMLElement} The div element that serves as the container for the logger.
    */
   createLogger() {
-    const div = Utils.createElement("div", "log-container");
+    const div = Utils.createElement("div", ["log-container", "log-overflow", "ps-2", "py-2"]);
     div.id = `loggerRecipe-${this.recipe.id}`;
     this.logger = new Logger(div);
 
