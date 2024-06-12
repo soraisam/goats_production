@@ -85,7 +85,8 @@
 <script src="{% static 'js/get_csrf_token.js' %}"></script>
 <script src="{% static 'js/fetch_wrapper.js' %}"></script>
 <script src="{% static 'js/dragons_setup_mvc.js' %}"></script>
-<script src="{% static 'js/recipes_mvc.js' %}"></script>
+<script src="{% static 'js/recipe_mvc.js' %}"></script>
+<script src="{% static 'js/recipes_manager_mvc.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/ace.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/mode-python.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/theme-cloud9_night.js' %}"></script>
@@ -94,60 +95,16 @@
 
 <script type="text/javascript">
   document.addEventListener("DOMContentLoaded", async () => {
-    // Connect to the websocket.
-    const dragonsWebSocket = new WebSocket("ws://localhost:8000/ws/dragons/");
-    
-    dragonsWebSocket.onopen = function(event) {
-      console.log('DRAGONS WebSocket connection established');
-    };
-
-    dragonsWebSocket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-
-        if (data.update === "log") {
-          console.log(data.message)
-        }
-    };
-
-    dragonsWebSocket.onclose = function(event) {
-        console.log('DRAGONS WebSocket connection closed', event);
-    };
-
-    dragonsWebSocket.onerror = function(error) {
-        console.log('DRAGONS WebSocket error', error);
-    };
     const api = new FetchWrapper("/api/");
-    const recipesContainer = document.getElementById("recipesContainer");
     api.setCsrfToken("{{ csrf_token }}");
 
     // Initialize models, views, and controllers.
     const setupModel = new SetupModel(api);
     const setupView = new SetupView();
     const setupController = new SetupController(setupModel, setupView);
-
-    const recipesModel = new RecipesModel(api);
-    const recipesView = new RecipesView();
-    const recipesController = new RecipesController(recipesModel, recipesView);
-
-    /**
-     * Clears the recipes container and repopulates it with new recipe cards.
-     * @param {string} runId The ID of the run for which to fetch and display recipes.
-     */
-    const updateRecipeCards = async (runId) => {
-      recipesContainer.innerHTML = ""; // Clear the existing recipe cards.
-      const recipeCards = await recipesController.handleFetchRecipes(runId);
-      recipeCards.forEach((card) => appendCardToContainer(card));
-    };
-
-    /**
-     * Appends a given card element to the recipes container.
-     * @param {HTMLElement} card The card element to be appended to the recipes container.
-     */
-    const appendCardToContainer = (card) => {
-      const col = Utils.createElement("div", ["col-xl-6", "col-12"]);
-      col.appendChild(card);
-      recipesContainer.appendChild(col);
-    };
+    const recipeManagerModel = new RecipeManagerModel(api);
+    const recipeManagerView = new RecipeManagerView();
+    const recipeManagerController = new RecipeManagerController(recipeManagerModel, recipeManagerView);
 
     /**
      * Handles the change in run selection by fetching related files and updating recipe cards
@@ -157,7 +114,7 @@
      */
     const handleRunSelectionChange = async (observationRecordPk, runId) => {
       await setupController.handleFetchFiles(observationRecordPk, runId);
-      await updateRecipeCards(runId);
+      await recipeManagerController.updateRecipeCards(runId);
     };
 
     // Bind the combined functionality to the run selection change.

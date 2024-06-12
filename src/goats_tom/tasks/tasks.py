@@ -99,7 +99,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
     logutils.config(
         mode="standard",
         file_name=run.get_log_file(),
-        # additional_handlers=dragons_handler,
+        additional_handlers=dragons_handler,
     )
 
     r = Reduce()

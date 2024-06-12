@@ -16,9 +16,9 @@ const EDITOR_DARK_THEME = "ace/theme/cloud9_night";
 const EDITOR_LIGHT_THEME = "ace/theme/dawn";
 
 /**
- * Represents a model for managing recipes in the DRAGONS system.
+ * Represents a model for managing recipe in the DRAGONS system.
  */
-class RecipesModel {
+class RecipeModel {
   /**
    * Constructor for the RecipesModel class.
    * @param {Object} api The API service used for fetching recipes data.
@@ -32,19 +32,17 @@ class RecipesModel {
   }
 
   /**
-   * Fetches recipes associated with a specific DRAGONS run.
-   * @param {string} dragonsRun The identifier for the DRAGONS run to fetch recipes for.
-   * @returns {Promise<Object[]>} A promise that resolves to an array of recipe objects.
+   * Fetches a specific recipe by its ID.
+   * @param {number} recipeId The ID of the recipe to fetch.
+   * @returns {Promise<Object>} A promise that resolves to the recipe object.
    */
-  async fetchRecipes(dragonsRun) {
+  async fetchRecipe(recipeId) {
     try {
-      const response = await this.api.get(
-        `${this.recipesUrl}?dragons_run=${dragonsRun}`
-      );
-      this.recipes = response.results;
-      return this.recipes;
+      const response = await this.api.get(`${recipesUrl}/${recipeId}/`);
+      this.recipe = response;
+      return response;
     } catch (error) {
-      console.error("Error fetching recipes:", error);
+      console.error("Error fetching recipe:", error);
     }
   }
 
@@ -66,9 +64,9 @@ class RecipesModel {
 }
 
 /**
- * Represents the view for recipes in the DRAGONS system.
+ * Represents the view for recipe in the DRAGONS system.
  */
-class RecipesView {
+class RecipeView {
   /**
    * Constructor for the RecipesView class.
    */
@@ -414,7 +412,7 @@ class RecipesView {
   /**
    * Updates the progress bar with a given width percentage.
    *
-   * @param {number} width - The new width percentage of the progress bar.
+   * @param {number} width The new width percentage of the progress bar.
    */
   updateProgressBar(width) {
     // Ensure width is within bounds (0 to 100).
@@ -465,11 +463,11 @@ class RecipesView {
   }
 }
 
-class RecipesController {
+class RecipeController {
   /**
-   * Constructor for the RecipesController class.
-   * @param {RecipesModel} model The model handling the business logic and data retrieval.
-   * @param {RecipesView} view The view handling the display and UI interactions.
+   * Constructor for the RecipeController class.
+   * @param {RecipeModel} model The model handling the business logic and data retrieval.
+   * @param {RecipeView} view The view handling the display and UI interactions.
    */
   constructor(model, view) {
     this.model = model;
@@ -481,24 +479,6 @@ class RecipesController {
     // When stopping a recipe reduce.
     this.view.bindStopReduce(this.handleStopReduce);
   }
-
-  /**
-   * Fetches recipes for a specific DRAGONS run and processes them for display.
-   * @param {string} dragonsRun The DRAGONS run identifier to fetch recipes for.
-   * @returns {Promise<HTMLElement[]>} A promise that resolves to an array of card elements for each recipe.
-   */
-  handleFetchRecipes = async (dragonsRun) => {
-    const recipes = await this.model.fetchRecipes(dragonsRun);
-    // Update the view.
-    const cards = [];
-    recipes.forEach((recipe) => {
-      if (recipe.file_type !== "other") {
-        const card = this.view.createCard(recipe);
-        cards.push(card);
-      }
-    });
-    return cards;
-  };
 
   /**
    * Initiates the reduction process for a given recipe ID.
@@ -518,5 +498,13 @@ class RecipesController {
   handleStopReduce = async (reduceId) => {
     // TODO: After API is written to terminate a running recipe reduce.
     console.log("Not implemented.");
+  };
+
+  /**
+   * Handles log messages and updates the logger.
+   * @param {string} message - The log message to add.
+   */
+  handleLogMessage = (message) => {
+    this.view.logger.log(message);
   };
 }
