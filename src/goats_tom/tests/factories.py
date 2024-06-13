@@ -215,19 +215,7 @@ class DRAGONSRecipeFactory(factory.django.DjangoModelFactory):
 
 
 class DRAGONSReduceFactory(factory.django.DjangoModelFactory):
-    """Factory for creating `DRAGONSReduce` instances.
-
-    Attributes
-    ----------
-    recipe : `factory.SubFactory`
-        Creates an associated `DRAGONSRecipe` instance.
-    start_time : `factory.LazyFunction`
-        Sets the start time to the current time when the instance is created.
-    end_time : `factory.Maybe`
-        Optionally sets the end time based on the `status` of the instance.
-    status : `factory.Iterator`
-        Iterates through potential statuses, defaults to "starting".
-    """
+    """Factory for creating `DRAGONSReduce` instances."""
 
     class Meta:
         model = DRAGONSReduce
@@ -235,4 +223,4 @@ class DRAGONSReduceFactory(factory.django.DjangoModelFactory):
     recipe = factory.SubFactory(DRAGONSRecipeFactory)
     start_time = factory.LazyFunction(timezone.now)
     end_time = None
-    status = "starting"
+    status = "created"

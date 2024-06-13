@@ -29,7 +29,9 @@ class DRAGONSReduce(models.Model):
     """
 
     STATUS_CHOICES = [
-        ("starting", "Starting"),
+        ("created", "Created"),
+        ("queued", "Queued"),
+        ("initializing", "Initializing"),
         ("running", "Running"),
         ("done", "Done"),
         ("error", "Error"),
@@ -40,10 +42,20 @@ class DRAGONSReduce(models.Model):
     )
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="starting")
+    status = models.CharField(max_length=13, choices=STATUS_CHOICES, default="created")
 
     def __str__(self):
         return f"Reduction {self.id} - {self.recipe.name}"
+
+    def mark_queued(self) -> None:
+        """Marks the reduction as queued."""
+        self.status = "queued"
+        self.save()
+
+    def mark_initializing(self) -> None:
+        """Marks the reduction as initializing."""
+        self.status = "initializing"
+        self.save()
 
     def mark_done(self) -> None:
         """Marks the reduction as completed and records the completion time."""

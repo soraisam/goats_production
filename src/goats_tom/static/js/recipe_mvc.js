@@ -13,10 +13,11 @@ const FILE_TYPE_2_DISPLAY = {
 };
 
 const STATUS_2_PROGRESS_BAR_COLOR = {
-  starting: "bg-primary",
-  error: "bg-danger",
-  warning: "bg-warning",
-  done: "bg-success",
+  Queued: "bg-primary-subtle",
+  Initializing: "bg-primary",
+  Error: "bg-danger",
+  Running: "bg-primary",
+  Done: "bg-success",
 };
 
 const EDITOR_DARK_THEME = "ace/theme/cloud9_night";
@@ -402,7 +403,6 @@ class RecipeView {
 
   createProgressBar() {
     const progressDiv = Utils.createElement("div");
-    console.log(progressDiv);
     const progressBarDiv = Utils.createElement("div", "progress");
     progressBarDiv.setAttribute("role", "progressbar");
     progressBarDiv.setAttribute("aria-label", "Recipe progress");
@@ -417,7 +417,6 @@ class RecipeView {
     // Create status bar
     this.progressStatus = Utils.createElement("p");
     progressDiv.append(progressBarDiv, this.progressStatus);
-    console.log(progressDiv)
 
     return progressDiv;
   }
@@ -430,7 +429,7 @@ class RecipeView {
     this.progressBar.className = `progress-bar ${colorClass}`;
 
     // Optionally, add animation class if not idle.
-    if (status === "running") {
+    if (status === "Running") {
       this.progressBar.classList.add("placeholder-wave");
     } else {
       this.progressBar.classList.remove("placeholder-wave");

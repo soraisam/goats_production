@@ -23,7 +23,7 @@ def test_dragons_progress():
 
         status, run_id, recipe_id, reduce_id = args
 
-        assert status == reduce.status, "Status mismatch"
+        assert status == reduce.get_status_display(), f"Status mismatch {status}!={reduce.get_status_display()}"
         assert run_id == reduce.recipe.dragons_run.id, "Run ID mismatch"
         assert recipe_id == reduce.recipe.id, "Recipe ID mismatch"
         assert reduce_id == reduce.id, "Reduce ID mismatch"

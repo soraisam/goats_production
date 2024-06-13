@@ -7,6 +7,7 @@ from rest_framework.viewsets import GenericViewSet
 from goats_tom.models import DRAGONSReduce
 from goats_tom.serializers import DRAGONSReduceFilterSerializer, DRAGONSReduceSerializer
 from goats_tom.tasks import run_dragons_reduce
+from goats_tom.realtime import DRAGONSProgress
 
 
 class DRAGONSReduceViewSet(
@@ -29,4 +30,6 @@ class DRAGONSReduceViewSet(
             The serializer with data loaded.
         """
         reduce = serializer.save()
+        reduce.mark_queued()
+        DRAGONSProgress.create_and_send(reduce)
         run_dragons_reduce(reduce.id)
