@@ -13,8 +13,8 @@ const FILE_TYPE_2_DISPLAY = {
 };
 
 const STATUS_2_PROGRESS_BAR_COLOR = {
-  Queued: "bg-primary-subtle",
-  Initializing: "bg-primary",
+  Queued: "bg-primary bg-opacity-25",
+  Initializing: "bg-primary bg-opacity-50",
   Error: "bg-danger",
   Running: "bg-primary",
   Done: "bg-success",
@@ -34,7 +34,6 @@ class RecipeModel {
   constructor(api) {
     this.api = api;
     this.recipe = null;
-    this.editor = null;
     this.recipesUrl = "dragonsrecipes/";
     this.reduceUrl = "dragonsreduce/";
   }
@@ -99,9 +98,7 @@ class RecipeView {
     this.progressBar = null;
     this.card = null;
     this.cardHeader = null;
-    this.editor = null;
     this.reduce = null;
-    this.progressBar = null;
     this.progressStatus = null;
   }
 
@@ -179,14 +176,21 @@ class RecipeView {
   }
 
   /**
-   * Creates the card body for a recipe.
+   * Creates the card body.
    * @returns {HTMLElement} The card body.
    */
   createCardBody() {
     const cardBody = Utils.createElement("div", "card-body");
-    const recipeAccordion = this.createAccordion("recipeAccordion");
-    cardBody.appendChild(recipeAccordion);
+    const row = Utils.createElement("div", ["row", "g-0"]);
+    const col1 = Utils.createElement("div", ["col-12"]);
+    const col2 = Utils.createElement("div", ["col-12"]);
+    const progressBarDiv = this.createProgressBar();
+    const progressStatusDiv = this.createProgressStatus();
 
+    col1.appendChild(progressStatusDiv);
+    col2.appendChild(progressBarDiv);
+    row.append(col1, col2);
+    cardBody.appendChild(row);
     return cardBody;
   }
 
@@ -226,21 +230,14 @@ class RecipeView {
   }
 
   /**
-   * Creates the first footer for the recipe, showing the progress bar.
+   * Creates the first footer for the recipe.
    * @return {HTMLElement} The footer.
    */
   createCardFooter1() {
-    // Create footer for progress updates and logger.
+    // Create footer.
     const cardFooter = Utils.createElement("div", "card-footer");
-    const row = Utils.createElement("div", ["row", "g-3"]);
-    const col = Utils.createElement("div", "col-12");
-    const progressBar = this.createProgressBar();
-    
-
-    col.appendChild(progressBar);
-    row.append(col);
-    cardFooter.appendChild(row);
-
+    const recipeAccordion = this.createAccordion("recipeAccordion");
+    cardFooter.appendChild(recipeAccordion);
     return cardFooter;
   }
 
@@ -401,8 +398,23 @@ class RecipeView {
     this.editor.setTheme(theme);
   }
 
+  /**
+   * Creates and returns a div element containing the progress status.
+   * @returns {HTMLElement} The div element containing the progress status.
+   */
+  createProgressStatus() {
+    const progressStatusDiv = Utils.createElement("div");
+    this.progressStatus = Utils.createElement("p", ["mb-0", "fst-italic"]);
+    this.progressStatus.textContent = "Not Started";
+    progressStatusDiv.appendChild(this.progressStatus);
+    return progressStatusDiv;
+  }
+
+  /**
+   * Creates and returns a progress bar element with initial configurations.
+   * @returns {HTMLElement} The progress bar element.
+   */
   createProgressBar() {
-    const progressDiv = Utils.createElement("div");
     const progressBarDiv = Utils.createElement("div", "progress");
     progressBarDiv.setAttribute("role", "progressbar");
     progressBarDiv.setAttribute("aria-label", "Recipe progress");
@@ -414,13 +426,13 @@ class RecipeView {
 
     progressBarDiv.appendChild(this.progressBar);
 
-    // Create status bar
-    this.progressStatus = Utils.createElement("p");
-    progressDiv.append(progressBarDiv, this.progressStatus);
-
-    return progressDiv;
+    return progressBarDiv;
   }
 
+  /**
+   * Updates the progress bar's visual appearance and textual status based on the current status of the operation.
+   * @param {string} status The current status which determines the appearance of the progress bar.
+   */
   updateProgressBar(status) {
     const colorClass = STATUS_2_PROGRESS_BAR_COLOR[status] || "bg-primary";
 
@@ -429,7 +441,7 @@ class RecipeView {
     this.progressBar.className = `progress-bar ${colorClass}`;
 
     // Optionally, add animation class if not idle.
-    if (status === "Running") {
+    if (status === "Running" || status === "Initializing") {
       this.progressBar.classList.add("placeholder-wave");
     } else {
       this.progressBar.classList.remove("placeholder-wave");
@@ -527,7 +539,21 @@ class RecipeController {
     this.view.logger.log(message);
   };
 
+  /**
+   * Updates the progress bar based on the status provided in the data.
+   * @param {Object} data The data object containing the status to update the progress bar.
+   */
   handleUpdateReduce = (data) => {
     this.view.updateProgressBar(data.status);
+  };
+
+  /**
+   * Creates a card element based on the provided data and returns it.
+   * @param {Object} data The data object containing details necessary to create a card.
+   * @returns {HTMLElement} The created card element.
+   */
+  handleCreateCard = (data) => {
+    const card = this.view.createCard(data);
+    return card;
   };
 }
