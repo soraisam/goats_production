@@ -43,20 +43,16 @@
       import { updateDownloadProgress } from "{% static 'js/download_progress.js' %}";
 
       const webSocket = new WebSocket('ws://localhost:8000/ws/updates/');
-
       webSocket.onopen = function(event) {
           console.log('WebSocket connection established');
       };
 
       webSocket.onmessage = function(event) {
           const data = JSON.parse(event.data);
-
           if (data.update === "notification") {
-            console.log("Creating toast.");
             createAndShowToast(data);
           }
           else if (data.update == "download") {
-            console.log("Updating download progress.");
             updateDownloadProgress(data);
           }
       };

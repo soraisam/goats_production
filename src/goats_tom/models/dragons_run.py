@@ -86,7 +86,7 @@ class DRAGONSRun(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"{self.run_id}.{self.observation_record.observation_id}"
+        return f"{self.observation_record.observation_id}.{self.run_id}"
 
     def save(self, *args, **kwargs) -> None:
         """Saves the DRAGONSRun instance.

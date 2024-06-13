@@ -60,6 +60,7 @@ goats = "goats_cli:cli"
 testpaths = ["tests/unit"]
 DJANGO_SETTINGS_MODULE = "goats_tom.tests.settings"
 norecursedirs = "tests/unit/goats_tom/ocs"
+addopts = "-r A -v -n auto --cov=src --cov-report=term --cov=tests --cov-branch"
 
 [tool.towncrier]
 version = ""

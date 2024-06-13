@@ -324,3 +324,20 @@ class TestDRAGONSReduce:
         reduction = DRAGONSReduceFactory(status="starting")
         reduction.mark_running()
         assert reduction.status == "running", "Should update status to running."
+        assert reduction.end_time is None, "Should not have end time set."
+
+    def test_mark_queued(self):
+        """Test changing the status to queued."""
+        reduction = DRAGONSReduceFactory()
+        reduction.mark_queued()
+        assert reduction.status == "queued", "Should update status to queued."
+        assert reduction.end_time is None, "Should not have end time set."
+
+    def test_mark_initializing(self):
+        """Test changing the status to initializing."""
+        reduction = DRAGONSReduceFactory()
+        reduction.mark_initializing()
+        assert (
+            reduction.status == "initializing"
+        ), "Should update status to initializing"
+        assert reduction.end_time is None, "Should not have end time set."
