@@ -143,8 +143,7 @@ class RecipeManagerController {
         // Store the recipe controller for easy manipulation later.
         this.recipes[recipe.id] = recipeController;
 
-        // TODO: Move this to the controller.
-        let recipeCard = recipeController.view.createCard(recipe);
+        let recipeCard = recipeController.handleCreateCard(recipe);
         recipeCards.push(recipeCard);
       }
     });
