@@ -411,7 +411,7 @@ class GOAQueryFormViewTest(TestCase):
         self.form_data = {"download_calibrations": "yes", "facility": "test_facility"}
 
     @patch("goats_tom.views.views.GOA")
-    @patch("goats_tom.views.views.download_goa_files")
+    @patch("goats_tom.views.views.download_goa_files.send")
     def test_successful_submission(self, mock_download, mock_goa):
         """Test successful form submission with valid GOA credentials."""
         GOALoginFactory.create(
@@ -427,7 +427,7 @@ class GOAQueryFormViewTest(TestCase):
         self.assertIn("Downloading data in background. Check back soon!", messages)
 
     @patch("goats_tom.views.views.GOA")
-    @patch("goats_tom.views.views.download_goa_files")
+    @patch("goats_tom.views.views.download_goa_files.send")
     def test_missing_goa_credentials(self, mock_download, mock_goa):
         """Test form submission with missing GOA credentials."""
         self.client.login(username="testuser", password="password")
@@ -443,7 +443,7 @@ class GOAQueryFormViewTest(TestCase):
         )
 
     @patch("goats_tom.views.views.GOA")
-    @patch("goats_tom.views.views.download_goa_files")
+    @patch("goats_tom.views.views.download_goa_files.send")
     def test_failed_goa_authentication(self, mock_download, mock_goa):
         """Test form submission with failed GOA authentication."""
         GOALoginFactory.create(

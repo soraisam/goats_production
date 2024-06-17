@@ -167,9 +167,6 @@ def install(
         # Get the path for the 'manage.py' file.
         manage_file = project_path / "manage.py"
 
-        # Modify the manage file for Huey.
-        # modify_manage(manage_file)
-
         # Change the MEDIA_ROOT if provided.
         if media_dir:
             full_media_dir = media_dir / "data"
@@ -328,11 +325,11 @@ def run(
     redis_thread = threading.Thread(target=start_redis_server, args=(redis_addrport,))
     redis_thread.start()
 
-    # Start Huey consumer in a separate thread.
-    huey_thread = threading.Thread(
-        target=start_huey_consumer, args=(str(manage_file), workers)
+    # Start background consumer in a separate thread.
+    background_thread = threading.Thread(
+        target=start_background_consumer, args=(manage_file, workers)
     )
-    huey_thread.start()
+    background_thread.start()
 
     # Start Django server in a separate thread.
     django_thread = threading.Thread(
@@ -342,7 +339,7 @@ def run(
 
     # Keep the main thread running while sub-threads are working.
     redis_thread.join()
-    huey_thread.join()
+    background_thread.join()
     django_thread.join()
 
 
@@ -400,8 +397,8 @@ def start_django_server(manage_file: Path, addrport: str) -> None:
         )
 
 
-def start_huey_consumer(manage_file: Path, workers: int) -> None:
-    """Starts the Huey consumer with "greenlet" workers.
+def start_background_consumer(manage_file: Path, workers: int) -> None:
+    """Starts the background consumer with workers.
 
     Parameters
     ----------
@@ -411,15 +408,23 @@ def start_huey_consumer(manage_file: Path, workers: int) -> None:
     Raises
     ------
     GOATSClickException
-        Raised if issue starting Huey consumers.
+        Raised if issue starting background consumers.
     """
     try:
         subprocess.run(
-            [f"{manage_file}", "run_huey", "--workers", f"{workers}"], check=True
+            [
+                f"{manage_file}",
+                "rundramatiq",
+                "--threads",
+                f"{workers}",
+                "--path",
+                f"{manage_file.parent}",
+            ],
+            check=True,
         )
     except subprocess.CalledProcessError as error:
         raise GOATSClickException(
-            f"Error running Huey consumer: '{error.cmd}'. "
+            f"Error running background consumer: '{error.cmd}'. "
             f"Exit status: {error.returncode}."
         )
 

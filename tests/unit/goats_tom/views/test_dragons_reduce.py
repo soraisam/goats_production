@@ -28,7 +28,7 @@ class TestDRAGONSReduceViewSet(APITestCase):
         """Helper method to authenticate requests."""
         force_authenticate(request, user=self.user)
 
-    @patch("goats_tom.views.dragons_reduce.run_dragons_reduce")
+    @patch("goats_tom.views.dragons_reduce.run_dragons_reduce.send")
     def test_create_reduction(self, mock_run_dragons_reduce):
         """Test creating a new DRAGONS reduction."""
         recipe = DRAGONSRecipeFactory()

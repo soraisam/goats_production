@@ -11,11 +11,10 @@ from django.conf import settings
 from django.core import serializers
 from django.db import IntegrityError
 from gempy.utils import logutils
-from huey.contrib.djhuey import db_task
 from recipe_system.reduction.coreReduce import Reduce
 from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
-
+import dramatiq
 from goats_tom.astroquery import Observations as GOA
 from goats_tom.logging.handlers import DRAGONSHandler
 from goats_tom.models import (
@@ -48,8 +47,7 @@ def _get_reduce_label(reduce: DRAGONSReduce) -> str:
     """
     return f"{reduce.recipe.dragons_run}::{reduce.recipe.short_name}"
 
-
-@db_task()
+@dramatiq.actor
 def run_dragons_reduce(reduce_id: int) -> None:
     """Executes a reduction process in the background.
 
@@ -156,8 +154,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
         )
         raise
 
-
-@db_task()
+@dramatiq.actor
 def download_goa_files(
     serialized_observation_record: str, query_params: dict, user: int
 ) -> None:
@@ -365,3 +362,4 @@ def download_goa_files(
     NotificationInstance.create_and_send(
         message=f"{message}", label=f"{observation_id}", color="success"
     )
+    print("Done.")

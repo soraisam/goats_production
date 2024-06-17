@@ -570,8 +570,8 @@ class GOAQueryFormView(View):
                 "json", [observation_record]
             )
             # Download in background.
-            download_goa_files(
-                serialized_observation_record, query_params, request.user
+            download_goa_files.send(
+                serialized_observation_record, query_params, request.user.id
             )
             messages.info(request, "Downloading data in background. Check back soon!")
 

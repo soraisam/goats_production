@@ -1,0 +1,1 @@
+Switched to `dramatiq` for task management: GOATS now uses `dramatiq` for background tasks due to its support for aborting running tasks, a feature not available in `huey`.
