@@ -9,7 +9,6 @@ from goats_tom.serializers import DRAGONSReduceFilterSerializer, DRAGONSReduceSe
 from goats_tom.tasks import run_dragons_reduce
 from goats_tom.realtime import DRAGONSProgress
 
-
 class DRAGONSReduceViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -32,4 +31,4 @@ class DRAGONSReduceViewSet(
         reduce = serializer.save()
         reduce.mark_queued()
         DRAGONSProgress.create_and_send(reduce)
-        run_dragons_reduce(reduce.id)
+        run_dragons_reduce.send(reduce.id)

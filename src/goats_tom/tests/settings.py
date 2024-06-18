@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import tempfile
 from pathlib import Path
+import redis
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,36 +34,37 @@ ALLOWED_HOSTS = []
 
 TOM_NAME = "GOATS"
 
+
 INSTALLED_APPS = [
-    "goats_tom",
-    "huey.contrib.djhuey",
-    "fontawesomefree",
-    "daphne",
-    "channels",
-    "corsheaders",
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "django.contrib.sites",
-    "django_extensions",
-    "guardian",
-    "tom_common",
-    "django_comments",
-    "bootstrap4",
-    "crispy_bootstrap4",
-    "crispy_forms",
-    "rest_framework",
-    "rest_framework.authtoken",
-    "django_filters",
-    "django_gravatar",
-    "tom_targets",
-    "tom_alerts",
-    "tom_catalogs",
-    "tom_observations",
-    "tom_dataproducts",
+    'django_dramatiq',
+    'daphne',
+    'goats_tom',
+    'channels',
+    'fontawesomefree',
+    'corsheaders',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'django_extensions',
+    'guardian',
+    'tom_common',
+    'django_comments',
+    'bootstrap4',
+    'crispy_bootstrap4',
+    'crispy_forms',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
+    'django_gravatar',
+    'tom_targets',
+    'tom_alerts',
+    'tom_catalogs',
+    'tom_observations',
+    'tom_dataproducts',
 ]
 
 SITE_ID = 1
@@ -120,23 +122,22 @@ DATABASES = {
     }
 }
 
-HUEY = {
-    "huey_class": "huey.MemoryHuey",  # Use in-memory storage for testing
-    "results": True,  # Store return values of tasks.
-    "store_none": False,  # If a task returns None, do not save to results.
-    "immediate": True,  # Run tasks synchronously for testing.
-    "utc": True,  # Use UTC for all times internally.
-    "consumer": {
-        "workers": 1,  # Only one worker needed for synchronous execution
-        "worker_type": "thread",
-        "initial_delay": 0.1,
-        "backoff": 1.15,
-        "max_delay": 10.0,
-        "scheduler_interval": 1,
-        "periodic": False,  # Disable crontab feature for testing
-        "check_worker_health": False,  # Disable health checks for testing
-        "health_check_interval": 1,
+
+DRAMATIQ_REDIS_URL = "redis://127.0.0.1:6379/1"
+
+DRAMATIQ_BROKER = {
+    "BROKER": "dramatiq.brokers.redis.RedisBroker",
+    "OPTIONS": {
+        "connection_pool": redis.ConnectionPool.from_url(DRAMATIQ_REDIS_URL),
     },
+    "MIDDLEWARE": [
+        "dramatiq.middleware.AgeLimit",
+        "dramatiq.middleware.TimeLimit",
+        "dramatiq.middleware.Retries",
+        "django_dramatiq.middleware.AdminMiddleware",
+        "django_dramatiq.middleware.DbConnectionsMiddleware",
+        "dramatiq.middleware.Callbacks",
+    ]
 }
 
 

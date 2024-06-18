@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import tempfile
+import redis
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,10 +35,10 @@ ALLOWED_HOSTS = ["*"]
 TOM_NAME = '{{ PROJECT_NAME }}'
 
 INSTALLED_APPS = [
+    'django_dramatiq',
     'daphne',
     'goats_tom',
     'channels',
-    'huey.contrib.djhuey',
     'fontawesomefree',
     'corsheaders',
     'django.contrib.admin',
@@ -125,32 +126,21 @@ CHANNEL_LAYERS = {
     },
 }
 
-HUEY = {
-    'name': '{{ PROJECT_NAME }}_huey',
-    'huey_class': 'huey.RedisHuey',  # Huey implementation to use.
-    'results': True,  # Store return values of tasks.
-    'store_none': False,  # If a task returns None, do not save to results.
-    'immediate': False,  # If DEBUG=True, run synchronously.
-    'utc': True,  # Use UTC for all times internally.
-    'connection': {
-        'host': '{{ REDIS_HOST }}',
-        'port': {{ REDIS_PORT }},
-        'db': 1,
-        'connection_pool': None,
-        'read_timeout': 1,  # If not polling (blocking pop), use timeout.
-        'url': None,  # Allow Redis config via a DSN.
+DRAMATIQ_REDIS_URL = "redis://{{ REDIS_HOST }}:{{ REDIS_PORT }}/1"
+
+DRAMATIQ_BROKER = {
+    "BROKER": "dramatiq.brokers.redis.RedisBroker",
+    "OPTIONS": {
+        "connection_pool": redis.ConnectionPool.from_url(DRAMATIQ_REDIS_URL),
     },
-    'consumer': {
-        'workers': 3,
-        'worker_type': 'thread',
-        'initial_delay': 0.1,  # Smallest polling interval, same as -d.
-        'backoff': 1.15,  # Exponential backoff using this rate, -b.
-        'max_delay': 10.0,  # Max possible polling interval, -m.
-        'scheduler_interval': 1,  # Check schedule every second, -s.
-        'periodic': True,  # Enable crontab feature.
-        'check_worker_health': True,  # Enable worker health checks.
-        'health_check_interval': 1,  # Check worker health every second.
-    },
+    "MIDDLEWARE": [
+        "dramatiq.middleware.AgeLimit",
+        "dramatiq.middleware.TimeLimit",
+        "dramatiq.middleware.Retries",
+        "django_dramatiq.middleware.AdminMiddleware",
+        "django_dramatiq.middleware.DbConnectionsMiddleware",
+        "dramatiq.middleware.Callbacks",
+    ]
 }
 
 
