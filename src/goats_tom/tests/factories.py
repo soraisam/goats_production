@@ -221,6 +221,8 @@ class DRAGONSReduceFactory(factory.django.DjangoModelFactory):
         model = DRAGONSReduce
 
     recipe = factory.SubFactory(DRAGONSRecipeFactory)
-    start_time = factory.LazyFunction(timezone.now)
+    created_at = factory.LazyFunction(timezone.now)
+    start_time = None
     end_time = None
     status = "created"
+    task_id = None

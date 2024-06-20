@@ -341,3 +341,13 @@ class TestDRAGONSReduce:
             reduction.status == "initializing"
         ), "Should update status to initializing"
         assert reduction.end_time is None, "Should not have end time set."
+        assert reduction.start_time is not None, "Should have start time set."
+    
+    def test_mark_canceled(self):
+        """Test changing the status to canceled."""
+        reduction = DRAGONSReduceFactory()
+        reduction.mark_canceled()
+        assert (
+            reduction.status == "canceled"
+        ), "Should update status to canceled"
+        assert reduction.end_time is not None, "Should have end time set."
