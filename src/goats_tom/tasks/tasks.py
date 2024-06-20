@@ -32,21 +32,6 @@ matplotlib.use("Agg", force=True)
 logger = logging.getLogger(__name__)
 
 
-def _get_reduce_label(reduce: DRAGONSReduce) -> str:
-    """Generates the label for the reduce notification.
-
-    Parameters
-    ----------
-    reduce : `DRAGONSReduce`
-        Model instance to build label from.
-
-    Returns
-    -------
-    `str`
-        The generated label.
-    """
-    return f"{reduce.recipe.dragons_run}::{reduce.recipe.short_name}"
-
 @dramatiq.actor
 def run_dragons_reduce(reduce_id: int) -> None:
     """Executes a reduction process in the background.
@@ -79,7 +64,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
         # Send start notification.
         NotificationInstance.create_and_send(
             message="Reduction started.",
-            label=_get_reduce_label(reduce),
+            label=reduce.get_label(),
         )
         reduce.mark_initializing()
         DRAGONSProgress.create_and_send(reduce)
@@ -130,7 +115,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
         # Send finished notification.
         NotificationInstance.create_and_send(
             message="Reduction finished.",
-            label=_get_reduce_label(reduce),
+            label=reduce.get_label(),
             color="success",
         )
         reduce.mark_done()
@@ -148,7 +133,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
         reduce.mark_error()
         DRAGONSProgress.create_and_send(reduce)
         NotificationInstance.create_and_send(
-            label=_get_reduce_label(reduce),
+            label=reduce.get_label(),
             message=f"Error during reduction: {str(e)}",
             color="danger",
         )

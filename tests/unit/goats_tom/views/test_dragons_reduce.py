@@ -23,6 +23,9 @@ class TestDRAGONSReduceViewSet(APITestCase):
         self.create_view = DRAGONSReduceViewSet.as_view({"post": "create"})
         self.list_view = DRAGONSReduceViewSet.as_view({"get": "list"})
         self.detail_view = DRAGONSReduceViewSet.as_view({"get": "retrieve"})
+        self.partial_update_view = DRAGONSReduceViewSet.as_view(
+            {"patch": "partial_update"}
+        )
 
     def authenticate(self, request):
         """Helper method to authenticate requests."""
@@ -31,6 +34,7 @@ class TestDRAGONSReduceViewSet(APITestCase):
     @patch("goats_tom.views.dragons_reduce.run_dragons_reduce.send")
     def test_create_reduction(self, mock_run_dragons_reduce):
         """Test creating a new DRAGONS reduction."""
+        mock_run_dragons_reduce.return_value.message_id = "12345"
         recipe = DRAGONSRecipeFactory()
         data = {
             "recipe_id": recipe.id,
@@ -46,6 +50,8 @@ class TestDRAGONSReduceViewSet(APITestCase):
 
         assert response.status_code == status.HTTP_201_CREATED
         assert DRAGONSReduce.objects.count() == 1
+        reduce = DRAGONSReduce.objects.first()
+        self.assertEqual(reduce.task_id, "12345")
 
     def test_list_reductions(self):
         """Test listing all DRAGONS reductions."""
@@ -81,6 +87,59 @@ class TestDRAGONSReduceViewSet(APITestCase):
         response = self.create_view(request)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("goats_tom.views.dragons_reduce.abort")
+    @patch("goats_tom.views.dragons_reduce.DRAGONSProgress.create_and_send")
+    @patch("goats_tom.views.dragons_reduce.NotificationInstance.create_and_send")
+    def test_valid_update_reduction(
+        self, mock_notification_send, mock_progress_send, mock_abort
+    ):
+        """Test valid updating of a DRAGONSReduce to 'canceled' status."""
+        reduction = DRAGONSReduceFactory(task_id="12345")
+        reduction.mark_initializing()
+        data = {"status": "canceled"}
+
+        request = self.factory.patch(
+            reverse("dragonsreduce-detail", args=[reduction.id]), data
+        )
+        self.authenticate(request)
+
+        response = self.partial_update_view(request, pk=reduction.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        reduction.refresh_from_db()
+        mock_abort.assert_called_once_with(reduction.task_id)
+        mock_progress_send.assert_called_once_with(reduction)
+        mock_notification_send.assert_called_once_with(
+            label=reduction.get_label(),
+            color="warning",
+            message="Background task canceled.",
+        )
+        self.assertEqual(reduction.status, "canceled")
+
+    @patch("goats_tom.views.dragons_reduce.abort")
+    @patch("goats_tom.views.dragons_reduce.DRAGONSProgress.create_and_send")
+    @patch("goats_tom.views.dragons_reduce.NotificationInstance.create_and_send")
+    def test_invalid_update_reduction(
+        self, mock_notification_send, mock_progress_send, mock_abort
+    ):
+        """Test invalid updating of a DRAGONSReduce with an unsupported status."""
+        reduction = DRAGONSReduceFactory(status="running")
+        data = {"status": "running"}
+
+        request = self.factory.patch(
+            reverse("dragonsreduce-detail", args=[reduction.id]), data
+        )
+        self.authenticate(request)
+
+        response = self.partial_update_view(request, pk=reduction.id)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        reduction.refresh_from_db()
+        self.assertEqual(reduction.status, "running")  # Status remains unchanged
+
+        mock_abort.assert_not_called()
+        mock_progress_send.assert_not_called()
+        mock_notification_send.assert_not_called()
 
     def test_authentication_required(self):
         """Test that authentication is required to access the view."""
