@@ -1,0 +1,1 @@
+Enabled running task cancellation from UI: Connected the frontend "Stop" button with the backend to enable users to cancel running tasks directly from the interface. Added logic to dynamically enable or disable "Start" and "Stop" buttons based on the current status of recipe reductions.

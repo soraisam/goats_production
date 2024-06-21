@@ -23,7 +23,7 @@ class DRAGONSProgress:
             The model instance for recipe reduce.
         """
         cls._send(
-            reduce.get_status_display(),
+            reduce.status,
             reduce.recipe.dragons_run.id,
             reduce.recipe.id,
             reduce.id,
