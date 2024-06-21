@@ -13,11 +13,12 @@ const FILE_TYPE_2_DISPLAY = {
 };
 
 const STATUS_2_PROGRESS_BAR_COLOR = {
-  Queued: "bg-primary bg-opacity-25",
-  Initializing: "bg-primary bg-opacity-50",
-  Error: "bg-danger",
-  Running: "bg-primary",
-  Done: "bg-success",
+  queued: "bg-primary bg-opacity-25",
+  initializing: "bg-primary bg-opacity-50",
+  error: "bg-danger",
+  running: "bg-primary",
+  done: "bg-success",
+  canceled: "bg-warning",
 };
 
 const EDITOR_DARK_THEME = "ace/theme/cloud9_night";
@@ -45,7 +46,7 @@ class RecipeModel {
    */
   async fetchRecipe(recipeId) {
     try {
-      const response = await this.api.get(`${recipesUrl}/${recipeId}/`);
+      const response = await this.api.get(`${recipesUrl}${recipeId}/`);
       this.recipe = response;
       return response;
     } catch (error) {
@@ -66,6 +67,22 @@ class RecipeModel {
       return response;
     } catch (error) {
       console.error("Error starting reduce:", error);
+    }
+  }
+
+  /**
+   * Stops the reduction process.
+   * @param {number} reduce The ID of the reduction to be stopped.
+   * @returns {Promise<Object>} A promise that resolves to the response from the server.
+   * @async
+   */
+  async stopReduce(reduce) {
+    const data = { status: "canceled" };
+    try {
+      const response = await this.api.patch(`${this.reduceUrl}${reduce}/`, data);
+      return response;
+    } catch (error) {
+      console.error("Error stopping reduce:", error);
     }
   }
 }
@@ -100,6 +117,8 @@ class RecipeView {
     this.cardHeader = null;
     this.reduce = null;
     this.progressStatus = null;
+    this.stopButton = null;
+    this.startButton = null;
   }
 
   /**
@@ -125,12 +144,20 @@ class RecipeView {
    */
   _initLocalListeners() {
     this.cardHeader.addEventListener("click", (event) => {
-      if (event.target.dataset.action === "startReduce") {
-        // On start, pass in the recipe to link to.
-        this.onStartReduce(event.target.dataset.recipeId);
-      } else if (event.target.dataset.action === "stopReduce") {
-        // On stop, need to specify what specific reduce to stop.
-        this.onStopReduce(event.target.dataset.recipeId);
+      if (event.target.dataset.action) {
+        const action = event.target.dataset.action;
+        switch (action) {
+          case "startReduce":
+            // On start, pass in the recipe to link to.
+            this.onStartReduce(event.target.dataset.recipeId);
+            break;
+          case "stopReduce":
+            // On stop, need to specify what specific reduce to stop.
+            this.onStopReduce(event.target.dataset.reduceId);
+            break;
+          default:
+            console.log("No action defined for this button");
+        }
       }
     });
   }
@@ -212,14 +239,15 @@ class RecipeView {
     // Create content for column 2
     const startButton = Utils.createElement("button", ["btn", "btn-success", "me-1"]);
     const stopButton = Utils.createElement("button", ["btn", "btn-danger"]);
-    startButton.id = `startRecipe-${this.recipe.id}`;
     startButton.dataset.recipeId = this.recipe.id;
     startButton.setAttribute("data-action", "startReduce");
     startButton.textContent = "Start";
-    stopButton.id = `stopButton-${this.recipe.id}`;
-    stopButton.setAttribute("data-recipeId", this.recipe.id);
+    this.startButton = startButton;
+    stopButton.setAttribute("data-reduceId", null);
     stopButton.textContent = "Stop";
     stopButton.setAttribute("data-action", "stopReduce");
+    stopButton.disabled = true;
+    this.stopButton = stopButton;
     col2.append(startButton, stopButton);
 
     // Build the layout.
@@ -448,7 +476,15 @@ class RecipeView {
     }
 
     // Update the status text below the progress bar.
-    this.progressStatus.textContent = `${status}`;
+    this.progressStatus.textContent = this.capitalizeFirstLetter(status);
+  }
+  /**
+   * Capitalizes the first letter of the given string.
+   * @param {string} string The string to capitalize.
+   * @return {string} The string with the first letter capitalized.
+   */
+  capitalizeFirstLetter(string) {
+    return string[0].toUpperCase() + string.slice(1);
   }
 
   /**
@@ -468,6 +504,43 @@ class RecipeView {
     this.logger = new Logger(div);
 
     return div;
+  }
+
+  /**
+   * Enables the stop button and sets its associated reduce ID.
+   * @param {number} reduce The reduce ID to be assigned to the stop button.
+   */
+  enableStopButton(reduce) {
+    if (this.stopButton) {
+      this.stopButton.dataset.reduceId = reduce;
+      this.stopButton.disabled = false;
+    }
+  }
+
+  /**
+   * Disables the stop button and clears its associated reduce ID.
+   */
+  disableStopButton() {
+    this.stopButton.disabled = true;
+    this.stopButton.dataset.reduceId = null;
+  }
+
+  /**
+   * Enables the start button, typically called when a new recipe is loaded
+   * or the current task is completed.
+   */
+  enableStartButton() {
+    if (this.startButton) {
+      // TODO: When swapping recipes this will be used.
+      this.startButton.disabled = false;
+    }
+  }
+
+  /**
+   * Disables the start button, typically used when a task is running.
+   */
+  disableStartButton() {
+    this.startButton.disabled = true;
   }
 
   /**
@@ -517,8 +590,9 @@ class RecipeController {
     // Clear logger before starting.
     this.view.logger.clear();
     const reduce = await this.model.startReduce(recipeId);
-    // TODO: Update the view.
+    // Update the view.
     this.handleUpdateReduce(reduce);
+    this.handleUpdateActionButtons(reduce);
   };
 
   /**
@@ -527,8 +601,11 @@ class RecipeController {
    * @async
    */
   handleStopReduce = async (reduceId) => {
-    // TODO: After API is written to terminate a running recipe reduce.
-    console.log("Not implemented.");
+    const reduce = await this.model.stopReduce(reduceId);
+    // TODO: Better error handling
+    // Update the view.
+    this.handleUpdateReduce(reduce);
+    this.handleUpdateActionButtons(reduce);
   };
 
   /**
@@ -545,6 +622,27 @@ class RecipeController {
    */
   handleUpdateReduce = (data) => {
     this.view.updateProgressBar(data.status);
+  };
+
+  /**
+   * Updates the state of action buttons based on the current task status.
+   * This function handles enabling/disabling and updating data attributes
+   * of start and stop buttons based on the task's lifecycle state.
+   * @param {Object} data The data object containing the current task's status and ID.
+   */
+  handleUpdateActionButtons = (data) => {
+    // Reset the stop button if the status is in these.
+    if (["canceled", "done", "error"].includes(data.status)) {
+      this.view.disableStopButton();
+    } else {
+      this.view.enableStopButton(data.id);
+    }
+    // Disable start button if task running, else enable.
+    if (["queued", "running", "initializing"].includes(data.status)) {
+      this.view.disableStartButton();
+    } else {
+      this.view.enableStartButton();
+    }
   };
 
   /**
