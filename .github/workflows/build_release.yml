@@ -37,7 +37,7 @@ jobs:
 
       - name: Update pyproject.toml with new version
         run: |
-          sed -i 's/version = ".*"/version = "${{ inputs.version }}"/' pyproject.toml
+          sed -i '/^\[project\]/,/^version = / s/^version = ".*"$/version = "${{ inputs.version }}"/' pyproject.toml
 
       - name: Commit updated changelog
         run: |
@@ -57,6 +57,6 @@ jobs:
         with:
           tag_name: ${{ inputs.version }}
           name: ${{ inputs.version }}
-          draft: false  # Set to true to create a draft release.
+          draft: true  # Set to true to create a draft release.
           prerelease: false
           body_path: draft_release_notes.md
