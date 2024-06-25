@@ -1,5 +1,5 @@
 /**
- * Represents a model for managing recipes in the DRAGONS system.
+ * Represents a model for managing recipes and reductions in the DRAGONS system.
  */
 class RecipeManagerModel {
   /**
@@ -10,6 +10,8 @@ class RecipeManagerModel {
     this.api = api;
     this.recipes = [];
     this.recipesUrl = "dragonsrecipes/";
+    this.reducesUrl = "dragonsreduce/";
+    this.reduces = [];
   }
 
   /**
@@ -24,6 +26,25 @@ class RecipeManagerModel {
       return this.recipes;
     } catch (error) {
       console.error("Error fetching recipes:", error);
+    }
+  }
+
+  /**
+   * Fetches the reduces data for a given run.
+   * @param {number} run The ID of the run to fetch reduces for.
+   * @param {boolean} [notFinished=false] Whether to fetch only not finished reduces.
+   * @returns {Promise<Array<Object>>} A promise that resolves to an array of reduces data.
+   * @throws {Error} Will log an error message if the request fails.
+   */
+  async fetchReduces(run, notFinished = False) {
+    try {
+      const response = await this.api.get(
+        `${this.reducesUrl}?run=${run}&not_finished=${notFinished}`
+      );
+      this.reduces = response.results;
+      return this.reduces;
+    } catch (error) {
+      console.error("Error fetching reduces:", error);
     }
   }
 }
@@ -149,5 +170,23 @@ class RecipeManagerController {
     });
     // Have list of recipe cards, update UI.
     this.view.addCards(recipeCards);
+  };
+
+  /**
+   * Updates the reduces progress for a given run.
+   * @param {number} run The ID of the run to update reduces progress for.
+   * @returns {Promise<void>} A promise that resolves when the progress update is complete.
+   */
+  updateReducesProgress = async (run) => {
+    const reducesData = await this.model.fetchReduces(run, true);
+
+    // Iterate over running reductions.
+    reducesData.forEach((reduce) => {
+      const recipeController = this.getRecipeControllerById(reduce.recipe);
+      if (recipeController) {
+        // Update the recipe reduce progress, it will only be not finished.
+        recipeController.handleUpdateReduce(reduce);
+      }
+    });
   };
 }

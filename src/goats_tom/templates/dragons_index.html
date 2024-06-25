@@ -116,6 +116,7 @@
     const handleRunSelectionChange = async (observationRecordPk, runId) => {
       await setupController.handleFetchFiles(observationRecordPk, runId);
       await recipeManagerController.updateRecipeCards(runId);
+      await recipeManagerController.updateReducesProgress(runId);
     };
 
     // Bind the combined functionality to the run selection change.

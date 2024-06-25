@@ -8,6 +8,7 @@ from goats_tom.tests.factories import (
     DRAGONSRecipeFactory,
     DRAGONSReduceFactory,
     UserFactory,
+    DRAGONSRunFactory,
 )
 from goats_tom.views import DRAGONSReduceViewSet
 from rest_framework import status
@@ -140,6 +141,55 @@ class TestDRAGONSReduceViewSet(APITestCase):
         mock_abort.assert_not_called()
         mock_progress_send.assert_not_called()
         mock_notification_send.assert_not_called()
+
+    def test_filter_by_run(self):
+        """Test filtering DRAGONS reduces by run."""
+        dragons_run = DRAGONSRunFactory()
+        DRAGONSReduceFactory.create_batch(2, recipe__dragons_run=dragons_run)
+        DRAGONSReduceFactory.create_batch(3)
+
+        request = self.factory.get(
+            reverse("dragonsreduce-list"), {"run": dragons_run.pk}
+        )
+        self.authenticate(request)
+
+        response = self.list_view(request)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data.get("results")) == 2
+
+    def test_filter_by_status(self):
+        """Test filtering DRAGONS reduces by status."""
+        status_filter = "running"
+        DRAGONSReduceFactory.create_batch(2, status=status_filter)
+        DRAGONSReduceFactory.create_batch(3)
+
+        request = self.factory.get(
+            reverse("dragonsreduce-list"), {"status": status_filter}
+        )
+        self.authenticate(request)
+
+        response = self.list_view(request)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data.get("results")) == 2
+
+    def test_filter_not_finished(self):
+        """Test filtering DRAGONS reduces by not finished status."""
+        DRAGONSReduceFactory.create_batch(2, status="running")
+        DRAGONSReduceFactory.create_batch(1, status="done")
+        DRAGONSReduceFactory.create_batch(1, status="canceled")
+        DRAGONSReduceFactory.create_batch(1, status="error")
+
+        request = self.factory.get(
+            reverse("dragonsreduce-list"), {"not_finished": "true"}
+        )
+        self.authenticate(request)
+
+        response = self.list_view(request)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data.get("results")) == 2
 
     def test_authentication_required(self):
         """Test that authentication is required to access the view."""

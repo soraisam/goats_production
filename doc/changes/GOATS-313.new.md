@@ -1,0 +1,1 @@
+Load running reductions on DRAGONS run select: Implemented synchronization of running reductions on page refresh or when a new run is selected. Added support for query parameters to fetch and limit reduction results in the API.

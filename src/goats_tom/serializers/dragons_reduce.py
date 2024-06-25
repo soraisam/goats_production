@@ -126,4 +126,16 @@ class DRAGONSReduceSerializer(serializers.ModelSerializer):
 
 
 class DRAGONSReduceFilterSerializer(serializers.Serializer):
-    pass
+    """Serializer for filtering `DRAGONSReduce` instances."""
+
+    status = serializers.ListField(
+        child=serializers.ChoiceField(choices=DRAGONSReduce.STATUS_CHOICES),
+        required=False,
+        help_text="Status for reduction to filter by.",
+    )
+    not_finished = serializers.BooleanField(
+        required=False, help_text="Return all reductions that are not finished."
+    )
+    run = serializers.IntegerField(
+        required=False, help_text="ID for the DRAGONS run to filter by."
+    )
