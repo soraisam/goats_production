@@ -1,1 +1,0 @@
-Fixed websocket connection issue: Resolved a bug where websockets failed to open on the DRAGONS run page, restoring functionality for notifications and download progress updates.

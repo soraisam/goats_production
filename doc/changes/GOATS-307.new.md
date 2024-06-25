@@ -1,1 +1,0 @@
-Wrote tests for additional Django Channels classes: Added unit tests for websocket classes responsible for the notification system.

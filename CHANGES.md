@@ -1,3 +1,36 @@
+## GOATS 24.6.0 (2024-06-25)
+
+
+### New Features
+
+- Extended pagination to include item count: Overrode bootstrap_pagination to show "Showing x-y of n" message. Updated HTML template to display item counts. [[#GOATS-178](https://noirlab.atlassian.net/browse/GOATS-178)]
+- Implemented WebSocket support for DRAGONS logs: Developed a Channels consumer to handle real-time log messages from DRAGONS. Added a new WebSocket endpoint for DRAGONS updates and integrated a WebSocket logging handler. Expanded testing to cover Django Channels consumers. [[#GOATS-286](https://noirlab.atlassian.net/browse/GOATS-286)]
+- Developed DRAGONS WebSocket logging: Developed a Python logging handler for WebSocket communication to provide real-time logs for the DRAGONS system. [[#GOATS-290](https://noirlab.atlassian.net/browse/GOATS-290)]
+- Add backend for DRAGONS reduction: Developed an API to initiate and manage DRAGONS reduction processes in the background. Introduced a model to store details and updates of background tasks. Wrote comprehensive tests for the new backend infrastructure. [[#GOATS-292](https://noirlab.atlassian.net/browse/GOATS-292)]
+- Enabled initiation of DRAGONS recipe reduction from the UI. [[#GOATS-295](https://noirlab.atlassian.net/browse/GOATS-295)]
+- Added cancel endpoint for DRAGONS tasks: An API endpoint now allows canceling running or queued tasks in DRAGONS by setting the status of a recipe reduction to “canceled.” This action triggers the abortion of the background task. The update includes a new serializer to handle patches and extends tests to cover both valid and invalid patch scenarios. [[#GOATS-299](https://noirlab.atlassian.net/browse/GOATS-299)]
+- Enabled running task cancellation from UI: Connected the frontend "Stop" button with the backend to enable users to cancel running tasks directly from the interface. Added logic to dynamically enable or disable "Start" and "Stop" buttons based on the current status of recipe reductions. [[#GOATS-300](https://noirlab.atlassian.net/browse/GOATS-300)]
+- Display real-time logs on frontend with websocket: Built infrastructure to manage recipes for reduce runs, simplifying updates to specific recipes. Refactored recipe MVC. [[#GOATS-301](https://noirlab.atlassian.net/browse/GOATS-301)]
+- Extended DRAGONS consumer for real-time recipe progress updates: Updated the UI to display initial progress information. Added utilities for easier real-time communication and refactored UI progress bars to lay the foundation for future enhancements. [[#GOATS-302](https://noirlab.atlassian.net/browse/GOATS-302)]
+- Enabled interactive mode for select file types in recipe reduce: Integrated Bokeh for interactive visualization in ‘arc’, ‘flat’, and ‘object’ file types. [[#GOATS-303](https://noirlab.atlassian.net/browse/GOATS-303)]
+- Wrote tests for additional Django Channels classes: Added unit tests for websocket classes responsible for the notification system. [[#GOATS-307](https://noirlab.atlassian.net/browse/GOATS-307)]
+- Enhanced DRAGONS log autoscroll behavior: Updated logger to conditionally autoscroll based on the user's current scroll position. Methods intended for logger internal use were made private. [[#GOATS-308](https://noirlab.atlassian.net/browse/GOATS-308)]
+- Cleared DRAGONS logs at recipe start. [[#GOATS-309](https://noirlab.atlassian.net/browse/GOATS-309)]
+- Load running reductions on DRAGONS run select: Implemented synchronization of running reductions on page refresh or when a new run is selected. Added support for query parameters to fetch and limit reduction results in the API. [[#GOATS-313](https://noirlab.atlassian.net/browse/GOATS-313)]
+
+
+### Changes
+
+- Update conda environment file and dependencies: Removed the set version for tomtoolkit. Fixed issue caused by the new version of tomtoolkit. [[#GOATS-272](https://noirlab.atlassian.net/browse/GOATS-272)]
+- Added additional recipe reduce status feedback: Enhanced visibility of recipe reduce states and refined error handling in the DRAGONS reduce background task. [[#GOATS-310](https://noirlab.atlassian.net/browse/GOATS-310)]
+- Enhanced recipe progress UI: Updated the progress bar to display different colors for different states and provide status label. [[#GOATS-311](https://noirlab.atlassian.net/browse/GOATS-311)]
+- Switched to `dramatiq` for task management: GOATS now uses `dramatiq` for background tasks due to its support for aborting running tasks, a feature not available in `huey`. [[#GOATS-315](https://noirlab.atlassian.net/browse/GOATS-315)]
+
+
+### Bug Fixes
+
+- Fixed websocket connection issue: Resolved a bug where websockets failed to open on the DRAGONS run page, restoring functionality for notifications and download progress updates. [[#GOATS-314](https://noirlab.atlassian.net/browse/GOATS-314)]
+
 ## GOATS 24.5.0 (2024-05-28)
 
 

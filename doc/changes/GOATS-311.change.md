@@ -1,1 +1,0 @@
-Enhanced recipe progress UI: Updated the progress bar to display different colors for different states and provide status label.

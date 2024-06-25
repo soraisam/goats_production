@@ -1,1 +1,0 @@
-Display real-time logs on frontend with websocket: Built infrastructure to manage recipes for reduce runs, simplifying updates to specific recipes. Refactored recipe MVC.

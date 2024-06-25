@@ -1,1 +1,0 @@
-Add backend for DRAGONS reduction: Developed an API to initiate and manage DRAGONS reduction processes in the background. Introduced a model to store details and updates of background tasks. Wrote comprehensive tests for the new backend infrastructure.

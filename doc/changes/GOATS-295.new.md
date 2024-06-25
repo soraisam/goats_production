@@ -1,1 +1,0 @@
-Enabled initiation of DRAGONS recipe reduction from the UI.

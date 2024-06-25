@@ -1,1 +1,0 @@
-Added cancel endpoint for DRAGONS tasks: An API endpoint now allows canceling running or queued tasks in DRAGONS by setting the status of a recipe reduction to “canceled.” This action triggers the abortion of the background task. The update includes a new serializer to handle patches and extends tests to cover both valid and invalid patch scenarios.
