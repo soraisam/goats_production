@@ -22,7 +22,7 @@ class DRAGONSRecipeFilterSerializer(serializers.Serializer):
     """
 
     dragons_run = serializers.IntegerField(
-        required=False, help_text="Primary key for the DRAGONS run to filter by"
+        required=False, help_text="Primary key for the DRAGONS run to filter by."
     )
     # TODO: This should be a choice of options for file_type to validate
     file_type = serializers.CharField(

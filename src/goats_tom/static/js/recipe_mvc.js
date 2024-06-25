@@ -243,7 +243,7 @@ class RecipeView {
     startButton.setAttribute("data-action", "startReduce");
     startButton.textContent = "Start";
     this.startButton = startButton;
-    stopButton.setAttribute("data-reduceId", null);
+    stopButton.dataset.reduceId = null;
     stopButton.textContent = "Stop";
     stopButton.setAttribute("data-action", "stopReduce");
     stopButton.disabled = true;
@@ -469,7 +469,7 @@ class RecipeView {
     this.progressBar.className = `progress-bar ${colorClass}`;
 
     // Optionally, add animation class if not idle.
-    if (status === "Running" || status === "Initializing") {
+    if (status === "running" || status === "initializing") {
       this.progressBar.classList.add("placeholder-wave");
     } else {
       this.progressBar.classList.remove("placeholder-wave");
@@ -592,7 +592,6 @@ class RecipeController {
     const reduce = await this.model.startReduce(recipeId);
     // Update the view.
     this.handleUpdateReduce(reduce);
-    this.handleUpdateActionButtons(reduce);
   };
 
   /**
@@ -605,7 +604,6 @@ class RecipeController {
     // TODO: Better error handling
     // Update the view.
     this.handleUpdateReduce(reduce);
-    this.handleUpdateActionButtons(reduce);
   };
 
   /**
@@ -617,25 +615,18 @@ class RecipeController {
   };
 
   /**
-   * Updates the progress bar based on the status provided in the data.
-   * @param {Object} data The data object containing the status to update the progress bar.
+   * Updates the progress bar and stop/start buttons based on the status provided in the data.
+   * @param {Object} data The data object containing the status to update with.
    */
   handleUpdateReduce = (data) => {
+    console.log(data);
     this.view.updateProgressBar(data.status);
-  };
-
-  /**
-   * Updates the state of action buttons based on the current task status.
-   * This function handles enabling/disabling and updating data attributes
-   * of start and stop buttons based on the task's lifecycle state.
-   * @param {Object} data The data object containing the current task's status and ID.
-   */
-  handleUpdateActionButtons = (data) => {
     // Reset the stop button if the status is in these.
     if (["canceled", "done", "error"].includes(data.status)) {
       this.view.disableStopButton();
     } else {
-      this.view.enableStopButton(data.id);
+      // Handle from websocket or API.
+      this.view.enableStopButton(data?.id ?? data?.reduce_id);
     }
     // Disable start button if task running, else enable.
     if (["queued", "running", "initializing"].includes(data.status)) {

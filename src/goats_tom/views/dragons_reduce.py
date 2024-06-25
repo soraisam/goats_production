@@ -4,6 +4,7 @@ __all__ = ["DRAGONSReduceViewSet"]
 from dramatiq_abort import abort
 from rest_framework import mixins, permissions
 from rest_framework.viewsets import GenericViewSet
+from django.db.models import QuerySet
 
 from goats_tom.models import DRAGONSReduce
 from goats_tom.realtime import DRAGONSProgress, NotificationInstance
@@ -30,6 +31,27 @@ class DRAGONSReduceViewSet(
         "partial_update": DRAGONSReduceUpdateSerializer,
     }
     serializer_class = DRAGONSReduceSerializer
+
+    def get_queryset(self) -> QuerySet:
+        queryset = super().get_queryset()
+
+        # Run query parameters through the serializer.
+        filter_serializer = self.filter_serializer_class(data=self.request.query_params)
+
+        # Check if any filters provided.
+        if filter_serializer.is_valid(raise_exception=False):
+            status_filter = filter_serializer.validated_data.get("status")
+            not_finished = filter_serializer.validated_data.get("not_finished")
+            run = filter_serializer.validated_data.get("run")
+
+            if run is not None:
+                queryset = queryset.filter(recipe__dragons_run__pk=run)
+            if status_filter is not None:
+                queryset = queryset.filter(status__in=status_filter)
+            if not_finished is True:
+                queryset = queryset.exclude(status__in=["canceled", "done", "error"])
+
+        return queryset
 
     def get_serializer_class(self):
         """Determine which serializer to use based on the HTTP method."""
