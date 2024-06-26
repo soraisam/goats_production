@@ -32,7 +32,7 @@ matplotlib.use("Agg", force=True)
 logger = logging.getLogger(__name__)
 
 
-@dramatiq.actor
+@dramatiq.actor(max_retries=0)
 def run_dragons_reduce(reduce_id: int) -> None:
     """Executes a reduction process in the background.
 
@@ -139,7 +139,8 @@ def run_dragons_reduce(reduce_id: int) -> None:
         )
         raise
 
-@dramatiq.actor
+
+@dramatiq.actor(max_retries=0)
 def download_goa_files(
     serialized_observation_record: str, query_params: dict, user: int
 ) -> None:
