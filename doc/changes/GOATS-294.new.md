@@ -1,0 +1,1 @@
+Add Chrome extension link: Users can now click to access the Chrome extension store for installing antares2goats to enhance their GOATS experience from the ANTARES broker page.
