@@ -1,0 +1,1 @@
+Output directory now matches run ID: Removed unused setup form and refresh button for DRAGONS runs. Disabled the delete option but retained it as a placeholder.

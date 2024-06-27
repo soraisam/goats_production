@@ -24,8 +24,8 @@ class DRAGONSRun(models.Model):
     observation_record : `models.ForeignKey`
         The ObservationRecord this DRAGONS run is associated with.
     run_id : `models.CharField`
-        Unique ID for the DRAGONS run, with a default format including
-        timestamp.
+        Unique ID for the DRAGONS run, with a default format
+        including timestamp.
     config_filename : `models.CharField`
         Filename for the DRAGONS configuration, not editable post-creation.
     output_directory : `models.CharField`
@@ -43,8 +43,8 @@ class DRAGONSRun(models.Model):
     Methods
     -------
     save(*args, **kwargs) -> None:
-        Saves the DRAGONSRun instance, applying default values for `run_id` and
-        `output_directory` if not provided.
+        Saves the DRAGONSRun instance, applying default value for `run_id` and
+        matches `output_directory` with `run_id`.
 
     get_output_dir() -> Path:
         Constructs and returns the full path to the output directory.
@@ -65,6 +65,7 @@ class DRAGONSRun(models.Model):
     output_directory = models.CharField(
         max_length=255,
         blank=True,
+        editable=False,
     )
     cal_manager_filename = models.CharField(max_length=30, default="cal_manager.db")
     log_filename = models.CharField(max_length=30, default="log.log", editable=False)
@@ -91,14 +92,15 @@ class DRAGONSRun(models.Model):
     def save(self, *args, **kwargs) -> None:
         """Saves the DRAGONSRun instance.
 
-        Applies default values for "run_id" and "output_directory" if they are
-        not provided.
+        Applies default values for "run_id" and assigns `output_directory`.
         """
+        # TODO: Do we want to allow spaces in `run_id`?
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         if not self.run_id:
             self.run_id = f"run-{timestamp}"
-        if not self.output_directory:
-            self.output_directory = f"reduced-{timestamp}"
+
+        # Output directory matches `run_id`.
+        self.output_directory = self.run_id
 
         return super(DRAGONSRun, self).save(*args, **kwargs)
 
