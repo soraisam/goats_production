@@ -78,6 +78,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
         dragons_handler.setLevel(21)
 
         # Change the working directory to save outputs.
+        print(run.get_output_dir())
         os.chdir(run.get_output_dir())
 
         # Filter the files based on the associated DRAGONS run and file type.
@@ -91,7 +92,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
         # Setup the logger.
         logutils.config(
             mode="standard",
-            file_name=run.get_log_file(),
+            file_name=run.log_filename,
             additional_handlers=dragons_handler,
         )
 

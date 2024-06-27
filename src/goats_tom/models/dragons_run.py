@@ -151,10 +151,10 @@ class DRAGONSRun(models.Model):
         `Path`
             The full path to the associated observation ID directory.
         """
-
-        return (
+        raw_dir = (
             settings.MEDIA_ROOT
             / self.observation_record.target.name
             / self.observation_record.facility
             / self.observation_record.observation_id
         )
+        return raw_dir
