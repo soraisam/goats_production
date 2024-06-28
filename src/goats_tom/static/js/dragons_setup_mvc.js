@@ -129,7 +129,6 @@ class SetupView {
     this.filesContainer = this.card.querySelector("#filesContainer");
     this.observationRecordPk = this.card.dataset.observationRecordPk;
     this.deleteRun = this.card.querySelector("#deleteRun");
-    this.refreshRuns = this.card.querySelector("#refreshRuns");
     this.headerModal = Utils.createModal("header");
 
     // Set up event listeners for UI interactions.
@@ -251,8 +250,8 @@ class SetupView {
    */
   setRunControlsDisabledState(disable) {
     this.runSelect.disabled = disable;
-    this.refreshRuns.disabled = disable;
-    this.deleteRun.disabled = disable;
+    // TODO: Keep this disabled until implemented.
+    //this.deleteRun.disabled = disable;
   }
 
   /**
