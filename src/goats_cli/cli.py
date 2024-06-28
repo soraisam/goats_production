@@ -4,7 +4,6 @@ __all__ = ["cli"]
 import re
 import shutil
 import subprocess
-import threading
 import time
 from pathlib import Path
 from typing import IO, Any
@@ -13,7 +12,15 @@ import click
 from click._compat import get_text_stderr
 
 # from .modify_manage import modify_manage
-from .modify_settings import modify_settings
+from goats_cli.modify_settings import modify_settings
+from goats_cli.process_manager import ProcessManager
+from goats_cli.utils import (
+    display_failed,
+    display_info,
+    display_message,
+    display_ok,
+    display_warning,
+)
 
 REDIS_HOST: str = "localhost"
 REDIS_PORT: int = 6379
@@ -297,11 +304,10 @@ def run(
     if not manage_file.is_file():
         display_failed()
         raise GOATSClickException(
-            f"The 'manage.py' file for the project '{project_name}' does not at exist "
-            f"at '{manage_file.absolute()}'."
+            f"The 'manage.py' file for the project '{project_name}' does not exist at '{manage_file.absolute()}'."
         )
     display_ok()
-    display_info("Verifing Redis installed...")
+    display_info("Verifying Redis installed...")
     try:
         subprocess.run(
             ["redis-server", "--version"], check=True, text=True, capture_output=True
@@ -320,29 +326,30 @@ def run(
         "---------------------------------------------", show_goats_emoji=False
     )
     time.sleep(2)
+
+    process_manager = ProcessManager()
+
     # Start the Redis server.
-    redis_thread = threading.Thread(target=start_redis_server, args=(redis_addrport,))
-    redis_thread.start()
+    process_manager.add_process("redis", start_redis_server(redis_addrport))
 
-    # Start background consumer in a separate thread.
-    background_thread = threading.Thread(
-        target=start_background_consumer, args=(manage_file, workers)
+    # Start Django server.
+    process_manager.add_process("django", start_django_server(manage_file, addrport))
+
+    # Start the background consumer.
+    process_manager.add_process(
+        "background_workers", start_background_workers(manage_file, workers=workers)
     )
-    background_thread.start()
 
-    # Start Django server in a separate thread.
-    django_thread = threading.Thread(
-        target=start_django_server, args=(str(manage_file), addrport)
-    )
-    django_thread.start()
-
-    # Keep the main thread running while sub-threads are working.
-    redis_thread.join()
-    background_thread.join()
-    django_thread.join()
+    # Handle the termination
+    try:
+        # Wait for termination signal (Ctrl+C)
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        process_manager.stop_all()
 
 
-def start_redis_server(addrport: str, disable_rdb: bool = True) -> None:
+def start_redis_server(addrport: str, disable_rdb: bool = True) -> subprocess.Popen:
     """Starts the Redis server.
 
     Parameters
@@ -350,11 +357,17 @@ def start_redis_server(addrport: str, disable_rdb: bool = True) -> None:
     addrport: `str`
         IP address and port to serve on.
 
+    Returns
+    -------
+    `subprocess.Popen`
+        The subprocess.
+
     Raises
     ------
     GOATSClickException
         Raised if issue starting Redis server.
     """
+    display_message("Starting redis database.")
     pattern = pattern = re.compile(REGEX_PATTERN)
     match = pattern.match(addrport)
     port = match.group("port")
@@ -364,15 +377,16 @@ def start_redis_server(addrport: str, disable_rdb: bool = True) -> None:
     if disable_rdb:
         cmd.extend(["--save", "''", "--appendonly", "no"])
     try:
-        subprocess.run(cmd, check=True)
+        redis_process = subprocess.Popen(cmd, start_new_session=True)
     except subprocess.CalledProcessError as error:
         raise GOATSClickException(
             f"Error running Redis server: '{error.cmd}'. "
             f"Exit status: {error.returncode}."
         )
+    return redis_process
 
 
-def start_django_server(manage_file: Path, addrport: str) -> None:
+def start_django_server(manage_file: Path, addrport: str) -> subprocess.Popen:
     """Starts the Django development server.
 
     Parameters
@@ -382,35 +396,50 @@ def start_django_server(manage_file: Path, addrport: str) -> None:
     addrport: `str`
         IP address and port to serve on.
 
+    Returns
+    -------
+    `subprocess.Popen`
+        The subprocess.
+
     Raises
     ------
     GOATSClickException
         Raised if issue starting Django server.
     """
+    display_message("Starting django server.")
     try:
-        subprocess.run([f"{manage_file}", "runserver", addrport], check=True)
+        django_process = subprocess.Popen(
+            [f"{manage_file}", "runserver", addrport], start_new_session=True
+        )
     except subprocess.CalledProcessError as error:
         raise GOATSClickException(
             f"Error running Django server: '{error.cmd}'. "
             f"Exit status: {error.returncode}."
         )
+    return django_process
 
 
-def start_background_consumer(manage_file: Path, workers: int) -> None:
-    """Starts the background consumer with workers.
+def start_background_workers(manage_file: Path, workers: int) -> subprocess.Popen:
+    """Starts the background workers.
 
     Parameters
     ----------
     manage_file : `Path`
         Path to the GOATS manage file.
 
+    Returns
+    -------
+    `subprocess.Popen`
+        The subprocess.
+
     Raises
     ------
     GOATSClickException
-        Raised if issue starting background consumers.
+        Raised if issue starting background workers.
     """
+    display_message("Starting background workers.")
     try:
-        subprocess.run(
+        background_workers_process = subprocess.Popen(
             [
                 f"{manage_file}",
                 "rundramatiq",
@@ -418,73 +447,17 @@ def start_background_consumer(manage_file: Path, workers: int) -> None:
                 f"{workers}",
                 "--path",
                 f"{manage_file.parent}",
+                "--worker-shutdown-timeout",
+                "1000",
             ],
-            check=True,
+            start_new_session=True,
         )
     except subprocess.CalledProcessError as error:
         raise GOATSClickException(
             f"Error running background consumer: '{error.cmd}'. "
             f"Exit status: {error.returncode}."
         )
-
-
-def display_message(
-    message: str, show_goats_emoji: bool = True, color: str = "cyan"
-) -> None:
-    """Displays a styled message to the console.
-
-    Parameters
-    ----------
-    message : `str`
-        The message to display.
-    show_goats_emoji : `bool`, optional
-        If ``False``, the goats emoji is not prefixed to the message, by
-        default ``True``.
-    color : `str`
-        The color to output the message in.
-    """
-    prefix = "🐐 " if show_goats_emoji else ""
-    click.echo(click.style(f"{prefix}{message}", fg=color, bold=True))
-
-
-def display_ok() -> None:
-    """Display "OK" in green format."""
-    time.sleep(0.5)
-    click.echo(click.style(" OK", fg="green", bold=True))
-    time.sleep(0.5)
-
-
-def display_info(message: str, indent: int = 4) -> None:
-    """Display a message with specified indentation.
-
-    Parameters
-    ----------
-    message : `str`
-        The message to be displayed.
-    indent : `int`, optional
-        The number of spaces for indentation, by default 4.
-    """
-    click.echo(f"{' ' * indent}{message}", nl=False)
-
-
-def display_failed() -> None:
-    """Display "FAILED" in red."""
-    click.echo(click.style(" FAILED", fg="red", bold=True))
-
-
-def display_warning(message: str, indent: int = 0) -> None:
-    """Display a message in yellow format for warnings.
-
-    Parameters
-    ----------
-    message : `str`
-        The message to be displayed.
-    indent : `int`, optional
-        The number of spaces for indentation, by default 0.
-    """
-    click.echo(
-        click.style(f"🐐 WARNING: {' ' * indent}{message}", fg="yellow", bold=True)
-    )
+    return background_workers_process
 
 
 cli.add_command(install)

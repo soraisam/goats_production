@@ -1,6 +1,7 @@
-import pytest
-from pathlib import Path
 import shutil
+from pathlib import Path
+
+import pytest
 from goats_cli.modify_settings import modify_settings
 from goats_cli.plugins import GOATSPlugin
 
