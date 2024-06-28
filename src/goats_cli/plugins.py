@@ -1,10 +1,8 @@
+"""Classes for plugins."""
+
 __all__ = ["Plugin", "GOATSPlugin"]
-# Standard library imports.
+
 from dataclasses import dataclass
-
-# Related third party imports.
-
-# Local application/library specific imports.
 
 
 @dataclass
@@ -32,6 +30,7 @@ class Plugin:
 @dataclass
 class GOATSPlugin(Plugin):
     """Plugin to install GOATS."""
+
     name: str = "goats_setup"
     look_for: str = "INSTALLED_APPS"
     line_to_add: str = "    'goats_setup',\n"

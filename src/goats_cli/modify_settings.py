@@ -1,18 +1,16 @@
 __all__ = ["modify_settings"]
-# Standard library imports.
 from pathlib import Path
 
-# Related third party imports.
 
-# Local application/library specific imports.
-from .plugins import Plugin, GOATSPlugin
+from goats_cli.plugins import Plugin, GOATSPlugin
 
 # Initialize constants.
 SETTINGS_FILENAME = "settings.py"
 
 
-def modify_settings(file_path: Path, add_goats: bool | None = False, verbose: bool | None = False
-                    ) -> None:
+def modify_settings(
+    file_path: Path, add_goats: bool | None = False, verbose: bool | None = False
+) -> None:
     """Modify Django settings to include additional apps.
 
     Parameters
@@ -53,7 +51,9 @@ def modify_settings(file_path: Path, add_goats: bool | None = False, verbose: bo
         f.writelines(lines)
 
 
-def _find_and_add(lines: list[str], plugin: Plugin, verbose: bool | None = False) -> list[str]:
+def _find_and_add(
+    lines: list[str], plugin: Plugin, verbose: bool | None = False
+) -> list[str]:
     """Utility function to add a plugin to the lines from a settings file.
 
     Parameters
@@ -84,7 +84,9 @@ def _find_and_add(lines: list[str], plugin: Plugin, verbose: bool | None = False
         return lines
 
     # Remove line if specified and exists
-    if plugin.line_to_remove and plugin.line_to_remove.strip() in (line.strip() for line in lines):
+    if plugin.line_to_remove and plugin.line_to_remove.strip() in (
+        line.strip() for line in lines
+    ):
         lines.remove(plugin.line_to_remove)
         if verbose:
             print(f"Line removed for plugin '{plugin.name}'.")
@@ -96,7 +98,9 @@ def _find_and_add(lines: list[str], plugin: Plugin, verbose: bool | None = False
             break
 
     if line_number is None:
-        raise ValueError(f"'{plugin.look_for}' not found in file, please verify contents.")
+        raise ValueError(
+            f"'{plugin.look_for}' not found in file, please verify contents."
+        )
 
     # Find the opening bracket line.
     pointer = None
