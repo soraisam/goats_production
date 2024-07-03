@@ -6,14 +6,49 @@ from goats_tom.models import DRAGONSRecipe
 class DRAGONSRecipeSerializer(serializers.ModelSerializer):
     """Serializer for `DRAGONSRecipe` models."""
 
+    active_function_definition = serializers.SerializerMethodField()
     short_name = serializers.SerializerMethodField()
 
     class Meta:
         model = DRAGONSRecipe
-        fields = "__all__"
+        fields = (
+            "id",
+            "dragons_run",
+            "file_type",
+            "name",
+            "function_definition",
+            "short_name",
+            "active_function_definition",
+        )
+        read_only_fields = (
+            "id",
+            "dragons_run",
+            "file_type",
+            "name",
+            "short_name",
+            "active_function_definition",
+        )
+        extra_kwargs = {"function_definition": {"write_only": True}}
 
-    def get_short_name(self, obj):
-        return obj.short_name
+    def get_active_function_definition(self, instance: DRAGONSRecipe) -> str:
+        return instance.active_function_definition
+
+    def get_short_name(self, instance: DRAGONSRecipe):
+        return instance.short_name
+
+    def update(self, instance: DRAGONSRecipe, validated_data: dict) -> DRAGONSRecipe:
+        # Check if "function_definition" key exists in the validated data.
+        if "function_definition" in validated_data:
+            func_def = validated_data["function_definition"]
+
+            # Check if "function_definition" is `None` or effectively empty.
+            if func_def is None or func_def.strip() == "":
+                instance.reset_to_original(save=False)
+            else:
+                instance.function_definition = func_def
+            instance.save()
+        # If the key is not present, do nothing regarding the function field.
+        return instance
 
 
 class DRAGONSRecipeFilterSerializer(serializers.Serializer):

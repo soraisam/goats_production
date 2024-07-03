@@ -19,6 +19,9 @@ class TestDRAGONSRecipesViewSet(APITestCase):
         self.user = UserFactory()
         self.list_view = DRAGONSRecipesViewSet.as_view({"get": "list"})
         self.detail_view = DRAGONSRecipesViewSet.as_view({"get": "retrieve"})
+        self.partial_update_view = DRAGONSRecipesViewSet.as_view(
+            {"patch": "partial_update"}
+        )
 
     def authenticate(self, request):
         """Helper method to authenticate requests."""
@@ -49,6 +52,40 @@ class TestDRAGONSRecipesViewSet(APITestCase):
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["file_type"] == dragons_recipe.file_type
+
+    def test_update_recipe(self):
+        """Test updating a DRAGONS recipe."""
+        dragons_recipe = DRAGONSRecipeFactory()
+        new_function_definition = "Updated function definition"
+        request = self.factory.patch(
+            reverse("dragonsrecipe-detail", args=[dragons_recipe.id]),
+            {"function_definition": new_function_definition},
+        )
+        self.authenticate(request)
+
+        response = self.partial_update_view(request, pk=dragons_recipe.id)
+
+        assert response.status_code == status.HTTP_200_OK
+        dragons_recipe.refresh_from_db()
+        assert (
+            dragons_recipe.function_definition == new_function_definition
+        ), "The function definition should be updated."
+
+        # Test resetting the function definition.
+        request = self.factory.patch(
+            reverse("dragonsrecipe-detail", args=[dragons_recipe.id]),
+            {"function_definition": None},
+        )
+        self.authenticate(request)
+
+        response = self.partial_update_view(request, pk=dragons_recipe.id)
+
+        assert response.status_code == status.HTTP_200_OK
+        dragons_recipe.refresh_from_db()
+        assert (
+            dragons_recipe.active_function_definition
+            == dragons_recipe.original_function_definition
+        ), "The function definition should be reset."
 
     def test_filter_by_dragons_run(self):
         """Test filtering DRAGONS recipes by DRAGONS run."""

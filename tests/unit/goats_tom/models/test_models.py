@@ -300,6 +300,37 @@ class TestDRAGONSRecipe:
         recipe = DRAGONSRecipeFactory(name=name_without_short)
         assert recipe.short_name is None
 
+    def test_active_function_definition(self):
+        """Test the active_function_definition property."""
+        recipe = DRAGONSRecipeFactory()
+        assert (
+            recipe.active_function_definition == recipe.original_function_definition
+        ), "Should initially be equal to original_function_definition"
+
+        modified_definition = "Updated function definition"
+        recipe.function_definition = modified_definition
+        assert (
+            recipe.active_function_definition == modified_definition
+        ), "Should return modified function definition when it exists"
+
+    def test_reset_to_original(self):
+        """Test resetting the function definition to the original."""
+        recipe = DRAGONSRecipeFactory()
+        modified_definition = "Updated function definition"
+        recipe.function_definition = modified_definition
+        recipe.save()
+
+        assert (
+            recipe.function_definition == modified_definition
+        ), "Pre-reset check failed"
+        recipe.reset_to_original()
+        assert (
+            recipe.function_definition is None
+        ), "Post-reset function_definition should be None"
+        assert (
+            recipe.active_function_definition == recipe.original_function_definition
+        ), "Active definition should revert to original after reset"
+
 
 @pytest.mark.django_db
 class TestDRAGONSReduce:
@@ -342,12 +373,10 @@ class TestDRAGONSReduce:
         ), "Should update status to initializing"
         assert reduction.end_time is None, "Should not have end time set."
         assert reduction.start_time is not None, "Should have start time set."
-    
+
     def test_mark_canceled(self):
         """Test changing the status to canceled."""
         reduction = DRAGONSReduceFactory()
         reduction.mark_canceled()
-        assert (
-            reduction.status == "canceled"
-        ), "Should update status to canceled"
+        assert reduction.status == "canceled", "Should update status to canceled"
         assert reduction.end_time is not None, "Should have end time set."

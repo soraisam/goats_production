@@ -211,7 +211,8 @@ class DRAGONSRecipeFactory(factory.django.DjangoModelFactory):
     dragons_run = factory.SubFactory(DRAGONSRunFactory)
     file_type = factory.Faker("word")
     name = factory.Faker("sentence")
-    function_definition = factory.Faker("text")
+    original_function_definition = factory.Faker("paragraph")
+    function_definition = None
 
 
 class DRAGONSReduceFactory(factory.django.DjangoModelFactory):

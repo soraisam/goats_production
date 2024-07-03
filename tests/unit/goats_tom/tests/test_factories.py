@@ -207,12 +207,16 @@ class TestDRAGONSRecipeFactory:
             dragons_run=dragons_run,
             file_type="BIAS",
             name="Test Recipe",
-            function_definition="def test_function(): pass",
+            original_function_definition="def test_function(): pass",
         )
         assert recipe.dragons_run == dragons_run
         assert recipe.file_type == "BIAS"
         assert recipe.name == "Test Recipe"
-        assert recipe.function_definition == "def test_function(): pass"
+        assert recipe.original_function_definition == "def test_function(): pass"
+        assert recipe.function_definition is None
+        assert recipe.active_function_definition == recipe.original_function_definition
+        recipe.function_definition = "new"
+        assert recipe.active_function_definition == recipe.function_definition
 
 
 @pytest.mark.django_db
