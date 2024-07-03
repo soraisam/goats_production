@@ -4,8 +4,12 @@ __all__ = ["download_goa_files", "run_dragons_reduce"]
 
 import logging
 import os
+import sys
 import time
+import types
+import uuid
 
+import dramatiq
 import matplotlib
 from django.conf import settings
 from django.core import serializers
@@ -14,7 +18,7 @@ from gempy.utils import logutils
 from recipe_system.reduction.coreReduce import Reduce
 from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
-import dramatiq
+
 from goats_tom.astroquery import Observations as GOA
 from goats_tom.logging.handlers import DRAGONSHandler
 from goats_tom.models import (
@@ -102,12 +106,42 @@ def run_dragons_reduce(reduce_id: int) -> None:
         r.config_file = str(run.get_config_file())
 
         r.files.extend(file_paths)
-        # Need to pass in short name not long.
-        r.recipename = recipe.short_name
+
+        # Prepare a namespace to execute the user-provided function definition safely.
+        function_definition_namespace = {}
+
+        # Execute the function definition provided by the user.
+        exec(recipe.active_function_definition, {}, function_definition_namespace)
+
+        # Search through the namespace to find any callable defined therein.
+        function_definition = None
+        for _, obj in function_definition_namespace.items():
+            if callable(obj):
+                function_definition = obj
+                break
+
+        # Ensure a function was successfully defined and retrieved.
+        if function_definition is None:
+            raise ValueError("No recipe was defined in the provided recipe.")
+
+        # Generate a unique module name to avoid conflicts in sys.modules.
+        unique_id = uuid.uuid4()
+        module_name = f"dynamic_recipes_{unique_id}"
+
+        # Create a new module and add it to `sys.modules`.
+        recipe_module = types.ModuleType(module_name)
+        sys.modules[module_name] = recipe_module
+
+        # Add the user-defined function to the newly created module.
+        setattr(recipe_module, function_definition.__name__, function_definition)
+
+        # Format the recipename to be recognized by DRAGONS which expects
+        # "<module_name>.<function_name>".
+        r.recipename = f"{module_name}.{function_definition.__name__}"
+
         if recipe.file_type in {"FLAT", "ARC", "object"}:
             r.uparms = [("interactive", True)]
 
-        # TODO: Use the function_definition from the recipe in the future.
         reduce.mark_running()
         DRAGONSProgress.create_and_send(reduce)
 
@@ -139,6 +173,11 @@ def run_dragons_reduce(reduce_id: int) -> None:
             color="danger",
         )
         raise
+    finally:
+        # Cleanup dynamically created module.
+        if module_name in sys.modules:
+            del sys.modules[module_name]
+            print(f"Module {module_name} removed from sys.modules.")
 
 
 @dramatiq.actor(max_retries=0)
