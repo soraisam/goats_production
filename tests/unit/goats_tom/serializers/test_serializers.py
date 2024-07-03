@@ -109,43 +109,44 @@ class TestDRAGONSFileFilterSerializer(APITestCase):
 class TestDRAGONSRecipeSerializer(APITestCase):
     """Test class for `DRAGONSRecipeSerializer`."""
 
+    def setUp(self):
+        self.recipe = DRAGONSRecipeFactory()
+
     def test_valid_data(self):
         """Test `DRAGONSRecipeSerializer` with valid data."""
-        recipe = DRAGONSRecipeFactory()
-        serializer = DRAGONSRecipeSerializer(recipe)
+        serializer = DRAGONSRecipeSerializer(self.recipe)
 
-        self.assertEqual(serializer.data["file_type"], recipe.file_type)
-        self.assertEqual(serializer.data["name"], recipe.name)
+        self.assertEqual(serializer.data["file_type"], self.recipe.file_type)
+        self.assertEqual(serializer.data["name"], self.recipe.name)
         self.assertEqual(
-            serializer.data["function_definition"], recipe.function_definition
+            serializer.data["active_function_definition"], self.recipe.original_function_definition
         )
-        self.assertEqual(serializer.data["short_name"], recipe.short_name)
-
-    def test_invalid_data(self):
-        """Test `DRAGONSRecipeSerializer` with invalid data."""
-        invalid_data = {
-            "file_type": "",
-            "name": "",
-            "function_definition": "Valid Function Definition",
-            "dragons_run": None,
-        }
-        serializer = DRAGONSRecipeSerializer(data=invalid_data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("file_type", serializer.errors)
-        self.assertIn("name", serializer.errors)
-        self.assertIn("dragons_run", serializer.errors)
+        self.assertEqual(serializer.data["short_name"], self.recipe.short_name)
 
     def test_partial_update(self):
         """Test partial update of `DRAGONSRecipe`."""
-        recipe = DRAGONSRecipeFactory()
         partial_data = {"function_definition": "Updated function definition"}
-        serializer = DRAGONSRecipeSerializer(recipe, data=partial_data, partial=True)
+        serializer = DRAGONSRecipeSerializer(self.recipe, data=partial_data, partial=True)
 
         self.assertTrue(serializer.is_valid())
         updated_instance = serializer.save()
         self.assertEqual(
             updated_instance.function_definition, "Updated function definition"
         )
+
+    def test_update_with_whitespace_only(self):
+        """Test updating function definition with whitespace only to trigger reset."""
+        data = {"function_definition": "   "}
+        serializer = DRAGONSRecipeSerializer(self.recipe, data=data, partial=True)
+        self.assertTrue(serializer.is_valid())
+        updated_instance = serializer.save()
+        self.assertIsNone(updated_instance.function_definition)
+
+    def test_function_definition_write_only(self):
+        """Test that 'function_definition' is write-only and not included in the output.
+        """
+        serializer = DRAGONSRecipeSerializer(self.recipe)
+        self.assertNotIn("function_definition", serializer.data)
 
 
 class TestDRAGONSRecipeFilterSerializer(APITestCase):

@@ -170,7 +170,7 @@ class DRAGONSRunsViewSet(
                 dragons_run=dragons_run,
                 file_type=file_type,
                 name=recipe,
-                function_definition=function_definition,
+                original_function_definition=function_definition,
             )
 
             # Don't add another recipe.

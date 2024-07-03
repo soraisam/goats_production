@@ -466,6 +466,11 @@ select.form-control[multiple] {
   height: 200px;
 }
 
+.editor-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* stylelint-disable */
 /* Fix for JS9 inheriting from parent. */
 .JS9Button {

@@ -1,14 +1,20 @@
 """Module that handles the DRAGONS recipe API."""
 
 from django.db.models import QuerySet
-from rest_framework import viewsets
+from rest_framework import mixins
+from rest_framework.viewsets import GenericViewSet
 from rest_framework.permissions import IsAuthenticated
 
 from goats_tom.models import DRAGONSRecipe
 from goats_tom.serializers import DRAGONSRecipeFilterSerializer, DRAGONSRecipeSerializer
 
 
-class DRAGONSRecipesViewSet(viewsets.ReadOnlyModelViewSet):
+class DRAGONSRecipesViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    GenericViewSet,
+):
     queryset = DRAGONSRecipe.objects.all()
     serializer_class = DRAGONSRecipeSerializer
     filter_serializer_class = DRAGONSRecipeFilterSerializer
