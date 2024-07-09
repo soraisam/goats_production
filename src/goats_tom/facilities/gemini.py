@@ -16,7 +16,7 @@ from django.http import HttpRequest
 from goats_tom.astroquery import Observations as GOA
 from goats_tom.ocs import GeminiID, OCSClient
 from goats_tom.utils import get_key_info
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ReadTimeout
 from tom_common.exceptions import ImproperCredentialsException
 from tom_dataproducts.models import DataProduct
 from tom_observations.facility import (
@@ -740,7 +740,8 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             files = GOA.query_criteria(program_id=observation_id)
         except HTTPError as e:
             logger.error("HTTP Error occured: %s", e)
-            return products
+        except ReadTimeout:
+            logger.error("Timeout hit querying GOA.")
 
         # Query DataProduct objects associated with the observation record.
         all_products = DataProduct.objects.filter(observation_record=observation_record)
