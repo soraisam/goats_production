@@ -90,6 +90,11 @@ class RecipeModel {
     }
   }
 
+  async fetchHelp(recipeId) {
+    // TODO: Finish fetching from API.
+    return;
+  }
+
   /**
    * Asynchronously updates the function definition of a recipe by sending a PATCH request.
    * @param {number} recipeId The unique identifier of the recipe.
@@ -181,6 +186,14 @@ class RecipeView {
   }
 
   /**
+   * Binds the handler for showing help for a recipe.
+   * @param {Function} handler The handler function to invoke.
+   */
+  bindShowHelp(handler) {
+    this.onShowHelp = handler;
+  }
+
+  /**
    * Initializes event listeners on the card header. Listeners are set up to handle
    * start and stop reduce actions based on data attributes of the event target.
    * @private
@@ -202,7 +215,7 @@ class RecipeView {
             this.onUpdateFunctionDefinition(event.target.dataset.recipeId);
             break;
           case "helpRecipe":
-            this.onHelpRecipe(event.target.dataset.recipeId);
+            this.onShowHelp(event.target.dataset.recipeId);
             break;
           case "resetRecipe":
             this.onResetFunctionDefinition(event.target.dataset.recipeId);
@@ -468,6 +481,8 @@ class RecipeView {
     helpButton.textContent = "Help";
     helpButton.dataset.recipeId = this.recipe.id;
     helpButton.dataset.action = "helpRecipe";
+    helpButton.setAttribute("data-bs-toggle", "offcanvas");
+    helpButton.setAttribute("data-bs-target", `#helpOffcanvas`);
     this.helpButton = helpButton;
 
     // Build the layout.
@@ -680,6 +695,8 @@ class RecipeController {
     this.view.bindUpdateFunctionDefinition(this.handleUpdateFunctionDefinition);
 
     this.view.bindResetFunctionDefinition(this.handleResetFunctionDefinition);
+
+    this.view.bindShowHelp(this.handleShowHelp);
   }
 
   /**
@@ -691,6 +708,24 @@ class RecipeController {
     const recipe = await this.model.updateFunctionDefinition(recipeId);
     // Update the editor with the new value.
     this.view.setEditorText(recipe.active_function_definition);
+  };
+
+  /**
+   * Handles fetching help information for primitives and updates display.
+   * @param {number} recipeId The ID of the recipe to fetch help for.
+   */
+  handleShowHelp = async (recipeId) => {
+    // Clear and show loading bar since it is not hidden.
+    window.helpOffcanvas.clearTitleAndContent();
+    window.helpOffcanvas.showLoading();
+
+    // Pass in the recipe to get the help for it.
+    const recipe = await this.model.fetchHelp(recipeId);
+
+    // Update the help offcanvas and show the content.
+    window.helpOffcanvas.setTitle("Some Title");
+    window.helpOffcanvas.setContent("Test Data");
+    window.helpOffcanvas.showContent();
   };
 
   /**

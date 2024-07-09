@@ -71,11 +71,13 @@
     <div id="recipesContainer" class="row g-3"></div>
   </div>
 </div>
+<div id="helpOffcanvasContainer"></div>
 {% endblock %}
 
 {% block javascript %}
 {{ block.super }}
 <script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/help_offcanvas.js' %}"></script>
 <script src="{% static 'js/logger.js' %}"></script>
 <script src="{% static 'js/get_csrf_token.js' %}"></script>
 <script src="{% static 'js/fetch_wrapper.js' %}"></script>
@@ -90,6 +92,10 @@
 
 <script type="text/javascript">
   document.addEventListener("DOMContentLoaded", async () => {
+    // Create help offcanvas used throughout SPA.
+    // TODO: When switching to single recipe can be done there.
+    window.helpOffcanvas = new HelpOffcanvas(document.getElementById("helpOffcanvasContainer"))
+
     const api = new FetchWrapper("/api/");
     api.setCsrfToken("{{ csrf_token }}");
 
