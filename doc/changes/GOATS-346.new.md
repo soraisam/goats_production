@@ -1,0 +1,1 @@
+Added UI for DRAGONS reduction help pages: Side offcanvas with animation opens and closes to display helpful information for users on click. 
