@@ -1,5 +1,5 @@
 /**
- * Manages the behavior and display of a bootstrap offcanvas component for showing help information.
+ * Manages the behavior and display of a offcanvas component for showing help information.
  */
 class HelpOffcanvas {
   /**
@@ -73,25 +73,6 @@ class HelpOffcanvas {
   }
 
   /**
-   * Sets the HTML content of the offcanvas.
-   * @param {string} htmlContent The HTML string to display inside the offcanvas.
-   */
-  setContent(htmlContent) {
-    this.contentElement.innerHTML = htmlContent;
-  }
-
-  /**
-   * Updates the title and content of the offcanvas and shows it.
-   * @param {string} title The new title of the offcanvas.
-   * @param {string} htmlContent The new HTML content of the offcanvas.
-   */
-  updateAndShow(title, htmlContent) {
-    this.setTitle(title);
-    this.setContent(htmlContent);
-    this.showContent();
-  }
-
-  /**
    * Shows the content of the offcanvas, hiding the loading indicator.
    */
   showContent() {
@@ -127,5 +108,155 @@ class HelpOffcanvas {
   clearTitleAndContent() {
     this.titleElement.textContent = "";
     this.contentElement.innerHTML = "";
+  }
+
+  /**
+   * Updates and shows the primitives documentation.
+   * @param {Object} recipe The recipe object containing all documentation info, including file
+   * type and help details for each primitive.
+   */
+  updateAndShowPrimitivesDocumentation(recipe) {
+    this.setTitle("Primitives Documentation");
+    const primitivesDocumentation = this._renderPrimitivesDocumentation(recipe);
+    this.contentElement.appendChild(primitivesDocumentation);
+    this.showContent();
+  }
+
+  /**
+   * Builds and renders an accordion in the offcanvas body displaying documentation for available
+   * primitives based on the given recipe.
+   * @private
+   * @param {Object} recipe The recipe object containing all documentation info, including file
+   * type and help details for each primitive.
+   * @returns {HTMLElement} A container element with the constructed accordion and introductory
+   * paragraph.
+   */
+  _renderPrimitivesDocumentation(recipe) {
+    // Build paragraph.
+    const container = Utils.createElement("div");
+    const about = Utils.createElement("p");
+    about.textContent = `Available primitives for ${recipe.file_type} observation types.`;
+
+    const accordionId = `${this.id}Accordion`;
+    const accordion = Utils.createElement("div", ["accordion", "accordion-flush"]);
+    accordion.id = accordionId;
+
+    // Loop through and build the accordion item and docs.
+    Object.entries(recipe.help).forEach(([key, value], index) => {
+      const item = Utils.createElement("div", ["accordion-item"]);
+      const header = Utils.createElement("h2", ["accordion-header"]);
+      const buttonId = `${accordionId}-heading-${index}`;
+      const collapseId = `${accordionId}-collapse-${index}`;
+
+      const button = Utils.createElement("button", ["accordion-button", "collapsed"]);
+      button.setAttribute("type", "button");
+      button.setAttribute("data-bs-toggle", "collapse");
+      button.setAttribute("data-bs-target", `#${collapseId}`);
+      button.setAttribute("aria-expanded", "false");
+      button.setAttribute("aria-controls", collapseId);
+      button.textContent = key;
+
+      const collapseDiv = Utils.createElement("div", [
+        "accordion-collapse",
+        "collapse",
+      ]);
+      collapseDiv.setAttribute("id", collapseId);
+      collapseDiv.setAttribute("aria-labelledby", buttonId);
+      collapseDiv.setAttribute("data-bs-parent", `#${accordionId}`);
+
+      const bodyDiv = Utils.createElement("div", ["accordion-body"]);
+
+      // Params Section.
+      if (value.params) {
+        const paramsTitle = Utils.createElement("h6", [
+          "bg-light-subtle",
+          "py-1",
+          "px-2",
+        ]);
+        paramsTitle.textContent = "Parameters";
+        bodyDiv.appendChild(paramsTitle);
+
+        const paramsList = Utils.createElement("ul", "list-unstyled");
+        Object.entries(value.params).forEach(([paramKey, paramDetails]) => {
+          const li = Utils.createElement("li", "mb-2");
+
+          // Create the parameter name and value.
+          const paramNameValue = Utils.createElement("p", ["d-inline", "fw-bold"]);
+
+          // Span for parameter name.
+          const paramNameSpan = Utils.createElement("span");
+          paramNameSpan.textContent = `${paramKey}=`;
+          paramNameValue.appendChild(paramNameSpan);
+
+          // Span for parameter value, italics and normal weight.
+          const paramValueSpan = Utils.createElement("span", [
+            "fst-italic",
+            "fw-normal",
+          ]);
+          paramValueSpan.textContent = paramDetails.value;
+
+          paramNameValue.appendChild(paramValueSpan);
+          li.appendChild(paramNameValue);
+
+          // Create documentation text below the parameter name and value.
+          if (paramDetails.doc) {
+            const paramDoc = Utils.createElement("div", "ms-3");
+            paramDoc.textContent = paramDetails.doc;
+            li.appendChild(paramDoc);
+          }
+
+          paramsList.appendChild(li);
+        });
+        bodyDiv.appendChild(paramsList);
+      }
+
+      // Docstring Section
+      if (value.docstring) {
+        Object.entries(value.docstring).forEach(([docKey, docValue]) => {
+          if (
+            ((Array.isArray(docValue) && docValue.length > 0) ||
+              (typeof docValue === "string" && docValue !== "")) &&
+            docKey !== "parameters"
+          ) {
+            const docTitle = Utils.createElement("h6", [
+              "bg-light-subtle",
+              "py-1",
+              "px-2",
+            ]);
+            docTitle.textContent = this._formatHeader(docKey);
+            bodyDiv.appendChild(docTitle);
+
+            const docContent = Utils.createElement("p");
+            docContent.textContent = Array.isArray(docValue)
+              ? docValue.join(" ")
+              : docValue;
+            bodyDiv.appendChild(docContent);
+          }
+        });
+      }
+
+      // Append all to build element.
+      header.appendChild(button);
+      collapseDiv.appendChild(bodyDiv);
+      item.append(header, collapseDiv);
+      accordion.appendChild(item);
+    });
+    container.append(about, accordion);
+    return container;
+  }
+
+  /**
+   * Formats a snake_case string into a human-readable title format with spaces and capitalization.
+   * @private
+   * @param {string} text The text to format, typically a key from a documentation object.
+   * @returns {string} The formatted text with underscores replaced by spaces and each word 
+   * capitalized.
+   */
+  _formatHeader(text) {
+    return text
+      .replace(/_/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 }
