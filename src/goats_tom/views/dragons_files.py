@@ -125,9 +125,9 @@ class DRAGONSFilesViewSet(
         filter_serializer = self.filter_serializer_class(data=request.query_params)
         # If valid, attach the additional information.
         if filter_serializer.is_valid(raise_exception=False):
-            includes = filter_serializer.validated_data.get("include", [])
+            include = filter_serializer.validated_data.get("include", [])
 
-            if "header" in includes:
+            if "header" in include:
                 header = get_astrodata_header(instance.data_product)
                 data["header"] = header
 

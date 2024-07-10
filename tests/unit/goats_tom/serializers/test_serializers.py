@@ -154,7 +154,7 @@ class TestDRAGONSRecipeFilterSerializer(APITestCase):
 
     def test_valid_data(self):
         """Test `DRAGONSRecipeFilterSerializer` with valid data."""
-        valid_data = {"dragons_run": 1, "file_type": "BIAS"}
+        valid_data = {"dragons_run": 1, "file_type": "BIAS", "include": ["help"]}
         serializer = DRAGONSRecipeFilterSerializer(data=valid_data)
         self.assertTrue(serializer.is_valid())
 

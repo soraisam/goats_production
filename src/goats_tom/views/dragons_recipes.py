@@ -1,9 +1,11 @@
 """Module that handles the DRAGONS recipe API."""
 
 from django.db.models import QuerySet
+from django.http import HttpRequest
 from rest_framework import mixins
-from rest_framework.viewsets import GenericViewSet
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from goats_tom.models import DRAGONSRecipe
 from goats_tom.serializers import DRAGONSRecipeFilterSerializer, DRAGONSRecipeSerializer
@@ -43,3 +45,33 @@ class DRAGONSRecipesViewSet(
                 queryset = queryset.filter(file_type=file_type)
 
         return queryset
+
+    def retrieve(self, request: HttpRequest, *args, **kwargs) -> Response:
+        """Retrieves a serialized representation of an object from a Django model,
+        possibly including additional information based on query parameters.
+
+        Parameters
+        ----------
+        request : `HttpRequest`
+            The HTTP request object that may include query parameters.
+
+        Returns
+        -------
+        `Response`
+            Response object containing the serialized data of the requested object. If
+            specified in the query parameters, additional data is included.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+
+        # Validate the query parameters.
+        filter_serializer = self.filter_serializer_class(data=request.query_params)
+        # If valid, attach the additional information.
+        if filter_serializer.is_valid(raise_exception=False):
+            include = filter_serializer.validated_data.get("include", [])
+
+            if "help" in include:
+                data["help"] = instance.list_primitives_and_docstrings()
+
+        return Response(data)

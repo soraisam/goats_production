@@ -52,9 +52,7 @@ class DRAGONSRecipeSerializer(serializers.ModelSerializer):
 
 
 class DRAGONSRecipeFilterSerializer(serializers.Serializer):
-    """Serializer for filtering `DRAGONS` recipes based on `DRAGONS` run ID and file
-    type.
-    """
+    """Serializer for filtering `DRAGONS` recipes."""
 
     dragons_run = serializers.IntegerField(
         required=False, help_text="Primary key for the DRAGONS run to filter by."
@@ -62,4 +60,7 @@ class DRAGONSRecipeFilterSerializer(serializers.Serializer):
     # TODO: This should be a choice of options for file_type to validate
     file_type = serializers.CharField(
         required=False, help_text="File type to filter by."
+    )
+    include = serializers.ListField(
+        child=serializers.ChoiceField(choices=["help"]), required=False
     )

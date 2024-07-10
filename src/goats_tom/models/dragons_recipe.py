@@ -1,6 +1,7 @@
 """Model for a recipe in DRAGONS."""
 
 import re
+from typing import Any
 
 from django.db import models
 
@@ -72,3 +73,24 @@ class DRAGONSRecipe(models.Model):
         self.function_definition = None
         if save:
             self.save()
+
+    def list_primitives_and_docstrings(self) -> dict[str, Any]:
+        """Retrieves the first file matching a specific file type from a collection
+        managed by a DRAGONS run, and lists all available primitives and their
+        documentation associated with that file.
+
+        Returns
+        -------
+        `dict[str, Any]`
+            A dictionary containing the method names as keys and their associated
+            parameters and docstrings if a matching file is found. Returns an empty
+            dictionary if no matching file is found.
+        """
+        first_file = self.dragons_run.dragons_run_files.filter(
+            data_product__metadata__file_type=self.file_type
+        ).first()
+
+        if first_file:
+            return first_file.list_primitives_and_docstrings()
+        
+        return {}
