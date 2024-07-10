@@ -29,6 +29,7 @@ dependencies = [
     "dramatiq[redis, watch]>=1.17.0",
     "django-dramatiq>=0.11.6",
     "dramatiq-abort>=1.1.0",
+    "numpydoc>=1.7.0,<2",
 ]
 version = "24.6.0"
 
@@ -62,7 +63,7 @@ goats = "goats_cli:cli"
 testpaths = ["tests/unit"]
 DJANGO_SETTINGS_MODULE = "goats_tom.tests.settings"
 norecursedirs = "tests/unit/goats_tom/ocs"
-addopts = "-r A -v -n auto --cov=src --cov-report=term --cov=tests --cov-branch"
+# addopts = "-r A -v -n auto --cov=src --cov-report=term --cov=tests --cov-branch"
 
 [tool.towncrier]
 version = ""

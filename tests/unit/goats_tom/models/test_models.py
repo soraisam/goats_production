@@ -269,6 +269,10 @@ class TestDRAGONSFile:
             dragons_file.get_file_type() == dragons_file.data_product.metadata.file_type
         )
 
+    def test_list_primitives_and_docstrings(self):
+        """Test listing primitives and docstrings of the associated file type."""
+        pass
+
 
 @pytest.mark.django_db
 class TestDRAGONSRecipe:

@@ -1,0 +1,1 @@
+Added query parameter for detailed docs for primitives in API: Extended the DRAGONS files and recipes system to include a new query parameter. This parameter allows API responses to provide detailed documentation and descriptions of primitives used in a recipe.
