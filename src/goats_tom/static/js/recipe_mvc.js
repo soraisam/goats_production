@@ -45,6 +45,8 @@ class RecipeModel {
    * Fetches a specific recipe by its ID.
    * @param {number} recipeId The ID of the recipe to fetch.
    * @returns {Promise<Object>} A promise that resolves to the recipe object.
+   * @throws {Error} If the API request fails, an error is logged to the console.
+   * @async
    */
   async fetchRecipe(recipeId) {
     try {
@@ -60,6 +62,7 @@ class RecipeModel {
    * Starts the reduction process for a given recipe.
    * @param {number} recipe The ID of the recipe to be reduced.
    * @returns {Promise<Object>} A promise that resolves to the response from the server.
+   * @throws {Error} If the API request fails, an error is logged to the console.
    * @async
    */
   async startReduce(recipe) {
@@ -77,6 +80,7 @@ class RecipeModel {
    * Stops the reduction process.
    * @param {number} reduce The ID of the reduction to be stopped.
    * @returns {Promise<Object>} A promise that resolves to the response from the server.
+   * @throws {Error} If the API request fails, an error is logged to the console.
    * @async
    */
   async stopReduce(reduce) {
@@ -90,9 +94,24 @@ class RecipeModel {
     }
   }
 
+  /**
+   * Asynchronously fetches help documentation for a specified recipe.
+   * @param {string} recipeId The ID of the recipe for which help documentation is being requested.
+   * @returns {Promise<Object>} A promise that resolves with the help documentation for the
+   * specified recipe.
+   * @throws {Error} If the API request fails, an error is logged to the console.
+   * @async
+   */
   async fetchHelp(recipeId) {
-    // TODO: Finish fetching from API.
-    return;
+    try {
+      const response = await this.api.get(
+        `${this.recipesUrl}${recipeId}/?include=help`
+      );
+      this.recipe = response;
+      return response;
+    } catch (error) {
+      console.error("Error stopping recipe:", error);
+    }
   }
 
   /**
@@ -717,15 +736,11 @@ class RecipeController {
   handleShowHelp = async (recipeId) => {
     // Clear and show loading bar since it is not hidden.
     window.helpOffcanvas.clearTitleAndContent();
-    window.helpOffcanvas.showLoading();
+    window.helpOffcanvas.isLoading();
 
     // Pass in the recipe to get the help for it.
     const recipe = await this.model.fetchHelp(recipeId);
-
-    // Update the help offcanvas and show the content.
-    window.helpOffcanvas.setTitle("Some Title");
-    window.helpOffcanvas.setContent("Test Data");
-    window.helpOffcanvas.showContent();
+    window.helpOffcanvas.updateAndShowPrimitivesDocumentation(recipe);
   };
 
   /**

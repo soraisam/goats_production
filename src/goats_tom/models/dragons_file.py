@@ -66,7 +66,8 @@ class DRAGONSFile(models.Model):
                         section.lower().replace(" ", "_"): content
                         for section, content in docstring._parsed_data.items()
                     }
-                except TypeError as e:
-                    print(f"Error processing docstring for {item}: {str(e)}")
+                except (ValueError, TypeError):
+                    # print(f"Error processing docstring for {item}: {str(e)}")
+                    pass
 
         return data
