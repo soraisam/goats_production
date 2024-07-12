@@ -145,7 +145,7 @@ class RecipeView {
     this.accordionSetups = {
       buttons: {
         recipeAccordion: "Modify Recipe",
-        logAccordion: "View Log",
+        logAccordion: "Log",
       },
       callbacks: {
         recipeAccordion: this.createRecipeAccordionItem.bind(this),
@@ -263,7 +263,7 @@ class RecipeView {
     this.recipe = recipe;
 
     // Build and append the header.
-    const card = Utils.createElement("div", "card");
+    const card = Utils.createElement("div");
     this.cardHeader = this.createCardHeader();
     card.appendChild(this.cardHeader);
 

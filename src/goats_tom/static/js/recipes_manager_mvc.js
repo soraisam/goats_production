@@ -50,7 +50,7 @@ class RecipeManagerModel {
 }
 
 /**
- * Represents the view for managing recipes in the DRAGONS system.
+ * Manages the user interface for recipe management in the DRAGONS system.
  */
 class RecipeManagerView {
   /**
@@ -58,24 +58,132 @@ class RecipeManagerView {
    */
   constructor() {
     this.container = document.getElementById("recipesContainer");
+    this.contentContainer = null;
+    this.navTabs = null;
+  }
+  /**
+   * Binds a handler for the tab switching action.
+   * @param {Function} handler Function to call when a tab is switched.
+   */
+  bindSwitchTab(handler) {
+    this.onSwitchTab = handler;
   }
 
   /**
-   * Clears the recipes container.
+   * Clears all content from the recipes container and resets references.
    */
   clear() {
     this.container.innerHTML = "";
+    this.contentContainer = null;
+    this.navTabs = null;
   }
 
   /**
-   * Adds recipe cards to the container.
-   * @param {HTMLElement[]} cards The array of card elements to add.
+   * Initializes event listeners for the navigation tabs. Uses event delegation to handle tab
+   * switching.
    */
-  addCards(cards) {
-    cards.forEach((card) => {
-      const col = Utils.createElement("div", ["col-xl-6", "col-12"]);
-      col.appendChild(card);
-      this.container.appendChild(col);
+  _initLocalListeners() {
+    this.navTabs.addEventListener("click", (event) => {
+      if (event.target.dataset.action) {
+        const action = event.target.dataset.action;
+        switch (action) {
+          case "switchTab":
+            this.onSwitchTab(event.target.dataset.fileType);
+            break;
+          default:
+            break;
+        }
+      }
+    });
+  }
+
+  /**
+   * Constructs and appends a card element to the main container, which includes navigation tabs
+   * and content.
+   * @param {Object[]} recipesAndContent Array of objects containing recipe data and associated DOM
+   * content.
+   */
+  createCard(recipesAndContent) {
+    // Create card to hold the recipes.
+    const card = Utils.createElement("div", "card");
+    const cardHeader = Utils.createElement("div", "card-header");
+
+    // Create navigation to switch file type.
+    const navTabs = Utils.createElement("ul", ["nav", "nav-tabs", "card-header-tabs"]);
+    this.navTabs = navTabs;
+    const contentContainer = Utils.createElement("div");
+    this.contentContainer = contentContainer;
+
+    // Iterate through and build the content. Hiding everything except the first.
+    recipesAndContent.forEach(({ recipe, content }, index) => {
+      const tab = Utils.createElement("li", "nav-item");
+      const tabLink = Utils.createElement("a", "nav-link");
+      tabLink.href = "#";
+      tabLink.textContent = Utils.formatDisplayText(recipe.file_type);
+      tabLink.dataset.fileType = recipe.file_type;
+      tabLink.dataset.action = "switchTab";
+
+      if (index === 0) {
+        tabLink.classList.add("active");
+        content.classList.add("d-block");
+      } else {
+        content.classList.add("d-none");
+      }
+
+      content.dataset.fileType = recipe.file_type;
+      contentContainer.appendChild(content);
+
+      tab.appendChild(tabLink);
+      navTabs.appendChild(tab);
+    });
+
+    cardHeader.appendChild(navTabs);
+    card.append(cardHeader, contentContainer);
+    this.container.appendChild(card);
+
+    // Initialize the event listeners.
+    this._initLocalListeners();
+  }
+
+  /**
+   * Toggles the visibility of content based on the specified file type.
+   * @private
+   * @param {string} fileType The file type whose content needs to be toggled.
+   */
+  _toggleContentVisibility(fileType) {
+    Array.from(this.contentContainer.children).forEach((content) => {
+      if (content.dataset.fileType === fileType) {
+        content.classList.remove("d-none");
+        content.classList.add("d-block");
+      } else {
+        content.classList.remove("d-block");
+        content.classList.add("d-none");
+      }
+    });
+  }
+
+  /**
+   * Activates the tab corresponding to the given file type and toggles the visibility of the associated content.
+   * @param {string} fileType The file type to activate.
+   */
+  activateAndToggleTab(fileType) {
+    this._activateTab(fileType);
+    this._toggleContentVisibility(fileType);
+  }
+
+  /**
+   * Activates the tab that matches the specified file type.
+   * @private
+   * @param {string} fileType The file type of the tab to activate.
+   */
+  _activateTab(fileType) {
+    Array.from(this.navTabs.querySelectorAll(".nav-link")).forEach((tab) => {
+      // Remove the 'active' class from all tabs.
+      tab.classList.remove("active");
+      // Add 'active' to the tab that matches the file type.
+      if (tab.dataset.fileType === fileType) {
+        tab.classList.add("active");
+      }
     });
   }
 }
@@ -94,6 +202,8 @@ class RecipeManagerController {
     this.view = view;
     this.recipes = {};
     this.ws = this._setupWebSocket();
+
+    this.view.bindSwitchTab(this.handleSwitchTab);
   }
 
   /**
@@ -104,6 +214,15 @@ class RecipeManagerController {
   getRecipeControllerById(recipeId) {
     return this.recipes[recipeId] || null;
   }
+
+  /**
+   * Handles the action of switching tabs in the user interface based on the file type.
+   * @param {string} fileType The file type identifier used to determine which tab to activate
+   * and which content to display.
+   */
+  handleSwitchTab = (fileType) => {
+    this.view.activateAndToggleTab(fileType);
+  };
 
   /**
    * Sets up the WebSocket connection for receiving log updates.
@@ -145,16 +264,16 @@ class RecipeManagerController {
   }
 
   /**
-   * Updates the recipe cards for a specific DRAGONS run.
+   * Updates the recipes and content for a specific DRAGONS run.
    * @param {string} runId The ID of the run to fetch recipes for.
    */
-  updateRecipeCards = async (runId) => {
+  updateRecipesCard = async (runId) => {
     this.view.clear();
-    const recipesData = await this.model.fetchRecipes(runId);
-    const recipeCards = [];
+    const recipes = await this.model.fetchRecipes(runId);
+    const recipesAndContent = [];
 
-    // Create the recipe cards.
-    recipesData.forEach((recipe) => {
+    // Create the recipe content.
+    recipes.forEach((recipe) => {
       if (recipe.file_type !== "other") {
         // Create MVC per recipe.
         let recipeModel = new RecipeModel(this.model.api);
@@ -164,12 +283,13 @@ class RecipeManagerController {
         // Store the recipe controller for easy manipulation later.
         this.recipes[recipe.id] = recipeController;
 
-        let recipeCard = recipeController.handleCreateCard(recipe);
-        recipeCards.push(recipeCard);
+        let content = recipeController.handleCreateCard(recipe);
+        // Combine recipe data and content for passing to the view.
+        recipesAndContent.push({ recipe: recipe, content: content });
       }
     });
-    // Have list of recipe cards, update UI.
-    this.view.addCards(recipeCards);
+    // Have list of recipe content, update UI.
+    this.view.createCard(recipesAndContent);
   };
 
   /**

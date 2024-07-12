@@ -117,4 +117,19 @@ class Utils {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
+
+  /**
+   * Formats a snake_case string into a human-readable title format with spaces and capitalization.
+   * @param {string} text The text to format, typically a key from a documentation object.
+   * @returns {string} The formatted text with underscores replaced by spaces and each word
+   * capitalized.
+   */
+  static formatDisplayText(text) {
+    return text
+      .toLowerCase()
+      .replace(/_/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
 }

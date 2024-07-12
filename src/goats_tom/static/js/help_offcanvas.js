@@ -223,7 +223,7 @@ class HelpOffcanvas {
               "py-1",
               "px-2",
             ]);
-            docTitle.textContent = this._formatHeader(docKey);
+            docTitle.textContent = Utils.formatDisplayText(docKey);
             bodyDiv.appendChild(docTitle);
 
             const docContent = Utils.createElement("p");
@@ -243,20 +243,5 @@ class HelpOffcanvas {
     });
     container.append(about, accordion);
     return container;
-  }
-
-  /**
-   * Formats a snake_case string into a human-readable title format with spaces and capitalization.
-   * @private
-   * @param {string} text The text to format, typically a key from a documentation object.
-   * @returns {string} The formatted text with underscores replaced by spaces and each word 
-   * capitalized.
-   */
-  _formatHeader(text) {
-    return text
-      .replace(/_/g, " ")
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
   }
 }

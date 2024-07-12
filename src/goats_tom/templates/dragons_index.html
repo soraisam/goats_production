@@ -68,7 +68,7 @@
     </div>
   </div>
   <div class="col-xl-7 col-lg-6 col-12">
-    <div id="recipesContainer" class="row g-3"></div>
+    <div id="recipesContainer"></div>
   </div>
 </div>
 <div id="helpOffcanvasContainer"></div>
@@ -108,14 +108,14 @@
     const recipeManagerController = new RecipeManagerController(recipeManagerModel, recipeManagerView);
 
     /**
-     * Handles the change in run selection by fetching related files and updating recipe cards
+     * Handles the change in run selection by fetching related files and updating recipes card
      * accordingly.
      * @param {string} observationRecordPk The primary key of the observation record.
      * @param {string} runId The ID of the selected run to fetch files for and to display recipes.
      */
     const handleRunSelectionChange = async (observationRecordPk, runId) => {
       await setupController.handleFetchFiles(observationRecordPk, runId);
-      await recipeManagerController.updateRecipeCards(runId);
+      await recipeManagerController.updateRecipesCard(runId);
       await recipeManagerController.updateReducesProgress(runId);
     };
 
