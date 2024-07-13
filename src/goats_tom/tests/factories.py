@@ -1,5 +1,4 @@
-"""
-This module contains factory classes for creating instances of various models
+"""This module contains factory classes for creating instances of various models
 used in the application, particularly for testing purposes.
 """
 
@@ -9,6 +8,7 @@ from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from goats_tom.models import (
+    BaseRecipe,
     DataProductMetadata,
     Download,
     DRAGONSFile,
@@ -35,6 +35,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     password : str
         A hashed password, generated using `make_password` for consistency in
         tests.
+
     """
 
     class Meta:
@@ -81,7 +82,7 @@ class DataProductFactory(factory.django.DjangoModelFactory):
     # Ensure observation_record is associated with the same target as
     # DataProduct
     observation_record = factory.SubFactory(
-        ObservingRecordFactory, target_id=factory.SelfAttribute("..target.id")
+        ObservingRecordFactory, target_id=factory.SelfAttribute("..target.id"),
     )
     data = ContentFile(b"some data", name="data.txt")
     extra_data = factory.Faker("text")
@@ -106,7 +107,7 @@ class ReducedDatumFactory(factory.django.DjangoModelFactory):
     source_location = "TOM-TOM Direct Sharing"
     timestamp = factory.LazyFunction(timezone.now)
     value = factory.LazyFunction(
-        lambda: {"magnitude": 15.582, "filter": "r", "error": 0.005}
+        lambda: {"magnitude": 15.582, "filter": "r", "error": 0.005},
     )
 
     @factory.post_generation
@@ -200,19 +201,30 @@ class DRAGONSFileFactory(factory.django.DjangoModelFactory):
     enabled = factory.Faker("boolean")
 
 
-class DRAGONSRecipeFactory(factory.django.DjangoModelFactory):
-    """Factory for `DRAGONSRecipe`."""
+class BaseRecipeFactory(factory.django.DjangoModelFactory):
+    """Factory for creating `BaseRecipe` instances for testing."""
 
     class Meta:
-        """Configuration."""
+        model = BaseRecipe
 
+    file_type = factory.Iterator(["BIAS", "FLAT", "ARC", "object"])
+    name = factory.Sequence(lambda n: f"Recipe{n}")
+    function_definition = factory.Faker("paragraph")
+    version = "32.2.0"
+    is_default = factory.Faker("boolean")
+
+
+class DRAGONSRecipeFactory(factory.django.DjangoModelFactory):
+    """Factory for creating `DRAGONSRecipe` instances for testing."""
+
+    class Meta:
         model = DRAGONSRecipe
 
+    recipe = factory.SubFactory(BaseRecipeFactory)
     dragons_run = factory.SubFactory(DRAGONSRunFactory)
-    file_type = factory.Faker("word")
-    name = factory.Faker("sentence")
-    original_function_definition = factory.Faker("paragraph")
     function_definition = None
+    created_at = factory.LazyFunction(timezone.now)
+    modified_at = factory.LazyAttribute(lambda o: o.created_at)
 
 
 class DRAGONSReduceFactory(factory.django.DjangoModelFactory):

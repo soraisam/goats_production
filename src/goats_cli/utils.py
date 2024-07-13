@@ -13,7 +13,7 @@ import click
 
 
 def display_message(
-    message: str, show_goats_emoji: bool = True, color: str = "cyan"
+    message: str, show_goats_emoji: bool = True, color: str = "cyan",
 ) -> None:
     """Displays a styled message to the console.
 
@@ -26,6 +26,7 @@ def display_message(
         default ``True``.
     color : `str`
         The color to output the message in.
+
     """
     prefix = "🐐 " if show_goats_emoji else ""
     click.echo(click.style(f"{prefix}{message}", fg=color, bold=True))
@@ -47,6 +48,7 @@ def display_info(message: str, indent: int = 4) -> None:
         The message to be displayed.
     indent : `int`, optional
         The number of spaces for indentation, by default 4.
+
     """
     click.echo(f"{' ' * indent}{message}", nl=False)
 
@@ -65,7 +67,8 @@ def display_warning(message: str, indent: int = 0) -> None:
         The message to be displayed.
     indent : `int`, optional
         The number of spaces for indentation, by default 0.
+
     """
     click.echo(
-        click.style(f"🐐 WARNING: {' ' * indent}{message}", fg="yellow", bold=True)
+        click.style(f"🐐 WARNING: {' ' * indent}{message}", fg="yellow", bold=True),
     )

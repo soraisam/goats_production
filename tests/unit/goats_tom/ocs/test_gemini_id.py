@@ -90,12 +90,12 @@ def test_is_valid_program_id():
 
     for program_id in valid_program_ids:
         assert GeminiID.is_valid_program_id(
-            program_id
+            program_id,
         ), f"Program ID '{program_id}' should be valid"
 
     for program_id in invalid_program_ids:
         assert not GeminiID.is_valid_program_id(
-            program_id
+            program_id,
         ), f"Program ID '{program_id}' should be invalid"
 
 
@@ -115,12 +115,12 @@ def test_is_valid_observation_id():
 
     for observation_id in valid_observation_ids:
         assert GeminiID.is_valid_observation_id(
-            observation_id
+            observation_id,
         ), f"Observation ID '{observation_id}' should be valid"
 
     for observation_id in invalid_observation_ids:
         assert not GeminiID.is_valid_observation_id(
-            observation_id
+            observation_id,
         ), f"Observation ID '{observation_id}' should be invalid"
 
 

@@ -4,6 +4,7 @@ __all__ = ["DRAGONSProgress"]
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+
 from goats_tom.models import DRAGONSReduce
 
 
@@ -21,6 +22,7 @@ class DRAGONSProgress:
         ----------
         reduce : `DRAGONSReduce`
             The model instance for recipe reduce.
+
         """
         cls._send(
             reduce.status,
@@ -43,6 +45,7 @@ class DRAGONSProgress:
             The identifier for the recipe being executed.
         reduce_id : `int`
             The identifier for the reduction process within the recipe.
+
         """
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(

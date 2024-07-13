@@ -31,14 +31,15 @@ class DRAGONSReduceUpdateSerializer(serializers.ModelSerializer):
             Raised if status is not 'canceled'.
         `ValidationError`
             Raised if status is already a terminal state.
+
         """
         if value != "canceled":
             raise serializers.ValidationError(
-                "Status can only be updated to 'canceled'."
+                "Status can only be updated to 'canceled'.",
             )
         if self.instance and self.instance.status in ["done", "canceled", "error"]:
             raise serializers.ValidationError(
-                "Cannot change status from a terminal state."
+                "Cannot change status from a terminal state.",
             )
         return value
 
@@ -58,6 +59,7 @@ class DRAGONSReduceUpdateSerializer(serializers.ModelSerializer):
         instance : `DRAGONSReduce`
             The updated `DRAGONSReduce` instance, with the status potentially set to
             'canceled'.
+
         """
         status = validated_data.get("status")
 
@@ -74,6 +76,7 @@ class DRAGONSReduceSerializer(serializers.ModelSerializer):
     ----------
     recipe_id : `serializers.IntegerField`
         ID of the DRAGONSRecipe instance that the reduction is associated with.
+
     """
 
     recipe_id = serializers.IntegerField(write_only=True, required=True)
@@ -101,6 +104,7 @@ class DRAGONSReduceSerializer(serializers.ModelSerializer):
         ------
         `ValidationError`
             Raised if no DRAGONSRecipe exists with the provided ID.
+
         """
         if not DRAGONSRecipe.objects.filter(id=value).exists():
             raise serializers.ValidationError("Recipe ID does not exist")
@@ -118,6 +122,7 @@ class DRAGONSReduceSerializer(serializers.ModelSerializer):
         -------
         `DRAGONSReduce`
             The newly created `DRAGONSReduce` instance.
+
         """
         recipe_id = validated_data.pop("recipe_id")
         recipe = DRAGONSRecipe.objects.get(id=recipe_id)
@@ -134,8 +139,8 @@ class DRAGONSReduceFilterSerializer(serializers.Serializer):
         help_text="Status for reduction to filter by.",
     )
     not_finished = serializers.BooleanField(
-        required=False, help_text="Return all reductions that are not finished."
+        required=False, help_text="Return all reductions that are not finished.",
     )
     run = serializers.IntegerField(
-        required=False, help_text="ID for the DRAGONS run to filter by."
+        required=False, help_text="ID for the DRAGONS run to filter by.",
     )

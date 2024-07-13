@@ -1,0 +1,1 @@
+Implemented version-based recipe creation: Prevented redundant recipe entries in DRAGONS by creating base recipes only when the version changes.

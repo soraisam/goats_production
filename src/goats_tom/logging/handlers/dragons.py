@@ -10,7 +10,8 @@ from channels.layers import get_channel_layer
 
 class DRAGONSHandler(logging.Handler):
     """A custom logging handler that sends messages to a WebSocket consumer group for
-    DRAGONS logs."""
+    DRAGONS logs.
+    """
 
     group_name = "dragons_group"
     func_type = "log.message"
@@ -30,6 +31,7 @@ class DRAGONSHandler(logging.Handler):
         ----------
         record : `logging.LogRecord`
             The log record to process.
+
         """
         log_entry = self.format(record)
 

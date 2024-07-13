@@ -1,4 +1,5 @@
 """Django command to install GOATS."""
+
 import re
 import sys
 from pathlib import Path
@@ -57,6 +58,7 @@ class Command(TOMCommand):
             The exit message to display.
         return_code : `int`, optional
             The exit code, default is 0.
+
         """
         self.stdout.write(f"🐐 {msg}")
         sys.exit(return_code)
@@ -89,7 +91,7 @@ class Command(TOMCommand):
             self.exit(
                 self.style.ERROR(
                     f"Incompatible Python version found. Please install Python >= "
-                    f"{PYTHON_VERSION}"
+                    f"{PYTHON_VERSION}",
                 ),
                 return_code=1,
             )
@@ -100,13 +102,13 @@ class Command(TOMCommand):
         sys.exit()
 
     def generate_file(self, file_type: Literal["settings", "urls", "asgi"]) -> None:
-        """
-        Generates Django configuration files based on the specified file type.
+        """Generates Django configuration files based on the specified file type.
 
         Parameters
         ----------
         file_type : `Literal["settings", "urls", "asgi"]`
             The type of file to generate.
+
         """
         self.status(f"  Generating {file_type}.py... ")
         template_name = f"goats_setup/{file_type}.tmpl"
@@ -116,8 +118,9 @@ class Command(TOMCommand):
         file_location = settings.BASE_DIR / settings.BASE_DIR.name / f"{file_type}.py"
         if not file_location.exists():
             msg = (
-                f"Could not determine {file_type}.py location. Writing {file_type}.py out to "
-                f"{file_location}. Please copy file to the proper location after script finishes."
+                f"Could not determine {file_type}.py location. Writing {file_type}.py ",
+                f"out to {file_location}. Please copy file to the proper location ",
+                "after script finishes.",
             )
             self.stdout.write(self.style.WARNING(msg))
 
@@ -167,7 +170,7 @@ class Command(TOMCommand):
         if not match:
             self.exit(
                 self.style.ERROR(
-                    f"Invalid format for --redis-addrport: '{redis_addrport}'"
+                    f"Invalid format for --redis-addrport: '{redis_addrport}'",
                 ),
                 return_code=1,
             )
@@ -215,8 +218,8 @@ class Command(TOMCommand):
         """Creates a Principal Investigator (PI) superuser."""
         self.stdout.write(
             self.style.MIGRATE_HEADING(
-                "Principal Investigator (PI) and public user creation:"
-            )
+                "Principal Investigator (PI) and public user creation:",
+            ),
         )
         call_command("createsuperuser", verbosity=0)
         self.status("  PI Superuser created... ")

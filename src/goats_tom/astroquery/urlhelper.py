@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-===========================================
+"""===========================================
 Gemini Observatory Archive (GOA) URL Helper
 ===========================================
 
@@ -23,7 +22,8 @@ def handle_keyword_arg(key, value):
 
 def handle_radius(key, radius):
     """Handler function for radius keyword with smart conversion to a degrees
-    value."""
+    value.
+    """
     if key != "radius":
         raise ValueError('Handler only works for "radius" keywords.')
 
@@ -83,7 +83,8 @@ class URLHelper:
 
     def __init__(self):
         """Make a URL Helper for building URLs to the Gemini Archive REST
-        service."""
+        service.
+        """
         self.server = conf.GOA_SERVER
 
     def get_login_url(self):
@@ -111,8 +112,7 @@ class URLHelper:
         return f'{self.server}{self.ENDPOINTS["search"]}/{program_id}'
 
     def build_url(self, *args, endpoint=None, **kwargs):
-        """
-        Build a URL with the given args and kwargs as the query parameters.
+        """Build a URL with the given args and kwargs as the query parameters.
 
         Parameters
         ----------
@@ -125,10 +125,12 @@ class URLHelper:
         Returns
         -------
         response : `string` url to execute the query
+
         """
         if endpoint is not None and endpoint not in self.VALID_ENDPOINTS:
             raise ValueError(
-                f'GOA URL endpoint ({endpoint}) must be: {", ".join(self.VALID_ENDPOINTS)}'
+                f"GOA URL endpoint ({endpoint}) must be: ",
+                f"{', '.join(self.VALID_ENDPOINTS)}",
             )
 
         if endpoint is None:
@@ -145,13 +147,15 @@ class URLHelper:
 
         # Get default values that are needed in API.
         eng_parm = next(
-            (a for a in args if a in self.ENGINEERING_PARAMETERS), "notengineering"
+            (a for a in args if a in self.ENGINEERING_PARAMETERS),
+            "notengineering",
         )
 
         qa_parm = next((a for a in args if a in self.QA_PARAMETERS), "NotFail")
 
         file_curation_param = next(
-            (a for a in args if a in self.FILE_CURATION_PARAMETERS), "canonical"
+            (a for a in args if a in self.FILE_CURATION_PARAMETERS),
+            "canonical",
         )
 
         # Filter out defaults from args.

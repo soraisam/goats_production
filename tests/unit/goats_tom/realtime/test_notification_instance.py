@@ -10,7 +10,7 @@ def test_notification_instance():
     with patch.object(NotificationInstance, "_send") as mock_send:
         # Create and send a notification
         NotificationInstance.create_and_send(
-            label="Alert", message="Test notification", color="warning"
+            label="Alert", message="Test notification", color="warning",
         )
 
         # Verify that _send was called with the correct parameters.

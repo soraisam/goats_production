@@ -30,6 +30,7 @@ class Download(models.Model):
         ----------
         message : `str`, optional
             A message about the download, by default `None`.
+
         """
         self.end_time = timezone.now()
         if error:
@@ -43,8 +44,7 @@ class Download(models.Model):
 
     @property
     def total_time(self) -> str:
-        """
-        Calculate and return the total time taken for the download in a
+        """Calculate and return the total time taken for the download in a
         human-readable format.
 
         Returns
@@ -52,6 +52,7 @@ class Download(models.Model):
         `str`
             The total time taken for the download formatted as "Wd Xh Ym Zs" or
             "N/A" if not available.
+
         """
         if self.end_time and self.start_time and self.done:
             duration = self.end_time - self.start_time

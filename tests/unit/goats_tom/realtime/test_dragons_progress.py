@@ -7,7 +7,7 @@ from goats_tom.realtime import DRAGONSProgress
 from goats_tom.tests.factories import DRAGONSReduceFactory
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_dragons_progress():
     """Tests creating and sending progress updates for DRAGONS recipes."""
     # Create a DRAGONSReduce instance using the factory.

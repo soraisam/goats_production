@@ -11,8 +11,11 @@ __all__ = [
     "extract_metadata",
     "get_short_name",
     "get_astrodata_header",
+    "get_recipes_and_primitives",
 ]
 
+import importlib
+import inspect
 import re
 from pathlib import Path
 from typing import Any
@@ -21,6 +24,8 @@ import astrodata
 from astropy.table import Table
 from django.contrib.auth.models import User
 from django.http import JsonResponse
+from recipe_system.mappers.recipeMapper import RecipeMapper
+from recipe_system.utils.errors import ModeError, RecipeNotFound
 from rest_framework import status
 from tom_dataproducts.models import DataProduct, ReducedDatum
 from tom_observations.models import ObservationRecord
@@ -40,6 +45,7 @@ def delete_associated_data_products(
     record_or_product : ObservationRecord | DataProduct
         The ObservationRecord object to find associated DataProducts,
         or a single DataProduct to be deleted.
+
     """
     if isinstance(record_or_product, ObservationRecord):
         query = DataProduct.objects.filter(observation_record=record_or_product)
@@ -47,7 +53,7 @@ def delete_associated_data_products(
         query = [record_or_product]
     else:
         raise ValueError(
-            "Invalid argument type. Must be ObservationRecord or DataProduct."
+            "Invalid argument type. Must be ObservationRecord or DataProduct.",
         )
 
     for data_product in query:
@@ -76,6 +82,7 @@ def create_name_reduction_map(file_list: Table) -> dict[str, str]:
     -------
     `dict[str, str]`
         A dictionary mapping file 'name' to their 'reduction' values.
+
     """
     return {row["name"]: row["reduction"] for row in file_list}
 
@@ -94,6 +101,7 @@ def custom_data_product_path(data_product: DataProduct, filename: str) -> str:
     -------
     `str`
         The path to the data product.
+
     """
     if data_product.observation_record is not None:
         return (
@@ -105,7 +113,8 @@ def custom_data_product_path(data_product: DataProduct, filename: str) -> str:
 
 
 def build_json_response(
-    error_message: str | None = None, error_status: int | None = status.HTTP_200_OK
+    error_message: str | None = None,
+    error_status: int | None = status.HTTP_200_OK,
 ) -> JsonResponse:
     """Build a JSON response.
 
@@ -121,10 +130,12 @@ def build_json_response(
     -------
     `JsonResponse`
         A JSON response with either a success or error status.
+
     """
     if error_message:
         return JsonResponse(
-            {"status": "error", "message": error_message}, status=error_status
+            {"status": "error", "message": error_message},
+            status=error_status,
         )
 
     return JsonResponse({"status": "success", "message": ""}, status=error_status)
@@ -145,12 +156,15 @@ def get_key(user: User, identifier: str) -> UserKey | ProgramKey | None:
     -------
     `UserKey | ProgramKey | None`
         The first found key (ProgramKey or UserKey), or `None` if not found.
+
     """
     # Check if identifier is a site.
     if identifier in GeminiID.sites:
         # Retrieve an active UserKey for the site.
         user_key = UserKey.objects.filter(
-            user=user, is_active=True, site=identifier
+            user=user,
+            is_active=True,
+            site=identifier,
         ).first()
         return user_key
 
@@ -162,7 +176,9 @@ def get_key(user: User, identifier: str) -> UserKey | ProgramKey | None:
 
     # Attempt to retrieve a ProgramKey.
     program_key = ProgramKey.objects.filter(
-        user=user, program_id=gemini_id.program_id, site=gemini_id.site
+        user=user,
+        program_id=gemini_id.program_id,
+        site=gemini_id.site,
     ).first()
     return program_key
 
@@ -181,6 +197,7 @@ def get_key_info(user: User, identifier: str) -> dict[str, str]:
     -------
     `dict[str, str]`
         A payload meant to be merged with the observation payload.
+
     """
     key = get_key(user, identifier=identifier)
     if key is None:
@@ -210,11 +227,14 @@ def has_key(user: User, identifier: str) -> bool:
     -------
     `bool`
         `True` if a key exists, `False` otherwise.
+
     """
     if identifier in GeminiID.sites:
         # Check for the existence of an active UserKey for the site.
         user_key_exists = UserKey.objects.filter(
-            user=user, is_active=True, site=identifier
+            user=user,
+            is_active=True,
+            site=identifier,
         ).exists()
         return user_key_exists
 
@@ -226,7 +246,9 @@ def has_key(user: User, identifier: str) -> bool:
 
     # Check for the existence of a ProgramKey.
     program_key_exists = ProgramKey.objects.filter(
-        user=user, program_id=gemini_id.program_id, site=gemini_id.site
+        user=user,
+        program_id=gemini_id.program_id,
+        site=gemini_id.site,
     ).exists()
     return program_key_exists
 
@@ -253,6 +275,7 @@ def extract_metadata(file_path: Path) -> dict | None:
     "BIAS", "DARK", "FLAT", "ARC", "PINHOLE", "RONCHI", "FRINGE", and
     "standard" file types, with a fallback to "unknown" or "object" types based
     on observation class.
+
     """
     # Define calibration file tags for identification.
     cal_file_tags = ["BIAS", "DARK", "FLAT", "ARC", "PINHOLE", "RONCHI", "FRINGE"]
@@ -310,6 +333,7 @@ def get_short_name(name: str) -> str | None:
     -------
     `str | None`
         The short name extracted after "::" if present.
+
     """
     # Regular expression pattern to capture text after "::".
     pattern = r"::(\w+)$"
@@ -332,6 +356,7 @@ def get_astrodata_header(data_product: DataProduct) -> dict[str, Any]:
     -------
     `dict[str, Any]`
         Header payload from astrodata.
+
     """
     ad = astrodata.open(data_product.data.path)
     # Prepare the header information.
@@ -344,3 +369,87 @@ def get_astrodata_header(data_product: DataProduct) -> dict[str, Any]:
         header[descriptor] = value
 
     return header
+
+
+def get_recipes_and_primitives(file_path: Path) -> dict[str, Any]:
+    """Fetches all recipes applicable to a file, along with their primitives, and
+    identifies the default recipe.
+
+    Parameters
+    ----------
+    file_path : `Path`
+        Path to the FITS file from which to extract recipes and their primitives.
+
+    Returns
+    -------
+    `dict[str, Any]`
+        A dictionary containing the recipe, function definition, and if it is the
+        default recipe.
+
+    """
+    default_recipe_name = None
+    astro_data = astrodata.open(file_path)
+    tags = set(astro_data.tags)
+    instrument_package = astro_data.instrument(generic=True).lower()
+    recipes = {}
+
+    # Attempt to get recipes for just "sq" for GOATS.
+    for mode in ["sq"]:
+        try:
+            recipe_mapper = RecipeMapper(tags, instrument_package, mode=mode)
+            applicable_recipe = recipe_mapper.get_applicable_recipe()
+            recipe_module = importlib.import_module(applicable_recipe.__module__)
+
+            # Loop through and build the recipe function definition from primitives.
+            for func_name, func in inspect.getmembers(
+                recipe_module,
+                inspect.isfunction,
+            ):
+                if func_name == "_default":
+                    # Capture real name to check later.
+                    default_recipe_name = func.__name__
+                    continue
+
+                recipe_name = f"{func.__module__}::{func.__name__}"
+                source_code = inspect.getsource(func)
+                primitives = re.findall(r"p\..*", source_code)
+
+                # Construct the function definition for the recipe.
+                function_definition = _create_recipe_function_definition(
+                    func_name,
+                    primitives,
+                )
+                is_default = func_name == default_recipe_name
+
+                recipes[recipe_name] = {
+                    "function_definition": function_definition,
+                    "is_default": is_default,
+                }
+
+        except (RecipeNotFound, ModeError) as e:
+            print(f"Error parsing recipes and primitives: {e}")
+            continue
+
+    return {"recipes": recipes}
+
+
+def _create_recipe_function_definition(recipe_name: str, primitives: list[str]) -> str:
+    """Constructs a Python function definition string from a list of primitive
+    operations.
+
+    Parameters
+    ----------
+    recipe_name : `str`
+        The name of the recipe function to be defined.
+    primitives : `list[str]`
+        A list of string representations of primitive operations that form the body of
+        the function.
+
+    Returns
+    -------
+    `str`
+        A formatted string representing the complete Python function definition.
+
+    """
+    function_body = "\n".join(f"    {primitive.strip()}" for primitive in primitives)
+    return f"def {recipe_name}(p):\n{function_body}\n"

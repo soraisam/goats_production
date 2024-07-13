@@ -19,12 +19,13 @@ class Plugin:
         The line to be added to the settings file.
     line_to_remove : `str`, optional
         The line to be removed from the settings file, default is `None`.
+
     """
 
     name: str
     look_for: str
     line_to_add: str
-    line_to_remove: str = None
+    line_to_remove: str | None = None
 
 
 @dataclass

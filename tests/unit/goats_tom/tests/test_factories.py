@@ -3,12 +3,9 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
-from goats_tom.models import (
-    DataProductMetadata,
-    DRAGONSFile,
-    DRAGONSRecipe,
-)
+from goats_tom.models import DataProductMetadata, DRAGONSFile
 from goats_tom.tests.factories import (
+    BaseRecipeFactory,
     DataProductFactory,
     DataProductMetadataFactory,
     DownloadFactory,
@@ -23,7 +20,7 @@ from goats_tom.tests.factories import (
 )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_goalogin_set_password():
     """Test to verify that the set_password method correctly hashes the
     password.
@@ -35,7 +32,7 @@ def test_goalogin_set_password():
     assert "testpassword", goa_login.password
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_task_progress_factory():
     # Test the TaskProgress factory.
     task = DownloadFactory.create()
@@ -55,7 +52,7 @@ def test_task_progress_factory():
     assert task.total_time != "N/A"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDataProductFactory:
     def test_create_dataproduct(self):
         # Test creating a simple DataProduct without any overrides.
@@ -76,7 +73,7 @@ class TestDataProductFactory:
             invalid_data_product.full_clean()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestReducedDatumFactory:
     def test_create_reduceddatum(self):
         # Test creating a simple ReducedDatum without any overrides.
@@ -97,7 +94,7 @@ class TestReducedDatumFactory:
             invalid_reduced_datum.full_clean()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class KeyFactoryTest(TestCase):
     def test_user_key_factory(self):
         user_key = UserKeyFactory()
@@ -113,7 +110,7 @@ class KeyFactoryTest(TestCase):
         self.assertIn(program_key.site, ["GS", "GN"])
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDRAGONSRunFactory:
     def test_create_dragonsrun(self):
         # Test creating a simple DRAGONSRun without any overrides.
@@ -130,7 +127,7 @@ class TestDRAGONSRunFactory:
         assert dragons_run.run_id == custom_run_id
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDataProductMetadataFactory:
     """Class to test `DataProductMetadataFactory`."""
 
@@ -138,7 +135,7 @@ class TestDataProductMetadataFactory:
         """Test that the factory creates a valid metadata instance."""
         metadata = DataProductMetadataFactory()
         assert isinstance(
-            metadata, DataProductMetadata
+            metadata, DataProductMetadata,
         ), "Factory should create a DataProductMetadata instance."
 
     def test_factory_with_specific_values(self):
@@ -166,7 +163,7 @@ class TestDataProductMetadataFactory:
         assert metadata.roi_setting == "Full Frame"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDRAGONSFileFactory:
     """Class to test `DRAGONSFileFactory`."""
 
@@ -174,7 +171,7 @@ class TestDRAGONSFileFactory:
         """Test that the factory creates a valid DRAGONSFile instance."""
         dragons_file = DRAGONSFileFactory()
         assert isinstance(
-            dragons_file, DRAGONSFile
+            dragons_file, DRAGONSFile,
         ), "Factory should create a DRAGONSFile instance."
 
     def test_factory_with_specific_values(self):
@@ -182,44 +179,14 @@ class TestDRAGONSFileFactory:
         dragons_run = DRAGONSRunFactory()
         data_product = DataProductFactory(create_metadata=True)
         dragons_file = DRAGONSFileFactory(
-            dragons_run=dragons_run, data_product=data_product, enabled=False
+            dragons_run=dragons_run, data_product=data_product, enabled=False,
         )
         assert dragons_file.dragons_run == dragons_run
         assert dragons_file.data_product == data_product
         assert dragons_file.enabled is False
 
 
-@pytest.mark.django_db
-class TestDRAGONSRecipeFactory:
-    """Class to test `DRAGONSRecipeFactory`."""
-
-    def test_factory_creation(self):
-        """Test that the factory creates a valid DRAGONSRecipe instance."""
-        recipe = DRAGONSRecipeFactory()
-        assert isinstance(
-            recipe, DRAGONSRecipe
-        ), "Factory should create a DRAGONSRecipe instance."
-
-    def test_factory_with_specific_values(self):
-        """Test factory creation with specific values."""
-        dragons_run = DRAGONSRunFactory()
-        recipe = DRAGONSRecipeFactory(
-            dragons_run=dragons_run,
-            file_type="BIAS",
-            name="Test Recipe",
-            original_function_definition="def test_function(): pass",
-        )
-        assert recipe.dragons_run == dragons_run
-        assert recipe.file_type == "BIAS"
-        assert recipe.name == "Test Recipe"
-        assert recipe.original_function_definition == "def test_function(): pass"
-        assert recipe.function_definition is None
-        assert recipe.active_function_definition == recipe.original_function_definition
-        recipe.function_definition = "new"
-        assert recipe.active_function_definition == recipe.function_definition
-
-
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDRAGONSReduceFactory:
     def test_initial_status(self):
         """Test the initial status of a newly created DRAGONSReduce instance."""
@@ -228,3 +195,60 @@ class TestDRAGONSReduceFactory:
         assert (
             reduction.end_time is None
         ), "end_time should be None when status is 'created'."
+
+
+@pytest.mark.django_db()
+class TestBaseRecipeFactory:
+    """Class to test the BaseRecipeFactory."""
+
+    def test_factory_with_specific_values(self):
+        """Test that the factory correctly applies passed values."""
+        specific_type = "BIAS"
+        recipe = BaseRecipeFactory(
+            file_type=specific_type, name="Test Recipe", version="32.2.0",
+        )
+        assert (
+            recipe.file_type == specific_type
+        ), "Factory should use the specified file_type."
+        assert recipe.name == "Test Recipe", "Factory should use the specified name."
+        assert recipe.version == "32.2.0", "Factory should use the specified version."
+        assert isinstance(
+            recipe.is_default, bool,
+        ), "is_default should be a boolean value."
+
+
+@pytest.mark.django_db()
+class TestDRAGONSRecipeFactory:
+    """Class to test the DRAGONSRecipeFactory."""
+
+    def test_factory_with_specific_values(self):
+        """Test that the factory correctly applies passed values."""
+        base_recipe = BaseRecipeFactory()
+        dragons_run = DRAGONSRunFactory()
+        custom_function_definition = "def custom_processing(): return 'processed'"
+
+        dragons_recipe = DRAGONSRecipeFactory(
+            recipe=base_recipe,
+            dragons_run=dragons_run,
+            function_definition=custom_function_definition,
+        )
+
+        assert (
+            dragons_recipe.recipe == base_recipe
+        ), "Factory should link to the specified BaseRecipe."
+        assert (
+            dragons_recipe.dragons_run == dragons_run
+        ), "Factory should link to the specified DRAGONSRun."
+        assert (
+            dragons_recipe.function_definition == custom_function_definition
+        ), "Factory should use the specified function definition."
+        assert (
+            dragons_recipe.function_definition is not None
+        ), "Function definition should not be None when explicitly set."
+
+    def test_factory_default_function_definition(self):
+        """Test that the factory correctly applies default values."""
+        dragons_recipe = DRAGONSRecipeFactory(function_definition=None)
+        assert (
+            dragons_recipe.function_definition is None
+        ), "Function definition should be None by default."

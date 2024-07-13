@@ -95,7 +95,7 @@ class GOAQueryForm(forms.Form):
     filename_prefix = forms.CharField(
         label="Filename Prefix",
         widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Leave empty for any"}
+            attrs={"class": "form-control", "placeholder": "Leave empty for any"},
         ),
         required=False,
         help_text="(Specify the first part of the filename to match by)",
@@ -152,6 +152,7 @@ class GOALoginForm(forms.Form):
         The field for the GOA username.
     password : `forms.CharField`
         The field for the GOA password.
+
     """
 
     username = forms.CharField(

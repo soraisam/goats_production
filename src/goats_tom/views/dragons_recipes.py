@@ -29,6 +29,7 @@ class DRAGONSRecipesViewSet(
         -------
         `QuerySet`
             A `QuerySet` of `DRAGONSRecipe` filtered by the provided parameters.
+
         """
         queryset = super().get_queryset()
 
@@ -42,7 +43,7 @@ class DRAGONSRecipesViewSet(
             if dragons_run_pk is not None:
                 queryset = queryset.filter(dragons_run__pk=dragons_run_pk)
             if file_type is not None:
-                queryset = queryset.filter(file_type=file_type)
+                queryset = queryset.filter(recipe__file_type=file_type)
 
         return queryset
 
@@ -60,6 +61,7 @@ class DRAGONSRecipesViewSet(
         `Response`
             Response object containing the serialized data of the requested object. If
             specified in the query parameters, additional data is included.
+
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)

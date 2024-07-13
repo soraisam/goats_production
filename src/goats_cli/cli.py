@@ -11,7 +11,6 @@ from typing import IO, Any
 import click
 from click._compat import get_text_stderr
 
-# from .modify_manage import modify_manage
 from goats_cli.modify_settings import modify_settings
 from goats_cli.process_manager import ProcessManager
 from goats_cli.utils import (
@@ -41,6 +40,7 @@ class GOATSClickException(click.ClickException):
         ----------
         file : `IO[Any] | None`, optional
             The file object to write the message to, by default ``None``.
+
         """
         if file is None:
             file = get_text_stderr()
@@ -55,7 +55,7 @@ def validate_addrport(ctx, param, value):
     """Validate IP address and port."""
     if not re.match(REGEX_PATTERN, value):
         raise click.BadParameter(
-            "The address and port must be in format 'HOST:PORT' or 'PORT'."
+            "The address and port must be in format 'HOST:PORT' or 'PORT'.",
         )
     return value
 
@@ -145,6 +145,7 @@ def install(
         Raised if the 'subprocess' calls fail.
     GOATSClickException
         Raised if the 'media_dir' path is not writable.
+
     """
     project_path = directory.resolve() / project_name
 
@@ -153,7 +154,7 @@ def install(
         if not overwrite:
             raise GOATSClickException(
                 f"'{project_path.absolute()}' already exists. Use the "
-                "'--overwrite' option to overwrite it."
+                "'--overwrite' option to overwrite it.",
             )
         shutil.rmtree(project_path)
 
@@ -163,7 +164,9 @@ def install(
     try:
         # Run the startproject command in the specified directory.
         subprocess.run(
-            ["django-admin", "startproject", project_name], cwd=directory, check=True
+            ["django-admin", "startproject", project_name],
+            cwd=directory,
+            check=True,
         )
 
         # Get the path for the 'settings.py' file.
@@ -186,8 +189,8 @@ def install(
             resolved_media_dir = media_dir.resolve()
             if resolved_media_dir.exists():
                 display_warning(
-                    "Media root directory already exists, proceeding but existing data might "
-                    "conflict."
+                    "Media root directory already exists, proceeding but existing data",
+                    " might conflict.",
                 )
             goats_setup_command.extend(["--media-dir", f"{resolved_media_dir}"])
 
@@ -216,7 +219,7 @@ def install(
         cmd_str = " ".join(error.cmd)
         raise GOATSClickException(
             f"An error occurred while running the command: '{cmd_str}'. Exit status:"
-            f" {error.returncode}."
+            f" {error.returncode}.",
         )
 
     except Exception as error:
@@ -271,7 +274,11 @@ def install(
     callback=validate_addrport,
 )
 def run(
-    project_name: str, directory: Path, workers: int, addrport: str, redis_addrport: str
+    project_name: str,
+    directory: Path,
+    workers: int,
+    addrport: str,
+    redis_addrport: str,
 ) -> None:
     """Starts the webserver, Redis server, and workers for GOATS.
 
@@ -294,6 +301,7 @@ def run(
         Raised if the 'manage.py' file for the project does not exist.
     GOATSClickException
         Raised if the 'subprocess' calls fail.
+
     """
     display_message("Serving GOATS.\n")
     display_message("Finding GOATS and Redis installation:", show_goats_emoji=False)
@@ -304,26 +312,32 @@ def run(
     if not manage_file.is_file():
         display_failed()
         raise GOATSClickException(
-            f"The 'manage.py' file for the project '{project_name}' does not exist at '{manage_file.absolute()}'."
+            f"The 'manage.py' file for the project '{project_name}' does not exist at",
+            f" '{manage_file.absolute()}'.",
         )
     display_ok()
     display_info("Verifying Redis installed...")
     try:
         subprocess.run(
-            ["redis-server", "--version"], check=True, text=True, capture_output=True
+            ["redis-server", "--version"],
+            check=True,
+            text=True,
+            capture_output=True,
         )
         display_ok()
     except FileNotFoundError:
         display_failed()
         raise GOATSClickException(
-            "An error occurred verifying Redis. Is Redis installed?"
+            "An error occurred verifying Redis. Is Redis installed?",
         )
 
     display_message(
-        "Starting Redis, GOATS and background workers:", show_goats_emoji=False
+        "Starting Redis, GOATS and background workers:",
+        show_goats_emoji=False,
     )
     display_message(
-        "---------------------------------------------", show_goats_emoji=False
+        "---------------------------------------------",
+        show_goats_emoji=False,
     )
     time.sleep(2)
 
@@ -337,7 +351,8 @@ def run(
 
     # Start the background consumer.
     process_manager.add_process(
-        "background_workers", start_background_workers(manage_file, workers=workers)
+        "background_workers",
+        start_background_workers(manage_file, workers=workers),
     )
 
     # Handle the termination
@@ -366,9 +381,10 @@ def start_redis_server(addrport: str, disable_rdb: bool = True) -> subprocess.Po
     ------
     GOATSClickException
         Raised if issue starting Redis server.
+
     """
     display_message("Starting redis database.")
-    pattern = pattern = re.compile(REGEX_PATTERN)
+    pattern = re.compile(REGEX_PATTERN)
     match = pattern.match(addrport)
     port = match.group("port")
     cmd = ["redis-server", "--port", f"{port}"]
@@ -381,7 +397,7 @@ def start_redis_server(addrport: str, disable_rdb: bool = True) -> subprocess.Po
     except subprocess.CalledProcessError as error:
         raise GOATSClickException(
             f"Error running Redis server: '{error.cmd}'. "
-            f"Exit status: {error.returncode}."
+            f"Exit status: {error.returncode}.",
         )
     return redis_process
 
@@ -405,16 +421,18 @@ def start_django_server(manage_file: Path, addrport: str) -> subprocess.Popen:
     ------
     GOATSClickException
         Raised if issue starting Django server.
+
     """
     display_message("Starting django server.")
     try:
         django_process = subprocess.Popen(
-            [f"{manage_file}", "runserver", addrport], start_new_session=True
+            [f"{manage_file}", "runserver", addrport],
+            start_new_session=True,
         )
     except subprocess.CalledProcessError as error:
         raise GOATSClickException(
             f"Error running Django server: '{error.cmd}'. "
-            f"Exit status: {error.returncode}."
+            f"Exit status: {error.returncode}.",
         )
     return django_process
 
@@ -436,6 +454,7 @@ def start_background_workers(manage_file: Path, workers: int) -> subprocess.Pope
     ------
     GOATSClickException
         Raised if issue starting background workers.
+
     """
     display_message("Starting background workers.")
     try:
@@ -455,7 +474,7 @@ def start_background_workers(manage_file: Path, workers: int) -> subprocess.Pope
     except subprocess.CalledProcessError as error:
         raise GOATSClickException(
             f"Error running background consumer: '{error.cmd}'. "
-            f"Exit status: {error.returncode}."
+            f"Exit status: {error.returncode}.",
         )
     return background_workers_process
 

@@ -8,12 +8,12 @@ from gempy.scripts import showpars
 from numpydoc.docscrape import NumpyDocString
 from tom_dataproducts.models import DataProduct
 
-from .dragons_run import DRAGONSRun
-
 
 class DRAGONSFile(models.Model):
     dragons_run = models.ForeignKey(
-        DRAGONSRun, on_delete=models.CASCADE, related_name="dragons_run_files"
+        "goats_tom.DRAGONSRun",
+        on_delete=models.CASCADE,
+        related_name="dragons_run_files",
     )
     data_product = models.ForeignKey(DataProduct, on_delete=models.CASCADE)
     enabled = models.BooleanField(default=True)
@@ -38,13 +38,14 @@ class DRAGONSFile(models.Model):
             A dictionary containing method names as keys and another dictionary as
             values, which includes parameters and their documentation, as well as the
             method's docstring parsed according to the numpy documentation standard.
+
         """
         data = {}
         primitive_obj, _ = showpars.get_pars(self.get_file_path())
 
         for item in dir(primitive_obj):
             if not item.startswith("_") and inspect.ismethod(
-                getattr(primitive_obj, item)
+                getattr(primitive_obj, item),
             ):
                 method = getattr(primitive_obj, item)
                 params = primitive_obj.params[item]

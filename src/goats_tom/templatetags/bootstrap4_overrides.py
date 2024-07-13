@@ -20,6 +20,7 @@ def bootstrap_pagination(page: Page, **kwargs) -> dict[str, Any]:
     `dict`
         The context for rendering the pagination component, including
         pagination details and item counts.
+
     """
     pagination_kwargs = kwargs.copy()
     pagination_kwargs["page"] = page

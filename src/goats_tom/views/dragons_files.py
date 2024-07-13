@@ -39,6 +39,7 @@ class DRAGONSFilesViewSet(
         -------
         `QuerySet`
             The filtered queryset.
+
         """
         queryset = super().get_queryset()
 
@@ -55,7 +56,7 @@ class DRAGONSFilesViewSet(
 
         # Apply select_related to optimize related object retrieval.
         queryset = queryset.select_related(
-            "data_product__observation_record", "data_product__metadata"
+            "data_product__observation_record", "data_product__metadata",
         )
 
         return queryset
@@ -72,6 +73,7 @@ class DRAGONSFilesViewSet(
         -------
         `Response`
             The paginated list of DRAGONS file records, optionally grouped by file type.
+
         """
         # Validates the provided query parameters.
         filter_serializer = self.filter_serializer_class(data=request.query_params)
@@ -93,7 +95,7 @@ class DRAGONSFilesViewSet(
         # Paginate and return data.
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(
-            page if page is not None else queryset, many=True
+            page if page is not None else queryset, many=True,
         )
 
         data = serializer.data
@@ -116,6 +118,7 @@ class DRAGONSFilesViewSet(
         -------
         `Response`
             Contains serialized DRAGONS file data with optional header information.
+
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)

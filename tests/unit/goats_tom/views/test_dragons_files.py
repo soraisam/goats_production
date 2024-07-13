@@ -38,7 +38,7 @@ class TestDRAGONSFilesViewSet(APITestCase):
         dragons_file = DRAGONSFileFactory()
 
         request = self.factory.get(
-            reverse("dragonsfile-detail", args=[dragons_file.id])
+            reverse("dragonsfile-detail", args=[dragons_file.id]),
         )
         self.authenticate(request)
 
@@ -53,7 +53,7 @@ class TestDRAGONSFilesViewSet(APITestCase):
         data = {"enabled": False}
 
         request = self.factory.patch(
-            reverse("dragonsfile-detail", args=[dragons_file.id]), data, format="json"
+            reverse("dragonsfile-detail", args=[dragons_file.id]), data, format="json",
         )
         self.authenticate(request)
 
@@ -70,7 +70,7 @@ class TestDRAGONSFilesViewSet(APITestCase):
         DRAGONSFileFactory.create_batch(3)
 
         request = self.factory.get(
-            reverse("dragonsfile-list"), {"dragons_run": dragons_run.pk}
+            reverse("dragonsfile-list"), {"dragons_run": dragons_run.pk},
         )
         self.authenticate(request)
 
@@ -85,7 +85,7 @@ class TestDRAGONSFilesViewSet(APITestCase):
         data = {"enabled": None}  # Invalid data, enabled should be a boolean
 
         request = self.factory.patch(
-            reverse("dragonsfile-detail", args=[dragons_file.id]), data, format="json"
+            reverse("dragonsfile-detail", args=[dragons_file.id]), data, format="json",
         )
         self.authenticate(request)
 

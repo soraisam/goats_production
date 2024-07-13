@@ -13,9 +13,6 @@ from dateutil.parser import parse
 from django import forms
 from django.conf import settings
 from django.http import HttpRequest
-from goats_tom.astroquery import Observations as GOA
-from goats_tom.ocs import GeminiID, OCSClient
-from goats_tom.utils import get_key_info
 from requests.exceptions import HTTPError, ReadTimeout
 from tom_common.exceptions import ImproperCredentialsException
 from tom_dataproducts.models import DataProduct
@@ -26,6 +23,10 @@ from tom_observations.facility import (
 )
 from tom_observations.models import ObservationRecord
 from tom_targets.models import Target
+
+from goats_tom.astroquery import Observations as GOA
+from goats_tom.ocs import GeminiID, OCSClient
+from goats_tom.utils import get_key_info
 
 try:
     AUTO_THUMBNAILS = settings.AUTO_THUMBNAILS
@@ -89,7 +90,9 @@ def make_request(*args, **kwargs):
     response = requests.request(*args, **kwargs)
     print(response.url)
     if 400 <= response.status_code < 500:
-        logger.log(msg=f"Gemini request failed: {response.content}", level=logging.WARN)
+        logger.log(
+            msg=f"Gemini request failed: {response.content}", level=logging.WARNING
+        )
         raise ImproperCredentialsException("GEM")
     response.raise_for_status()
     return response
@@ -104,14 +107,14 @@ def flatten_error_dict(form, error_dict):
                     if k in form.fields:
                         form.add_error(k, i)
                     else:
-                        non_field_errors.append("{}: {}".format(k, i))
+                        non_field_errors.append(f"{k}: {i}")
                 if isinstance(i, dict):
                     non_field_errors.append(flatten_error_dict(form, i))
         elif isinstance(v, str):
             if k in form.fields:
                 form.add_error(k, v)
             else:
-                non_field_errors.append("{}: {}".format(k, v))
+                non_field_errors.append(f"{k}: {v}")
         elif isinstance(v, dict):
             non_field_errors.append(flatten_error_dict(form, v))
 
@@ -155,8 +158,7 @@ def get_site(progid, location=False):
 
 
 class GEMObservationForm(BaseRoboticObservationForm):
-    """
-    Defines and collects parameters for the Gemini ToO observation API.
+    """Defines and collects parameters for the Gemini ToO observation API.
 
     Refer to https://www.gemini.edu/node/11005 for the ToO process and
     https://www.gemini.edu/node/12109 for user key and authentication.
@@ -181,7 +183,8 @@ class GEMObservationForm(BaseRoboticObservationForm):
     # Form fields
     obsid = forms.MultipleChoiceField(choices=obs_choices())
     ready = forms.ChoiceField(
-        initial="true", choices=(("true", "Yes"), ("false", "No"))
+        initial="true",
+        choices=(("true", "Yes"), ("false", "No")),
     )
     brightness = forms.FloatField(required=False, label="Target Brightness")
     brightness_system = forms.ChoiceField(
@@ -229,7 +232,9 @@ class GEMObservationForm(BaseRoboticObservationForm):
 
     group = forms.CharField(required=False, label="Group Name")
     notetitle = forms.CharField(
-        required=False, initial="Finding Chart", label="Note Title"
+        required=False,
+        initial="Finding Chart",
+        label="Note Title",
     )
     note = forms.CharField(required=False, label="Note Text")
 
@@ -304,12 +309,15 @@ class GEMObservationForm(BaseRoboticObservationForm):
     window_start = forms.CharField(
         required=False,
         widget=forms.DateTimeInput(
-            attrs={"type": "datetime"}, format="%Y-%m-%d %H:%M:%S"
+            attrs={"type": "datetime"},
+            format="%Y-%m-%d %H:%M:%S",
         ),
         label="Timing Window",
     )
     window_duration = forms.IntegerField(
-        required=False, min_value=1, label="Window Duration [hr]"
+        required=False,
+        min_value=1,
+        label="Window Duration [hr]",
     )
 
     def layout(self):
@@ -319,7 +327,7 @@ class GEMObservationForm(BaseRoboticObservationForm):
             HTML("Setting Ready=No will keep the new observation(s) On Hold. <br>"),
             HTML("If a value is not set, then the template default is used. <br>"),
             HTML(
-                "If setting Exptime, then provide a list of values if selecting more than one Obsid.</p>"
+                "If setting Exptime, then provide a list of values if selecting more than one Obsid.</p>",
             ),
             Div(
                 Div("obsid", css_class="col"),
@@ -362,6 +370,7 @@ class GEMObservationForm(BaseRoboticObservationForm):
         -------
         `dict`
             Errors, if any.
+
         """
         obs_module = get_service_class(self.cleaned_data["facility"])
         return obs_module().validate_observation(self.observation_payload())
@@ -396,8 +405,8 @@ class GEMObservationForm(BaseRoboticObservationForm):
                         "error": (
                             "If exptimes given, the number of values must equal the number of obsids "
                             "selected."
-                        )
-                    }
+                        ),
+                    },
                 )
                 return payloads
 
@@ -453,7 +462,7 @@ class GEMObservationForm(BaseRoboticObservationForm):
                 payload["windowDate"] = wdate
                 payload["windowTime"] = wtime
                 payload["windowDuration"] = str(
-                    self.cleaned_data["window_duration"]
+                    self.cleaned_data["window_duration"],
                 ).strip()
 
             # elevation/airmass
@@ -491,8 +500,7 @@ class GEMObservationForm(BaseRoboticObservationForm):
 
 
 class GOATSGEMFacility(BaseRoboticObservationFacility):
-    """
-    The ``GEMFacility`` is the interface to the Gemini Telescope. For
+    """The ``GEMFacility`` is the interface to the Gemini Telescope. For
     information regarding Gemini observing and the available parameters, please
     see https://www.gemini.edu/observing/start-here
     """
@@ -539,6 +547,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         -------
         `dict`
             Errors, if any.
+
         """
         # Gemini doesn't have an API for validation, but run some checks.
         errors = {}
@@ -594,30 +603,25 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         return {"state": state, "scheduled_start": None, "scheduled_end": None}
 
     def get_flux_constant(self) -> u:
-        """
-        Returns the astropy quantity that a facility uses for its spectral flux
+        """Returns the astropy quantity that a facility uses for its spectral flux
         conversion.
         """
         return FLUX_CONSTANT
 
     def get_wavelength_units(self):
-        """
-        Returns the astropy units that a facility uses for its spectral
+        """Returns the astropy units that a facility uses for its spectral
         wavelengths
         """
-        pass
 
     def is_fits_facility(self, header):
-        """
-        Returns True if the FITS header is from this facility based on valid
+        """Returns True if the FITS header is from this facility based on valid
         keywords and associated
         values, False otherwise.
         """
         return False
 
     def get_facility_weather_urls(self):
-        """
-        Returns a dictionary containing a URL for weather information
+        """Returns a dictionary containing a URL for weather information
         for each site in the Facility SITES. This is intended to be useful
         in observation planning.
 
@@ -629,8 +633,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         return {}
 
     def get_facility_status(self):
-        """
-        Returns a dictionary describing the current availability of the
+        """Returns a dictionary describing the current availability of the
         Facility
         telescopes. This is intended to be useful in observation planning.
         The top-level (Facility) dictionary has a list of sites. Each site
@@ -650,22 +653,22 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         return {}
 
     def cancel_observation(self, observation_id):
-        """
-        Takes an observation id and submits a request to the observatory that
+        """Takes an observation id and submits a request to the observatory that
         the observation be cancelled.
 
         If the cancellation was successful, return True. Otherwise, return
         False.
         """
         raise NotImplementedError(
-            "This facility has not implemented cancel observation."
+            "This facility has not implemented cancel observation.",
         )
 
     def get_date_obs_from_fits_header(self, header):
         return None
 
     def all_data_products(
-        self, observation_record: ObservationRecord
+        self,
+        observation_record: ObservationRecord,
     ) -> list[dict[str, Any]]:
         """Grabs all the data products.
 
@@ -678,6 +681,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         -------
         list[dict[str, Any]]
             A list of dict of data products
+
         """
         products = {"saved": [], "unsaved": []}
         for product in self.data_products(observation_record):
@@ -688,14 +692,16 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                 products["unsaved"].append(product)
         # Obtain products uploaded manually by users
         user_products = DataProduct.objects.filter(
-            observation_record_id=observation_record.id, product_id=None
+            observation_record_id=observation_record.id,
+            product_id=None,
         )
         for product in user_products:
             products["saved"].append(product)
 
         # Add any JPEG images created from DataProducts
         image_products = DataProduct.objects.filter(
-            observation_record_id=observation_record.id, data_product_type="image_file"
+            observation_record_id=observation_record.id,
+            data_product_type="image_file",
         )
         for product in image_products:
             products["saved"].append(product)
@@ -709,11 +715,13 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         query_params: dict[str, Any] | None = None,
     ) -> list[DataProduct]:
         raise NotImplementedError(
-            "Data products should be downloaded by background task from GOA."
+            "Data products should be downloaded by background task from GOA.",
         )
 
     def data_products(
-        self, observation_record: ObservationRecord, product_id: str | None = None
+        self,
+        observation_record: ObservationRecord,
+        product_id: str | None = None,
     ) -> list[dict[str, Any]]:
         """Gets the products to save to the observation.
 
@@ -728,6 +736,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         -------
         `list[dict[str, Any]]`
             A list of products for the observation ID.
+
         """
         # Store products.
         products = []
@@ -761,7 +770,9 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                 "reduction": "RAW",
             }
             for product, name in zip(
-                all_products, filenames - {f["name"] for f in files}
+                all_products,
+                filenames - {f["name"] for f in files},
+                strict=False,
             )
         ]
 
@@ -799,6 +810,7 @@ def _create_data_product_entry(product: Any) -> dict[str, Any]:
     -------
     `dict[str, Any]`
         A data product entry.
+
     """
     uncompressed_filename = product["name"]
     if product["release"] is None:

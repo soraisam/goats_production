@@ -18,7 +18,7 @@ class TestDRAGONSRunViewSet(APITestCase):
         self.user = UserFactory()
         self.list_view = DRAGONSRunsViewSet.as_view({"get": "list", "post": "create"})
         self.detail_view = DRAGONSRunsViewSet.as_view(
-            {"get": "retrieve", "delete": "destroy"}
+            {"get": "retrieve", "delete": "destroy"},
         )
 
     def authenticate(self, request):
@@ -76,7 +76,7 @@ class TestDRAGONSRunViewSet(APITestCase):
         dragons_run = DRAGONSRunFactory()
 
         request = self.factory.delete(
-            reverse("dragonsrun-detail", args=[dragons_run.id])
+            reverse("dragonsrun-detail", args=[dragons_run.id]),
         )
         self.authenticate(request)
 
@@ -93,7 +93,7 @@ class TestDRAGONSRunViewSet(APITestCase):
         DRAGONSRunFactory.create_batch(3)
 
         request = self.factory.get(
-            reverse("dragonsrun-list"), {"observation_record": observation_record.pk}
+            reverse("dragonsrun-list"), {"observation_record": observation_record.pk},
         )
         self.authenticate(request)
 

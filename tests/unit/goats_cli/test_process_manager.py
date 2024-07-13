@@ -1,18 +1,18 @@
 """Tests the `ProcessManager` class."""
 import subprocess
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 
 import pytest
 from goats_cli.process_manager import ProcessManager
 
 
-@pytest.fixture
+@pytest.fixture()
 def manager():
     """Fixture to provide a fresh ProcessManager for each test."""
     return ProcessManager(timeout=2)
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_process():
     """Fixture to create a mock subprocess.Popen object."""
     process = Mock(spec=subprocess.Popen)
@@ -60,7 +60,7 @@ def test_stop_all_processes_in_correct_order(manager, mock_process):
         manager.add_process(name, process)
 
     # Patch the stop_process method to check call order.
-    with patch.object(manager, 'stop_process', wraps=manager.stop_process) as mocked_stop_process:
+    with patch.object(manager, "stop_process", wraps=manager.stop_process) as mocked_stop_process:
         manager.stop_all()
 
         # Expected order is from the class attribute `shutdown_order`.

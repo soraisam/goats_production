@@ -1,10 +1,10 @@
 """Module for DRAGONSReduce view set."""
 
 __all__ = ["DRAGONSReduceViewSet"]
+from django.db.models import QuerySet
 from dramatiq_abort import abort
 from rest_framework import mixins, permissions
 from rest_framework.viewsets import GenericViewSet
-from django.db.models import QuerySet
 
 from goats_tom.models import DRAGONSReduce
 from goats_tom.realtime import DRAGONSProgress, NotificationInstance
@@ -64,6 +64,7 @@ class DRAGONSReduceViewSet(
         ----------
         serializer : `DRAGONSReduceSerializer`
             The serializer with data loaded.
+
         """
         reduce = serializer.save()
         reduce.mark_queued()
@@ -78,6 +79,8 @@ class DRAGONSReduceViewSet(
         Parameters
         ----------
         serializer : `DRAGONSReduceUpdateSerializer`.
+            The serialized data.
+
         """
         reduce = serializer.save()
         if reduce.status == "canceled":

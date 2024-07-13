@@ -6,7 +6,7 @@ from channels.testing import WebsocketCommunicator
 from goats_tom.consumers import UpdatesConsumer
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_notification_message_handling():
     """Tests sending and receiving notification messages."""
     communicator = WebsocketCommunicator(UpdatesConsumer.as_asgi(), "/ws/updates/")
@@ -41,7 +41,7 @@ async def test_notification_message_handling():
     await communicator.disconnect()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_download_message_handling():
     """Tests sending and receiving download messages."""
     communicator = WebsocketCommunicator(UpdatesConsumer.as_asgi(), "/ws/updates/")
@@ -81,7 +81,7 @@ async def test_download_message_handling():
     await communicator.disconnect()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_no_pending_messages():
     """Tests for no pending messages."""
     communicator = WebsocketCommunicator(UpdatesConsumer.as_asgi(), "/ws/updates/")

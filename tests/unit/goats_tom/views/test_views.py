@@ -34,12 +34,12 @@ from tom_observations.tests.factories import ObservingRecordFactory
 from tom_targets.tests.factories import SiderealTargetFactory
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_request():
     return HttpRequest()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestUpdateBrokerQueryName:
     @patch("goats_tom.views.views.BrokerQuery")
     def test_update_brokerquery_name_success(self, mock_brokerquery, mock_request):
@@ -94,7 +94,7 @@ class TestUpdateBrokerQueryName:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestRecentDownloadsView(TestCase):
     def test_recent_downloads(self):
         # Create completed Download instances using the factory.
@@ -141,7 +141,7 @@ class TestOngoingTasks:
         assert response.status_code == 200
         assert json.loads(response.content) == []
 
-    @pytest.mark.django_db
+    @pytest.mark.django_db()
     @patch("goats_tom.views.views.Download")
     def test_ongoing_tasks_with_tasks(self, mock_task_progress, mock_request):
         """Test the ongoing_tasks view with some ongoing tasks."""
@@ -168,10 +168,10 @@ class TestGOATSDataProductDeleteView(APITestCase):
         ReducedDatumFactory.create_batch(2, data_product=self.data_product)
         # Verify the number of ReducedDatum objects before deletion.
         initial_reduced_datum_count = ReducedDatum.objects.filter(
-            data_product=self.data_product
+            data_product=self.data_product,
         ).count()
         self.assertEqual(
-            initial_reduced_datum_count, 2, "Initial ReducedDatum count does not match"
+            initial_reduced_datum_count, 2, "Initial ReducedDatum count does not match",
         )
 
     def test_form_valid(self):
@@ -194,7 +194,7 @@ class TestGOATSDataProductDeleteView(APITestCase):
 
         # Test that associated ReducedDatum objects are deleted.
         self.assertEqual(
-            ReducedDatum.objects.filter(data_product=self.data_product).count(), 0
+            ReducedDatum.objects.filter(data_product=self.data_product).count(), 0,
         )
 
         # Test that the file is deleted.
@@ -215,18 +215,18 @@ class TestObservationRecordDeleteView(TestCase):
 
         # Create an ObservationRecord with the created Target.
         self.observation_record = ObservingRecordFactory.create(
-            target_id=self.target.id
+            target_id=self.target.id,
         )
         DataProductFactory.create_batch(2, observation_record=self.observation_record)
 
     def test_form_valid(self):
         # Ensure the ObservationRecord and DataProducts exist.
         self.assertIsNotNone(
-            ObservationRecord.objects.filter(pk=self.observation_record.pk).first()
+            ObservationRecord.objects.filter(pk=self.observation_record.pk).first(),
         )
         self.assertEqual(
             DataProduct.objects.filter(
-                observation_record=self.observation_record
+                observation_record=self.observation_record,
             ).count(),
             2,
         )
@@ -249,7 +249,7 @@ class TestObservationRecordDeleteView(TestCase):
         # Test that associated DataProducts are deleted
         self.assertEqual(
             DataProduct.objects.filter(
-                observation_record=self.observation_record
+                observation_record=self.observation_record,
             ).count(),
             0,
         )
@@ -263,19 +263,19 @@ class UserGenerateTokenViewTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.superuser = User.objects.create_superuser(
-            "superuser", "super@example.com", "password"
+            "superuser", "super@example.com", "password",
         )
         self.normal_user = User.objects.create_user(
-            "normaluser", "normal@example.com", "password"
+            "normaluser", "normal@example.com", "password",
         )
         self.target_user = User.objects.create_user(
-            "targetuser", "target@example.com", "password"
+            "targetuser", "target@example.com", "password",
         )
 
     def test_superuser_generates_token(self):
         self.client.login(username="superuser", password="password")
         response = self.client.get(
-            reverse("user-generate-token", kwargs={"pk": self.target_user.pk})
+            reverse("user-generate-token", kwargs={"pk": self.target_user.pk}),
         )
         self.assertEqual(response.status_code, 200)
 
@@ -298,7 +298,7 @@ class UserGenerateTokenViewTest(TestCase):
         response = self.client.get(token_url)
 
         self.assertRedirects(
-            response, expected_url, status_code=302, target_status_code=200
+            response, expected_url, status_code=302, target_status_code=200,
         )
 
     def test_user_not_found(self):
@@ -316,7 +316,7 @@ class GOALoginViewTest(TestCase):
         self.client = Client()
         self.user = User.objects.create_user("testuser", "test@example.com", "password")
         self.superuser = User.objects.create_superuser(
-            "superuser", "super@example.com", "password"
+            "superuser", "super@example.com", "password",
         )
         self.url = reverse("user-goa-login", kwargs={"pk": self.user.pk})
 
@@ -337,12 +337,12 @@ class GOALoginViewTest(TestCase):
         mock_goa.authenticated.return_value = True
 
         response = self.client.post(
-            self.url, {"username": "testgoa", "password": "goapass"}
+            self.url, {"username": "testgoa", "password": "goapass"},
         )
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("user-list"))
         self.assertTrue(
-            GOALogin.objects.filter(user=self.user, username="testgoa").exists()
+            GOALogin.objects.filter(user=self.user, username="testgoa").exists(),
         )
 
         # Check success message.
@@ -358,7 +358,7 @@ class GOALoginViewTest(TestCase):
         mock_goa.authenticated.return_value = False
 
         response = self.client.post(
-            self.url, {"username": "wronguser", "password": "wrongpass"}
+            self.url, {"username": "wronguser", "password": "wrongpass"},
         )
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("user-list"))
@@ -378,7 +378,7 @@ class TestReceiveQueryView(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username="testuser", email="user@test.com", password="testpass"
+            username="testuser", email="user@test.com", password="testpass",
         )
         self.client.force_authenticate(user=self.user)
         self.url = reverse("receive_query")
@@ -405,7 +405,7 @@ class GOAQueryFormViewTest(TestCase):
         self.user = User.objects.create_user(username="testuser", password="password")
         self.target = SiderealTargetFactory.create()
         self.observation_record = ObservingRecordFactory.create(
-            target_id=self.target.id
+            target_id=self.target.id,
         )
         self.url = reverse("goa_query", kwargs={"pk": self.observation_record.pk})
         self.form_data = {"download_calibrations": "yes", "facility": "test_facility"}
@@ -415,7 +415,7 @@ class GOAQueryFormViewTest(TestCase):
     def test_successful_submission(self, mock_download, mock_goa):
         """Test successful form submission with valid GOA credentials."""
         GOALoginFactory.create(
-            user=self.user, username="goauser", password="goapassword"
+            user=self.user, username="goauser", password="goapassword",
         )
         self.client.login(username="testuser", password="password")
 
@@ -447,7 +447,7 @@ class GOAQueryFormViewTest(TestCase):
     def test_failed_goa_authentication(self, mock_download, mock_goa):
         """Test form submission with failed GOA authentication."""
         GOALoginFactory.create(
-            user=self.user, username="goauser", password="goapassword"
+            user=self.user, username="goauser", password="goapassword",
         )
         self.client.login(username="testuser", password="password")
 
@@ -489,7 +489,7 @@ class GOATSDataProductDeleteViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(DataProduct.objects.filter(pk=self.data_product.pk).exists())
         self.assertEqual(
-            ReducedDatum.objects.filter(data_product=self.data_product).count(), 0
+            ReducedDatum.objects.filter(data_product=self.data_product).count(), 0,
         )
 
     def test_deletion_of_associated_file(self):
@@ -501,7 +501,7 @@ class GOATSDataProductDeleteViewTest(TestCase):
         self.assertFalse(file_path.exists())
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestActivateUserKeyView(TestCase):
     def setUp(self):
         self.client = Client()
@@ -523,11 +523,11 @@ class TestActivateUserKeyView(TestCase):
         self.user_key.refresh_from_db()
         self.assertFalse(self.user_key.is_active)
         self.assertRedirects(
-            response, reverse("manage-keys", args=[self.other_user.pk])
+            response, reverse("manage-keys", args=[self.other_user.pk]),
         )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestCreateKeyView(TestCase):
     def setUp(self):
         self.client = Client()
@@ -560,7 +560,7 @@ class TestCreateKeyView(TestCase):
         )
         self.assertEqual(UserKey.objects.count(), 0)
         self.assertRedirects(
-            response, reverse("manage-keys", args=[self.other_user.pk])
+            response, reverse("manage-keys", args=[self.other_user.pk]),
         )
 
     def test_create_program_key_success(self):
@@ -572,7 +572,8 @@ class TestCreateKeyView(TestCase):
 
     def test_replace_existing_program_key(self):
         """Test that an existing program key is replaced by a new one with the
-        same program_id and site."""
+        same program_id and site.
+        """
         # Create initial program key
         ProgramKeyFactory(user=self.user, program_id="GS-2023B-Q-101", site="GN")
 
@@ -596,7 +597,7 @@ class TestCreateKeyView(TestCase):
         self.assertRedirects(response, reverse("manage-keys", args=[other_user.pk]))
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDeleteKeyView(TestCase):
     def setUp(self):
         self.client = Client()
@@ -605,10 +606,10 @@ class TestDeleteKeyView(TestCase):
         self.user_key = UserKeyFactory(user=self.user)
         self.program_key = ProgramKeyFactory(user=self.user)
         self.user_key_url = reverse(
-            "delete-user-key", args=[self.user.pk, self.user_key.pk]
+            "delete-user-key", args=[self.user.pk, self.user_key.pk],
         )
         self.program_key_url = reverse(
-            "delete-program-key", args=[self.user.pk, self.user_key.pk]
+            "delete-program-key", args=[self.user.pk, self.user_key.pk],
         )
 
     def test_delete_user_key_success(self):
@@ -623,7 +624,7 @@ class TestDeleteKeyView(TestCase):
         response = self.client.get(self.user_key_url)
         self.assertEqual(UserKey.objects.count(), 1)
         self.assertRedirects(
-            response, reverse("manage-keys", args=[self.other_user.pk])
+            response, reverse("manage-keys", args=[self.other_user.pk]),
         )
 
     def test_delete_program_key_success(self):
@@ -638,11 +639,11 @@ class TestDeleteKeyView(TestCase):
         response = self.client.get(self.program_key_url)
         self.assertEqual(ProgramKey.objects.count(), 1)
         self.assertRedirects(
-            response, reverse("manage-keys", args=[self.other_user.pk])
+            response, reverse("manage-keys", args=[self.other_user.pk]),
         )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestManageKeysView(TestCase):
     def setUp(self):
         self.client = Client()

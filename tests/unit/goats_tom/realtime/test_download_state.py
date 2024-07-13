@@ -58,7 +58,7 @@ def test_download_state_complete():
 
         # Update the download state to in-progress.
         download_state.update_and_send(
-            downloaded_bytes=2048, message="Download in progress", status="In Progress"
+            downloaded_bytes=2048, message="Download in progress", status="In Progress",
         )
 
         # Verify that _send was called again with the updated parameters.
@@ -78,7 +78,7 @@ def test_download_state_complete():
 
         # Complete the download.
         download_state.update_and_send(
-            downloaded_bytes=4096, message="Download complete", done=True
+            downloaded_bytes=4096, message="Download complete", done=True,
         )
 
         # Verify that _send was called again with the completion parameters.

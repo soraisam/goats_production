@@ -56,6 +56,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
     TODO
     ----
     - Integrate actual reduction logic using `function_definition` from the recipe.
+
     """
     try:
         # Get the reduction to run in the background.
@@ -77,7 +78,9 @@ def run_dragons_reduce(reduce_id: int) -> None:
 
         # Create an instance of the custom handler.
         dragons_handler = DRAGONSHandler(
-            recipe_id=recipe.id, reduce_id=reduce.id, run_id=run.id
+            recipe_id=recipe.id,
+            reduce_id=reduce.id,
+            run_id=run.id,
         )
         dragons_handler.setLevel(21)
 
@@ -169,7 +172,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
         DRAGONSProgress.create_and_send(reduce)
         NotificationInstance.create_and_send(
             label=reduce.get_label(),
-            message=f"Error during reduction: {str(e)}",
+            message=f"Error during reduction: {e!s}",
             color="danger",
         )
         raise
@@ -182,7 +185,9 @@ def run_dragons_reduce(reduce_id: int) -> None:
 
 @dramatiq.actor(max_retries=0)
 def download_goa_files(
-    serialized_observation_record: str, query_params: dict, user: int
+    serialized_observation_record: str,
+    query_params: dict,
+    user: int,
 ) -> None:
     """Downloads observation files associated with a given observation record from the
     GOA.
@@ -197,7 +202,8 @@ def download_goa_files(
     serialized_observation_record : `str`
         A JSON serialized string of the observation record object.
     query_params : `dict`
-        A dictionary containing additional parameters for querying and downloading files.
+        A dictionary containing additional parameters for querying and downloading
+        files.
     user : `int`
         The user ID used to retrieve credentials for accessing the GOA.
 
@@ -207,6 +213,7 @@ def download_goa_files(
         Raised if the GOA login fails due to incorrect credentials.
     `HTTPError`
         Raised if an HTTP error occurs during the download process.
+
     """
     # Allow page to refresh before displaying notification.
     print("Running background task.")
@@ -216,7 +223,7 @@ def download_goa_files(
 
     # Only ever one observation record passed.
     observation_record = list(
-        serializers.deserialize("json", serialized_observation_record)
+        serializers.deserialize("json", serialized_observation_record),
     )[0].object
     target = observation_record.target
     facility = observation_record.facility
@@ -230,7 +237,8 @@ def download_goa_files(
     )
 
     NotificationInstance.create_and_send(
-        message="Download started.", label=f"{observation_id}"
+        message="Download started.",
+        label=f"{observation_id}",
     )
     download_state.update_and_send(label=observation_id, status="Starting...")
 
@@ -269,11 +277,12 @@ def download_goa_files(
         cal_files = []
 
         # Query GOA for science tarfile.
-        if not download_calibration == "only":
+        if download_calibration != "only":
             print(f"{observation_id}: Downloading science files...")
 
             download_state.update_and_send(
-                status="Downloading science files...", downloaded_bytes=0
+                status="Downloading science files...",
+                downloaded_bytes=0,
             )
 
             file_list = GOA.query_criteria(*args, **kwargs)
@@ -289,10 +298,11 @@ def download_goa_files(
             sci_files = sci_out["downloaded_files"]
             num_files_omitted += sci_out["num_files_omitted"]
 
-        if not download_calibration == "no":
+        if download_calibration != "no":
             print(f"{observation_id}: Downloading calibration files...")
             download_state.update_and_send(
-                status="Downloading calibration files...", downloaded_bytes=0
+                status="Downloading calibration files...",
+                downloaded_bytes=0,
             )
 
             # Query GOA for calibration tarfile.
@@ -309,7 +319,8 @@ def download_goa_files(
             num_files_omitted += cal_out["num_files_omitted"]
 
         download_state.update_and_send(
-            status="Finished downloads...", downloaded_bytes=None
+            status="Finished downloads...",
+            downloaded_bytes=None,
         )
 
     except HTTPError as e:
@@ -386,6 +397,8 @@ def download_goa_files(
         message += f" {num_files_omitted} proprietary files were omitted."
 
     NotificationInstance.create_and_send(
-        message=f"{message}", label=f"{observation_id}", color="success"
+        message=f"{message}",
+        label=f"{observation_id}",
+        color="success",
     )
     print("Done.")
