@@ -6,7 +6,7 @@ from channels.testing import WebsocketCommunicator
 from goats_tom.consumers import DRAGONSConsumer
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_log_message_handling():
     """Tests sending log messages."""
     communicator = WebsocketCommunicator(DRAGONSConsumer.as_asgi(), "/ws/dragons/")
@@ -40,7 +40,7 @@ async def test_log_message_handling():
     await communicator.disconnect()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_recipe_progress_handling():
     """Tests sending recipe progress."""
     communicator = WebsocketCommunicator(DRAGONSConsumer.as_asgi(), "/ws/dragons/")
@@ -74,7 +74,7 @@ async def test_recipe_progress_handling():
     await communicator.disconnect()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_no_pending_messages():
     """Tests for pending messages."""
     communicator = WebsocketCommunicator(DRAGONSConsumer.as_asgi(), "/ws/dragons/")

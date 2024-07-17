@@ -16,7 +16,7 @@ class NotificationInstance:
 
     @classmethod
     def create_and_send(
-        cls, label: str = "", message: str = "", color: str = "primary"
+        cls, label: str = "", message: str = "", color: str = "primary",
     ) -> None:
         """Creates and sends a notification.
 
@@ -29,6 +29,7 @@ class NotificationInstance:
         color : `str`, optional
             The bootstrap color scheme to apply to the notification, by default
             "primary".
+
         """
         unique_id = f"{uuid.uuid4()}"
         cls._send(unique_id, label, message, color)
@@ -47,6 +48,7 @@ class NotificationInstance:
             The label of the notification.
         color : `str`
             The bootstrap color scheme to apply to the notification.
+
         """
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(

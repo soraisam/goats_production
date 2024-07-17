@@ -1,4 +1,4 @@
-from goats_cli.plugins import Plugin, GOATSPlugin
+from goats_cli.plugins import GOATSPlugin, Plugin
 
 
 def test_plugin():

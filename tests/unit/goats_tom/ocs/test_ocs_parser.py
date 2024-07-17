@@ -4,29 +4,29 @@ import pytest
 from goats_tom.ocs import OCSParser
 
 
-@pytest.fixture
+@pytest.fixture()
 def ocs_parser():
     return OCSParser()
 
 
-@pytest.fixture
+@pytest.fixture()
 def odb_xml():
     file_path = Path(__file__).parent.parent.parent / "data" / "odb.xml"
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         return file.read()
 
 
-@pytest.fixture
+@pytest.fixture()
 def coordinates_xml():
     file_path = Path(__file__).parent.parent.parent / "data" / "coordinates.xml"
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         return file.read()
 
 
-@pytest.fixture
+@pytest.fixture()
 def sequence_xml():
     file_path = Path(__file__).parent.parent.parent / "data" / "sequence.xml"
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         return file.read()
 
 

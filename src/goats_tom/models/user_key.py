@@ -22,7 +22,7 @@ class UserKey(Key):
         """
         # TODO: Want to allow active keys for both sites?
         type(self).objects.filter(user=self.user, site=self.site).update(
-            is_active=False
+            is_active=False,
         )
         self.is_active = True
         self.save()

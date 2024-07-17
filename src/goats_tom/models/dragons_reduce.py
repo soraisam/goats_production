@@ -4,8 +4,6 @@ __all__ = ["DRAGONSReduce"]
 from django.db import models
 from django.utils import timezone
 
-from goats_tom.models import DRAGONSRecipe
-
 
 class DRAGONSReduce(models.Model):
     """Represents a reduction process associated with a specific recipe in the DRAGONS
@@ -26,6 +24,7 @@ class DRAGONSReduce(models.Model):
         The current status of the reduction process. It can be one of the following:
         "created", "starting", "running", "canceled", "done", or "error". The default
         status at creation is "created".
+
     """
 
     STATUS_CHOICES = [
@@ -39,7 +38,7 @@ class DRAGONSReduce(models.Model):
     ]
 
     recipe = models.ForeignKey(
-        DRAGONSRecipe,
+        "goats_tom.DRAGONSRecipe",
         on_delete=models.CASCADE,
         related_name="reductions",
         editable=False,
@@ -60,6 +59,7 @@ class DRAGONSReduce(models.Model):
         ----------
         save : `bool`
             Saves to the database, default is `True`.
+
         """
         self.status = "queued"
         if save:
@@ -72,6 +72,7 @@ class DRAGONSReduce(models.Model):
         ----------
         save : `bool`
             Saves to the database, default is `True`.
+
         """
         self.status = "initializing"
         self.start_time = timezone.now()
@@ -85,6 +86,7 @@ class DRAGONSReduce(models.Model):
         ----------
         save : `bool`
             Saves to the database, default is `True`.
+
         """
         self.status = "done"
         self.end_time = timezone.now()
@@ -98,6 +100,7 @@ class DRAGONSReduce(models.Model):
         ----------
         save : `bool`
             Saves to the database, default is `True`.
+
         """
         self.status = "error"
         self.end_time = timezone.now()
@@ -111,6 +114,7 @@ class DRAGONSReduce(models.Model):
         ----------
         save : `bool`
             Saves to the database, default is `True`.
+
         """
         self.status = "running"
         if save:
@@ -123,6 +127,7 @@ class DRAGONSReduce(models.Model):
         ----------
         save : `bool`
             Saves to the database, default is `True`.
+
         """
         self.status = "canceled"
         self.end_time = timezone.now()
@@ -136,5 +141,6 @@ class DRAGONSReduce(models.Model):
         -------
         `str`
             The generated label.
+
         """
         return f"{self.recipe.dragons_run}::{self.recipe.short_name}"

@@ -2,10 +2,12 @@ from datetime import timedelta
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
-from goats_tom.models import ProgramKey
+from goats_tom.models import BaseRecipe, ProgramKey
 from goats_tom.tests.factories import (
+    BaseRecipeFactory,
     DataProductMetadataFactory,
     DownloadFactory,
     DRAGONSFileFactory,
@@ -20,7 +22,7 @@ from goats_tom.tests.factories import (
 from tom_observations.tests.factories import ObservingRecordFactory
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestGOALoginModel(TestCase):
     def setUp(self):
         self.goa_login = GOALoginFactory()
@@ -31,7 +33,7 @@ class TestGOALoginModel(TestCase):
             self.goa_login.clean()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDownloadModel(TestCase):
     def setUp(self):
         self.task = DownloadFactory()
@@ -42,13 +44,13 @@ class TestDownloadModel(TestCase):
 
     def test_long_duration_task(self):
         self.task.start_time = timezone.now() - timedelta(
-            days=1
+            days=1,
         )  # Simulate a long-running task
         self.task.finish()
         assert "1d" in self.task.total_time
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestKeyModels:
     def test_key_activation(self):
         # Test activating a key.
@@ -149,7 +151,7 @@ class TestKeyModels:
         assert ProgramKey.objects.filter(program_id=program_id, site="GS").count() == 1
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDRAGONSRun:
     def test_automatic_run_id_generation(self):
         """Test that "run_id" is automatically generated if not provided."""
@@ -175,12 +177,12 @@ class TestDRAGONSRun:
 
         with pytest.raises(ValidationError):
             duplicate_run = DRAGONSRunFactory.build(
-                observation_record=observation_record, run_id=run_id
+                observation_record=observation_record, run_id=run_id,
             )
             duplicate_run.full_clean()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDataProductMetadata:
     """Class to test `DataProductMetadata` model."""
 
@@ -236,7 +238,7 @@ class TestDataProductMetadata:
         assert str(metadata) == f"Metadata for {metadata.data_product.product_id}"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDRAGONSFile:
     """Class to test `DRAGONSFile` model."""
 
@@ -271,72 +273,9 @@ class TestDRAGONSFile:
 
     def test_list_primitives_and_docstrings(self):
         """Test listing primitives and docstrings of the associated file type."""
-        pass
 
 
-@pytest.mark.django_db
-class TestDRAGONSRecipe:
-    """Class to test `DRAGONSRecipe` model."""
-
-    def test_create_recipe(self):
-        """Test creating a DRAGONSRecipe instance."""
-        recipe = DRAGONSRecipeFactory()
-        assert recipe.pk is not None, "DRAGONSRecipe should be created successfully."
-
-    def test_unique_constraint(self):
-        """Test the unique constraint between dragons_run, file_type, and name."""
-        recipe = DRAGONSRecipeFactory()
-        with pytest.raises(ValidationError):
-            duplicate_recipe = DRAGONSRecipeFactory.build(
-                dragons_run=recipe.dragons_run,
-                file_type=recipe.file_type,
-                name=recipe.name,
-            )
-            duplicate_recipe.full_clean()
-
-    def test_short_name(self):
-        """Test the short_name property."""
-        name_with_short = "full_name::short_name"
-        recipe = DRAGONSRecipeFactory(name=name_with_short)
-        assert recipe.short_name == "short_name"
-
-        name_without_short = "full_name"
-        recipe = DRAGONSRecipeFactory(name=name_without_short)
-        assert recipe.short_name is None
-
-    def test_active_function_definition(self):
-        """Test the active_function_definition property."""
-        recipe = DRAGONSRecipeFactory()
-        assert (
-            recipe.active_function_definition == recipe.original_function_definition
-        ), "Should initially be equal to original_function_definition"
-
-        modified_definition = "Updated function definition"
-        recipe.function_definition = modified_definition
-        assert (
-            recipe.active_function_definition == modified_definition
-        ), "Should return modified function definition when it exists"
-
-    def test_reset_to_original(self):
-        """Test resetting the function definition to the original."""
-        recipe = DRAGONSRecipeFactory()
-        modified_definition = "Updated function definition"
-        recipe.function_definition = modified_definition
-        recipe.save()
-
-        assert (
-            recipe.function_definition == modified_definition
-        ), "Pre-reset check failed"
-        recipe.reset_to_original()
-        assert (
-            recipe.function_definition is None
-        ), "Post-reset function_definition should be None"
-        assert (
-            recipe.active_function_definition == recipe.original_function_definition
-        ), "Active definition should revert to original after reset"
-
-
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestDRAGONSReduce:
     """Tests for the `DRAGONSReduce` model."""
 
@@ -384,3 +323,149 @@ class TestDRAGONSReduce:
         reduction.mark_canceled()
         assert reduction.status == "canceled", "Should update status to canceled"
         assert reduction.end_time is not None, "Should have end time set."
+
+
+@pytest.mark.django_db()
+class TestBaseRecipe:
+    """Tests for the BaseRecipe model."""
+
+    def test_factory_creation(self):
+        """Ensure the BaseRecipe factory correctly creates a new instance."""
+        base_recipe = BaseRecipeFactory()
+        assert (
+            base_recipe.pk is not None
+        ), "BaseRecipe should be created with a primary key."
+        assert isinstance(
+            base_recipe, BaseRecipe,
+        ), "Factory should create a BaseRecipe instance."
+
+    def test_string_representation(self):
+        """Test the string representation of BaseRecipe."""
+        base_recipe = BaseRecipeFactory(name="Test Recipe", version="32.2.0")
+        expected_representation = "v32.2.0 Test Recipe"
+        assert (
+            str(base_recipe) == expected_representation
+        ), "String representation should be 'v<version> <name>'."
+
+    def test_short_name_extraction(self):
+        """Test the extraction of short_name from the name attribute."""
+        base_recipe_with_short = BaseRecipeFactory(name="Recipe::ShortName")
+        assert (
+            base_recipe_with_short.short_name == "ShortName"
+        ), "Should correctly extract 'ShortName'."
+
+        base_recipe_without_short = BaseRecipeFactory(name="RecipeWithoutDelimiter")
+        assert (
+            base_recipe_without_short.short_name == "Unknown"
+        ), "Should return 'Unknown' if delimiter '::' is absent."
+
+    def test_unique_constraints(self):
+        """Ensure that BaseRecipe respects its unique-together constraint."""
+        base_recipe = BaseRecipeFactory()
+        with pytest.raises(ValidationError):
+            duplicate_recipe = BaseRecipeFactory.build(
+                file_type=base_recipe.file_type,
+                name=base_recipe.name,
+                version=base_recipe.version,
+            )
+            duplicate_recipe.full_clean()
+
+    def test_default_values(self):
+        """Test default values for 'is_default' field."""
+        recipe_default_true = BaseRecipeFactory(is_default=True)
+        assert (
+            recipe_default_true.is_default is True
+        ), "is_default should be able to be set to True."
+
+        recipe_default_false = BaseRecipeFactory(is_default=False)
+        assert (
+            recipe_default_false.is_default is False
+        ), "is_default should be able to be set to False."
+
+
+@pytest.mark.django_db()
+class TestDRAGONSRecipe:
+    """Test suite for the DRAGONSRecipe model."""
+
+    def test_DRAGONSRecipe_creation(self):
+        """Verify that a DRAGONSRecipe instance can be created successfully."""
+        dragons_recipe = DRAGONSRecipeFactory()
+        assert dragons_recipe.pk is not None, "Should create a DRAGONSRecipe instance."
+
+    def test_base_recipe_link(self):
+        """Ensure the DRAGONSRecipe links correctly to a BaseRecipe."""
+        base_recipe = BaseRecipeFactory()
+        dragons_recipe = DRAGONSRecipeFactory(recipe=base_recipe)
+        assert (
+            dragons_recipe.recipe == base_recipe
+        ), "Should link to the correct BaseRecipe."
+
+    def test_dragons_run_link(self):
+        """Ensure the DRAGONSRecipe links correctly to a DRAGONSRun."""
+        dragons_run = DRAGONSRunFactory()
+        dragons_recipe = DRAGONSRecipeFactory(dragons_run=dragons_run)
+        assert (
+            dragons_recipe.dragons_run == dragons_run
+        ), "Should link to the correct DRAGONSRun."
+
+    def test_function_definition_default(self):
+        """Check that the function definition defaults to None."""
+        dragons_recipe = DRAGONSRecipeFactory()
+        assert (
+            dragons_recipe.function_definition is None
+        ), "Function definition should default to None."
+
+    def test_active_function_definition(self):
+        """Test active function definition retrieval logic."""
+        base_recipe = BaseRecipeFactory(function_definition="def base_func(): pass")
+        modified_recipe = DRAGONSRecipeFactory(
+            recipe=base_recipe, function_definition="def modified_func(): pass",
+        )
+        assert (
+            modified_recipe.active_function_definition == "def modified_func(): pass"
+        ), "Should return the modified function definition when set."
+
+        unmodified_recipe = DRAGONSRecipeFactory(
+            recipe=base_recipe, function_definition=None,
+        )
+        assert (
+            unmodified_recipe.active_function_definition
+            == base_recipe.function_definition
+        ), "Should fallback to the base recipe's function definition when none is set."
+
+    def test_unique_together_constraint(self):
+        """Test that the unique together constraint on recipe and dragons_run is enforced."""
+        first_recipe = DRAGONSRecipeFactory()
+        with pytest.raises(IntegrityError):
+            DRAGONSRecipeFactory(
+                recipe=first_recipe.recipe, dragons_run=first_recipe.dragons_run,
+            )
+
+    def test_reset_function_definition(self):
+        """Verify that the reset method clears the custom function definition."""
+        dragons_recipe = DRAGONSRecipeFactory(
+            function_definition="def custom_func(): pass",
+        )
+        dragons_recipe.reset()
+        assert (
+            dragons_recipe.function_definition is None
+        ), "Reset should clear the custom function definition."
+
+    def test_properties(self):
+        """Test that model properties return correct values derived from the base recipe."""
+        base_recipe = BaseRecipeFactory(
+            file_type="BIAS", name="ComplexRecipe::Simple", version="32.2.0",
+        )
+        dragons_recipe = DRAGONSRecipeFactory(recipe=base_recipe)
+        assert (
+            dragons_recipe.file_type == "BIAS"
+        ), "File type should be retrieved from the base recipe."
+        assert (
+            dragons_recipe.name == "ComplexRecipe::Simple"
+        ), "Name should be retrieved from the base recipe."
+        assert (
+            dragons_recipe.version == "32.2.0"
+        ), "Version should be retrieved from the base recipe."
+        assert (
+            dragons_recipe.short_name == "Simple"
+        ), "Should correctly extract the short name from the base recipe."

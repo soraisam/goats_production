@@ -36,34 +36,35 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
     -----
     This serializer dynamically maps `DataProduct` and `DataProductMetadata`
     fields to a flattened structure.
+
     """
 
     product_id = serializers.CharField(source="data_product.product_id")
     observation_id = serializers.CharField(
-        source="data_product.observation_record.observation_id"
+        source="data_product.observation_record.observation_id",
     )
     url = serializers.CharField(source="data_product.data.url")
     file_type = serializers.CharField(source="data_product.metadata.file_type")
     group_id = serializers.CharField(
-        source="data_product.metadata.group_id", allow_null=True
+        source="data_product.metadata.group_id", allow_null=True,
     )
     exposure_time = serializers.FloatField(
-        source="data_product.metadata.exposure_time", allow_null=True
+        source="data_product.metadata.exposure_time", allow_null=True,
     )
     object_name = serializers.CharField(
-        source="data_product.metadata.object_name", allow_null=True
+        source="data_product.metadata.object_name", allow_null=True,
     )
     central_wavelength = serializers.FloatField(
-        source="data_product.metadata.central_wavelength", allow_null=True
+        source="data_product.metadata.central_wavelength", allow_null=True,
     )
     wavelength_band = serializers.CharField(
-        source="data_product.metadata.wavelength_band", allow_null=True
+        source="data_product.metadata.wavelength_band", allow_null=True,
     )
     observation_date = serializers.DateField(
-        source="data_product.metadata.observation_date", allow_null=True
+        source="data_product.metadata.observation_date", allow_null=True,
     )
     roi_setting = serializers.CharField(
-        source="data_product.metadata.roi_setting", allow_null=True
+        source="data_product.metadata.roi_setting", allow_null=True,
     )
     enabled = serializers.BooleanField()
 
@@ -96,5 +97,5 @@ class DRAGONSFileFilterSerializer(serializers.Serializer):
     group_by_file_type = serializers.BooleanField(required=False, default=False)
     dragons_run = serializers.IntegerField(required=False)
     include = serializers.ListField(
-        child=serializers.ChoiceField(choices=["header"]), required=False
+        child=serializers.ChoiceField(choices=["header"]), required=False,
     )

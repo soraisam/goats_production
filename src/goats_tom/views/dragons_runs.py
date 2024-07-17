@@ -1,18 +1,16 @@
 """Module that handles the DRAGONS run API."""
 
-import re
 from datetime import timedelta
 
 from django.db.models import Max, QuerySet
-from gempy.utils.showrecipes import showprims
 from recipe_system import cal_service
 from rest_framework import mixins, permissions
 from rest_framework.viewsets import GenericViewSet
 from tom_dataproducts.models import DataProduct
 
-from goats_tom.models import DRAGONSFile, DRAGONSRecipe, DRAGONSRun
+from goats_tom.models import BaseRecipe, DRAGONSFile, DRAGONSRecipe, DRAGONSRun
 from goats_tom.serializers import DRAGONSRunFilterSerializer, DRAGONSRunSerializer
-from goats_tom.utils import get_short_name
+from goats_tom.utils import get_recipes_and_primitives
 
 
 class DRAGONSRunsViewSet(
@@ -23,7 +21,8 @@ class DRAGONSRunsViewSet(
     GenericViewSet,
 ):
     """A viewset that provides `create`, `retrieve`, `list`, and `delete` actions for a
-    reduction run."""
+    reduction run.
+    """
 
     queryset = DRAGONSRun.objects.all()
     serializer_class = DRAGONSRunSerializer
@@ -37,6 +36,7 @@ class DRAGONSRunsViewSet(
         -------
         QuerySet
             The filtered queryset.
+
         """
         queryset = super().get_queryset()
 
@@ -46,7 +46,7 @@ class DRAGONSRunsViewSet(
         # Check if any filters provided.
         if filter_serializer.is_valid(raise_exception=False):
             observation_record_pk = filter_serializer.validated_data.get(
-                "observation_record"
+                "observation_record",
             )
             if observation_record_pk is not None:
                 queryset = queryset.filter(observation_record__pk=observation_record_pk)
@@ -61,6 +61,7 @@ class DRAGONSRunsViewSet(
         ----------
         serializer : `DRAGONSRunSerializer`
             The serializer containing the validated data for creating a `DRAGONSRun`.
+
         """
         dragons_run = serializer.save()
 
@@ -68,7 +69,7 @@ class DRAGONSRunsViewSet(
 
         # Link DataProducts for the run to enable/disable.
         data_products = DataProduct.objects.filter(
-            observation_record=dragons_run.observation_record
+            observation_record=dragons_run.observation_record,
         ).select_related("metadata")
 
         DRAGONSFile.objects.bulk_create(
@@ -84,7 +85,10 @@ class DRAGONSRunsViewSet(
         self._init_recipe_and_primitives(dragons_run)
 
     def _disable_old_biases(
-        self, data_products: QuerySet, dragons_run: DRAGONSRun, days: float | None = 10
+        self,
+        data_products: QuerySet,
+        dragons_run: DRAGONSRun,
+        days: float | None = 10,
     ) -> None:
         """Disables bias `DRAGONSFiles` outside of a defined window around the latest
         object observation date.
@@ -99,10 +103,11 @@ class DRAGONSRunsViewSet(
         days : `float`, optional
             The number of days before and after the latest object observation date to
             consider; defaults to 10.
+
         """
         # Determine the latest observation date for 'object' file types.
         latest_object_date = data_products.filter(
-            metadata__file_type="object"
+            metadata__file_type="object",
         ).aggregate(Max("metadata__observation_date"))[
             "metadata__observation_date__max"
         ]
@@ -114,14 +119,15 @@ class DRAGONSRunsViewSet(
 
             # Disable bias files outside the window.
             bias_products_to_disable = data_products.filter(
-                metadata__file_type="BIAS"
+                metadata__file_type="BIAS",
             ).exclude(
                 metadata__observation_date__range=(start_date, end_date),
             )
 
             # Update the enabled status for BIAS files outside the window.
             DRAGONSFile.objects.filter(
-                dragons_run=dragons_run, data_product__in=bias_products_to_disable
+                dragons_run=dragons_run,
+                data_product__in=bias_products_to_disable,
             ).update(enabled=False)
 
     def _init_dragons_dir(self, dragons_run: DRAGONSRun) -> None:
@@ -137,6 +143,7 @@ class DRAGONSRunsViewSet(
         dragons_run : `DRAGONSRun`
             The `DRAGONSRun` instance for which the directory and necessary files are
             created.
+
         """
         # Create the output directory.
         output_dir = dragons_run.get_output_dir()
@@ -153,53 +160,58 @@ class DRAGONSRunsViewSet(
         cal_service.LocalDB(cal_manager_db_file, force_init=True)
 
     def _init_recipe_and_primitives(self, dragons_run: DRAGONSRun) -> None:
-        dragons_files = dragons_run.dragons_run_files.all()
+        """Initializes recipes and their primitives for a DRAGONS run based on the file
+        types available in the run. This method creates new recipe if they do not
+        already exist for the file type and version and creates corresponding
+        `DRAGONSRecipe` instances.
 
-        processed_file_types = set()
+        Parameters
+        ----------
+        dragons_run : `DRAGONSRun`
+            The DRAGONS run instance for which recipes are being initialized.
+
+        """
+        dragons_files = dragons_run.dragons_run_files.all()
+        version = dragons_run.version
+        existing_recipes = BaseRecipe.objects.filter(version=version)
+
+        processed_base_recipe_file_types = {
+            recipe.file_type for recipe in existing_recipes
+        }
+        processed_recipe_file_types = set()
 
         for dragons_file in dragons_files:
             file_type = dragons_file.get_file_type()
-            if file_type in processed_file_types:
-                continue
 
-            # Create a recipe and primitives for the default option for now.
-            recipe, function_definition = self.get_default_recipe_and_primitives(
-                dragons_file
-            )
-            recipe = DRAGONSRecipe.objects.create(
-                dragons_run=dragons_run,
-                file_type=file_type,
-                name=recipe,
-                original_function_definition=function_definition,
-            )
+            if file_type not in processed_base_recipe_file_types:
+                recipes_and_primitives = get_recipes_and_primitives(
+                    dragons_file.get_file_path(),
+                )
 
-            # Don't add another recipe.
-            processed_file_types.add(file_type)
+                # Create or update recipes in the database.
+                for recipe_name, details in recipes_and_primitives["recipes"].items():
+                    BaseRecipe.objects.update_or_create(
+                        file_type=file_type,
+                        name=recipe_name,
+                        version=version,
+                        function_definition=details["function_definition"],
+                        is_default=details["is_default"],
+                    )
 
-    def get_default_recipe_and_primitives(self, dragons_file):
-        output_text = showprims(dragons_file.get_file_path())
+                # Mark this file_type as processed to avoid duplicate processing
+                processed_base_recipe_file_types.add(file_type)
 
-        return self.parse_showprims_output(output_text)
-
-    def parse_showprims_output(self, output_text) -> tuple[str, str]:
-        # Regex to extract the "Matched recipe:" and the list of primitives as a
-        # function.
-        recipe_pattern = r"Matched recipe:\s*(.+)"
-
-        # Find matched recipe
-        recipe_match = re.search(recipe_pattern, output_text)
-        recipe = recipe_match.group(1).strip() if recipe_match else None
-        func_name = get_short_name(recipe)
-
-        # Regex to extract the list of primitives as a function.
-        primitives_pattern = r"Primitives used:\s*((?:\s*p\.[^\n]+\n)+)"
-        primitives_match = re.search(primitives_pattern, output_text)
-        primitives_list = (
-            primitives_match.group(1).strip().split("\n") if primitives_match else []
-        )
-
-        # Format the function definition.
-        function_definition = f"def {func_name}(p):\n"
-        for primitive in primitives_list:
-            function_definition += f"    {primitive.strip()}\n"
-        return recipe, function_definition
+            if file_type not in processed_recipe_file_types:
+                # Fetch all existing base recipes for this file type and version
+                existing_recipes_for_file_type = BaseRecipe.objects.filter(
+                    file_type=file_type,
+                    version=version,
+                )
+                for existing_recipe in existing_recipes_for_file_type:
+                    # Create the recipe linking the base recipe.
+                    DRAGONSRecipe.objects.create(
+                        dragons_run=dragons_run,
+                        recipe=existing_recipe,
+                    )
+                # Add to the file types to skip next time.
+                processed_recipe_file_types.add(file_type)

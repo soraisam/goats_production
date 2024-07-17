@@ -29,6 +29,7 @@ class DataProductMetadata(models.Model):
         Date of the observation.
     roi_setting : `models.CharField`
         Region of interest setting of the detector.
+
     """
 
     data_product = models.OneToOneField(

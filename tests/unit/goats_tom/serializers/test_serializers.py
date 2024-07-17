@@ -5,11 +5,11 @@ from goats_tom.serializers import (
     DRAGONSFileSerializer,
     DRAGONSRecipeFilterSerializer,
     DRAGONSRecipeSerializer,
+    DRAGONSReduceFilterSerializer,
     DRAGONSReduceSerializer,
     DRAGONSReduceUpdateSerializer,
     DRAGONSRunFilterSerializer,
     DRAGONSRunSerializer,
-    DRAGONSReduceFilterSerializer,
 )
 from goats_tom.tests.factories import (
     DRAGONSFileFactory,
@@ -29,16 +29,16 @@ class TestDRAGONSFileSerializer(APITestCase):
         serializer = DRAGONSFileSerializer(dragons_file)
 
         self.assertEqual(
-            serializer.data["product_id"], dragons_file.data_product.product_id
+            serializer.data["product_id"], dragons_file.data_product.product_id,
         )
         self.assertEqual(
-            serializer.data["file_type"], dragons_file.data_product.metadata.file_type
+            serializer.data["file_type"], dragons_file.data_product.metadata.file_type,
         )
 
     def test_invalid_data(self):
         """Test `DRAGONSFileSerializer` with invalid data."""
         invalid_data = {
-            "enabled": None  # Invalid as enabled should not be None
+            "enabled": None,  # Invalid as enabled should not be None
         }
         serializer = DRAGONSFileSerializer(data=invalid_data)
         self.assertFalse(serializer.is_valid())
@@ -48,7 +48,7 @@ class TestDRAGONSFileSerializer(APITestCase):
         dragons_file = DRAGONSFileFactory(enabled=True)
         partial_data = {"enabled": False}
         serializer = DRAGONSFileSerializer(
-            dragons_file, data=partial_data, partial=True
+            dragons_file, data=partial_data, partial=True,
         )
 
         self.assertTrue(serializer.is_valid())
@@ -119,7 +119,7 @@ class TestDRAGONSRecipeSerializer(APITestCase):
         self.assertEqual(serializer.data["file_type"], self.recipe.file_type)
         self.assertEqual(serializer.data["name"], self.recipe.name)
         self.assertEqual(
-            serializer.data["active_function_definition"], self.recipe.original_function_definition
+            serializer.data["active_function_definition"], self.recipe.active_function_definition,
         )
         self.assertEqual(serializer.data["short_name"], self.recipe.short_name)
 
@@ -131,7 +131,10 @@ class TestDRAGONSRecipeSerializer(APITestCase):
         self.assertTrue(serializer.is_valid())
         updated_instance = serializer.save()
         self.assertEqual(
-            updated_instance.function_definition, "Updated function definition"
+            updated_instance.active_function_definition, "Updated function definition",
+        )
+        self.assertEqual(
+            updated_instance.function_definition, "Updated function definition",
         )
 
     def test_update_with_whitespace_only(self):
@@ -161,7 +164,6 @@ class TestDRAGONSRecipeFilterSerializer(APITestCase):
     def test_invalid_data(self):
         """Test `DRAGONSRecipeFilterSerializer` with invalid data."""
         # TODO: This should be testing the options for file_type.
-        pass
 
 
 class TestDRAGONSRunSerializer(APITestCase):
@@ -178,13 +180,13 @@ class TestDRAGONSRunSerializer(APITestCase):
         )
         self.assertEqual(serializer.data["run_id"], dragons_run.run_id)
         self.assertEqual(
-            serializer.data["config_filename"], dragons_run.config_filename
+            serializer.data["config_filename"], dragons_run.config_filename,
         )
         self.assertEqual(
-            serializer.data["output_directory"], dragons_run.output_directory
+            serializer.data["output_directory"], dragons_run.output_directory,
         )
         self.assertEqual(
-            serializer.data["cal_manager_filename"], dragons_run.cal_manager_filename
+            serializer.data["cal_manager_filename"], dragons_run.cal_manager_filename,
         )
         self.assertEqual(serializer.data["log_filename"], dragons_run.log_filename)
 
@@ -250,7 +252,7 @@ class TestDRAGONSReduceSerializer(APITestCase):
             "Serializer should not be valid with a non-existent recipe ID.",
         )
         self.assertIn(
-            "recipe_id", serializer.errors, "Error key should be 'recipe_id'."
+            "recipe_id", serializer.errors, "Error key should be 'recipe_id'.",
         )
 
 
@@ -302,7 +304,7 @@ class TestDRAGONSReduceUpdateSerializer(APITestCase):
     def test_invalid_update_wrong_status(self):
         """Test updating `DRAGONSReduce` with an incorrect status value."""
         invalid_data = {
-            "status": "running"
+            "status": "running",
         }  # Assuming 'running' cannot be set directly
         serializer = DRAGONSReduceUpdateSerializer(self.reduction, data=invalid_data)
 

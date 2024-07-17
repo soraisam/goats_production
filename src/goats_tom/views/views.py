@@ -61,6 +61,7 @@ class DRAGONSView(LoginRequiredMixin, View):
         -------
         `HttpResponse`
             The rendered DRAGONS page.
+
         """
         observation_record = get_object_or_404(ObservationRecord, pk=pk)
         dragons_runs = observation_record.dragons_runs.all()
@@ -75,7 +76,9 @@ class DRAGONSView(LoginRequiredMixin, View):
 
 @login_required
 def activate_user_key(
-    request: HttpRequest, user_pk: int, pk: int
+    request: HttpRequest,
+    user_pk: int,
+    pk: int,
 ) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
     """Activate a specified UserKey.
 
@@ -90,6 +93,7 @@ def activate_user_key(
     -------
     `HttpResponseRedirect | HttpResponsePermanentRedirect`
         Redirects to the manage-keys page.
+
     """
     key = get_object_or_404(UserKey, pk=pk)
 
@@ -107,7 +111,9 @@ def activate_user_key(
 
 @login_required
 def create_key(
-    request: HttpRequest, user_pk: int, key_type: str
+    request: HttpRequest,
+    user_pk: int,
+    key_type: str,
 ) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
     """Create either a UserKey or a ProgramKey for a specific user.
 
@@ -124,6 +130,7 @@ def create_key(
     -------
     `HttpResponseRedirect | HttpResponsePermanentRedirect`
         Redirects to the manage-keys page.
+
     """
     target_user = get_object_or_404(User, pk=user_pk)
 
@@ -161,10 +168,12 @@ def create_key(
 
 @login_required
 def delete_key(
-    request: HttpRequest, user_pk: int, key_type: str, pk: int
+    request: HttpRequest,
+    user_pk: int,
+    key_type: str,
+    pk: int,
 ) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
-    """
-    Delete a specified UserKey or ProgramKey for a given user.
+    """Delete a specified UserKey or ProgramKey for a given user.
 
     Parameters
     ----------
@@ -181,6 +190,7 @@ def delete_key(
     -------
     `HttpResponseRedirect | HttpResponsePermanentRedirect`
         Redirects to the manage-keys page after deletion.
+
     """
     key_models = {"user_key": UserKey, "program_key": ProgramKey}
     model = key_models.get(key_type)
@@ -197,7 +207,8 @@ def delete_key(
     if key.user.pk == request.user.pk or request.user.is_superuser:
         key.delete()
         messages.success(
-            request, f"{key_type.replace('_', ' ').capitalize()} deleted successfully."
+            request,
+            f"{key_type.replace('_', ' ').capitalize()} deleted successfully.",
         )
     else:
         messages.error(request, "You do not have permission to delete this key.")
@@ -246,6 +257,7 @@ class GOATSTargetDeleteView(TargetDeleteView):
         -------
         `HttpResponse`
             HTTP response indicating the outcome of the deletion process.
+
         """
         target = self.get_object()
         # Fetch the ObservationRecord object.
@@ -261,8 +273,7 @@ class GOATSTargetDeleteView(TargetDeleteView):
 
 
 def update_brokerquery_name(request: HttpRequest, pk: int) -> JsonResponse:
-    """
-    Update the name of a BrokerQuery object.
+    """Update the name of a BrokerQuery object.
 
     Parameters
     ----------
@@ -313,6 +324,7 @@ def recent_downloads(request: HttpRequest) -> HttpResponse:
     -------
     `HttpResponse`
         The rendered HTML response containing the recent downloads.
+
     """
     # Fetch all Download instances
     downloads = Download.objects.filter(done=True).order_by("-start_time")
@@ -336,10 +348,11 @@ def ongoing_tasks(request: HttpRequest) -> JsonResponse:
     -------
     `JsonResponse`
         A JSON response containing the ongoing tasks.
+
     """
     # First, evaluate the QuerySet and get the current tasks data
     tasks = list(
-        Download.objects.filter(done=False).values("unique_id", "observation_id")
+        Download.objects.filter(done=False).values("unique_id", "observation_id"),
     )
 
     # Return the evaluated tasks list
@@ -367,9 +380,10 @@ class GOATSObservationRecordDetailView(ObservationRecordDetailView):
             initial={
                 "observation_record": observation_record,
                 "referrer": reverse(
-                    "tom_observations:detail", args=(self.get_object().id,)
+                    "tom_observations:detail",
+                    args=(self.get_object().id,),
                 ),
-            }
+            },
         )
         context["data_product_form"] = data_product_upload_form
         return context
@@ -390,7 +404,8 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
     permission_required = "tom_observations.delete_dataproduct"
 
     def get_required_permissions(
-        self, request: HttpRequest | None = None
+        self,
+        request: HttpRequest | None = None,
     ) -> list[str] | None:
         """Get the required permissions for this view.
 
@@ -404,6 +419,7 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
         `list[str] | None`
             A list of required permission strings, or ``None`` if custom
             settings apply.
+
         """
         if settings.TARGET_PERMISSIONS_ONLY:
             # Custom logic based on your application's settings
@@ -423,6 +439,7 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
         `bool`
             ``True`` if the request has the required permissions, ``False``
             otherwise.
+
         """
         if settings.TARGET_PERMISSIONS_ONLY:
             # Custom logic based on your application's settings
@@ -443,6 +460,7 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
         -------
         `HttpResponse`
             The HttpResponse object rendering the confirmation page.
+
         """
         observation_record = get_object_or_404(ObservationRecord, pk=pk)
         context = {
@@ -464,6 +482,7 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
         -------
         `HttpResponse`
             Redirects to the observation detail page after deletion.
+
         """
         observation_record = get_object_or_404(ObservationRecord, pk=pk)
         try:
@@ -477,8 +496,7 @@ class DeleteObservationDataProductsView(Raise403PermissionRequiredMixin, View):
 
 class GOATSDataProductDeleteView(DataProductDeleteView):
     def form_valid(self, form):
-        """
-        Method that handles DELETE requests for this view. It performs the
+        """Method that handles DELETE requests for this view. It performs the
         following actions in order:
         1. Deletes all ``ReducedDatum`` objects associated with the
         ``DataProduct``.
@@ -518,6 +536,7 @@ class ObservationRecordDeleteView(Raise403PermissionRequiredMixin, DeleteView):
         -------
         `HttpResponse`
             HTTP response indicating the outcome of the deletion process.
+
         """
         # Fetch the ObservationRecord object.
         observation_record = self.get_object()
@@ -539,6 +558,7 @@ class GOAQueryFormView(View):
         -------
         `HttpResponse`
             The response object.
+
         """
         # Check if your GOAQueryForm was submitted.
         form = GOAQueryForm(request.POST)
@@ -556,7 +576,8 @@ class GOAQueryFormView(View):
 
             except GOALogin.DoesNotExist:
                 messages.warning(
-                    request, f"GOA login credentials not found. {prop_data_msg}"
+                    request,
+                    f"GOA login credentials not found. {prop_data_msg}",
                 )
             except PermissionError:
                 messages.warning(
@@ -567,11 +588,14 @@ class GOAQueryFormView(View):
             query_params = form.cleaned_data["query_params"]
 
             serialized_observation_record = serializers.serialize(
-                "json", [observation_record]
+                "json",
+                [observation_record],
             )
             # Download in background.
             download_goa_files.send(
-                serialized_observation_record, query_params, request.user.id
+                serialized_observation_record,
+                query_params,
+                request.user.id,
             )
             messages.info(request, "Downloading data in background. Check back soon!")
 
@@ -593,6 +617,7 @@ class UserGenerateTokenView(SuperuserRequiredMixin, TemplateView):
     ----------
     template_name : `str`
         The name of the template to be used in this view.
+
     """
 
     template_name = "auth/generate_token.html"
@@ -615,6 +640,7 @@ class UserGenerateTokenView(SuperuserRequiredMixin, TemplateView):
             A response instance containing the rendered template with user and
             token context, or a URL pointing to the "user-list" view if the
             requester is not a superuser.
+
         """
         try:
             user = User.objects.get(pk=self.kwargs["pk"])
@@ -624,7 +650,8 @@ class UserGenerateTokenView(SuperuserRequiredMixin, TemplateView):
 
         if not request.user.is_superuser:
             messages.error(
-                request, "You do not have permission to generate a token for this user."
+                request,
+                "You do not have permission to generate a token for this user.",
             )
             return redirect("user-list")
 
@@ -648,6 +675,7 @@ def receive_query(request: HttpResponse) -> HttpResponse:
     -------
     `HttpResponse`
         A HTTP response indicating success or failure.
+
     """
     data = request.body.decode("utf-8")
 
@@ -705,6 +733,7 @@ class GOALoginView(LoginRequiredMixin, FormView):
         -------
         `str`
             The URL to redirect to.
+
         """
         return reverse_lazy("user-list")
 
@@ -720,6 +749,7 @@ class GOALoginView(LoginRequiredMixin, FormView):
         -------
         `HttpResponse`
             HTTP response.
+
         """
         username = form.cleaned_data["username"]
         password = form.cleaned_data["password"]
@@ -734,7 +764,8 @@ class GOALoginView(LoginRequiredMixin, FormView):
             )
         else:
             messages.success(
-                self.request, "GOA login information verified and saved successfully."
+                self.request,
+                "GOA login information verified and saved successfully.",
             )
 
         # No matter what, logout and save credentials.
@@ -759,9 +790,11 @@ class GOALoginView(LoginRequiredMixin, FormView):
         -------
         `HttpResponse`
             HTTP response.
+
         """
         messages.error(
-            self.request, "Failed to save GOA login information. Please try again."
+            self.request,
+            "Failed to save GOA login information. Please try again.",
         )
         return super().form_invalid(form)
 
@@ -777,6 +810,7 @@ class GOALoginView(LoginRequiredMixin, FormView):
         -------
         `HttpResponse`
             Rendered template as HTTP response.
+
         """
         user = User.objects.get(pk=self.kwargs["pk"])
         form = self.form_class()

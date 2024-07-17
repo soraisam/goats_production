@@ -25,6 +25,7 @@ class GeminiID:
         The entire program ID.
     observation_id : `str | None`
         The entire observation ID if it is an observation ID.
+
     """
 
     sites = ["GS", "GN"]
@@ -38,6 +39,7 @@ class GeminiID:
         ----------
         gemini_id : `str`
             The Gemini ID to parse (either program or observation ID).
+
         """
         match = self.parse_id(gemini_id)
 
@@ -74,6 +76,7 @@ class GeminiID:
         ------
         ValueError
             Raised if the Gemini ID does not match the expected format.
+
         """
         observation_match = re.match(self.observation_pattern, gemini_id)
         if observation_match:
@@ -92,6 +95,7 @@ class GeminiID:
         -------
         `bool`
             `True` if the ID is an observation ID, `False` otherwise.
+
         """
         return self._observation_id is not None and self._observation_number is not None
 
@@ -103,6 +107,7 @@ class GeminiID:
         -------
         `str`
             The site code extracted from the Gemini ID.
+
         """
         return self._site
 
@@ -114,6 +119,7 @@ class GeminiID:
         -------
         `str`
             The semester extracted from the Gemini ID.
+
         """
         return self._semester
 
@@ -125,6 +131,7 @@ class GeminiID:
         -------
         `str`
             The program type extracted from the Gemini ID.
+
         """
         return self._program_type
 
@@ -136,6 +143,7 @@ class GeminiID:
         -------
         `int`
             The program number extracted from the Gemini ID.
+
         """
         return self._program_number
 
@@ -147,6 +155,7 @@ class GeminiID:
         -------
         `int | None`
             The observation number extracted from the Gemini ID if available.
+
         """
         return self._observation_number
 
@@ -158,6 +167,7 @@ class GeminiID:
         -------
         `str`
             The full program ID string.
+
         """
         return self._program_id
 
@@ -169,6 +179,7 @@ class GeminiID:
         -------
         `str | None`
             The full observation ID string if available.
+
         """
         return self._observation_id
 
@@ -185,6 +196,7 @@ class GeminiID:
         -------
         `bool`
             `True` if the program ID is valid, `False` otherwise.
+
         """
         return re.match(cls.program_pattern, program_id) is not None
 
@@ -201,6 +213,7 @@ class GeminiID:
         -------
         `bool`
             `True` if the observation ID is valid, `False` otherwise.
+
         """
         return re.match(cls.observation_pattern, observation_id) is not None
 
@@ -219,7 +232,8 @@ class GeminiID:
         `bool`
             `True` if the ID is valid (either a program or observation ID),
             `False` otherwise.
+
         """
         return cls.is_valid_program_id(gemini_id) or cls.is_valid_observation_id(
-            gemini_id
+            gemini_id,
         )

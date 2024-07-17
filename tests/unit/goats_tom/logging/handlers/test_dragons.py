@@ -12,7 +12,7 @@ class TestDRAGONSHandler(TestCase):
     def setUp(self):
         # Patch the get_channel_layer to return a mock.
         self.patcher = mock.patch(
-            "goats_tom.logging.handlers.dragons.get_channel_layer"
+            "goats_tom.logging.handlers.dragons.get_channel_layer",
         )
         self.mock_get_channel_layer = self.patcher.start()
         self.mock_channel_layer = mock.Mock()
@@ -27,7 +27,8 @@ class TestDRAGONSHandler(TestCase):
 
     def test_initialization(self):
         """Test that the handler initializes with correct recipe and reduce IDs and a
-        channel layer."""
+        channel layer.
+        """
         self.assertEqual(self.handler.recipe_id, 123)
         self.assertEqual(self.handler.reduce_id, 456)
         self.assertIsNotNone(self.handler.channel_layer)
@@ -55,13 +56,13 @@ class TestDRAGONSHandler(TestCase):
             "run_id": 789,
         }
         self.mock_channel_layer.group_send.assert_called_once_with(
-            "dragons_group", expected_message
+            "dragons_group", expected_message,
         )
 
     def test_emit_with_failure(self):
         """Test behavior when channel layer fails to send a message."""
         self.mock_channel_layer.group_send.side_effect = Exception(
-            "Channel layer error"
+            "Channel layer error",
         )
         log_record = logging.LogRecord(
             name="test_failure",

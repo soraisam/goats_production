@@ -7,8 +7,8 @@ from goats_tom.models import DRAGONSReduce
 from goats_tom.tests.factories import (
     DRAGONSRecipeFactory,
     DRAGONSReduceFactory,
-    UserFactory,
     DRAGONSRunFactory,
+    UserFactory,
 )
 from goats_tom.views import DRAGONSReduceViewSet
 from rest_framework import status
@@ -25,7 +25,7 @@ class TestDRAGONSReduceViewSet(APITestCase):
         self.list_view = DRAGONSReduceViewSet.as_view({"get": "list"})
         self.detail_view = DRAGONSReduceViewSet.as_view({"get": "retrieve"})
         self.partial_update_view = DRAGONSReduceViewSet.as_view(
-            {"patch": "partial_update"}
+            {"patch": "partial_update"},
         )
 
     def authenticate(self, request):
@@ -93,7 +93,7 @@ class TestDRAGONSReduceViewSet(APITestCase):
     @patch("goats_tom.views.dragons_reduce.DRAGONSProgress.create_and_send")
     @patch("goats_tom.views.dragons_reduce.NotificationInstance.create_and_send")
     def test_valid_update_reduction(
-        self, mock_notification_send, mock_progress_send, mock_abort
+        self, mock_notification_send, mock_progress_send, mock_abort,
     ):
         """Test valid updating of a DRAGONSReduce to 'canceled' status."""
         reduction = DRAGONSReduceFactory(task_id="12345")
@@ -101,7 +101,7 @@ class TestDRAGONSReduceViewSet(APITestCase):
         data = {"status": "canceled"}
 
         request = self.factory.patch(
-            reverse("dragonsreduce-detail", args=[reduction.id]), data
+            reverse("dragonsreduce-detail", args=[reduction.id]), data,
         )
         self.authenticate(request)
 
@@ -121,14 +121,14 @@ class TestDRAGONSReduceViewSet(APITestCase):
     @patch("goats_tom.views.dragons_reduce.DRAGONSProgress.create_and_send")
     @patch("goats_tom.views.dragons_reduce.NotificationInstance.create_and_send")
     def test_invalid_update_reduction(
-        self, mock_notification_send, mock_progress_send, mock_abort
+        self, mock_notification_send, mock_progress_send, mock_abort,
     ):
         """Test invalid updating of a DRAGONSReduce with an unsupported status."""
         reduction = DRAGONSReduceFactory(status="running")
         data = {"status": "running"}
 
         request = self.factory.patch(
-            reverse("dragonsreduce-detail", args=[reduction.id]), data
+            reverse("dragonsreduce-detail", args=[reduction.id]), data,
         )
         self.authenticate(request)
 
@@ -149,7 +149,7 @@ class TestDRAGONSReduceViewSet(APITestCase):
         DRAGONSReduceFactory.create_batch(3)
 
         request = self.factory.get(
-            reverse("dragonsreduce-list"), {"run": dragons_run.pk}
+            reverse("dragonsreduce-list"), {"run": dragons_run.pk},
         )
         self.authenticate(request)
 
@@ -165,7 +165,7 @@ class TestDRAGONSReduceViewSet(APITestCase):
         DRAGONSReduceFactory.create_batch(3)
 
         request = self.factory.get(
-            reverse("dragonsreduce-list"), {"status": status_filter}
+            reverse("dragonsreduce-list"), {"status": status_filter},
         )
         self.authenticate(request)
 
@@ -182,7 +182,7 @@ class TestDRAGONSReduceViewSet(APITestCase):
         DRAGONSReduceFactory.create_batch(1, status="error")
 
         request = self.factory.get(
-            reverse("dragonsreduce-list"), {"not_finished": "true"}
+            reverse("dragonsreduce-list"), {"not_finished": "true"},
         )
         self.authenticate(request)
 

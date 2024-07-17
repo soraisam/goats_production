@@ -13,6 +13,7 @@ class ProcessManager:
     ----------
     timeout : `int`
         Timeout in seconds for stopping a process.
+
     """
 
     shutdown_order: list[str] = ["background_workers", "django", "redis"]
@@ -31,6 +32,7 @@ class ProcessManager:
             The name of the process.
         process : `subprocess.Popen`
             The process.
+
         """
         self.processes[name] = process
 
@@ -53,6 +55,7 @@ class ProcessManager:
         -------
         `bool`
             `True` if process was able to be stopped, else `False`.
+
         """
         process = self.processes.pop(name, None)
         display_message(f"Stopping {name}.")

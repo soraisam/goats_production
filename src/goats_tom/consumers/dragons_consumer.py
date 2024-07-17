@@ -15,6 +15,7 @@ class DRAGONSConsumer(WebsocketConsumer):
     ----------
     group_name : `str`
         The name of the group that this consumer handles updates for.
+
     """
 
     group_name = "dragons_group"
@@ -31,9 +32,10 @@ class DRAGONSConsumer(WebsocketConsumer):
         ----------
         code : `int`
             Return code to send on disconnect.
+
         """
         async_to_sync(self.channel_layer.group_discard)(
-            self.group_name, self.channel_name
+            self.group_name, self.channel_name,
         )
 
     def log_message(self, event: dict) -> None:
@@ -43,6 +45,7 @@ class DRAGONSConsumer(WebsocketConsumer):
         ----------
         event : `dict`
             The event dictionary containing the log data.
+
         """
         # Construct the log message.
         log = {
@@ -63,6 +66,7 @@ class DRAGONSConsumer(WebsocketConsumer):
         ----------
         event : `dict`
             The event dictionary containing the recipe reduce update.
+
         """
         # Construct the update.
         recipe_progress = {

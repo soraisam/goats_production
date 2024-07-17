@@ -7,6 +7,7 @@ from .utils import (
     get_astrodata_header,
     get_key,
     get_key_info,
+    get_recipes_and_primitives,
     get_short_name,
     has_key,
 )
@@ -22,4 +23,5 @@ __all__ = [
     "extract_metadata",
     "get_short_name",
     "get_astrodata_header",
+    "get_recipes_and_primitives",
 ]

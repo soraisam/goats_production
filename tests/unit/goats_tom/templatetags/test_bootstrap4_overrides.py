@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from goats_tom.templatetags import bootstrap_pagination
 
 
-@pytest.fixture
+@pytest.fixture()
 def page():
     # Create a mock Page object
     paginator = Paginator(range(100), 10)  # 100 items, 10 per page

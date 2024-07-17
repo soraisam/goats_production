@@ -2,7 +2,7 @@ import pytest
 from goats_tom.forms import GOALoginForm, GOAQueryForm
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestGOAQueryForm:
     def test_form_fields(self):
         form = GOAQueryForm()
@@ -38,7 +38,7 @@ class TestGOAQueryForm:
         assert form.cleaned_data["query_params"]["kwargs"]["filepre"] == "test_prefix"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestGOALoginForm:
     def test_form_fields(self):
         form = GOALoginForm()

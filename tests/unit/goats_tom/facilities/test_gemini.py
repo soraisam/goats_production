@@ -4,7 +4,7 @@ import pytest
 from goats_tom.facilities import GEMObservationForm, GOATSGEMFacility
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestGOATSGEMFacility:
     """Test cases for the GOATSGEMFacility class."""
 
@@ -25,7 +25,7 @@ class TestGOATSGEMFacility:
                 "elevationMin": "1.0",
                 "elevationMax": "2.0",
                 "posangle": "0.0",
-            }
+            },
         ]
 
     def test_get_form(self):
@@ -41,7 +41,7 @@ class TestGOATSGEMFacility:
                 "elevationMin": "1.2",
                 "elevationMax": "2.0",
                 "exptime": 600,
-            }
+            },
         ]
         errors = self.facility.validate_observation(valid_payload)
         assert len(errors) == 0
@@ -55,7 +55,7 @@ class TestGOATSGEMFacility:
                 "elevationMin": "0.9",
                 "elevationMax": "2.6",
                 "exptime": 600,
-            }
+            },
         ]
         errors = self.facility.validate_observation(invalid_payload)
         assert "elevationMin" in errors
@@ -92,7 +92,7 @@ class TestGOATSGEMFacility:
                 "elevationMin": "1.2",
                 "elevationMax": "2.0",
                 "exptime": 600,
-            }
+            },
         ]
         errors = self.facility.validate_observation(invalid_payload)
         assert "obs" in errors
@@ -100,7 +100,7 @@ class TestGOATSGEMFacility:
     @patch("goats_tom.facilities.gemini.get_key_info")
     @patch("goats_tom.facilities.gemini.make_request")
     def test_submit_observation_with_user_key(
-        self, mock_make_request, mock_get_key_info
+        self, mock_make_request, mock_get_key_info,
     ):
         mock_get_key_info.return_value = {
             "email": "user@test.com",
@@ -124,7 +124,7 @@ class TestGOATSGEMFacility:
     @patch("goats_tom.facilities.gemini.get_key_info")
     @patch("goats_tom.facilities.gemini.make_request")
     def test_submit_observation_with_program_key(
-        self, mock_make_request, mock_get_key_info
+        self, mock_make_request, mock_get_key_info,
     ):
         mock_get_key_info.return_value = {"password": "programkey123"}
         mock_make_request.return_value.text = "GS-2024A-Q-123-001"

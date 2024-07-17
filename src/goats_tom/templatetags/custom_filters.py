@@ -9,7 +9,7 @@ from django import template
 register = template.Library()
 
 
-@register.filter(name='starts_with')
+@register.filter(name="starts_with")
 def starts_with(text: str, look_for: str) -> bool:
     """Checks to see if string starts with provided text.
 
@@ -24,6 +24,7 @@ def starts_with(text: str, look_for: str) -> bool:
     -------
     `bool`
         `True` if text starts with string, `False` if not.
+
     """
     if isinstance(text, str):
         return text.startswith(look_for)

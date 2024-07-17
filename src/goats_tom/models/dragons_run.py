@@ -3,16 +3,25 @@
 __all__ = ["DRAGONSRun"]
 
 from datetime import datetime
+from importlib import metadata
 from pathlib import Path
 
 from django.conf import settings
 from django.db import models
 from tom_observations.models import ObservationRecord
 
+from goats_tom.models import DRAGONSRecipe
+
+
+def get_dragons_version():
+    try:
+        return metadata.version("dragons")
+    except metadata.PackageNotFoundError:
+        return "Unknown"
+
 
 class DRAGONSRun(models.Model):
-    """
-    Represents a DRAGONS run setup configuration.
+    """Represents a DRAGONS run setup configuration.
 
     This model stores configuration data for a DRAGONS run, including
     references to the associated observation record, run identifier,
@@ -52,10 +61,11 @@ class DRAGONSRun(models.Model):
     get_raw_dir() -> Path:
         Constructs and returns the full path to the raw directory based on the
         observation record's properties.
+
     """
 
     observation_record = models.ForeignKey(
-        ObservationRecord, on_delete=models.CASCADE, related_name="dragons_runs"
+        ObservationRecord, on_delete=models.CASCADE, related_name="dragons_runs",
     )
     run_id = models.CharField(
         max_length=255,
@@ -71,6 +81,13 @@ class DRAGONSRun(models.Model):
     log_filename = models.CharField(max_length=30, default="log.log", editable=False)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+    version = models.CharField(
+        max_length=30,
+        editable=False,
+        blank=False,
+        null=False,
+        default=get_dragons_version,
+    )
 
     class Meta:
         # Ensure run_id is unique within the scope of each
@@ -79,7 +96,7 @@ class DRAGONSRun(models.Model):
             models.UniqueConstraint(
                 fields=["observation_record", "run_id"],
                 name="unique_observation_run_id",
-            )
+            ),
         ]
         # Index by "run_id" for easy filtering and getting.
         indexes = [
@@ -111,6 +128,7 @@ class DRAGONSRun(models.Model):
         -------
         `Path`
             The full path to the output directory.
+
         """
         return self.get_raw_dir() / self.output_directory
 
@@ -121,6 +139,7 @@ class DRAGONSRun(models.Model):
         -------
         `Path`
             The full path to the calibration manager database file.
+
         """
         return self.get_output_dir() / self.cal_manager_filename
 
@@ -131,6 +150,7 @@ class DRAGONSRun(models.Model):
         -------
         `Path`
             The full path to the log file.
+
         """
         return self.get_output_dir() / self.log_filename
 
@@ -141,17 +161,18 @@ class DRAGONSRun(models.Model):
         -------
         `Path`
             The full path to the configuration file.
+
         """
         return self.get_output_dir() / self.config_filename
 
     def get_raw_dir(self) -> Path:
-        """
-        Returns the full path to the raw directory.
+        """Returns the full path to the raw directory.
 
         Returns
         -------
         `Path`
             The full path to the associated observation ID directory.
+
         """
         raw_dir = (
             settings.MEDIA_ROOT
@@ -160,3 +181,6 @@ class DRAGONSRun(models.Model):
             / self.observation_record.observation_id
         )
         return raw_dir
+
+    def get_recipes(self):
+        return DRAGONSRecipe.objects.filter(version=self.version)

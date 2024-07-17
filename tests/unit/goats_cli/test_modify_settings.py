@@ -6,7 +6,7 @@ from goats_cli.modify_settings import modify_settings
 from goats_cli.plugins import GOATSPlugin
 
 
-@pytest.fixture
+@pytest.fixture()
 def settings_file(tmp_path):
     settings_file = Path(__file__).parent.parent / "data" / "settings.py"
     copied_settings_file = tmp_path / "settings.py"
@@ -15,7 +15,7 @@ def settings_file(tmp_path):
     return copied_settings_file
 
 
-@pytest.fixture
+@pytest.fixture()
 def tom_setup_settings_file(tmp_path):
     tom_setup_settings_file = Path(__file__).parent.parent / "data" / "goats_setup_settings.py"
     copied_tom_setup_settings_file = tmp_path / "goats_setup_settings.py"
@@ -27,6 +27,6 @@ def tom_setup_settings_file(tmp_path):
 def test_modify_settings_goats(tom_setup_settings_file):
     # Test adding ANTARES plugin.
     modify_settings(tom_setup_settings_file, add_goats=True)
-    with open(tom_setup_settings_file, "r") as f:
+    with open(tom_setup_settings_file) as f:
         lines = f.readlines()
     assert GOATSPlugin().line_to_add in lines

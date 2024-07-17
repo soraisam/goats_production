@@ -25,6 +25,7 @@ def render_goa_query_form(context: template.context.RequestContext) -> dict[str,
     -------
     `dict`
         Dictionary containing the form to render.
+
     """
     form = GOAQueryForm()
     # Need to pass in the context of the object for partial to work.
@@ -50,5 +51,6 @@ def render_launch_dragons(context: template.context.RequestContext) -> dict[str,
     -------
     `dict`
         Dictionary containing the form to render.
+
     """
     return {"object": context.get("object", {})}

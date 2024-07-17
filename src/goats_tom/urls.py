@@ -55,7 +55,9 @@ urlpatterns = [
         name="user-generate-token",
     ),
     path(
-        "users/<int:pk>/goa_login/", views.GOALoginView.as_view(), name="user-goa-login"
+        "users/<int:pk>/goa_login/",
+        views.GOALoginView.as_view(),
+        name="user-goa-login",
     ),
     path("goa_query/<int:pk>/", views.GOAQueryFormView.as_view(), name="goa_query"),
     path("api/ongoing-tasks/", views.ongoing_tasks, name="ongoing_tasks"),

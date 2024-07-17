@@ -19,10 +19,11 @@ class GOALogin(models.Model):
         The GOA login username.
     password : `models.CharField`
         The GOA login password, stored as a securely hashed value.
+
     """
 
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name="goa_login"
+        User, on_delete=models.CASCADE, related_name="goa_login",
     )
     username = models.CharField(max_length=100)
     # Making this 128 to store encrypted passwords.

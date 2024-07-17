@@ -31,6 +31,7 @@ class OCSParser:
         -------
         `dict[str, Any]`
             A dictionary representation of the XML sequence data.
+
         """
 
         def parse_sequence_element(system_element: ET.Element) -> dict[str, Any]:
@@ -45,6 +46,7 @@ class OCSParser:
             -------
             `dict[str, Any]`
                 A dictionary representation of the "system" element.
+
             """
             system_data = {}
             for param in system_element:
@@ -87,6 +89,7 @@ class OCSParser:
         -------
         `dict[str, Any]`
             A dictionary representation of the parsed XML data.
+
         """
 
         def parse_coordinates_element(element: ET.Element) -> dict[str, Any]:
@@ -101,6 +104,7 @@ class OCSParser:
             -------
             `dict[str, Any]`
                 A dictionary representation of the XML element.
+
             """
             # For "param" elements, return a dictionary with its name and
             # value.
@@ -149,6 +153,7 @@ class OCSParser:
         -------
         `dict[str, Any]`
             A dictionary representation of the parsed XML program data.
+
         """
 
         def parse_odb_element(element: ET.Element) -> Any:
@@ -163,6 +168,7 @@ class OCSParser:
             -------
             `Any`
                 A XML element.
+
             """
             parsed = {}
             # Consolidate text elements directly

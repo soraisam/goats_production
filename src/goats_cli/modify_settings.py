@@ -1,15 +1,14 @@
 __all__ = ["modify_settings"]
 from pathlib import Path
 
-
-from goats_cli.plugins import Plugin, GOATSPlugin
+from goats_cli.plugins import GOATSPlugin, Plugin
 
 # Initialize constants.
 SETTINGS_FILENAME = "settings.py"
 
 
 def modify_settings(
-    file_path: Path, add_goats: bool | None = False, verbose: bool | None = False
+    file_path: Path, add_goats: bool | None = False, verbose: bool | None = False,
 ) -> None:
     """Modify Django settings to include additional apps.
 
@@ -26,6 +25,7 @@ def modify_settings(
     ------
     FileNotFoundError
         Raised if the settings file does not exist.
+
     """
     if verbose:
         print(f"Modifying {file_path.absolute()}...")
@@ -39,7 +39,7 @@ def modify_settings(
         raise FileNotFoundError(f"{file_path.absolute()} does not exist.")
 
     # Read the file.
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     # Add plugins.
@@ -52,7 +52,7 @@ def modify_settings(
 
 
 def _find_and_add(
-    lines: list[str], plugin: Plugin, verbose: bool | None = False
+    lines: list[str], plugin: Plugin, verbose: bool | None = False,
 ) -> list[str]:
     """Utility function to add a plugin to the lines from a settings file.
 
@@ -74,6 +74,7 @@ def _find_and_add(
     ------
     ValueError
         Raised if the ``Plugin.look_for`` string is not found in the file.
+
     """
     line_number = None
 
@@ -99,7 +100,7 @@ def _find_and_add(
 
     if line_number is None:
         raise ValueError(
-            f"'{plugin.look_for}' not found in file, please verify contents."
+            f"'{plugin.look_for}' not found in file, please verify contents.",
         )
 
     # Find the opening bracket line.

@@ -13,7 +13,7 @@ class Key(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     password = encrypt(models.CharField(max_length=100))
     site = models.CharField(
-        max_length=2, choices=[("GS", "Gemini South"), ("GN", "Gemini North")]
+        max_length=2, choices=[("GS", "Gemini South"), ("GN", "Gemini North")],
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -49,6 +49,7 @@ class DownloadState:
             Whether the download task is done or not, by default `None`.
         error : `bool | None`, optional
             Whether there was an error in the task, by default `None`.
+
         """
         if label is not None:
             self.label = label
@@ -85,8 +86,7 @@ class DownloadState:
 
     @staticmethod
     def format_bytes(downloaded_bytes: int | None = None) -> str:
-        """
-        Converts the number of bytes into a more readable format, choosing the
+        """Converts the number of bytes into a more readable format, choosing the
         appropriate unit from bytes, kilobytes (KB), megabytes (MB),
         gigabytes (GB), or terabytes (TB), with a specific number of decimal
         places for each unit.
@@ -100,6 +100,7 @@ class DownloadState:
         -------
         `str`
             A string representation of the data size.
+
         """
         if downloaded_bytes is None:
             return ""

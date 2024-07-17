@@ -5,10 +5,9 @@ from django.core.exceptions import ValidationError
 from goats_tom.brokers import GOATSANTARESBroker, GOATSANTARESBrokerForm
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_goatsantaresbroker_form_valid():
-    """
-    Test the form with valid data.
+    """Test the form with valid data.
     """
     form_data = {
         "esquery": {"query": "some valid query"},
@@ -19,10 +18,9 @@ def test_goatsantaresbroker_form_valid():
     assert form.is_valid(), "Form should be valid with correct esquery data."
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_goatsantaresbroker_form_invalid():
-    """
-    Test the form with invalid data.
+    """Test the form with invalid data.
     """
     form_data = {}
     form = GOATSANTARESBrokerForm(data=form_data)
@@ -32,16 +30,15 @@ def test_goatsantaresbroker_form_invalid():
         form.clean()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_goatsantaresbroker_form_no_data():
-    """
-    Test the form with no data.
+    """Test the form with no data.
     """
     form = GOATSANTARESBrokerForm()
     assert not form.is_valid(), "Form should not be valid without data."
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_fetch_alerts_locusid_remote():
     broker = GOATSANTARESBroker()
     parameters = {"locusid": "ANT2020j7wo4"}  # Example parameter
@@ -49,7 +46,7 @@ def test_fetch_alerts_locusid_remote():
     assert isinstance(alerts, Iterator)
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_fetch_alerts_esquery_remote():
     broker = GOATSANTARESBroker()
     esquery = {
@@ -61,13 +58,13 @@ def test_fetch_alerts_esquery_remote():
                             "properties.num_mag_values": {
                                 "gte": 50,
                                 "lte": 100,
-                            }
-                        }
+                            },
+                        },
                     },
                     {"term": {"tags": "nuclear_transient"}},
-                ]
-            }
-        }
+                ],
+            },
+        },
     }
     parameters = {"esquery": esquery}  # Example parameter
     alerts = broker.fetch_alerts(parameters)

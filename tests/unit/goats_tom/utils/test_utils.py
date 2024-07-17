@@ -31,10 +31,10 @@ class DeleteAssociatedDataProductsTest(TestCase):
     def setUp(self):
         self.target = SiderealTargetFactory.create()
         self.observation_record = ObservingRecordFactory.create(
-            target_id=self.target.id
+            target_id=self.target.id,
         )
         self.data_products = DataProductFactory.create_batch(
-            3, observation_record=self.observation_record
+            3, observation_record=self.observation_record,
         )
         for data_product in self.data_products:
             ReducedDatumFactory.create(data_product=data_product)
@@ -44,13 +44,13 @@ class DeleteAssociatedDataProductsTest(TestCase):
 
         self.assertEqual(
             DataProduct.objects.filter(
-                observation_record=self.observation_record
+                observation_record=self.observation_record,
             ).count(),
             0,
         )
         for data_product in self.data_products:
             self.assertEqual(
-                ReducedDatum.objects.filter(data_product=data_product).count(), 0
+                ReducedDatum.objects.filter(data_product=data_product).count(), 0,
             )
 
     def test_delete_single_data_product(self):
@@ -59,7 +59,7 @@ class DeleteAssociatedDataProductsTest(TestCase):
 
         self.assertFalse(DataProduct.objects.filter(pk=single_data_product.pk).exists())
         self.assertEqual(
-            ReducedDatum.objects.filter(data_product=single_data_product).count(), 0
+            ReducedDatum.objects.filter(data_product=single_data_product).count(), 0,
         )
 
     def test_delete_file_and_thumbnail(self):
@@ -75,7 +75,7 @@ class DeleteAssociatedDataProductsTest(TestCase):
         # Check if files and thumbnails are deleted from the disk.
         for data_path, thumbnail_path in file_paths:
             self.assertFalse(
-                os.path.exists(data_path), f"Data file {data_path} should be deleted."
+                os.path.exists(data_path), f"Data file {data_path} should be deleted.",
             )
             self.assertFalse(
                 os.path.exists(thumbnail_path),
@@ -95,7 +95,7 @@ class BuildJsonResponseTests(unittest.TestCase):
         response = build_json_response()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response.content.decode(), '{"status": "success", "message": ""}'
+            response.content.decode(), '{"status": "success", "message": ""}',
         )
 
     def test_error_response_with_custom_message(self):
@@ -113,7 +113,7 @@ class BuildJsonResponseTests(unittest.TestCase):
         error_message = "Not found"
         error_status = status.HTTP_404_NOT_FOUND
         response = build_json_response(
-            error_message=error_message, error_status=error_status
+            error_message=error_message, error_status=error_status,
         )
         self.assertEqual(response.status_code, error_status)
         self.assertEqual(
@@ -123,11 +123,12 @@ class BuildJsonResponseTests(unittest.TestCase):
 
     def test_error_response_with_custom_message_and_status(self):
         """Test building an error JSON response with a custom message and
-        status."""
+        status.
+        """
         error_message = "Unauthorized access"
         error_status = status.HTTP_401_UNAUTHORIZED
         response = build_json_response(
-            error_message=error_message, error_status=error_status
+            error_message=error_message, error_status=error_status,
         )
         self.assertEqual(response.status_code, error_status)
         self.assertEqual(
@@ -136,10 +137,10 @@ class BuildJsonResponseTests(unittest.TestCase):
         )
 
 
-@pytest.fixture
+@pytest.fixture()
 def non_empty_file_list():
     return Table(
-        rows=[("file1", "red1"), ("file2", "red2")], names=("name", "reduction")
+        rows=[("file1", "red1"), ("file2", "red2")], names=("name", "reduction"),
     )
 
 
@@ -157,7 +158,7 @@ class TestCreateNameReductionMap:
         assert result == expected_map
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_data_product():
     data_product = Mock()
     data_product.target.name = "target_name"
@@ -184,7 +185,7 @@ class TestCustomDataProductPath:
         assert result == expected_path
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestGetKey(TestCase):
     """Test cases for the `get_key` utility function."""
 
@@ -207,7 +208,7 @@ class TestGetKey(TestCase):
         assert get_key(user, "invalid_id") is None
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestHasKey:
     """Test cases for the `has_key` utility function."""
 
@@ -220,7 +221,8 @@ class TestHasKey:
 
     def test_has_key_with_program_key(self):
         """Test if `has_key` correctly identifies the presence of a
-        ProgramKey."""
+        ProgramKey.
+        """
         user = UserFactory()
         program_key = ProgramKeyFactory(user=user)
         assert has_key(user, str(program_key.program_id)) is True
@@ -231,7 +233,7 @@ class TestHasKey:
         assert has_key(user, "invalid_id") is False
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 class TestGetKeyInfo:
     """Test cases for the `get_key_info` utility function."""
 

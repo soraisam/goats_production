@@ -3,7 +3,7 @@ import pytest
 from goats_cli import cli
 
 
-@pytest.fixture
+@pytest.fixture()
 def runner():
     return click.testing.CliRunner()
 

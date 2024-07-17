@@ -2,6 +2,7 @@
 
 from django.urls import reverse
 from goats_tom.tests.factories import (
+    BaseRecipeFactory,
     DRAGONSRecipeFactory,
     DRAGONSRunFactory,
     UserFactory,
@@ -20,7 +21,7 @@ class TestDRAGONSRecipesViewSet(APITestCase):
         self.list_view = DRAGONSRecipesViewSet.as_view({"get": "list"})
         self.detail_view = DRAGONSRecipesViewSet.as_view({"get": "retrieve"})
         self.partial_update_view = DRAGONSRecipesViewSet.as_view(
-            {"patch": "partial_update"}
+            {"patch": "partial_update"},
         )
 
     def authenticate(self, request):
@@ -44,7 +45,7 @@ class TestDRAGONSRecipesViewSet(APITestCase):
         dragons_recipe = DRAGONSRecipeFactory()
 
         request = self.factory.get(
-            reverse("dragonsrecipe-detail", args=[dragons_recipe.id])
+            reverse("dragonsrecipe-detail", args=[dragons_recipe.id]),
         )
         self.authenticate(request)
 
@@ -84,7 +85,7 @@ class TestDRAGONSRecipesViewSet(APITestCase):
         dragons_recipe.refresh_from_db()
         assert (
             dragons_recipe.active_function_definition
-            == dragons_recipe.original_function_definition
+            == dragons_recipe.recipe.function_definition
         ), "The function definition should be reset."
 
     def test_filter_by_dragons_run(self):
@@ -94,7 +95,7 @@ class TestDRAGONSRecipesViewSet(APITestCase):
         DRAGONSRecipeFactory.create_batch(3)
 
         request = self.factory.get(
-            reverse("dragonsrecipe-list"), {"dragons_run": dragons_run.pk}
+            reverse("dragonsrecipe-list"), {"dragons_run": dragons_run.pk},
         )
         self.authenticate(request)
 
@@ -106,11 +107,12 @@ class TestDRAGONSRecipesViewSet(APITestCase):
     def test_filter_by_file_type(self):
         """Test filtering DRAGONS recipes by file type."""
         file_type = "test-file-type"
-        DRAGONSRecipeFactory.create_batch(2, file_type=file_type)
+        recipe = BaseRecipeFactory(file_type=file_type)
+        DRAGONSRecipeFactory.create_batch(2, recipe=recipe)
         DRAGONSRecipeFactory.create_batch(3)
 
         request = self.factory.get(
-            reverse("dragonsrecipe-list"), {"file_type": file_type}
+            reverse("dragonsrecipe-list"), {"file_type": file_type},
         )
         self.authenticate(request)
 

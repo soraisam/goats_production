@@ -16,6 +16,7 @@ class UpdatesConsumer(WebsocketConsumer):
     ----------
     group_name : `str`
         The name of the group that this consumer handles updates for.
+
     """
 
     group_name = "updates_group"
@@ -32,9 +33,10 @@ class UpdatesConsumer(WebsocketConsumer):
         ----------
         code : `int`
             Return code to send on disconnect.
+
         """
         async_to_sync(self.channel_layer.group_discard)(
-            self.group_name, self.channel_name
+            self.group_name, self.channel_name,
         )
 
     def notification_message(self, event: dict) -> None:
@@ -44,6 +46,7 @@ class UpdatesConsumer(WebsocketConsumer):
         ----------
         event : `dict`
             The event dictionary containing the notification data.
+
         """
         # Construct the notification message.
         notification = {
@@ -64,6 +67,7 @@ class UpdatesConsumer(WebsocketConsumer):
         ----------
         event : `dict`
             The event dictionary containing the download data.
+
         """
         # Construct the download message.
         download = {
