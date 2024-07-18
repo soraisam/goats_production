@@ -91,7 +91,7 @@ class Command(TOMCommand):
             self.exit(
                 self.style.ERROR(
                     f"Incompatible Python version found. Please install Python >= "
-                    f"{PYTHON_VERSION}",
+                    f"{PYTHON_VERSION}"
                 ),
                 return_code=1,
             )
@@ -118,9 +118,9 @@ class Command(TOMCommand):
         file_location = settings.BASE_DIR / settings.BASE_DIR.name / f"{file_type}.py"
         if not file_location.exists():
             msg = (
-                f"Could not determine {file_type}.py location. Writing {file_type}.py ",
-                f"out to {file_location}. Please copy file to the proper location ",
-                "after script finishes.",
+                f"Could not determine {file_type}.py location. Writing {file_type}.py "
+                f"out to {file_location}. Please copy file to the proper location "
+                "after script finishes."
             )
             self.stdout.write(self.style.WARNING(msg))
 
@@ -219,7 +219,7 @@ class Command(TOMCommand):
         self.stdout.write(
             self.style.MIGRATE_HEADING(
                 "Principal Investigator (PI) and public user creation:",
-            ),
+            )
         )
         call_command("createsuperuser", verbosity=0)
         self.status("  PI Superuser created... ")

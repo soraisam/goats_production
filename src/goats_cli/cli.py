@@ -189,8 +189,8 @@ def install(
             resolved_media_dir = media_dir.resolve()
             if resolved_media_dir.exists():
                 display_warning(
-                    "Media root directory already exists, proceeding but existing data",
-                    " might conflict.",
+                    "Media root directory already exists, proceeding but existing "
+                    "data might conflict."
                 )
             goats_setup_command.extend(["--media-dir", f"{resolved_media_dir}"])
 
@@ -219,7 +219,7 @@ def install(
         cmd_str = " ".join(error.cmd)
         raise GOATSClickException(
             f"An error occurred while running the command: '{cmd_str}'. Exit status:"
-            f" {error.returncode}.",
+            f" {error.returncode}."
         )
 
     except Exception as error:
@@ -312,8 +312,8 @@ def run(
     if not manage_file.is_file():
         display_failed()
         raise GOATSClickException(
-            f"The 'manage.py' file for the project '{project_name}' does not exist at",
-            f" '{manage_file.absolute()}'.",
+            f"The 'manage.py' file for the project '{project_name}' does not exist at"
+            f" '{manage_file.absolute()}'."
         )
     display_ok()
     display_info("Verifying Redis installed...")
@@ -474,7 +474,7 @@ def start_background_workers(manage_file: Path, workers: int) -> subprocess.Pope
     except subprocess.CalledProcessError as error:
         raise GOATSClickException(
             f"Error running background consumer: '{error.cmd}'. "
-            f"Exit status: {error.returncode}.",
+            f"Exit status: {error.returncode}."
         )
     return background_workers_process
 

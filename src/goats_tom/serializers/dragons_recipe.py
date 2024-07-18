@@ -19,6 +19,7 @@ class DRAGONSRecipeSerializer(serializers.ModelSerializer):
             "short_name",
             "version",
             "function_definition",
+            "is_default",
         )
         read_only_fields = (
             "id",
@@ -27,6 +28,7 @@ class DRAGONSRecipeSerializer(serializers.ModelSerializer):
             "short_name",
             "version",
             "active_function_definition",
+            "is_default",
         )
         extra_kwargs = {"function_definition": {"write_only": True}}
 
@@ -49,15 +51,20 @@ class DRAGONSRecipeFilterSerializer(serializers.Serializer):
     """Serializer for filtering `DRAGONS` recipes."""
 
     dragons_run = serializers.IntegerField(
-        required=False, help_text="Primary key for the DRAGONS run to filter by.",
+        required=False,
+        help_text="Primary key for the DRAGONS run to filter by.",
     )
     # TODO: This should be a choice of options for file_type to validate
     file_type = serializers.CharField(
-        required=False, help_text="File type to filter by.",
+        required=False,
+        help_text="File type to filter by.",
     )
     include = serializers.ListField(
-        child=serializers.ChoiceField(choices=["help"]), required=False,
+        child=serializers.ChoiceField(choices=["help"]),
+        required=False,
     )
     version = serializers.CharField(
-        required=False, help_text="DRAGONS version to filter recipes by.",
+        required=False,
+        help_text="DRAGONS version to filter recipes by.",
     )
+    group_by_file_type = serializers.BooleanField(required=False, default=False)

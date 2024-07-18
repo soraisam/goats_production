@@ -14,9 +14,7 @@
 <div class="row g-3">
   <div class="col-xl-5 col-lg-6 col-12">
     <div class="card" id="setupCard" data-observation-record-pk="{{ observation_record.id }}">
-      <div class="card-header">
-        DRAGONS Reduction Setup and Configure
-      </div>
+      <div class="card-header h5 mb-0">DRAGONS Reduction Setup and Configure</div>
       <div class="card-body">
         <div class="row g-3 mb-3">
           <div class="col-12">
@@ -61,7 +59,7 @@
             </div>
           </div>
           <div class="col-12">
-            <div id="filesContainer" class="accordion accordion-flush"></div>
+            <div id="filesAndRecipesContainer" class="accordion accordion-flush"></div>
           </div>
         </div>
       </div>
@@ -113,14 +111,21 @@
      * @param {string} observationRecordPk The primary key of the observation record.
      * @param {string} runId The ID of the selected run to fetch files for and to display recipes.
      */
-    const handleRunSelectionChange = async (observationRecordPk, runId) => {
-      await setupController.handleFetchFiles(observationRecordPk, runId);
+    const handleRunSelectionChange = async (runId) => {
+      await setupController.handleUpdateFiles(runId);
       await recipeManagerController.updateRecipesCard(runId);
       await recipeManagerController.updateReducesProgress(runId);
     };
 
+    const handleSwitchTab = async (recipeId) => {
+      recipeManagerController.handleSwitchTab(recipeId);
+    }
+
+
     // Bind the combined functionality to the run selection change.
     setupView.bindFetchFiles(handleRunSelectionChange);
+
+    setupView.bindSwitchTab(handleSwitchTab)
   });
 </script>
 {% endblock %}

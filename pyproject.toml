@@ -97,7 +97,7 @@ name = "Other"
 showcontent = true
 
 [tool.ruff]
-extend-exclude = ["src/goats_tom/migrations", "tests", "src/goats_tom/brokers/antares.py", "src/goats_tom/facilities/gemini.py"]
+extend-exclude = ["src/goats_tom/migrations", "tests", "src/goats_tom/brokers/antares.py", "src/goats_tom/facilities/gemini.py", "src/goats_tom/tests/settings.py", "src/goats_tom/tests/urls.py"]
 target-version = "py310"
 
 [tool.ruff.lint]

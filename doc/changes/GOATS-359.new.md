@@ -1,0 +1,1 @@
+Updated UI recipe selection: Added functionality to choose and display recipes dynamically in DRAGONS recipe cards. Enhanced user interface elements include ordered observation types and updated card titles.
