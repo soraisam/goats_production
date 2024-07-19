@@ -370,8 +370,7 @@ class ObservationsClass(QueryWithLogin):
                 if len(utc_date) != 2:
                     raise ValueError("utc_date tuple should have two values")
                 if not isinstance(utc_date[0], date) or not isinstance(
-                    utc_date[1],
-                    date,
+                    utc_date[1], date
                 ):
                     raise ValueError("utc_date tuple should have date values in it")
                 args.append(f"{utc_date[0]:%Y%m%d}-{utc_date[1]:%Y%m%d}")
@@ -859,8 +858,8 @@ class ObservationsClass(QueryWithLogin):
         # Constructing the message
         if num_files_downloaded == 0 and num_files_omitted == 0:
             message = (
-                "No files were found or downloaded. Data for this observation ",
-                "record does not exist.",
+                "No files were found or downloaded. Data for this observation "
+                "record does not exist."
             )
         else:
             message = f"Downloaded {num_files_downloaded} files."

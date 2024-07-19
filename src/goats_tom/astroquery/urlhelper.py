@@ -129,8 +129,8 @@ class URLHelper:
         """
         if endpoint is not None and endpoint not in self.VALID_ENDPOINTS:
             raise ValueError(
-                f"GOA URL endpoint ({endpoint}) must be: ",
-                f"{', '.join(self.VALID_ENDPOINTS)}",
+                f"GOA URL endpoint ({endpoint}) must be: "
+                f"{', '.join(self.VALID_ENDPOINTS)}"
             )
 
         if endpoint is None:

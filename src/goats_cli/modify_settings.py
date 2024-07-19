@@ -8,7 +8,7 @@ SETTINGS_FILENAME = "settings.py"
 
 
 def modify_settings(
-    file_path: Path, add_goats: bool | None = False, verbose: bool | None = False,
+    file_path: Path, add_goats: bool | None = False, verbose: bool | None = False
 ) -> None:
     """Modify Django settings to include additional apps.
 
@@ -52,7 +52,7 @@ def modify_settings(
 
 
 def _find_and_add(
-    lines: list[str], plugin: Plugin, verbose: bool | None = False,
+    lines: list[str], plugin: Plugin, verbose: bool | None = False
 ) -> list[str]:
     """Utility function to add a plugin to the lines from a settings file.
 
@@ -100,7 +100,7 @@ def _find_and_add(
 
     if line_number is None:
         raise ValueError(
-            f"'{plugin.look_for}' not found in file, please verify contents.",
+            f"'{plugin.look_for}' not found in file, please verify contents."
         )
 
     # Find the opening bracket line.

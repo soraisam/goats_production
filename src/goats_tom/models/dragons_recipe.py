@@ -132,6 +132,18 @@ class DRAGONSRecipe(models.Model):
             else self.recipe.function_definition
         )
 
+    @property
+    def is_default(self) -> bool:
+        """Provides default information from the linked base recipe.
+
+        Returns
+        -------
+        `bool`
+            If the recipe is the default in DRAGONS.
+
+        """
+        return self.recipe.is_default
+
     def list_primitives_and_docstrings(self) -> dict[str, Any]:
         """Retrieves the first file matching a specific file type from a collection
         managed by a DRAGONS run, and lists all available primitives and their

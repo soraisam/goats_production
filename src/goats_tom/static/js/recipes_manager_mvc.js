@@ -59,7 +59,6 @@ class RecipeManagerView {
   constructor() {
     this.container = document.getElementById("recipesContainer");
     this.contentContainer = null;
-    this.navTabs = null;
   }
   /**
    * Binds a handler for the tab switching action.
@@ -75,26 +74,6 @@ class RecipeManagerView {
   clear() {
     this.container.innerHTML = "";
     this.contentContainer = null;
-    this.navTabs = null;
-  }
-
-  /**
-   * Initializes event listeners for the navigation tabs. Uses event delegation to handle tab
-   * switching.
-   */
-  _initLocalListeners() {
-    this.navTabs.addEventListener("click", (event) => {
-      if (event.target.dataset.action) {
-        const action = event.target.dataset.action;
-        switch (action) {
-          case "switchTab":
-            this.onSwitchTab(event.target.dataset.fileType);
-            break;
-          default:
-            break;
-        }
-      }
-    });
   }
 
   /**
@@ -106,83 +85,30 @@ class RecipeManagerView {
   createCard(recipesAndContent) {
     // Create card to hold the recipes.
     const card = Utils.createElement("div", "card");
-    const cardHeader = Utils.createElement("div", "card-header");
 
-    // Create navigation to switch file type.
-    const navTabs = Utils.createElement("ul", ["nav", "nav-tabs", "card-header-tabs"]);
-    this.navTabs = navTabs;
     const contentContainer = Utils.createElement("div");
     this.contentContainer = contentContainer;
 
-    // Iterate through and build the content. Hiding everything except the first.
+    // Iterate through and build the content. Hiding everything.
     recipesAndContent.forEach(({ recipe, content }, index) => {
-      const tab = Utils.createElement("li", "nav-item");
-      const tabLink = Utils.createElement("a", "nav-link");
-      tabLink.href = "#";
-      tabLink.textContent = Utils.formatDisplayText(recipe.file_type);
-      tabLink.dataset.fileType = recipe.file_type;
-      tabLink.dataset.action = "switchTab";
-
-      if (index === 0) {
-        tabLink.classList.add("active");
-        content.classList.add("d-block");
-      } else {
-        content.classList.add("d-none");
-      }
-
+      content.classList.add("d-none");
       content.dataset.fileType = recipe.file_type;
+      content.dataset.recipeId = recipe.id;
       contentContainer.appendChild(content);
-
-      tab.appendChild(tabLink);
-      navTabs.appendChild(tab);
     });
 
-    cardHeader.appendChild(navTabs);
-    card.append(cardHeader, contentContainer);
+    card.appendChild(contentContainer);
     this.container.appendChild(card);
-
-    // Initialize the event listeners.
-    this._initLocalListeners();
   }
 
-  /**
-   * Toggles the visibility of content based on the specified file type.
-   * @private
-   * @param {string} fileType The file type whose content needs to be toggled.
-   */
-  _toggleContentVisibility(fileType) {
+  toggleContentVisibility(recipeId) {
     Array.from(this.contentContainer.children).forEach((content) => {
-      if (content.dataset.fileType === fileType) {
+      if (content.dataset.recipeId === recipeId) {
         content.classList.remove("d-none");
         content.classList.add("d-block");
       } else {
         content.classList.remove("d-block");
         content.classList.add("d-none");
-      }
-    });
-  }
-
-  /**
-   * Activates the tab corresponding to the given file type and toggles the visibility of the associated content.
-   * @param {string} fileType The file type to activate.
-   */
-  activateAndToggleTab(fileType) {
-    this._activateTab(fileType);
-    this._toggleContentVisibility(fileType);
-  }
-
-  /**
-   * Activates the tab that matches the specified file type.
-   * @private
-   * @param {string} fileType The file type of the tab to activate.
-   */
-  _activateTab(fileType) {
-    Array.from(this.navTabs.querySelectorAll(".nav-link")).forEach((tab) => {
-      // Remove the 'active' class from all tabs.
-      tab.classList.remove("active");
-      // Add 'active' to the tab that matches the file type.
-      if (tab.dataset.fileType === fileType) {
-        tab.classList.add("active");
       }
     });
   }
@@ -215,13 +141,8 @@ class RecipeManagerController {
     return this.recipes[recipeId] || null;
   }
 
-  /**
-   * Handles the action of switching tabs in the user interface based on the file type.
-   * @param {string} fileType The file type identifier used to determine which tab to activate
-   * and which content to display.
-   */
-  handleSwitchTab = (fileType) => {
-    this.view.activateAndToggleTab(fileType);
+  handleSwitchTab = (recipeId) => {
+    this.view.toggleContentVisibility(recipeId);
   };
 
   /**

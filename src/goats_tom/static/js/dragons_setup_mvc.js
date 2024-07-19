@@ -6,18 +6,24 @@ class SetupModel {
     this.api = api;
     this.runs = [];
     this.files = [];
+    this.recipesUrl = "dragonsrecipes/";
+    this.runsUrl = "dragonsruns/";
+    this.filesUrl = "dragonsfiles/";
+    this.recipes = [];
   }
 
   /**
-   * Updates the enabled status of a specific file.
-   * @param {string} filePk The primary key of the file to update.
-   * @param {boolean} isEnabled The new enabled state to set for the file.
+   * Updates the enabled state of a specific file.
+   * @param {string} fileId The ID of the file to update.
+   * @param {boolean} isEnabled The new state to be set for the 'enabled' field of the file.
+   * @returns {Promise<Object>} A promise that resolves to the response object from the server.
+   * @throws {Error} Throws an error if the update operation fails.
    */
-  async updateFile(filePk, isEnabled) {
+  async updateFile(fileId, isEnabled) {
     const fileData = { enabled: isEnabled };
     try {
-      const response = await this.api.patch(`dragonsfiles/${filePk}/`, fileData);
-      this.onFileChanged(response);
+      const response = await this.api.patch(`${this.filesUrl}${fileId}`, fileData);
+      return response;
     } catch (error) {
       console.error("Error updating file state:", error);
       throw error; // Consider rethrowing to handle in the controller
@@ -25,16 +31,32 @@ class SetupModel {
   }
 
   /**
+   * Fetches recipes associated with a specific DRAGONS run.
+   * @param {string} runId The identifier for the DRAGONS run to fetch recipes for.
+   * @returns {Promise<Object[]>} A promise that resolves to an array of recipe objects.
+   */
+  async fetchRecipes(runId) {
+    try {
+      const response = await this.api.get(
+        `${this.recipesUrl}?dragons_run=${runId}&group_by_file_type=true`
+      );
+      this.recipes = response.results || [];
+      return this.recipes;
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+    }
+  }
+
+  /**
    * Submits setup data to initialize a new DRAGONS run and updates runs.
    * @param {FormData} formData Setup data from the form.
    */
-  async formSubmit(observationRecordPk, formData) {
+  async formSubmit(observationRecordId, formData) {
     const formDataObject = Object.fromEntries(formData);
-    console.log(formDataObject);
 
     try {
       const response = await this.api.post(
-        `dragonsruns/?observation_record=${observationRecordPk}`,
+        `${this.runsUrl}?observation_record=${observationRecordId}`,
         formDataObject
       );
     } catch (error) {
@@ -44,41 +66,18 @@ class SetupModel {
   }
 
   /**
-   * Registers a callback to be called when runs data changes.
-   * @param {Function} callback Function to call on data change.
+   * Fetches a list of files associated with a specific run. The files are grouped by file type.
+   * @param {string} runId The ID of the run for which files are to be fetched.
+   * @returns {Promise<Array>} A promise that resolves to an array of files grouped by file type.
+   * @throws {Error} Throws an error if the fetch operation fails.
    */
-  bindRunsChanged(callback) {
-    this.onRunsChanged = callback;
-  }
-
-  /**
-   * Registers a callback to be called when the file list changes.
-   * @param {Function} callback The callback function to register.
-   */
-  bindFileListChanged(callback) {
-    this.onFileListChanged = callback;
-  }
-
-  /**
-   * Registers a callback to be called when the file changes.
-   * @param {Function} callback The callback function to register.
-   */
-  bindFileChanged(callback) {
-    this.onFileChanged = callback;
-  }
-
-  /**
-   * Fetches the file list for a given run ID and updates the model.
-   * @param {string} observationRecordPk The ID for the observation.
-   * @param {string} runId The ID of the run for which to fetch the file list.
-   */
-  async fetchFileList(observationRecordPk, runId) {
+  async fetchFileList(runId) {
     try {
       const response = await this.api.get(
-        `dragonsfiles/?group_by_file_type=true&dragons_run=${runId}`
+        `${this.filesUrl}?group_by_file_type=true&dragons_run=${runId}`
       );
       this.files = response.results || [];
-      this.onFileListChanged(this.files);
+      return this.files;
     } catch (error) {
       console.error("Error fetching files:", error);
     }
@@ -91,7 +90,7 @@ class SetupModel {
    */
   async fetchHeader(fileId) {
     try {
-      const response = await this.api.get(`dragonsfiles/${fileId}/?include=header`);
+      const response = await this.api.get(`${this.filesUrl}${fileId}/?include=header`);
       return response;
     } catch (error) {
       console.error("Error fetching header:", error);
@@ -99,16 +98,18 @@ class SetupModel {
   }
 
   /**
-   * Fetches the runs for a given observation record and updates the model.
-   * @param {string} observationRecordPk The ID for the observation.
+   * Fetches a list of runs associated with a specific observation record.
+   * @param {string} observationRecordId The ID of the observation record.
+   * @returns {Promise<Array>} A promise that resolves to an array of runs.
+   * @throws {Error} Throws an error if the fetch operation fails.
    */
-  async fetchRuns(observationRecordPk) {
+  async fetchRuns(observationRecordId) {
     try {
       const response = await this.api.get(
-        `dragonsruns/?observation_record=${observationRecordPk}`
+        `${this.runsUrl}?observation_record=${observationRecordId}`
       );
       this.runs = response.results || [];
-      this.onRunsChanged(this.runs);
+      return this.runs;
     } catch (error) {
       console.error("Error fetching runs:", error);
     }
@@ -126,8 +127,10 @@ class SetupView {
     this.runSelect = this.card.querySelector("#runSelect");
     this.startNewRun = this.card.querySelector("#startNewRun");
     this.useExistingRun = this.card.querySelector("#useExistingRun");
-    this.filesContainer = this.card.querySelector("#filesContainer");
-    this.observationRecordPk = this.card.dataset.observationRecordPk;
+    this.filesAndRecipesContainer = this.card.querySelector(
+      "#filesAndRecipesContainer"
+    );
+    this.observationRecordId = this.card.dataset.observationRecordId;
     this.deleteRun = this.card.querySelector("#deleteRun");
     this.headerModal = Utils.createModal("header");
 
@@ -167,10 +170,10 @@ class SetupView {
    * @returns {HTMLElement} A Bootstrap-styled table element with key-value pairs.
    */
   formatHeaderData(data) {
-    // Create the table element with Bootstrap classes
+    // Create the table element.
     const table = Utils.createElement("table", ["table", "table-sm"]);
 
-    // Create and append the table body
+    // Create and append the table body.
     const tbody = Utils.createElement("tbody");
     for (const [key, value] of Object.entries(data.header)) {
       const row = Utils.createElement("tr");
@@ -201,24 +204,32 @@ class SetupView {
   }
 
   /**
-   * Renders the files within the UI.
-   * @param {Object[]} files Object of file metadata.
+   * Display files and recipes in the specified container.
+   * @param {Object} files The files to display, grouped by file type.
+   * @param {Object} recipes The recipes associated with each file type.
    */
-  displayFiles(files) {
-    this.filesContainer.innerHTML = "";
+  displayFilesAndRecipes(files, recipes) {
+    this.filesAndRecipesContainer.innerHTML = "";
 
-    const filesContainerP = Utils.createElement("p", "mb-0");
+    const filesAndRecipesContainerP = Utils.createElement("p", "mb-2");
 
     if (Object.keys(files).length === 0) {
-      filesContainerP.textContent = "No Files Found";
-      this.filesContainer.appendChild(filesContainerP);
+      filesAndRecipesContainerP.textContent = "No Files Found";
+      this.filesAndRecipesContainer.appendChild(filesAndRecipesContainerP);
     } else {
-      filesContainerP.textContent = "Available Files";
-      this.filesContainer.appendChild(filesContainerP);
-      // Create accordion for each file type
-      Object.entries(files).forEach(([fileType, file], index) => {
-        const accordionItem = this.createAccordionItem(fileType, file, index);
-        filesContainer.appendChild(accordionItem);
+      filesAndRecipesContainerP.textContent = "Observation Type";
+      this.filesAndRecipesContainer.appendChild(filesAndRecipesContainerP);
+
+      // Sort the file types alphabetically before creating accordion items.
+      const sortedEntries = Object.entries(files).sort((a, b) =>
+        a[0].localeCompare(b[0])
+      );
+
+      // Create accordion for each file type.
+      sortedEntries.forEach(([fileType, file], index) => {
+        const recipe = recipes[fileType];
+        const accordionItem = this.createAccordionItem(fileType, file, recipe, index);
+        filesAndRecipesContainer.appendChild(accordionItem);
       });
     }
   }
@@ -228,10 +239,7 @@ class SetupView {
    * @param {Function} handler The function to call when fetching files.
    */
   bindFetchFiles(handler) {
-    this.runSelect.addEventListener("change", (event) => {
-      let selectedRun = event.target.value;
-      handler(this.observationRecordPk, selectedRun);
-    });
+    this.onChangeRun = handler;
   }
 
   /**
@@ -255,13 +263,14 @@ class SetupView {
   }
 
   /**
-   * Creates an accordion item for a specific file type.
-   * @param {string} fileType The file type to create an accordion for.
-   * @param {Object[]} files The files associated with the file type.
-   * @param {number} index The index of the accordion item.
-   * @returns {Element} The accordion item element.
+   * Create an accordion item for a specific file type and its associated files and recipes.
+   * @param {string} fileType The type of the files.
+   * @param {Array} files The files associated with this file type.
+   * @param {Array} recipes The recipes associated with the files.
+   * @param {number} index The index used to generate unique IDs for DOM elements.
+   * @returns {HTMLElement} The constructed accordion item.
    */
-  createAccordionItem(fileType, files, index) {
+  createAccordionItem(fileType, files, recipes, index) {
     // Create the outer container for the accordion item with the 'accordion-item' class.
     const accordionItem = Utils.createElement("div", "accordion-item");
 
@@ -289,10 +298,61 @@ class SetupView {
     const collapse = Utils.createElement("div", ["accordion-collapse", "collapse"]);
     collapse.id = collapseId;
     collapse.setAttribute("aria-labelledby", headerId);
-    collapse.setAttribute("data-parent", "#filesContainer");
+    collapse.setAttribute("data-parent", "#filesAndRecipesContainer");
 
     // Create the body content area for the collapsible section.
     const body = Utils.createElement("div", ["accordion-body", "files-overflow"]);
+
+    // Create a container for recipes.
+    const navP = Utils.createElement("p", "mb-2");
+    navP.textContent = "Available Recipes";
+    const navContainer = Utils.createElement("ul", ["nav", "nav-pills", "flex-column"]);
+    navContainer.setAttribute("id", `js-pills-${fileType}`);
+
+    navContainer.setAttribute("role", "tablist");
+    navContainer.setAttribute("aria-orientation", "vertical");
+
+    recipes.forEach((recipe, index) => {
+      const pillId = `recipePill-${recipe.id}`;
+      const paneId = `recipePane-${recipe.id}`;
+
+      const navItem = Utils.createElement("li", ["nav-item"]);
+      navItem.setAttribute("role", "presentation");
+
+      const navLink = Utils.createElement("button", [
+        "nav-link",
+        "w-100",
+        "text-start",
+        "d-flex",
+        "align-items-center",
+      ]);
+      if (recipe.file_type !== "other") {
+        navLink.setAttribute("id", pillId);
+        navLink.setAttribute("data-bs-toggle", "pill");
+        navLink.setAttribute("data-bs-target", `#${paneId}`);
+        navLink.setAttribute("type", "button");
+        navLink.setAttribute("role", "tab");
+        navLink.setAttribute("aria-controls", paneId);
+        navLink.setAttribute("aria-selected", "false");
+        navLink.dataset.action = "switchTab";
+        navLink.dataset.recipeId = recipe.id;
+
+        navLink.textContent = `${recipe.short_name}${
+          recipe.is_default ? " (default)" : ""
+        }`;
+      } else {
+        navLink.classList.add("disabled");
+        navLink.textContent = recipe.short_name;
+      }
+
+      navItem.appendChild(navLink);
+      navContainer.appendChild(navItem);
+    });
+    body.append(navP, navContainer);
+
+    // Create files table.
+    const tableP = Utils.createElement("p", ["mt-3", "mb-2"]);
+    tableP.textContent = "Available Files";
     const table = Utils.createElement("table", [
       "table",
       "table-sm",
@@ -305,7 +365,7 @@ class SetupView {
       tbody.appendChild(fileRow);
     });
     table.appendChild(tbody);
-    body.appendChild(table);
+    body.append(tableP, table);
     collapse.appendChild(body);
 
     // Construct the complete accordion item by adding both header and collapse sections.
@@ -411,12 +471,17 @@ class SetupView {
     this.onFileToggle = handler;
   }
 
+  bindSwitchTab(handler) {
+    this.onSwitchTab = handler;
+  }
+
   /**
-   * Sets up event listeners for form submission and radio button changes.
+   * Initialize local event listeners for the component.
+   * Sets up handlers to manage user interactions within the files and recipes container.
    */
   _initLocalListeners() {
-    // Delegate checkbox changes in the files container.
-    this.filesContainer.addEventListener("change", (event) => {
+    // Listen for changes to checkboxes within the files container to toggle file state.
+    this.filesAndRecipesContainer.addEventListener("change", (event) => {
       if (event.target.classList.contains("file-checkbox")) {
         const filePk = event.target.dataset.filePk;
         const isChecked = event.target.checked;
@@ -424,39 +489,76 @@ class SetupView {
       }
     });
 
+    // Listen for changes to the run selection dropdown to load different runs.
+    this.runSelect.addEventListener("change", (event) => {
+      let selectedRun = event.target.value;
+      this.onChangeRun(selectedRun);
+    });
+
+    // Handle visibility toggling for starting a new run form.
     this.startNewRun.addEventListener("change", () => {
       this.toggleFormVisibility(true);
       this.runSelect.options[0].selected = true;
-      this.filesContainer.innerHTML = "";
+      this.filesAndRecipesContainer.innerHTML = "";
       this.setRunControlsDisabledState(true);
     });
 
+    // Handle visibility toggling for using an existing run form.
     this.useExistingRun.addEventListener("change", () => {
       this.toggleFormVisibility(false);
       this.setRunControlsDisabledState(false);
     });
 
+    // Prevent form submission from refreshing the page and submit form data manually.
     this.form.addEventListener("submit", (event) => {
       event.preventDefault();
       const formData = new FormData(this.form);
-      this.formSubmitHandler(this.observationRecordPk, formData);
+      this.formSubmitHandler(this.observationRecordId, formData);
     });
 
-    // Delegate for header button clicks.
-    this.filesContainer.addEventListener("click", (event) => {
+    // Listen for clicks on header buttons to trigger specific actions like showing file
+    // details or showing recipes in recipe reduction container.
+    this.filesAndRecipesContainer.addEventListener("click", (event) => {
       if (event.target.classList.contains("header-button")) {
         const fileId = event.target.dataset.fileId;
         this.onShowHeader(fileId);
       }
+      if (event.target.dataset.action) {
+        const action = event.target.dataset.action;
+        switch (action) {
+          case "switchTab":
+            this.onSwitchTab(event.target.dataset.recipeId);
+            this.activateTab(event.target.dataset.recipeId);
+            break;
+          default:
+            break;
+        }
+      }
 
+      // Open a new window to display JS9 analysis if a JS9 button is clicked.
       if (event.target.classList.contains("js9-button")) {
-        console.log("js9");
         const url = event.target.dataset.url;
         openJS9Window(url);
       }
     });
   }
 
+  /**
+   * Activates the tab that matches the specified file type and deactivates the rest.
+   * @param {string} fileType The file type of the tab to activate.
+   */
+  activateTab(recipeId) {
+    Array.from(this.filesAndRecipesContainer.querySelectorAll(".nav-link")).forEach(
+      (tab) => {
+        // Remove the 'active' class from all tabs.
+        tab.classList.remove("active");
+        // Add 'active' to the tab that matches the file type.
+        if (tab.dataset.recipeId === recipeId) {
+          tab.classList.add("active");
+        }
+      }
+    );
+  }
   /**
    * Shows or hides the setup form based on the user's selection.
    * @param {boolean} isVisible True to show the form, false to hide.
@@ -496,88 +598,56 @@ class SetupController {
     // When the form is submitted, handle the data submission.
     this.view.bindFormSubmit(this.handleFormSubmit);
 
-    // When the model's run data changes, update the view with the new runs
-    this.model.bindRunsChanged(this.onRunsChanged);
-
-    // When the model's file data changes, update the view with the new state.
-    this.model.bindFileChanged(this.onFileChanged);
-
-    // Bind the model's change event to the controller's method to update the view.
-    // This ensures the view gets updated when the model's data changes.
-    this.model.bindFileListChanged(this.onFileListChanged);
-
     // Bind the view's request to fetch files to the controller's method.
     // This allows the controller to respond to user actions triggered in the view.
-    this.view.bindFetchFiles(this.handleFetchFiles);
+    this.view.bindFetchFiles(this.handleUpdateFiles);
 
+    // When a header is requested.
     this.view.bindShowHeader(this.handleFetchHeader);
   }
-
   /**
-   * Handles the file toggle, invoking the model to update the file.
-   *
-   * @param {string} filePk The file to update.
-   * @param {boolean} isChecked If the file is enabled.
+   * Toggles the enabled state of a specific file and updates the view based on the response.
+   * @param {string} fileId The ID of the file to toggle.
+   * @param {boolean} isChecked The new state to be applied to the file.
+   * @returns {Promise<void>} A promise that resolves when the file has been updated and the view
+   * has been refreshed.
    */
-  handleFileToggle = async (filePk, isChecked) => {
+  handleFileToggle = async (fileId, isChecked) => {
     try {
-      await this.model.updateFile(filePk, isChecked);
+      const file = await this.model.updateFile(fileId, isChecked);
+      this.view.updateFile(file);
     } catch (error) {
-      console.error("Error updating file:", error);
+      console.error("Failed to toggle file:", error);
     }
-  };
-
-  /**
-   * Callback to be executed when the model notifies of file change.
-   *
-   * @param {Object} file Object with file information.
-   */
-  onFileChanged = (file) => {
-    this.view.updateFile(file);
   };
 
   /**
    * Handles the form submission, invoking the model to submit the form data.
-   *
    * @param {FormData} formData The data from the setup form.
    */
-  handleFormSubmit = async (observationRecordPk, formData) => {
+  handleFormSubmit = async (observationRecordId, formData) => {
     try {
-      await this.model.formSubmit(observationRecordPk, formData);
+      await this.model.formSubmit(observationRecordId, formData);
       this.view.resetForm();
-      await this.model.fetchRuns(observationRecordPk);
+      this.handleFetchRuns(observationRecordId);
     } catch (error) {
       console.error("Setup form submission failed:", error);
     }
   };
-
   /**
-   * Callback to be executed when the model notifies of runs data change.
-   * Updates the view to display the new list of runs.
-   *
-   * @param {Array} runs The updated list of runs.
+   * Fetches and displays files and recipes associated with a specific run.
+   * @param {string} runId The ID of the run for which files and recipes are to be fetched.
+   * @returns {Promise<void>} A promise that resolves when both files and recipes have been fetched
+   * and displayed.
    */
-  onRunsChanged = (runs) => {
-    this.view.displayRuns(runs);
-  };
-
-  /**
-   * Callback to be executed when the model notifies of a file list change.
-   *
-   * @param {Array} fileList The updated list of files.
-   */
-  onFileListChanged = (fileList) => {
-    this.view.displayFiles(fileList);
-  };
-
-  /**
-   * Handles requests to fetch files based on a run ID.
-   *
-   * @param {string} observationRecordPk The ID for the observation record.
-   * @param {string} runId The run ID for which files should be fetched.
-   */
-  handleFetchFiles = async (observationRecordPk, runId) => {
-    await this.model.fetchFileList(observationRecordPk, runId);
+  handleUpdateFiles = async (runId) => {
+    try {
+      const files = await this.model.fetchFileList(runId);
+      const recipes = await this.model.fetchRecipes(runId);
+      this.view.displayFilesAndRecipes(files, recipes);
+    } catch (error) {
+      console.error("Failed to update files:", error);
+    }
   };
 
   /**
@@ -593,13 +663,17 @@ class SetupController {
       console.error("Failed to fetch header:", error);
     }
   };
-
   /**
-   * Handles requests to fetch runs based on a observation record ID.
-   *
-   * @param {string} observationRecordPk The ID for the observation record.
+   * Fetches and displays the list of runs associated with a specific observation record.
+   * @param {string} observationRecordId The ID of the observation record for which to fetch runs.
+   * @returns {Promise<void>} A promise that resolves when the runs have been fetched and displayed.
    */
-  handleFetchRuns = async (observationRecordPk) => {
-    await this.model.fetchRuns(observationRecordPk);
+  handleFetchRuns = async (observationRecordId) => {
+    try {
+      const runs = await this.model.fetchRuns(observationRecordId);
+      this.view.displayRuns(runs);
+    } catch (error) {
+      console.error("Failed to fetch runs:", error);
+    }
   };
 }

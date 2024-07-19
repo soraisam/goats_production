@@ -13,7 +13,7 @@ import click
 
 
 def display_message(
-    message: str, show_goats_emoji: bool = True, color: str = "cyan",
+    message: str, show_goats_emoji: bool = True, color: str = "cyan"
 ) -> None:
     """Displays a styled message to the console.
 
@@ -70,5 +70,5 @@ def display_warning(message: str, indent: int = 0) -> None:
 
     """
     click.echo(
-        click.style(f"🐐 WARNING: {' ' * indent}{message}", fg="yellow", bold=True),
+        click.style(f"🐐 WARNING: {' ' * indent}{message}", fg="yellow", bold=True)
     )
