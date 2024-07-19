@@ -52,13 +52,12 @@ class DRAGONSFile(models.Model):
                 data[item] = {
                     "params": {
                         # Filter and store parameters that do not start with "debug".
-                        k: {"value": v, "doc": params.doc(k)}
+                        k: {"value": f"{v}", "doc": f"{params.doc(k)}"}
                         for k, v in params.items()
                         if not k.startswith("debug")
                     },
                     "docstring": {},
                 }
-                # Process the docstring.
                 try:
                     docstring = NumpyDocString(method.__doc__)
                     # Parse and store the docstring content, transforming section titles
@@ -67,8 +66,8 @@ class DRAGONSFile(models.Model):
                         section.lower().replace(" ", "_"): content
                         for section, content in docstring._parsed_data.items()
                     }
-                except (ValueError, TypeError):
-                    # print(f"Error processing docstring for {item}: {str(e)}")
+                except (ValueError, TypeError) as e:
+                    print(f"Error processing docstring for {item}: {str(e)}")
                     pass
 
         return data
