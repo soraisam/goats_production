@@ -15,6 +15,15 @@ class HelpOffcanvas {
     this.offcanvas = this._createOffcanvas();
     this.parentElement.appendChild(this.offcanvas);
     this.bsOffcanvas = new bootstrap.Offcanvas(this.offcanvas);
+    this.primitiveHelpHtml = `
+      <ul>
+        <li><strong>Adding Primitives:</strong> Insert <code>p.primitive_name(optional_arguments)</code> at the required position in the recipe.</li>
+        <li><strong>Modify Parameters:</strong> Change the arguments of any primitive to meet your specific requirements. E.g., <code>p.prepare(suffix="_test", require_wcs=True)</code></li>
+        <li><strong>Reorder Primitives:</strong> Move the primitives to different positions to change the execution order.</li>
+        <li><strong>Remove Primitives:</strong> Delete the entire primitive line to remove from the recipe.</li>
+      </ul>
+      <p>A list of all available primitives and parameters for this observation type are below</p>
+    `;
   }
 
   /**
@@ -40,7 +49,7 @@ class HelpOffcanvas {
     closeButton.setAttribute("data-bs-dismiss", "offcanvas");
     closeButton.setAttribute("aria-label", "Close");
 
-    const body = Utils.createElement("div", "offcanvas-body");
+    const body = Utils.createElement("div", ["offcanvas-body", "pt-0"]);
     const helpContentDiv = Utils.createElement("div");
     this.contentElement = helpContentDiv; // Store reference to content element.
 
@@ -116,7 +125,7 @@ class HelpOffcanvas {
    * type and help details for each primitive.
    */
   updateAndShowPrimitivesDocumentation(recipe) {
-    this.setTitle("Primitives Documentation");
+    this.setTitle(`${Utils.formatDisplayText(recipe.file_type)} Primitives Documentation`);
     const primitivesDocumentation = this._renderPrimitivesDocumentation(recipe);
     this.contentElement.appendChild(primitivesDocumentation);
     this.showContent();
@@ -135,7 +144,7 @@ class HelpOffcanvas {
     // Build paragraph.
     const container = Utils.createElement("div");
     const about = Utils.createElement("p");
-    about.textContent = `Available primitives for ${recipe.file_type} observation types.`;
+    about.innerHTML = this.primitiveHelpHtml;
 
     const accordionId = `${this.id}Accordion`;
     const accordion = Utils.createElement("div", ["accordion", "accordion-flush"]);
@@ -200,7 +209,7 @@ class HelpOffcanvas {
 
           // Create documentation text below the parameter name and value.
           if (paramDetails.doc) {
-            const paramDoc = Utils.createElement("div", "ms-3");
+            const paramDoc = Utils.createElement("pre", ["ms-3"]);
             paramDoc.textContent = paramDetails.doc;
             li.appendChild(paramDoc);
           }
@@ -210,13 +219,13 @@ class HelpOffcanvas {
         bodyDiv.appendChild(paramsList);
       }
 
-      // Docstring Section
+      // Docstring section.
       if (value.docstring) {
         Object.entries(value.docstring).forEach(([docKey, docValue]) => {
           if (
             ((Array.isArray(docValue) && docValue.length > 0) ||
               (typeof docValue === "string" && docValue !== "")) &&
-            docKey !== "parameters"
+            !["parameters", "returns"].includes(docKey)
           ) {
             const docTitle = Utils.createElement("h6", [
               "bg-light-subtle",
@@ -226,9 +235,9 @@ class HelpOffcanvas {
             docTitle.textContent = Utils.formatDisplayText(docKey);
             bodyDiv.appendChild(docTitle);
 
-            const docContent = Utils.createElement("p");
+            const docContent = Utils.createElement("pre");
             docContent.textContent = Array.isArray(docValue)
-              ? docValue.join(" ")
+              ? docValue.join("\n")
               : docValue;
             bodyDiv.appendChild(docContent);
           }
