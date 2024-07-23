@@ -1,1 +1,0 @@
-Improved "Help" bar output: Preserved spacing in docstrings for improved readability and changed applied styles.

@@ -1,1 +1,0 @@
-Refactored UI for recipe management: Redesigned the user interface for managing observation type recipes and reductions. Now, only one reduction is displayed at a time, requiring users to toggle between them. This change simplifies the interface, helping users focus on one task at a time and reducing information overload.

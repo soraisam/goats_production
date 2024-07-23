@@ -1,1 +1,0 @@
-Improved error handling for GOA timeouts when querying data products.

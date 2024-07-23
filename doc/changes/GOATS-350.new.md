@@ -1,1 +1,0 @@
-Connected frontend and backend for help docs: Established linkage between the frontend and backend systems for fetching and displaying help documentation related to primitives. Designed the user interface to comprehensively present all components of numpy doc strings and parameters when available.

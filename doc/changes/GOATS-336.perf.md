@@ -1,1 +1,0 @@
-Enhanced GOATS startup and shutdown: Removed threading and implemented subprocesses. GOATS now exits cleanly, allowing sufficient time for all processes to shutdown properly.

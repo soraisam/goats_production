@@ -1,1 +1,0 @@
-Resolved bug for trying to set state of null element in UI.

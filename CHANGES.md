@@ -1,3 +1,38 @@
+## GOATS 24.7.0 (2024-07-23)
+
+
+### New Features
+
+- Add Chrome extension link: Users can now click to access the Chrome extension store for installing antares2goats to enhance their GOATS experience from the ANTARES broker page. [[#GOATS-294](https://noirlab.atlassian.net/browse/GOATS-294)]
+- Editing, resetting, and saving DRAGONS recipes: DRAGONS recipes now support editing, saving, and resetting to original states. Users can customize recipes during data reduction processes. [[#GOATS-321](https://noirlab.atlassian.net/browse/GOATS-321)]
+- Enabled custom recipe input for DRAGONS: Users can now specify and utilize their own recipes in the DRAGONS reduction process. [[#GOATS-345](https://noirlab.atlassian.net/browse/GOATS-345)]
+- Added UI for DRAGONS reduction help pages: Side offcanvas with animation opens and closes to display helpful information for users on click. [[#GOATS-346](https://noirlab.atlassian.net/browse/GOATS-346)]
+- Added query parameter for detailed docs for primitives in API: Extended the DRAGONS files and recipes system to include a new query parameter. This parameter allows API responses to provide detailed documentation and descriptions of primitives used in a recipe. [[#GOATS-349](https://noirlab.atlassian.net/browse/GOATS-349)]
+- Connected frontend and backend for help docs: Established linkage between the frontend and backend systems for fetching and displaying help documentation related to primitives. Designed the user interface to comprehensively present all components of numpy doc strings and parameters when available. [[#GOATS-350](https://noirlab.atlassian.net/browse/GOATS-350)]
+- Implemented version-based recipe creation: Prevented redundant recipe entries in DRAGONS by creating base recipes only when the version changes. [[#GOATS-358](https://noirlab.atlassian.net/browse/GOATS-358)]
+- Updated UI recipe selection: Added functionality to choose and display recipes dynamically in DRAGONS recipe cards. Enhanced user interface elements include ordered observation types and updated card titles. [[#GOATS-359](https://noirlab.atlassian.net/browse/GOATS-359)]
+
+
+### Changes
+
+- Output directory now matches run ID: Removed unused setup form and refresh button for DRAGONS runs. Disabled the delete option but retained it as a placeholder. [[#GOATS-305](https://noirlab.atlassian.net/browse/GOATS-305)]
+- Refactored UI for recipe management: Redesigned the user interface for managing observation type recipes and reductions. Now, only one reduction is displayed at a time, requiring users to toggle between them. This change simplifies the interface, helping users focus on one task at a time and reducing information overload. [[#GOATS-351](https://noirlab.atlassian.net/browse/GOATS-351)]
+- Improved "Help" bar output: Preserved spacing in docstrings for improved readability and changed applied styles. [[#GOATS-352](https://noirlab.atlassian.net/browse/GOATS-352)]
+
+
+### Bug Fixes
+
+- Fixed custom media directory issue: Resolved path handling for custom media directories when running DRAGONS and saving products. [[#GOATS-304](https://noirlab.atlassian.net/browse/GOATS-304)]
+- Disabled automatic retries for failed DRAGONS reductions and GOA downloads. [[#GOATS-335](https://noirlab.atlassian.net/browse/GOATS-335)]
+- Resolved bug for trying to set state of null element in UI. [[#GOATS-340](https://noirlab.atlassian.net/browse/GOATS-340)]
+- Improved error handling for GOA timeouts when querying data products. [[#GOATS-344](https://noirlab.atlassian.net/browse/GOATS-344)]
+
+
+### Enhancements
+
+- Enhanced GOATS startup and shutdown: Removed threading and implemented subprocesses. GOATS now exits cleanly, allowing sufficient time for all processes to shutdown properly. [[#GOATS-336](https://noirlab.atlassian.net/browse/GOATS-336)]
+- Reduced file operations in DRAGONS recipe queries. [[#GOATS-357](https://noirlab.atlassian.net/browse/GOATS-357)]
+
 ## GOATS 24.6.0 (2024-06-25)
 
 

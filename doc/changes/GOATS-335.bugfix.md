@@ -1,1 +1,0 @@
-Disabled automatic retries for failed DRAGONS reductions and GOA downloads.
