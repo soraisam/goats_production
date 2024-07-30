@@ -13,39 +13,35 @@ class BaseRecipe(models.Model):
 
     Attributes
     ----------
-    file_type : `models.CharField`
-        The type of file the recipe is associated with.
     name : `models.CharField`
         The name of the recipe.
     function_definition : `models.TextField`
         The textual representation of the recipe's function.
-    version : `models.CharField`
-        The version of the DRAGONS system the recipe is compatible with.
     is_default : `models.BooleanField`
         Flag indicating if this recipe is the default for its file type and version.
+    recipes_module : `models.ForeignKey`
+        An optional foreign key to the `RecipesModule`, indicating which
+        recipes module is associated with this recipe.
 
     """
 
-    file_type = models.CharField(
-        max_length=100, editable=False, blank=False, null=False,
-    )
     name = models.CharField(max_length=255, editable=False, blank=False, null=False)
     function_definition = models.TextField(editable=False, blank=False, null=False)
-    version = models.CharField(
-        max_length=30,
-        editable=False,
-        blank=False,
-        null=False,
-    )
     is_default = models.BooleanField(
-        editable=False, null=False, blank=False, default=False,
+        editable=False,
+        null=False,
+        blank=False,
+        default=False,
+    )
+    recipes_module = models.ForeignKey(
+        "goats_tom.RecipesModule", on_delete=models.CASCADE, related_name="base_recipes"
     )
 
     class Meta:
-        unique_together = ("file_type", "name", "version")
+        unique_together = ("name", "recipes_module")
 
     def __str__(self) -> str:
-        return f"v{self.version} {self.name}"
+        return f"Base recipe {self.name} for {self.recipes_module}"
 
     @property
     def short_name(self) -> str:
@@ -64,3 +60,39 @@ class BaseRecipe(models.Model):
         if match:
             return match.group(1)
         return "Unknown"
+
+    @property
+    def version(self) -> str:
+        """Provides the version derived from the linked recipes module.
+
+        Returns
+        -------
+        `str`
+            The version from the recipes module.
+
+        """
+        return self.recipes_module.version
+
+    @property
+    def instrument(self) -> str:
+        """Provides the instrument derived from the linked recipes module.
+
+        Returns
+        -------
+        `str`
+            The instrument from the recipes module.
+
+        """
+        return self.recipes_module.instrument
+
+    @property
+    def recipes_module_name(self) -> str:
+        """Provides the recipes module name.
+
+        Returns
+        -------
+        `str`
+            The recipes module name.
+
+        """
+        return self.recipes_module.name

@@ -56,7 +56,8 @@ class DRAGONSFilesViewSet(
 
         # Apply select_related to optimize related object retrieval.
         queryset = queryset.select_related(
-            "data_product__observation_record", "data_product__metadata",
+            "data_product__observation_record",
+            "data_product__metadata",
         )
 
         return queryset
@@ -89,13 +90,26 @@ class DRAGONSFilesViewSet(
             grouped_data = defaultdict(list)
             for item in serializer.data:
                 grouped_data[(item["file_type"]).lower()].append(item)
+
+            if "object" in grouped_data:
+                object_group = defaultdict(list)
+                for obj_item in grouped_data["object"]:
+                    sub_type = obj_item.get(
+                        "object_name", ""
+                    )
+                    object_group[sub_type].append(obj_item)
+                grouped_data["object"] = dict(
+                    object_group
+                )  # Replace the list with a dictionary of sub_types
+
             data = dict(grouped_data)
             return Response({"results": data})
 
         # Paginate and return data.
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(
-            page if page is not None else queryset, many=True,
+            page if page is not None else queryset,
+            many=True,
         )
 
         data = serializer.data

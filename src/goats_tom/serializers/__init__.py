@@ -1,3 +1,4 @@
+from .base_recipe import BaseRecipeSerializer
 from .dragons_file import DRAGONSFileFilterSerializer, DRAGONSFileSerializer
 from .dragons_recipe import DRAGONSRecipeFilterSerializer, DRAGONSRecipeSerializer
 from .dragons_reduce import (
@@ -6,6 +7,7 @@ from .dragons_reduce import (
     DRAGONSReduceUpdateSerializer,
 )
 from .dragons_run import DRAGONSRunFilterSerializer, DRAGONSRunSerializer
+from .recipes_module import RecipesModuleSerializer
 
 __all__ = [
     "DRAGONSRecipeFilterSerializer",
@@ -17,4 +19,6 @@ __all__ = [
     "DRAGONSReduceFilterSerializer",
     "DRAGONSReduceSerializer",
     "DRAGONSReduceUpdateSerializer",
+    "RecipesModuleSerializer",
+    "BaseRecipeSerializer",
 ]

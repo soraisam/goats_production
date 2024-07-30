@@ -2,13 +2,20 @@
 
 from datetime import timedelta
 
+import astrodata
 from django.db.models import Max, QuerySet
 from recipe_system import cal_service
 from rest_framework import mixins, permissions
 from rest_framework.viewsets import GenericViewSet
 from tom_dataproducts.models import DataProduct
 
-from goats_tom.models import BaseRecipe, DRAGONSFile, DRAGONSRecipe, DRAGONSRun
+from goats_tom.models import (
+    BaseRecipe,
+    DRAGONSFile,
+    DRAGONSRecipe,
+    DRAGONSRun,
+    RecipesModule,
+)
 from goats_tom.serializers import DRAGONSRunFilterSerializer, DRAGONSRunSerializer
 from goats_tom.utils import get_recipes_and_primitives
 
@@ -67,20 +74,8 @@ class DRAGONSRunsViewSet(
 
         self._init_dragons_dir(dragons_run)
 
-        # Link DataProducts for the run to enable/disable.
-        data_products = DataProduct.objects.filter(
-            observation_record=dragons_run.observation_record,
-        ).select_related("metadata")
-
-        DRAGONSFile.objects.bulk_create(
-            [
-                DRAGONSFile(dragons_run=dragons_run, data_product=dp, enabled=True)
-                for dp in data_products
-            ],
-            ignore_conflicts=True,
-        )
-
-        self._disable_old_biases(data_products, dragons_run)
+        # TODO: Use the new method for biases.
+        # self._disable_old_biases(data_products, dragons_run)
 
         self._init_recipe_and_primitives(dragons_run)
 
@@ -160,10 +155,11 @@ class DRAGONSRunsViewSet(
         cal_service.LocalDB(cal_manager_db_file, force_init=True)
 
     def _init_recipe_and_primitives(self, dragons_run: DRAGONSRun) -> None:
-        """Initializes recipes and their primitives for a DRAGONS run based on the file
-        types available in the run. This method creates new recipe if they do not
-        already exist for the file type and version and creates corresponding
-        `DRAGONSRecipe` instances.
+        """This method processes each data product linked to the run, using its tags and
+        instrument data to fetch applicable recipes and create or update corresponding
+        `DRAGONSRecipe` instances. If a file matches the conditions (unprepared and not
+        processed or is a BPM file), it initializes recipes, updates the database, and
+        creates a DRAGONSFile record.
 
         Parameters
         ----------
@@ -171,47 +167,74 @@ class DRAGONSRunsViewSet(
             The DRAGONS run instance for which recipes are being initialized.
 
         """
-        dragons_files = dragons_run.dragons_run_files.all()
-        version = dragons_run.version
-        existing_recipes = BaseRecipe.objects.filter(version=version)
+        # TODO: Make this more intelligent.
+        # Link DataProducts for the run to enable/disable.
+        data_products = DataProduct.objects.filter(
+            observation_record=dragons_run.observation_record,
+        )
 
-        processed_base_recipe_file_types = {
-            recipe.file_type for recipe in existing_recipes
-        }
-        processed_recipe_file_types = set()
+        for data_product in data_products:
+            # Get the tags and instrument.
+            ad = astrodata.open(data_product.data.path)
+            tags = ad.tags
+            instrument = ad.instrument(generic=True).lower()
+            object_name = None
 
-        for dragons_file in dragons_files:
-            file_type = dragons_file.get_file_type()
+            # Skip if file is prepared or processed, unless it's a BPM file.
+            if "BPM" not in tags and ("PREPARED" in tags or "PROCESSED" in tags):
+                print("Skipping prepared or processed file.")
+                continue
 
-            if file_type not in processed_base_recipe_file_types:
-                recipes_and_primitives = get_recipes_and_primitives(
-                    dragons_file.get_file_path(),
+            # Get the file type and the object name if applicable.
+            file_type = ad.observation_type().lower()
+            if file_type == "object":
+                object_name = ad.object()
+
+            # if file_type not in processed_base_recipe_file_types:
+            recipes_and_primitives = get_recipes_and_primitives(tags, instrument)
+
+            # Create or update recipes in the database.
+            for recipe_name, details in recipes_and_primitives["recipes"].items():
+                recipes_module, created = RecipesModule.objects.get_or_create(
+                    name=details["recipes_module"],
+                    instrument=instrument,
+                    version=dragons_run.version,
                 )
 
-                # Create or update recipes in the database.
-                for recipe_name, details in recipes_and_primitives["recipes"].items():
-                    BaseRecipe.objects.update_or_create(
-                        file_type=file_type,
-                        name=recipe_name,
-                        version=version,
-                        function_definition=details["function_definition"],
-                        is_default=details["is_default"],
-                    )
-
-                # Mark this file_type as processed to avoid duplicate processing
-                processed_base_recipe_file_types.add(file_type)
-
-            if file_type not in processed_recipe_file_types:
-                # Fetch all existing base recipes for this file type and version
-                existing_recipes_for_file_type = BaseRecipe.objects.filter(
-                    file_type=file_type,
-                    version=version,
+                # Create or fetch the base recipe.
+                base_recipe, base_recipe_created = BaseRecipe.objects.get_or_create(
+                    name=recipe_name,
+                    recipes_module=recipes_module,
+                    defaults={
+                        "function_definition": details["function_definition"],
+                        "is_default": details["is_default"],
+                    },
                 )
-                for existing_recipe in existing_recipes_for_file_type:
-                    # Create the recipe linking the base recipe.
-                    DRAGONSRecipe.objects.create(
+                if base_recipe_created:
+                    print(f"Created a BASE recipe: {recipe_name}")
+                else:
+                    print(f"Did not create a BASE recipe: {recipe_name}")
+
+                # Create or get the recipe for this one.
+                dragons_recipe, dragons_recipe_created = (
+                    DRAGONSRecipe.objects.get_or_create(
                         dragons_run=dragons_run,
-                        recipe=existing_recipe,
+                        recipe=base_recipe,
+                        object_name=object_name,
+                        file_type=file_type,
                     )
-                # Add to the file types to skip next time.
-                processed_recipe_file_types.add(file_type)
+                )
+
+                if dragons_recipe_created:
+                    print(f"Created a tmp recipe: {recipe_name}")
+                else:
+                    print(f"Did not create a tmp recipe: {recipe_name}")
+
+            # Create a file for this run using the recipes module last retrieved.
+            DRAGONSFile.objects.create(
+                dragons_run=dragons_run,
+                data_product=data_product,
+                recipes_module=recipes_module,
+                file_type=file_type,
+                object_name=object_name,
+            )

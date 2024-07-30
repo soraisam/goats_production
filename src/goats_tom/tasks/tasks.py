@@ -22,14 +22,12 @@ from tom_dataproducts.models import DataProduct
 from goats_tom.astroquery import Observations as GOA
 from goats_tom.logging.handlers import DRAGONSHandler
 from goats_tom.models import (
-    DataProductMetadata,
     Download,
-    DRAGONSFile,
     DRAGONSReduce,
     GOALogin,
 )
 from goats_tom.realtime import DownloadState, DRAGONSProgress, NotificationInstance
-from goats_tom.utils import create_name_reduction_map, extract_metadata
+from goats_tom.utils import create_name_reduction_map
 
 matplotlib.use("Agg", force=True)
 
@@ -53,10 +51,6 @@ def run_dragons_reduce(reduce_id: int) -> None:
     `DoesNotExist`
         Raised if the DRAGONSReduce instance does not exist.
 
-    TODO
-    ----
-    - Integrate actual reduction logic using `function_definition` from the recipe.
-
     """
     try:
         # Get the reduction to run in the background.
@@ -66,6 +60,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
 
         run = reduce.recipe.dragons_run
         recipe = reduce.recipe
+        recipes_module = recipe.recipe.recipes_module
         # Send start notification.
         NotificationInstance.create_and_send(
             message="Reduction started.",
@@ -85,16 +80,11 @@ def run_dragons_reduce(reduce_id: int) -> None:
         dragons_handler.setLevel(21)
 
         # Change the working directory to save outputs.
-        print(run.get_output_dir())
         os.chdir(run.get_output_dir())
 
         # Filter the files based on the associated DRAGONS run and file type.
-        files = DRAGONSFile.objects.filter(
-            dragons_run=run,
-            data_product__metadata__file_type=recipe.file_type,
-            enabled=True,
-        )
-        file_paths = [file.get_file_path() for file in files]
+        files = recipes_module.files.filter(enabled=True, dragons_run=run)
+        file_paths = [file.file_path for file in files]
 
         # Setup the logger.
         logutils.config(
@@ -142,7 +132,7 @@ def run_dragons_reduce(reduce_id: int) -> None:
         # "<module_name>.<function_name>".
         r.recipename = f"{module_name}.{function_definition.__name__}"
 
-        if recipe.file_type in {"FLAT", "ARC", "object"}:
+        if recipe.file_type in {"flat", "arc", "object"}:
             r.uparms = [("interactive", True)]
 
         reduce.mark_running()
@@ -378,10 +368,6 @@ def download_goa_files(
                     "There already exists a data product '%s', skipping.",
                     file_path.name,
                 )
-        # Extract and save the metadata
-        # TODO: Will this ever be empty?
-        metadata = extract_metadata(file_path)
-        DataProductMetadata.objects.update_or_create(data_product=dp, defaults=metadata)
 
     GOA.logout()
 

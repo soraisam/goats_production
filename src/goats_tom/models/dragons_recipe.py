@@ -23,6 +23,11 @@ class DRAGONSRecipe(models.Model):
         Timestamp when the recipe modification was created.
     modified_at : `models.DateTimeField`
         Timestamp when the recipe modification was last updated.
+    file_type : `models.CharField`
+        A character field storing the type of the file.
+    object_name : `models.CharField`
+        An optional character field storing the name of the object related to
+        the file, if applicable.
 
     """
 
@@ -47,6 +52,8 @@ class DRAGONSRecipe(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    file_type = models.CharField(max_length=50, null=False, blank=False)
+    object_name = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         unique_together = ("recipe", "dragons_run")
@@ -80,16 +87,28 @@ class DRAGONSRecipe(models.Model):
         return self.recipe.short_name
 
     @property
-    def file_type(self) -> str:
-        """Provides the file type derived from the linked base recipe.
+    def instrument(self) -> str:
+        """Provides the instrument derived from the linked base recipe.
 
         Returns
         -------
         `str`
-            The file type from the base recipe.
+            The instrument from the base recipe.
 
         """
-        return self.recipe.file_type
+        return self.recipe.instrument
+
+    @property
+    def recipes_module_name(self) -> str:
+        """Provides the recipes module name.
+
+        Returns
+        -------
+        `str`
+            The recipes module name.
+
+        """
+        return self.recipe.recipes_module_name
 
     @property
     def name(self) -> str:

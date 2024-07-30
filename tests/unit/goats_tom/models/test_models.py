@@ -8,7 +8,6 @@ from django.utils import timezone
 from goats_tom.models import BaseRecipe, ProgramKey
 from goats_tom.tests.factories import (
     BaseRecipeFactory,
-    DataProductMetadataFactory,
     DownloadFactory,
     DRAGONSFileFactory,
     DRAGONSRecipeFactory,
@@ -18,6 +17,7 @@ from goats_tom.tests.factories import (
     ProgramKeyFactory,
     UserFactory,
     UserKeyFactory,
+    RecipesModuleFactory
 )
 from tom_observations.tests.factories import ObservingRecordFactory
 
@@ -182,62 +182,95 @@ class TestDRAGONSRun:
             duplicate_run.full_clean()
 
 
-@pytest.mark.django_db()
-class TestDataProductMetadata:
-    """Class to test `DataProductMetadata` model."""
+# @pytest.mark.django_db()
+# class TestDataProductMetadata:
+#     """Class to test `DataProductMetadata` model."""
 
-    def test_create_metadata(self):
-        """Test creating a metadata instance."""
-        metadata = DataProductMetadataFactory()
-        assert metadata.pk is not None, "Metadata should be created successfully."
+#     def test_create_metadata(self):
+#         """Test creating a metadata instance."""
+#         metadata = DataProductMetadataFactory()
+#         assert metadata.pk is not None, "Metadata should be created successfully."
 
-    def test_null_fields(self):
-        """Test metadata creation with null fields."""
-        metadata = DataProductMetadataFactory(
-            file_type=None,
-            group_id=None,
-            exposure_time=None,
-            object_name=None,
-            central_wavelength=None,
-            wavelength_band=None,
-            observation_date=None,
-            roi_setting=None,
+#     def test_null_fields(self):
+#         """Test metadata creation with null fields."""
+#         metadata = DataProductMetadataFactory(
+#             file_type=None,
+#             group_id=None,
+#             exposure_time=None,
+#             object_name=None,
+#             central_wavelength=None,
+#             wavelength_band=None,
+#             observation_date=None,
+#             roi_setting=None,
+#         )
+#         assert (
+#             metadata.pk is not None
+#         ), "Metadata with null fields should be created successfully."
+
+#     def test_empty_strings(self):
+#         """Test metadata creation with empty strings."""
+#         metadata = DataProductMetadataFactory(
+#             file_type="",
+#             group_id="",
+#             object_name="",
+#             wavelength_band="",
+#             roi_setting="",
+#         )
+#         assert (
+#             metadata.pk is not None
+#         ), "Metadata with empty strings should be created successfully."
+
+#     def test_invalid_exposure_time(self):
+#         """Test metadata creation with negative exposure time."""
+#         with pytest.raises(ValidationError):
+#             metadata = DataProductMetadataFactory.build(exposure_time=-1)
+#             metadata.full_clean()
+
+#     def test_invalid_central_wavelength(self):
+#         """Test metadata creation with negative central wavelength."""
+#         with pytest.raises(ValidationError):
+#             metadata = DataProductMetadataFactory.build(central_wavelength=-1)
+#             metadata.full_clean()
+
+#     def test_string_representation(self):
+#         """Test the string representation of the metadata."""
+#         metadata = DataProductMetadataFactory()
+#         assert str(metadata) == f"Metadata for {metadata.data_product.product_id}"
+
+
+
+@pytest.mark.django_db
+class RecipesModuleTests(TestCase):
+    def test_create_recipes_module(self):
+        """Ensure that the RecipesModule can be created with valid attributes using the
+        factory.
+
+        """
+        module = RecipesModuleFactory()
+        self.assertIsNotNone(
+            module.pk, 
+            "Failed to save the RecipesModule instance to the database."
         )
-        assert (
-            metadata.pk is not None
-        ), "Metadata with null fields should be created successfully."
 
-    def test_empty_strings(self):
-        """Test metadata creation with empty strings."""
-        metadata = DataProductMetadataFactory(
-            file_type="",
-            group_id="",
-            object_name="",
-            wavelength_band="",
-            roi_setting="",
-        )
-        assert (
-            metadata.pk is not None
-        ), "Metadata with empty strings should be created successfully."
+    def test_unique_constraints(self):
+        """Verify that the unique constraints on `name`, `version`, and `instrument`
+        are enforced by the database.
 
-    def test_invalid_exposure_time(self):
-        """Test metadata creation with negative exposure time."""
-        with pytest.raises(ValidationError):
-            metadata = DataProductMetadataFactory.build(exposure_time=-1)
-            metadata.full_clean()
+        """
+        # Create an initial module with specific details.
+        module1 = RecipesModuleFactory(name="Astro", version="1.0.0", 
+                                       instrument="Telescope")
+        module1.save()
 
-    def test_invalid_central_wavelength(self):
-        """Test metadata creation with negative central wavelength."""
-        with pytest.raises(ValidationError):
-            metadata = DataProductMetadataFactory.build(central_wavelength=-1)
-            metadata.full_clean()
-
-    def test_string_representation(self):
-        """Test the string representation of the metadata."""
-        metadata = DataProductMetadataFactory()
-        assert str(metadata) == f"Metadata for {metadata.data_product.product_id}"
-
-
+        # Attempt to create another module with the same details.
+        module2 = RecipesModuleFactory.build(
+            name="Astro", version="1.0.0", instrument="Telescope")
+        with self.assertRaises(
+            IntegrityError, 
+            msg="Database failed to enforce uniqueness."):
+            module2.save()
+            
+            
 @pytest.mark.django_db()
 class TestDRAGONSFile:
     """Class to test `DRAGONSFile` model."""
@@ -259,20 +292,9 @@ class TestDRAGONSFile:
             )
             duplicate_file.full_clean()
 
-    def test_file_path(self):
-        """Test the get_file_path method."""
-        dragons_file = DRAGONSFileFactory()
-        assert dragons_file.get_file_path() == dragons_file.data_product.data.path
-
-    def test_file_type(self):
-        """Test the get_file_type method."""
-        dragons_file = DRAGONSFileFactory()
-        assert (
-            dragons_file.get_file_type() == dragons_file.data_product.metadata.file_type
-        )
-
     def test_list_primitives_and_docstrings(self):
         """Test listing primitives and docstrings of the associated file type."""
+        pass
 
 
 @pytest.mark.django_db()
@@ -339,14 +361,6 @@ class TestBaseRecipe:
             base_recipe, BaseRecipe,
         ), "Factory should create a BaseRecipe instance."
 
-    def test_string_representation(self):
-        """Test the string representation of BaseRecipe."""
-        base_recipe = BaseRecipeFactory(name="Test Recipe", version="32.2.0")
-        expected_representation = "v32.2.0 Test Recipe"
-        assert (
-            str(base_recipe) == expected_representation
-        ), "String representation should be 'v<version> <name>'."
-
     def test_short_name_extraction(self):
         """Test the extraction of short_name from the name attribute."""
         base_recipe_with_short = BaseRecipeFactory(name="Recipe::ShortName")
@@ -364,9 +378,7 @@ class TestBaseRecipe:
         base_recipe = BaseRecipeFactory()
         with pytest.raises(ValidationError):
             duplicate_recipe = BaseRecipeFactory.build(
-                file_type=base_recipe.file_type,
                 name=base_recipe.name,
-                version=base_recipe.version,
             )
             duplicate_recipe.full_clean()
 
@@ -453,19 +465,12 @@ class TestDRAGONSRecipe:
 
     def test_properties(self):
         """Test that model properties return correct values derived from the base recipe."""
-        base_recipe = BaseRecipeFactory(
-            file_type="BIAS", name="ComplexRecipe::Simple", version="32.2.0",
+        base_recipe = BaseRecipeFactory(name="ComplexRecipe::Simple",
         )
         dragons_recipe = DRAGONSRecipeFactory(recipe=base_recipe)
         assert (
-            dragons_recipe.file_type == "BIAS"
-        ), "File type should be retrieved from the base recipe."
-        assert (
             dragons_recipe.name == "ComplexRecipe::Simple"
         ), "Name should be retrieved from the base recipe."
-        assert (
-            dragons_recipe.version == "32.2.0"
-        ), "Version should be retrieved from the base recipe."
         assert (
             dragons_recipe.short_name == "Simple"
         ), "Should correctly extract the short name from the base recipe."

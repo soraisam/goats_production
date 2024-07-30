@@ -104,22 +104,6 @@ class TestDRAGONSRecipesViewSet(APITestCase):
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data.get("results")) == 2
 
-    def test_filter_by_file_type(self):
-        """Test filtering DRAGONS recipes by file type."""
-        file_type = "test-file-type"
-        recipe = BaseRecipeFactory(file_type=file_type)
-        DRAGONSRecipeFactory.create_batch(2, recipe=recipe)
-        DRAGONSRecipeFactory.create_batch(3)
-
-        request = self.factory.get(
-            reverse("dragonsrecipe-list"), {"file_type": file_type},
-        )
-        self.authenticate(request)
-
-        response = self.list_view(request)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data.get("results")) == 2
 
     def test_authentication_required(self):
         """Test that authentication is required to access the view."""

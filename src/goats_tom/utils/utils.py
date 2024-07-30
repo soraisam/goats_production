@@ -271,59 +271,36 @@ def extract_metadata(file_path: Path) -> dict | None:
     -----
     This function utilizes the astrodata library to open and extract relevant
     metadata from files. It identifies the file type based on specific tags
-    and observation classes present in the file's metadata. Currently handles
-    "BIAS", "DARK", "FLAT", "ARC", "PINHOLE", "RONCHI", "FRINGE", and
-    "standard" file types, with a fallback to "unknown" or "object" types based
-    on observation class.
+    and observation classes present in the file's metadata.
 
     """
-    # Define calibration file tags for identification.
-    cal_file_tags = ["BIAS", "DARK", "FLAT", "ARC", "PINHOLE", "RONCHI", "FRINGE"]
-
     # Open the file using astrodata.
     ad = astrodata.open(file_path)
 
-    # Determine file type based on tags and observation class.
-    file_type = "other"
-    if "BPM" in ad.tags:
-        file_type = "BPM"
-    elif "PREPARED" in ad.tags:
-        # Skip files marked as "PREPARED".
-        return None
-    elif (
-        (
-            "STANDARD" in ad.tags
-            or ad.observation_class() == "partnerCal"
-            or ad.observation_class() == "progCal"
-        )
-        and "UNPREPARED" in ad.tags
-        and ad.observation_type() == "OBJECT"
-    ):
-        file_type = "standard"
-    elif "CAL" in ad.tags and "UNPREPARED" in ad.tags:
-        # Check against a list of calibration file tags.
-        for tag in cal_file_tags:
-            if tag in ad.tags:
-                file_type = tag
-                break
-    elif ad.observation_class() == "science" and "UNPREPARED" in ad.tags:
-        file_type = "object"
+    # Only want unprepared or BPM files.
+    if "BPM" in ad.tags or "UNPREPARED" in ad.tags:
+        # Skip all prepared and processed files.
+        if "PREPARED" in ad.tags or "PROCESSED" in ad.tags:
+            return
+        # Construct the metadata dictionary.
+        metadata_dict = {
+            "file_type": ad.observation_type(),
+            # "observation_class", ad.observation_class(),
+            "group_id": (
+                ad.group_id() if "GNIRS" not in ad.instrument() else None
+            ),  # GNIRS not implemented yet with groups.
+            "exposure_time": ad.exposure_time(),
+            "object_name": ad.object(),
+            "central_wavelength": ad.central_wavelength(),
+            "wavelength_band": ad.wavelength_band(),
+            "observation_date": ad.ut_date().isoformat(),
+            "roi_setting": ad.detector_roi_setting(),
+            "instrument": ad.instrument(generic=True).lower(),
+            "tags": list(ad.tags),
+        }
 
-    # Construct the metadata dictionary.
-    metadata_dict = {
-        "file_type": file_type,
-        "group_id": (
-            ad.group_id() if "GNIRS" not in ad.instrument() else None
-        ),  # GNIRS not implemented yet with groups.
-        "exposure_time": ad.exposure_time(),
-        "object_name": ad.object(),
-        "central_wavelength": ad.central_wavelength(),
-        "wavelength_band": ad.wavelength_band(),
-        "observation_date": ad.ut_date().isoformat(),
-        "roi_setting": ad.detector_roi_setting(),
-    }
-
-    return metadata_dict
+        return metadata_dict
+    return
 
 
 def get_short_name(name: str) -> str | None:
@@ -371,38 +348,42 @@ def get_astrodata_header(data_product: DataProduct) -> dict[str, Any]:
     return header
 
 
-def get_recipes_and_primitives(file_path: Path) -> dict[str, Any]:
-    """Fetches all recipes applicable to a file, along with their primitives, and
-    identifies the default recipe.
+def get_recipes_and_primitives(tags: set, instrument: str) -> dict[str, Any]:
+    """Retrieves all applicable recipes and their associated primitives based on the
+    given tags and instrument. It also determines which recipe should be considered the
+    default for the given parameters.
 
     Parameters
     ----------
-    file_path : `Path`
-        Path to the FITS file from which to extract recipes and their primitives.
+    tags : `set`
+        A set of tags associated with the file, used to identify applicable recipes.
+    instrument : `str`
+        The instrument type, used to filter recipes specific to the instrument.
 
     Returns
     -------
     `dict[str, Any]`
-        A dictionary containing the recipe, function definition, and if it is the
-        default recipe.
+        A dictionary containing recipes keyed by their names, each with details such as
+        the recipe's function definition, module, and whether it is the default recipe.
 
+    Raises
+    ------
+    RecipeNotFound, ModeError
+        Raised if no applicable recipe is found or there's an error in processing modes.
     """
     default_recipe_name = None
-    astro_data = astrodata.open(file_path)
-    tags = set(astro_data.tags)
-    instrument_package = astro_data.instrument(generic=True).lower()
     recipes = {}
 
     # Attempt to get recipes for just "sq" for GOATS.
     for mode in ["sq"]:
         try:
-            recipe_mapper = RecipeMapper(tags, instrument_package, mode=mode)
+            recipe_mapper = RecipeMapper(tags, instrument, mode=mode)
             applicable_recipe = recipe_mapper.get_applicable_recipe()
-            recipe_module = importlib.import_module(applicable_recipe.__module__)
+            module = importlib.import_module(applicable_recipe.__module__)
 
             # Loop through and build the recipe function definition from primitives.
             for func_name, func in inspect.getmembers(
-                recipe_module,
+                module,
                 inspect.isfunction,
             ):
                 if func_name == "_default":
@@ -411,6 +392,12 @@ def get_recipes_and_primitives(file_path: Path) -> dict[str, Any]:
                     continue
 
                 recipe_name = f"{func.__module__}::{func.__name__}"
+                recipe_module = f"{func.__module__.split('.')[-1]}"
+                # Want to skip common as they are just to be shared between recipe
+                # modules.
+                if recipe_module == "recipes_common":
+                    continue
+
                 source_code = inspect.getsource(func)
                 primitives = re.findall(r"p\..*", source_code)
 
@@ -424,6 +411,7 @@ def get_recipes_and_primitives(file_path: Path) -> dict[str, Any]:
                 recipes[recipe_name] = {
                     "function_definition": function_definition,
                     "is_default": is_default,
+                    "recipes_module": recipe_module,
                 }
 
         except (RecipeNotFound, ModeError) as e:

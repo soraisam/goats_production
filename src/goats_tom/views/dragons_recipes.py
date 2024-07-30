@@ -41,11 +41,8 @@ class DRAGONSRecipesViewSet(
         # Check if any filters provided.
         if filter_serializer.is_valid(raise_exception=False):
             dragons_run_pk = filter_serializer.validated_data.get("dragons_run")
-            file_type = filter_serializer.validated_data.get("file_type")
             if dragons_run_pk is not None:
                 queryset = queryset.filter(dragons_run__pk=dragons_run_pk)
-            if file_type is not None:
-                queryset = queryset.filter(recipe__file_type=file_type)
 
         return queryset
 
@@ -77,6 +74,15 @@ class DRAGONSRecipesViewSet(
             grouped_data = defaultdict(list)
             for item in serializer.data:
                 grouped_data[(item["file_type"]).lower()].append(item)
+
+            if "object" in grouped_data:
+                object_group = defaultdict(list)
+                for obj_item in grouped_data["object"]:
+                    sub_type = obj_item.get(
+                        "object_name", ""
+                    )
+                    object_group[sub_type].append(obj_item)
+                grouped_data["object"] = dict(object_group)
             data = dict(grouped_data)
             return Response({"results": data})
 

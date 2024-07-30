@@ -1,7 +1,9 @@
+from .base_recipe import BaseRecipeViewSet
 from .dragons_files import DRAGONSFilesViewSet
 from .dragons_recipes import DRAGONSRecipesViewSet
 from .dragons_reduce import DRAGONSReduceViewSet
 from .dragons_runs import DRAGONSRunsViewSet
+from .recipes_module import RecipesModuleViewSet
 from .views import (
     DeleteObservationDataProductsView,
     DRAGONSView,
@@ -46,4 +48,6 @@ __all__ = [
     "ObservationRecordDeleteView",
     "DRAGONSRunsViewSet",
     "DRAGONSReduceViewSet",
+    "RecipesModuleViewSet",
+    "BaseRecipeViewSet",
 ]
