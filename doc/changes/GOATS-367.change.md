@@ -1,0 +1,1 @@
+Extended help page for interactive mode: Enhanced help documentation to show how to enable interactive mode for specific primitives. Interactive mode is no longer the default setting.

@@ -19,6 +19,16 @@ class HelpOffcanvas {
       <ul>
         <li><strong>Adding Primitives:</strong> Insert <code>p.primitive_name(optional_arguments)</code> at the required position in the recipe.</li>
         <li><strong>Modify Parameters:</strong> Change the arguments of any primitive to meet your specific requirements. E.g., <code>p.prepare(suffix="_test", require_wcs=True)</code></li>
+        <li><strong>Interactive Mode:</strong> Note that the following primitives have the argument <code>interactive</code>:
+        <ul>
+          <li><code>calculateSensitivity</code></li>
+          <li><code>determineWavelengthSolution</code></li>
+          <li><code>findApertures</code></li>
+          <li><code>normalizeFlat</code></li>
+          <li><code>skyCorrectFromSlit</code></li>
+          <li><code>traceApertures</code></li>
+        </ul>
+        If you want to turn on the interactive tools of DRAGONS, make sure to set the interactive parameter for these primitives whenever present in the recipe; e.g., <code>p.determineWavelengthSolution(interactive=True)</code></li>
         <li><strong>Reorder Primitives:</strong> Move the primitives to different positions to change the execution order.</li>
         <li><strong>Remove Primitives:</strong> Delete the entire primitive line to remove from the recipe.</li>
       </ul>
@@ -125,7 +135,9 @@ class HelpOffcanvas {
    * type and help details for each primitive.
    */
   updateAndShowPrimitivesDocumentation(recipe) {
-    this.setTitle(`${Utils.formatDisplayText(recipe.file_type)} Primitives Documentation`);
+    this.setTitle(
+      `${Utils.formatDisplayText(recipe.file_type)} Primitives Documentation`
+    );
     const primitivesDocumentation = this._renderPrimitivesDocumentation(recipe);
     this.contentElement.appendChild(primitivesDocumentation);
     this.showContent();
