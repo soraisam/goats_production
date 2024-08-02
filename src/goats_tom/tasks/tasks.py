@@ -132,9 +132,6 @@ def run_dragons_reduce(reduce_id: int) -> None:
         # "<module_name>.<function_name>".
         r.recipename = f"{module_name}.{function_definition.__name__}"
 
-        if recipe.file_type in {"flat", "arc", "object"}:
-            r.uparms = [("interactive", True)]
-
         reduce.mark_running()
         DRAGONSProgress.create_and_send(reduce)
 
