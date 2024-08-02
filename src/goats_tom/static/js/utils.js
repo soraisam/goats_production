@@ -62,7 +62,7 @@ class Utils {
     modalHeaderTitle.id = modalHeaderTitleId;
 
     const closeButton = this.createElement("button", "btn-close");
-    closeButton.setAttribute("data-dismiss", "modal");
+    closeButton.setAttribute("data-bs-dismiss", "modal");
     closeButton.setAttribute("aria-label", "Close");
     modalHeader.appendChild(modalHeaderTitle);
     modalHeader.appendChild(closeButton);
