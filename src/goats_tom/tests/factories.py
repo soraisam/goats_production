@@ -84,7 +84,7 @@ class DataProductFactory(factory.django.DjangoModelFactory):
     observation_record = factory.SubFactory(
         ObservingRecordFactory, target_id=factory.SelfAttribute("..target.id"),
     )
-    data = ContentFile(b"some data", name="data.txt")
+    data = factory.django.FileField(data=b"test", filename="data.txt")
     extra_data = factory.Faker("text")
     data_product_type = "photometry"
     featured = False

@@ -176,8 +176,8 @@ class DRAGONSRecipe(models.Model):
             dictionary if no matching file is found.
 
         """
-        first_file = self.dragons_run.dragons_run_files.filter(
-            data_product__metadata__file_type=self.file_type,
+        first_file = self.recipe.recipes_module.files.filter(
+            file_type=self.file_type
         ).first()
 
         if first_file:
