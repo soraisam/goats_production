@@ -40,7 +40,7 @@ const createAndShowToast = (notification) => {
   // Create close button.
   const toastHeaderButton = document.createElement("button");
   toastHeaderButton.classList.add("btn-close");
-  toastHeaderButton.setAttribute("data-dismiss", "toast");
+  toastHeaderButton.setAttribute("data-bs-dismiss", "toast");
   toastHeaderButton.setAttribute("aria-label", "Close");
 
   toastHeader.appendChild(toastHeaderButton);
