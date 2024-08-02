@@ -3,11 +3,10 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
-from goats_tom.models import DataProductMetadata, DRAGONSFile
+from goats_tom.models import DRAGONSFile
 from goats_tom.tests.factories import (
     BaseRecipeFactory,
     DataProductFactory,
-    DataProductMetadataFactory,
     DownloadFactory,
     DRAGONSFileFactory,
     DRAGONSRecipeFactory,
@@ -17,6 +16,7 @@ from goats_tom.tests.factories import (
     ProgramKeyFactory,
     ReducedDatumFactory,
     UserKeyFactory,
+    RecipesModuleFactory,
 )
 
 
@@ -127,40 +127,40 @@ class TestDRAGONSRunFactory:
         assert dragons_run.run_id == custom_run_id
 
 
-@pytest.mark.django_db()
-class TestDataProductMetadataFactory:
-    """Class to test `DataProductMetadataFactory`."""
+# @pytest.mark.django_db()
+# class TestDataProductMetadataFactory:
+#     """Class to test `DataProductMetadataFactory`."""
 
-    def test_factory_creation(self):
-        """Test that the factory creates a valid metadata instance."""
-        metadata = DataProductMetadataFactory()
-        assert isinstance(
-            metadata, DataProductMetadata,
-        ), "Factory should create a DataProductMetadata instance."
+#     def test_factory_creation(self):
+#         """Test that the factory creates a valid metadata instance."""
+#         metadata = DataProductMetadataFactory()
+#         assert isinstance(
+#             metadata, DataProductMetadata,
+#         ), "Factory should create a DataProductMetadata instance."
 
-    def test_factory_with_specific_values(self):
-        """Test factory creation with specific values."""
-        data_product = DataProductFactory()
-        metadata = DataProductMetadataFactory(
-            data_product=data_product,
-            file_type="BIAS",
-            group_id="group_1",
-            exposure_time=30.0,
-            object_name="Test Object",
-            central_wavelength=500.0,
-            wavelength_band="VIS",
-            observation_date="2023-01-01",
-            roi_setting="Full Frame",
-        )
-        assert metadata.data_product == data_product
-        assert metadata.file_type == "BIAS"
-        assert metadata.group_id == "group_1"
-        assert metadata.exposure_time == 30.0
-        assert metadata.object_name == "Test Object"
-        assert metadata.central_wavelength == 500.0
-        assert metadata.wavelength_band == "VIS"
-        assert metadata.observation_date == "2023-01-01"
-        assert metadata.roi_setting == "Full Frame"
+#     def test_factory_with_specific_values(self):
+#         """Test factory creation with specific values."""
+#         data_product = DataProductFactory()
+#         metadata = DataProductMetadataFactory(
+#             data_product=data_product,
+#             file_type="BIAS",
+#             group_id="group_1",
+#             exposure_time=30.0,
+#             object_name="Test Object",
+#             central_wavelength=500.0,
+#             wavelength_band="VIS",
+#             observation_date="2023-01-01",
+#             roi_setting="Full Frame",
+#         )
+#         assert metadata.data_product == data_product
+#         assert metadata.file_type == "BIAS"
+#         assert metadata.group_id == "group_1"
+#         assert metadata.exposure_time == 30.0
+#         assert metadata.object_name == "Test Object"
+#         assert metadata.central_wavelength == 500.0
+#         assert metadata.wavelength_band == "VIS"
+#         assert metadata.observation_date == "2023-01-01"
+#         assert metadata.roi_setting == "Full Frame"
 
 
 @pytest.mark.django_db()
@@ -177,7 +177,7 @@ class TestDRAGONSFileFactory:
     def test_factory_with_specific_values(self):
         """Test factory creation with specific values."""
         dragons_run = DRAGONSRunFactory()
-        data_product = DataProductFactory(create_metadata=True)
+        data_product = DataProductFactory()
         dragons_file = DRAGONSFileFactory(
             dragons_run=dragons_run, data_product=data_product, enabled=False,
         )
@@ -203,13 +203,9 @@ class TestBaseRecipeFactory:
 
     def test_factory_with_specific_values(self):
         """Test that the factory correctly applies passed values."""
-        specific_type = "BIAS"
-        recipe = BaseRecipeFactory(
-            file_type=specific_type, name="Test Recipe", version="32.2.0",
+        recipes_module = RecipesModuleFactory(version="32.2.0")
+        recipe = BaseRecipeFactory(name="Test Recipe", recipes_module=recipes_module,
         )
-        assert (
-            recipe.file_type == specific_type
-        ), "Factory should use the specified file_type."
         assert recipe.name == "Test Recipe", "Factory should use the specified name."
         assert recipe.version == "32.2.0", "Factory should use the specified version."
         assert isinstance(

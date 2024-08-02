@@ -6,6 +6,10 @@ from django.db import models
 from tom_dataproducts.models import DataProduct
 
 
+def default_observation_subtypes() -> list:
+    return []
+
+
 class DataProductMetadata(models.Model):
     """Represents metadata associated with a data product.
 
@@ -15,6 +19,8 @@ class DataProductMetadata(models.Model):
         The data product this metadata is associated with.
     file_type : `models.CharField`
         Type of the file (e.g., BIAS, DARK, FLAT).
+    observation_subtypes : `models.JSONField`
+        The subtypes of the file (e.g., filter).
     group_id : `models.CharField`
         Group identifier for the file, if applicable.
     exposure_time : `models.FloatField`
@@ -39,6 +45,11 @@ class DataProductMetadata(models.Model):
         related_name="metadata",
     )
     file_type = models.CharField(max_length=50, null=True, blank=True)
+    # observation_subtypes = models.JSONField(
+    #     blank=True,
+    #     help_text="Field for storing subtypes of the observation.",
+    #     default=default_observation_subtypes,
+    # )
     group_id = models.CharField(max_length=255, null=True, blank=True)
     exposure_time = models.FloatField(null=True, blank=True)
     object_name = models.CharField(max_length=255, null=True, blank=True)
@@ -47,6 +58,8 @@ class DataProductMetadata(models.Model):
     observation_date = models.DateField(null=True, blank=True)
     roi_setting = models.CharField(max_length=50, null=True, blank=True)
     modified = models.DateTimeField(auto_now=True)
+    tags = models.JSONField(editable=False)
+    instrument = models.CharField(max_length=50, editable=False, blank=True, null=True)
 
     def __str__(self):
         return f"Metadata for {self.data_product.product_id}"

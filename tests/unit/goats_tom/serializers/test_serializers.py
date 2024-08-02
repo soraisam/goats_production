@@ -29,10 +29,7 @@ class TestDRAGONSFileSerializer(APITestCase):
         serializer = DRAGONSFileSerializer(dragons_file)
 
         self.assertEqual(
-            serializer.data["product_id"], dragons_file.data_product.product_id,
-        )
-        self.assertEqual(
-            serializer.data["file_type"], dragons_file.data_product.metadata.file_type,
+            serializer.data["product_id"], dragons_file.product_id,
         )
 
     def test_invalid_data(self):

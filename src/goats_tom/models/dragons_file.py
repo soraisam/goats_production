@@ -1,3 +1,5 @@
+"""Module for `DRAGONSFile` model."""
+
 __all__ = ["DRAGONSFile"]
 
 import inspect
@@ -10,6 +12,32 @@ from tom_dataproducts.models import DataProduct
 
 
 class DRAGONSFile(models.Model):
+    """Represents a file associated with a DRAGONS run.
+
+    Attributes
+    ----------
+    dragons_run : `models.ForeignKey`
+        A foreign key linking to the `DRAGONSRun` instance.
+    data_product : `models.ForeignKey`
+        A foreign key to the `DataProduct` model that details the data
+        product associated with this file.
+    enabled : `models.BooleanField`
+        A boolean flag indicating whether the file is active and should be
+        considered in operations and processes.
+    modified : `models.DateTimeField`
+        The date and time the file was last modified, automatically set to
+        the current timestamp when the file object is updated.
+    recipes_module : `models.ForeignKey`
+        An optional foreign key to the `RecipesModule`, indicating which
+        recipes module is associated with this file.
+    file_type : `models.CharField`
+        A character field storing the type of the file.
+    object_name : `models.CharField`
+        An optional character field storing the name of the object related to
+        the file, if applicable.
+
+    """
+
     dragons_run = models.ForeignKey(
         "goats_tom.DRAGONSRun",
         on_delete=models.CASCADE,
@@ -18,15 +46,61 @@ class DRAGONSFile(models.Model):
     data_product = models.ForeignKey(DataProduct, on_delete=models.CASCADE)
     enabled = models.BooleanField(default=True)
     modified = models.DateTimeField(auto_now=True)
+    recipes_module = models.ForeignKey(
+        "goats_tom.RecipesModule",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="files",
+    )
+    file_type = models.CharField(max_length=50, null=True, blank=True)
+    object_name = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         unique_together = ("dragons_run", "data_product")
 
-    def get_file_path(self) -> str:
+    @property
+    def file_path(self) -> str:
+        """Gets the file path from the data product.
+
+        Returns
+        -------
+        `str`
+            The file path.
+        """
         return self.data_product.data.path
 
-    def get_file_type(self) -> str:
-        return self.data_product.metadata.file_type
+    @property
+    def product_id(self) -> str:
+        """Returns the product ID for the file.
+
+        Returns
+        -------
+        `str`
+            The product ID.
+        """
+        return self.data_product.product_id
+
+    @property
+    def observation_id(self) -> str:
+        """Returns the observation ID for the file.
+
+        Returns
+        -------
+        `str`
+            The observation ID.
+        """
+        return self.data_product.observation_record.observation_id
+
+    @property
+    def url(self) -> str:
+        """Returns the URL to download the file.
+
+        Returns
+        -------
+        `str`
+            The download URL.
+        """
+        return self.data_product.data.url
 
     def list_primitives_and_docstrings(self) -> dict[str, Any]:
         """Lists all available primitives and their documentation for the file type
@@ -41,7 +115,7 @@ class DRAGONSFile(models.Model):
 
         """
         data = {}
-        primitive_obj, _ = showpars.get_pars(self.get_file_path())
+        primitive_obj, _ = showpars.get_pars(self.file_path)
 
         for item in dir(primitive_obj):
             if not item.startswith("_") and inspect.ismethod(

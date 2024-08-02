@@ -22,7 +22,7 @@ class SetupModel {
   async updateFile(fileId, isEnabled) {
     const fileData = { enabled: isEnabled };
     try {
-      const response = await this.api.patch(`${this.filesUrl}${fileId}`, fileData);
+      const response = await this.api.patch(`${this.filesUrl}${fileId}/`, fileData);
       return response;
     } catch (error) {
       console.error("Error updating file state:", error);
@@ -225,11 +225,31 @@ class SetupView {
         a[0].localeCompare(b[0])
       );
 
-      // Create accordion for each file type.
-      sortedEntries.forEach(([fileType, file], index) => {
-        const recipe = recipes[fileType];
-        const accordionItem = this.createAccordionItem(fileType, file, recipe, index);
-        filesAndRecipesContainer.appendChild(accordionItem);
+      sortedEntries.forEach(([fileType, fileGroup], index) => {
+        // TODO: Fix this object check need to determine if we always want lower
+        if (fileType === "object") {
+          // Special handling for 'object' category.
+          Object.entries(fileGroup).forEach(([objectName, fileList], objectIndex) => {
+            const recipe = recipes[fileType][objectName]; // Assuming a generic recipe for simplicity.
+            const accordionItem = this.createAccordionItem(
+              `${fileType} | ${objectName}`,
+              fileList,
+              recipe,
+              `${index}-${objectIndex}`
+            );
+            this.filesAndRecipesContainer.appendChild(accordionItem);
+          });
+        } else {
+          // Regular handling for other file types.
+          const recipe = recipes[fileType];
+          const accordionItem = this.createAccordionItem(
+            fileType,
+            fileGroup,
+            recipe,
+            index
+          );
+          this.filesAndRecipesContainer.appendChild(accordionItem);
+        }
       });
     }
   }
@@ -406,13 +426,13 @@ class SetupView {
     cellCheckbox.appendChild(tempdiv);
     row.appendChild(cellCheckbox);
 
-    // Build the additional data to display.
-    const cellObsDate = Utils.createElement("td", ["py-0", "mb-0"]);
-    cellObsDate.textContent = file.observation_date;
-    row.appendChild(cellObsDate);
+    // // Build the additional data to display.
+    // const cellObsDate = Utils.createElement("td", ["py-0", "mb-0"]);
+    // cellObsDate.textContent = file.observation_date;
+    // row.appendChild(cellObsDate);
 
     // Build the view dropdown.
-    const cell3 = Utils.createElement("td", ["py-0", "mb-0"]);
+    const viewer = Utils.createElement("td", ["py-0", "mb-0", "text-end"]);
     const viewDropdown = Utils.createElement("div", "dropdown");
     const viewLink = Utils.createElement("a", [
       "btn",
@@ -448,9 +468,9 @@ class SetupView {
     li3.appendChild(button2);
     ul.append(li1, li2, li3);
     viewDropdown.append(viewLink, ul);
-    cell3.appendChild(viewDropdown);
+    viewer.appendChild(viewDropdown);
 
-    row.appendChild(cell3);
+    row.appendChild(viewer);
 
     return row;
   }

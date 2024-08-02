@@ -9,7 +9,6 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 from goats_tom.models import (
     BaseRecipe,
-    DataProductMetadata,
     Download,
     DRAGONSFile,
     DRAGONSRecipe,
@@ -19,6 +18,7 @@ from goats_tom.models import (
     Key,
     ProgramKey,
     UserKey,
+    RecipesModule
 )
 from tom_dataproducts.models import DataProduct, ReducedDatum
 from tom_observations.tests.factories import ObservingRecordFactory
@@ -89,10 +89,6 @@ class DataProductFactory(factory.django.DjangoModelFactory):
     data_product_type = "photometry"
     featured = False
 
-    @factory.post_generation
-    def create_metadata(self, create, extracted, **kwargs):
-        if create and extracted and not hasattr(self, "metadata"):
-            DataProductMetadataFactory(data_product=self)
 
 
 class ReducedDatumFactory(factory.django.DjangoModelFactory):
@@ -169,37 +165,46 @@ class DRAGONSRunFactory(factory.django.DjangoModelFactory):
     log_filename = "log.log"
 
 
-class DataProductMetadataFactory(factory.django.DjangoModelFactory):
-    """Factory for `DataProductMetadata`."""
+# class DataProductMetadataFactory(factory.django.DjangoModelFactory):
+#     """Factory for `DataProductMetadata`."""
+
+#     class Meta:
+#         """Configuration."""
+
+#         model = DataProductMetadata
+
+#     data_product = factory.SubFactory(DataProductFactory)
+#     file_type = factory.Faker("word")
+#     group_id = factory.Faker("word")
+#     exposure_time = factory.Faker("pyfloat", positive=True)
+#     object_name = factory.Faker("word")
+#     central_wavelength = factory.Faker("pyfloat", positive=True)
+#     wavelength_band = factory.Faker("word")
+#     observation_date = factory.Faker("date")
+#     roi_setting = factory.Faker("word")
+
+class RecipesModuleFactory(factory.django.DjangoModelFactory):
+    """Factory for creating `RecipesModule` instances for testing."""
 
     class Meta:
-        """Configuration."""
+        model = RecipesModule
 
-        model = DataProductMetadata
-
-    data_product = factory.SubFactory(DataProductFactory)
-    file_type = factory.Faker("word")
-    group_id = factory.Faker("word")
-    exposure_time = factory.Faker("pyfloat", positive=True)
-    object_name = factory.Faker("word")
-    central_wavelength = factory.Faker("pyfloat", positive=True)
-    wavelength_band = factory.Faker("word")
-    observation_date = factory.Faker("date")
-    roi_setting = factory.Faker("word")
-
+    name = factory.Faker("word")
+    version = factory.Faker("numerify", text='#.#.#')
+    instrument = factory.Faker("word")
 
 class DRAGONSFileFactory(factory.django.DjangoModelFactory):
     """Factory for `DRAGONSFile`."""
 
     class Meta:
-        """Configuration."""
-
         model = DRAGONSFile
 
     dragons_run = factory.SubFactory(DRAGONSRunFactory)
-    data_product = factory.SubFactory(DataProductFactory, create_metadata=True)
+    data_product = factory.SubFactory(DataProductFactory)
     enabled = factory.Faker("boolean")
-
+    recipes_module = factory.SubFactory(RecipesModuleFactory)
+    file_type = factory.Iterator(["bias", "flat", "object", "arc"])
+    object_name = factory.Faker("word")
 
 class BaseRecipeFactory(factory.django.DjangoModelFactory):
     """Factory for creating `BaseRecipe` instances for testing."""
@@ -207,11 +212,10 @@ class BaseRecipeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = BaseRecipe
 
-    file_type = factory.Iterator(["BIAS", "FLAT", "ARC", "object"])
     name = factory.Sequence(lambda n: f"Recipe{n}")
     function_definition = factory.Faker("paragraph")
-    version = "32.2.0"
     is_default = factory.Faker("boolean")
+    recipes_module = factory.SubFactory(RecipesModuleFactory)
 
 
 class DRAGONSRecipeFactory(factory.django.DjangoModelFactory):
@@ -239,3 +243,4 @@ class DRAGONSReduceFactory(factory.django.DjangoModelFactory):
     end_time = None
     status = "created"
     task_id = None
+

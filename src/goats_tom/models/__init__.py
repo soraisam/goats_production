@@ -8,6 +8,7 @@ from goats_tom.models.dragons_run import DRAGONSRun
 from goats_tom.models.goa_login import GOALogin
 from goats_tom.models.key import Key
 from goats_tom.models.program_key import ProgramKey
+from goats_tom.models.recipes_module import RecipesModule
 from goats_tom.models.user_key import UserKey
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "DRAGONSRecipe",
     "DRAGONSReduce",
     "BaseRecipe",
+    "RecipesModule",
 ]
