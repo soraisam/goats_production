@@ -1,0 +1,1 @@
+Fixed help page docstring retrieval: Corrected an issue where docstrings were not properly fetched for the help page. Added  tests to prevent in future.
