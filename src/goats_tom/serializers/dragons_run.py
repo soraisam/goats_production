@@ -16,15 +16,34 @@ class DRAGONSRunSerializer(serializers.ModelSerializer):
         A field to include the "observation_id" from the related
         `ObservationRecord` model instance.
 
+    directory: `serializers.SerializerMethodField`
+        A field to include the full path to the output directory.
+
     """
 
     observation_id = serializers.SerializerMethodField()
+    directory = serializers.SerializerMethodField()
 
     class Meta:
         """Meta class for configuration."""
 
         model = DRAGONSRun
         fields = "__all__"
+
+    def get_directory(self, obj: DRAGONSRun) -> str:
+        """Returns the full path to the output directory.
+
+        Parameters
+        ----------
+        obj : `DRAGONSRun`
+            The `DRAGONSRun` instance being serialized.
+
+        Returns
+        -------
+        `str`
+            The full path to the output directory.
+        """
+        return f"{obj.get_output_dir()}"
 
     def get_observation_id(self, obj: DRAGONSRun) -> str:
         """Returns the "observation_id" for the given DRAGONSRun instance.
@@ -45,5 +64,6 @@ class DRAGONSRunSerializer(serializers.ModelSerializer):
 
 class DRAGONSRunFilterSerializer(serializers.Serializer):
     observation_record = serializers.IntegerField(
-        required=False, help_text="Primary key for the observation record to filter by",
+        required=False,
+        help_text="Primary key for the observation record to filter by",
     )

@@ -176,9 +176,9 @@ class DRAGONSRun(models.Model):
         """
         raw_dir = (
             settings.MEDIA_ROOT
-            / self.observation_record.target.name
-            / self.observation_record.facility
-            / self.observation_record.observation_id
+            / f"{self.observation_record.target.name}"
+            / f"{self.observation_record.facility}"
+            / f"{self.observation_record.observation_id}"
         )
         return raw_dir
 

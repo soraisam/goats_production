@@ -120,6 +120,7 @@ class Utils {
 
   /**
    * Formats a snake_case string into a human-readable title format with spaces and capitalization.
+   * Also converts "Id" to all uppercase.
    * @param {string} text The text to format, typically a key from a documentation object.
    * @returns {string} The formatted text with underscores replaced by spaces and each word
    * capitalized.
@@ -129,7 +130,12 @@ class Utils {
       .toLowerCase()
       .replace(/_/g, " ")
       .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => {
+        if (word.toLowerCase() === "id") {
+          return "ID";
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
       .join(" ");
   }
 }
