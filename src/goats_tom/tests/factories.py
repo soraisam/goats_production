@@ -165,24 +165,6 @@ class DRAGONSRunFactory(factory.django.DjangoModelFactory):
     log_filename = "log.log"
 
 
-# class DataProductMetadataFactory(factory.django.DjangoModelFactory):
-#     """Factory for `DataProductMetadata`."""
-
-#     class Meta:
-#         """Configuration."""
-
-#         model = DataProductMetadata
-
-#     data_product = factory.SubFactory(DataProductFactory)
-#     file_type = factory.Faker("word")
-#     group_id = factory.Faker("word")
-#     exposure_time = factory.Faker("pyfloat", positive=True)
-#     object_name = factory.Faker("word")
-#     central_wavelength = factory.Faker("pyfloat", positive=True)
-#     wavelength_band = factory.Faker("word")
-#     observation_date = factory.Faker("date")
-#     roi_setting = factory.Faker("word")
-
 class RecipesModuleFactory(factory.django.DjangoModelFactory):
     """Factory for creating `RecipesModule` instances for testing."""
 

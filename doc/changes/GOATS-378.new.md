@@ -1,0 +1,1 @@
+Added API endpoint for groups retrieval: Provided astrodata descriptors (groups) via API for DRAGONS runs and files.

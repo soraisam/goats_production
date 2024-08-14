@@ -67,3 +67,11 @@ class DRAGONSRunFilterSerializer(serializers.Serializer):
         required=False,
         help_text="Primary key for the observation record to filter by",
     )
+    include = serializers.ListField(
+        child=serializers.ChoiceField(
+            choices=[
+                "groups",
+            ]
+        ),
+        required=False,
+    )
