@@ -65,7 +65,9 @@ class DRAGONSRun(models.Model):
     """
 
     observation_record = models.ForeignKey(
-        ObservationRecord, on_delete=models.CASCADE, related_name="dragons_runs",
+        ObservationRecord,
+        on_delete=models.CASCADE,
+        related_name="dragons_runs",
     )
     run_id = models.CharField(
         max_length=255,
@@ -184,3 +186,18 @@ class DRAGONSRun(models.Model):
 
     def get_recipes(self):
         return DRAGONSRecipe.objects.filter(version=self.version)
+
+    def list_groups(self) -> list[str]:
+        """Returns a list of groups aka descriptors from an associated first file.
+
+        Returns
+        -------
+        `list[str]`
+            The list of groups.
+        """
+        first_file = self.dragons_run_files.first()
+
+        if first_file:
+            return first_file.list_groups()
+
+        return []

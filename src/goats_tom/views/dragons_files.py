@@ -94,9 +94,7 @@ class DRAGONSFilesViewSet(
             if "object" in grouped_data:
                 object_group = defaultdict(list)
                 for obj_item in grouped_data["object"]:
-                    sub_type = obj_item.get(
-                        "object_name", ""
-                    )
+                    sub_type = obj_item.get("object_name", "")
                     object_group[sub_type].append(obj_item)
                 grouped_data["object"] = dict(
                     object_group
@@ -125,13 +123,13 @@ class DRAGONSFilesViewSet(
 
         Parameters
         ----------
-        request : HttpRequest
+        request : `HttpRequest`
             The HTTP request object, containing query parameters.
 
         Returns
         -------
         `Response`
-            Contains serialized DRAGONS file data with optional header information.
+            Contains serialized DRAGONS file data with optional information.
 
         """
         instance = self.get_object()
@@ -147,5 +145,8 @@ class DRAGONSFilesViewSet(
             if "header" in include:
                 header = get_astrodata_header(instance.data_product)
                 data["header"] = header
+
+            if "groups" in include:
+                data["groups"] = instance.list_groups()
 
         return Response(data)

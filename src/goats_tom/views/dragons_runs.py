@@ -4,8 +4,10 @@ from datetime import timedelta
 
 import astrodata
 from django.db.models import Max, QuerySet
+from django.http import HttpRequest
 from recipe_system import cal_service
 from rest_framework import mixins, permissions
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from tom_dataproducts.models import DataProduct
 
@@ -238,3 +240,33 @@ class DRAGONSRunsViewSet(
                 file_type=file_type,
                 object_name=object_name,
             )
+
+    def retrieve(self, request: HttpRequest, *args, **kwargs) -> Response:
+        """Retrieve a DRAGONS run instance along with optional included data based on
+        query parameters.
+
+        Parameters
+        ----------
+        request : `HttpRequest`
+            The HTTP request object, containing query parameters.
+
+        Returns
+        -------
+        `Response`
+            Contains serialized DRAGONS run data with optional information.
+
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+
+        # Validate the query parameters.
+        filter_serializer = self.filter_serializer_class(data=request.query_params)
+        # If valid, attach the additional information.
+        if filter_serializer.is_valid(raise_exception=False):
+            include = filter_serializer.validated_data.get("include", [])
+
+            if "groups" in include:
+                data["groups"] = instance.list_groups()
+
+        return Response(data)

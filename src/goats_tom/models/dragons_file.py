@@ -5,6 +5,7 @@ __all__ = ["DRAGONSFile"]
 import inspect
 from typing import Any
 
+import astrodata
 from django.db import models
 from gempy.scripts import showpars
 from numpydoc.docscrape import NumpyDocString
@@ -145,3 +146,15 @@ class DRAGONSFile(models.Model):
                     pass
 
         return data
+
+    def list_groups(self) -> list[str]:
+        """Returns a list of groups for the file.
+
+        Returns
+        -------
+        `list[str]`
+            A list of groups aka descriptors for the file.
+
+        """
+        ad = astrodata.open(self.file_path)
+        return list(ad.descriptors)

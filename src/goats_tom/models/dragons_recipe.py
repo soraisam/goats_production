@@ -184,3 +184,21 @@ class DRAGONSRecipe(models.Model):
             return first_file.list_primitives_and_docstrings()
 
         return {}
+
+    def list_groups(self) -> list[str]:
+        """Returns a list of groups for a recipe from the associated files.
+
+        Returns
+        -------
+        `list[str]`
+            A list of groups aka descriptors from the associated first file.
+
+        """
+        first_file = self.recipe.recipes_module.files.fileter(
+            file_type=self.file_type
+        ).first()
+
+        if first_file:
+            return first_file.list_groups()
+
+        return []
