@@ -55,6 +55,9 @@ class DRAGONSFile(models.Model):
     )
     file_type = models.CharField(max_length=50, null=True, blank=True)
     object_name = models.CharField(max_length=100, null=True, blank=True)
+    astrodata_descriptors = models.JSONField(default=dict)
+    url = models.CharField(max_length=255, null=False, blank=False)
+    product_id = models.CharField(max_length=100, null=False, blank=False)
 
     class Meta:
         unique_together = ("dragons_run", "data_product")
@@ -71,17 +74,6 @@ class DRAGONSFile(models.Model):
         return self.data_product.data.path
 
     @property
-    def product_id(self) -> str:
-        """Returns the product ID for the file.
-
-        Returns
-        -------
-        `str`
-            The product ID.
-        """
-        return self.data_product.product_id
-
-    @property
     def observation_id(self) -> str:
         """Returns the observation ID for the file.
 
@@ -91,17 +83,6 @@ class DRAGONSFile(models.Model):
             The observation ID.
         """
         return self.data_product.observation_record.observation_id
-
-    @property
-    def url(self) -> str:
-        """Returns the URL to download the file.
-
-        Returns
-        -------
-        `str`
-            The download URL.
-        """
-        return self.data_product.data.url
 
     def list_primitives_and_docstrings(self) -> dict[str, Any]:
         """Lists all available primitives and their documentation for the file type

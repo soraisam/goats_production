@@ -1,5 +1,6 @@
 """Module that handles the DRAGONS run API."""
 
+import datetime
 from datetime import timedelta
 
 import astrodata
@@ -181,6 +182,8 @@ class DRAGONSRunsViewSet(
             tags = ad.tags
             instrument = ad.instrument(generic=True).lower()
             object_name = None
+            # TODO: Is there a better place for this?
+            descriptors = ad.descriptors
 
             # Skip if file is prepared or processed, unless it's a BPM file.
             if "BPM" not in tags and ("PREPARED" in tags or "PROCESSED" in tags):
@@ -232,6 +235,23 @@ class DRAGONSRunsViewSet(
                 else:
                     print(f"Did not create a tmp recipe: {recipe_name}")
 
+            # Build the astrodata descriptors to save.
+            astrodata_descriptors = {}
+            for descriptor in descriptors:
+                if hasattr(ad, descriptor):
+                    try:
+                        value = getattr(ad, descriptor)()
+                        # Check for unsupported types and convert them.
+                        if isinstance(value, (datetime.date, datetime.datetime)):
+                            # Convert datetime or date to ISO formatted string.
+                            value = value.isoformat()
+                        elif not isinstance(value, (str, int, float, bool, type(None))):
+                            # Convert any other unsupported types to string.
+                            value = str(value)
+                        astrodata_descriptors[descriptor] = value
+                    except Exception as e:
+                        print(f"Error accessing descriptor {descriptor}: {str(e)}")
+
             # Create a file for this run using the recipes module last retrieved.
             DRAGONSFile.objects.create(
                 dragons_run=dragons_run,
@@ -239,6 +259,9 @@ class DRAGONSRunsViewSet(
                 recipes_module=recipes_module,
                 file_type=file_type,
                 object_name=object_name,
+                astrodata_descriptors=astrodata_descriptors,
+                product_id=data_product.product_id,
+                url=data_product.data.url,
             )
 
     def retrieve(self, request: HttpRequest, *args, **kwargs) -> Response:
