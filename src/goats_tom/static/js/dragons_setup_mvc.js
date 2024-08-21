@@ -98,6 +98,45 @@ class SetupModel {
   }
 
   /**
+   * Fetches, groups, and optionally filters files based on their descriptors.
+   * @param {string} runId The ID of the run for which files are to be fetched.
+   * @param {string | string[]} groupBy The descriptor(s) to group the files by.
+   * @param {string} fileType The type of files to filter before grouping.
+   * @param {string} [filterExpression] Optional filter expression to apply before grouping.
+   * @returns {Promise<Object>} A promise that resolves to an object containing grouped files.
+   */
+  async fetchGroupAndFilterFiles(runId, groupBy, fileType, filterExpression = "") {
+    let groupByParams = "";
+
+    if (Array.isArray(groupBy)) {
+      // Build URL with multiple group_by parameters.
+      groupByParams = groupBy.map((gb) => `group_by=${gb}`).join("&");
+    } else {
+      // Single group_by parameter.
+      groupByParams = `group_by=${groupBy}`;
+    }
+
+    // Base URL setup with mandatory parameters
+    const baseUrl = `${this.filesUrl}?dragons_run=${runId}&${groupByParams}&file_type=${fileType}`;
+
+    // Append filter expression if it's provided
+    const filterExpressionParam = filterExpression
+      ? `&filter_expression=${encodeURIComponent(filterExpression)}`
+      : "";
+
+    // Complete URL construction
+    const url = baseUrl + filterExpressionParam;
+    console.log(url);
+    try {
+      const response = await this.api.get(url);
+      return response.results || {};
+    } catch (error) {
+      console.error("Error fetching, grouping, and filtering files:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Fetches a list of runs associated with a specific observation record.
    * @param {string} observationRecordId The ID of the observation record.
    * @returns {Promise<Array>} A promise that resolves to an array of runs.
@@ -475,6 +514,13 @@ class SetupView {
     // Create files table.
     const tableP = Utils.createElement("p", ["mt-3", "mb-2"]);
     tableP.textContent = "Available Files";
+
+    // Build the file filter.
+    const fileFilterRow = this.createFileFilter(files[0]);
+    const fileGroupingsRow = this.createFileGroupings(files[0]);
+    const strictFileFilterRow = this.createStrictFileFilter(files[0]);
+    const availableFileGroupsRow = this.createAvailableFileGroups(files[0]);
+
     const table = Utils.createElement("table", [
       "table",
       "table-sm",
@@ -487,7 +533,14 @@ class SetupView {
       tbody.appendChild(fileRow);
     });
     table.appendChild(tbody);
-    body.append(tableP, table);
+    body.append(
+      tableP,
+      fileGroupingsRow,
+      availableFileGroupsRow,
+      fileFilterRow,
+      strictFileFilterRow,
+      table
+    );
     collapse.appendChild(body);
 
     // Construct the complete accordion item by adding both header and collapse sections.
@@ -496,6 +549,130 @@ class SetupView {
 
     // Return the fully constructed accordion item.
     return accordionItem;
+  }
+
+  // TODO: Documentation
+  createFileFilter(file) {
+    const row = Utils.createElement("div", ["row", "ms-1", "mb-1"]);
+    const col1 = Utils.createElement("div", ["col-sm-3"]);
+    const col2 = Utils.createElement("div", ["col-sm-9"]);
+
+    // Build the ID.
+    const id = `filterExpression-${file.id}`;
+
+    // Build the label.
+    const label = Utils.createElement("label", ["col-form-label"]);
+    label.setAttribute("for", id);
+    label.textContent = "Filter Files";
+
+    // Build the input.
+    const input = Utils.createElement("input", ["form-control"]);
+    input.id = id;
+    input.setAttribute("type", "text");
+    input.setAttribute("placeholder", "exposure_time > 10 and airmass == 1");
+
+    // Put together.
+    col1.append(label);
+    col2.append(input);
+    row.append(col1, col2);
+
+    return row;
+  }
+
+  createFileGroupings(file) {
+    const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
+    const col1 = Utils.createElement("div", ["col-sm-3"]);
+    const col2 = Utils.createElement("div", ["col-sm-9"]);
+
+    // Build the ID.
+    const id = `fileGroupings-${file.id}`;
+    // tom-select has a different ID.
+    const tsId = `${id}-ts-control`;
+
+    // Build the label.
+    const label = Utils.createElement("label", ["col-form-label"]);
+    label.setAttribute("for", tsId);
+    label.textContent = "Create Groupings";
+
+    // Build the select.
+    const select = Utils.createElement("select", []);
+    select.id = id;
+    select.name = "groupBy[]";
+    select.setAttribute("autocomplete", "off");
+    select.multiple = true;
+
+    // Create and add the first option.
+    const option1 = Utils.createElement("option");
+    option1.value = "test1";
+    option1.textContent = "Test 1";
+    select.appendChild(option1);
+
+    // Create and add the second option.
+    const option2 = Utils.createElement("option");
+    option2.value = "test2";
+    option2.textContent = "Test 2";
+    select.appendChild(option2);
+
+    // Put together.
+    col1.append(label);
+    col2.append(select);
+    row.append(col1, col2);
+
+    new TomSelect(select, {});
+
+    return row;
+  }
+
+  createAvailableFileGroups(file) {
+    const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
+    const col1 = Utils.createElement("div", ["col-sm-3"]);
+    const col2 = Utils.createElement("div", ["col-sm-9"]);
+
+    // Build the ID.
+    const id = `availableFileGroups-${file.id}`;
+
+    // Build the label.
+    const label = Utils.createElement("label", ["col-form-label"]);
+    label.setAttribute("for", id);
+    label.textContent = "Available Groups";
+
+    // Build the select.
+    const select = Utils.createElement("select", ["form-select"]);
+    select.id = id;
+    select.setAttribute("autocomplete", "off");
+
+    // Put together.
+    col1.appendChild(label);
+    col2.appendChild(select);
+    row.append(col1, col2);
+
+    return row;
+  }
+
+  createStrictFileFilter(file) {
+    const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
+    const col = Utils.createElement("div", ["col-sm-9", "ms-auto"]);
+    const div = Utils.createElement("div", ["form-check"]);
+
+    // Build the ID.
+    const id = `strictFileFilter-${file.id}`;
+
+    // Build the checkbox.
+    const checkbox = Utils.createElement("input", ["form-check-input"]);
+    checkbox.id = id;
+    checkbox.setAttribute("type", "checkbox");
+
+    // Build the label.
+    const label = Utils.createElement("label", ["form-check-label"]);
+    label.setAttribute("for", id);
+    label.textContent = "Use strict filter expression matching";
+
+    // Put together.
+    div.append(checkbox, label);
+    col.appendChild(div);
+    row.appendChild(col);
+
+    return row;
   }
 
   /**
