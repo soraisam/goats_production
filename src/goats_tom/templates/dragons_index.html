@@ -73,10 +73,12 @@
   </div>
 </div>
 <div id="helpOffcanvasContainer"></div>
+<link rel="stylesheet" href="{% static 'tom-select/tom-select.bootstrap5.css' %}">
 {% endblock %}
 
 {% block javascript %}
 {{ block.super }}
+<script src="{% static 'tom-select/tom-select.base.js' %}"></script>
 <script src="{% static 'js/utils.js' %}"></script>
 <script src="{% static 'js/help_offcanvas.js' %}"></script>
 <script src="{% static 'js/logger.js' %}"></script>

@@ -1,0 +1,1 @@
+Added UI components for file grouping and filtering: Introduced user interface elements that allow grouping and filtering of files, featuring a multiselect dropdown for selecting astrodata descriptors.
