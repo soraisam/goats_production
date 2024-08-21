@@ -72,7 +72,7 @@ class DRAGONSFileFilterSerializer(serializers.Serializer):
         group_by = data.get("group_by", [])
         file_type = data.get("file_type", "")
         object_name = data.get("object_name", "")
-        dragons_run = data.get("dragons_run", None)
+        # dragons_run = data.get("dragons_run", None)
 
         # When group_by_file_type is True, ensure no group_by, file_type, or
         # object_name is provided
@@ -84,32 +84,32 @@ class DRAGONSFileFilterSerializer(serializers.Serializer):
                 )
 
         # group_by is required for file_type and object_name
-        if not group_by:
-            if file_type:
-                raise serializers.ValidationError(
-                    "'file_type' can only be included if 'group_by' is provided."
-                )
-            if object_name:
-                raise serializers.ValidationError(
-                    "'object_name' can only be included if 'group_by' is provided."
-                )
+        # if not group_by:
+        #     if file_type:
+        #         raise serializers.ValidationError(
+        #             "'file_type' can only be included if 'group_by' is provided."
+        #         )
+        #     if object_name:
+        #         raise serializers.ValidationError(
+        #             "'object_name' can only be included if 'group_by' is provided."
+        #         )
 
-        # If group_by is used, ensure that dragons_run and file_type are provided
-        if group_by:
-            if not dragons_run:
-                raise serializers.ValidationError(
-                    "'dragons_run' is required when 'group_by' is used."
-                )
-            if not file_type:
-                raise serializers.ValidationError(
-                    "'file_type' is required when 'group_by' is used."
-                )
-            # If file_type is 'object', object_name must also be provided
-            if file_type == "object" and not object_name:
-                raise serializers.ValidationError(
-                    "'object_name' is required when 'file_type' is 'object' and "
-                    "'group_by' is used."
-                )
+        # # If group_by is used, ensure that dragons_run and file_type are provided
+        # if group_by:
+        #     if not dragons_run:
+        #         raise serializers.ValidationError(
+        #             "'dragons_run' is required when 'group_by' is used."
+        #         )
+        #     if not file_type:
+        #         raise serializers.ValidationError(
+        #             "'file_type' is required when 'group_by' is used."
+        #         )
+        #     # If file_type is 'object', object_name must also be provided
+        #     if file_type == "object" and not object_name:
+        #         raise serializers.ValidationError(
+        #             "'object_name' is required when 'file_type' is 'object' and "
+        #             "'group_by' is used."
+        #         )
 
         return data
 

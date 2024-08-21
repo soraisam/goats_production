@@ -103,21 +103,28 @@ class SetupModel {
    * @param {string | string[]} groupBy The descriptor(s) to group the files by.
    * @param {string} fileType The type of files to filter before grouping.
    * @param {string} [filterExpression] Optional filter expression to apply before grouping.
+   * @param {boolean} [filterStrict] Optional filter strictly.
    * @returns {Promise<Object>} A promise that resolves to an object containing grouped files.
    */
-  async fetchGroupAndFilterFiles(runId, groupBy, fileType, filterExpression = "") {
+  async fetchGroupAndFilterFiles(
+    runId,
+    groupBy,
+    fileType,
+    filterExpression = "",
+    filterStrict = false
+  ) {
     let groupByParams = "";
 
     if (Array.isArray(groupBy)) {
       // Build URL with multiple group_by parameters.
-      groupByParams = groupBy.map((gb) => `group_by=${gb}`).join("&");
+      groupByParams = groupBy.map((gb) => `&group_by=${gb}`).join("");
     } else {
       // Single group_by parameter.
-      groupByParams = `group_by=${groupBy}`;
+      groupByParams = `&group_by=${groupBy}`;
     }
 
     // Base URL setup with mandatory parameters
-    const baseUrl = `${this.filesUrl}?dragons_run=${runId}&${groupByParams}&file_type=${fileType}`;
+    const baseUrl = `${this.filesUrl}?dragons_run=${runId}${groupByParams}&file_type=${fileType}&filter_strict=${filterStrict}`;
 
     // Append filter expression if it's provided
     const filterExpressionParam = filterExpression
@@ -129,10 +136,9 @@ class SetupModel {
     console.log(url);
     try {
       const response = await this.api.get(url);
-      return response.results || {};
+      return response || {};
     } catch (error) {
       console.error("Error fetching, grouping, and filtering files:", error);
-      throw error;
     }
   }
 
@@ -162,7 +168,7 @@ class SetupModel {
    */
   async fetchRun(runId) {
     try {
-      const response = await this.api.get(`${this.runsUrl}${runId}/`);
+      const response = await this.api.get(`${this.runsUrl}${runId}?include=groups`);
       return response;
     } catch (error) {
       console.error("Error fetching run:", error);
@@ -189,6 +195,7 @@ class SetupView {
     this.headerModal = Utils.createModal("header");
     this.runContainer = this.card.querySelector("#runContainer");
     this.runContainer.appendChild(this.createRunTable());
+    this.runId = null;
 
     // Set up event listeners for UI interactions.
     this._initLocalListeners();
@@ -281,6 +288,7 @@ class SetupView {
         this.runTable.appendChild(tr);
       }
     });
+    this.runId = run.id;
   }
 
   /**
@@ -348,8 +356,9 @@ class SetupView {
    * Display files and recipes in the specified container.
    * @param {Object} files The files to display, grouped by file type.
    * @param {Object} recipes The recipes associated with each file type.
+   * @param groups
    */
-  displayFilesAndRecipes(files, recipes) {
+  displayFilesAndRecipes(files, recipes, groups) {
     this.filesAndRecipesContainer.innerHTML = "";
 
     const filesAndRecipesContainerP = Utils.createElement("p", "mb-2");
@@ -376,7 +385,8 @@ class SetupView {
               `${fileType} | ${objectName}`,
               fileList,
               recipe,
-              `${index}-${objectIndex}`
+              `${index}-${objectIndex}`,
+              groups
             );
             this.filesAndRecipesContainer.appendChild(accordionItem);
           });
@@ -387,7 +397,8 @@ class SetupView {
             fileType,
             fileGroup,
             recipe,
-            index
+            index,
+            groups
           );
           this.filesAndRecipesContainer.appendChild(accordionItem);
         }
@@ -431,7 +442,8 @@ class SetupView {
    * @param {number} index The index used to generate unique IDs for DOM elements.
    * @returns {HTMLElement} The constructed accordion item.
    */
-  createAccordionItem(fileType, files, recipes, index) {
+  createAccordionItem(fileType, files, recipes, index, groups) {
+    const hr = Utils.createElement("hr");
     // Create the outer container for the accordion item with the 'accordion-item' class.
     const accordionItem = Utils.createElement("div", "accordion-item");
 
@@ -516,9 +528,7 @@ class SetupView {
     tableP.textContent = "Available Files";
 
     // Build the file filter.
-    const fileFilterRow = this.createFileFilter(files[0]);
-    const fileGroupingsRow = this.createFileGroupings(files[0]);
-    const strictFileFilterRow = this.createStrictFileFilter(files[0]);
+    const form = this.createFileGroupingsAndFilterForm(files[0], groups);
     const availableFileGroupsRow = this.createAvailableFileGroups(files[0]);
 
     const table = Utils.createElement("table", [
@@ -533,14 +543,7 @@ class SetupView {
       tbody.appendChild(fileRow);
     });
     table.appendChild(tbody);
-    body.append(
-      tableP,
-      fileGroupingsRow,
-      availableFileGroupsRow,
-      fileFilterRow,
-      strictFileFilterRow,
-      table
-    );
+    body.append(tableP, form, hr, availableFileGroupsRow, table);
     collapse.appendChild(body);
 
     // Construct the complete accordion item by adding both header and collapse sections.
@@ -551,7 +554,11 @@ class SetupView {
     return accordionItem;
   }
 
-  // TODO: Documentation
+  /**
+   * Creates a filter input row for file filtering based on user-defined criteria.
+   * @param {Object} file The file object for which the filter is being created.
+   * @returns {HTMLElement} A DOM element representing the row for file filtering input.
+   */
   createFileFilter(file) {
     const row = Utils.createElement("div", ["row", "ms-1", "mb-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
@@ -570,6 +577,7 @@ class SetupView {
     input.id = id;
     input.setAttribute("type", "text");
     input.setAttribute("placeholder", "exposure_time > 10 and airmass == 1");
+    input.name = "filter_expression";
 
     // Put together.
     col1.append(label);
@@ -579,7 +587,13 @@ class SetupView {
     return row;
   }
 
-  createFileGroupings(file) {
+  /**
+   * Generates a row with a multiple selection dropdown for grouping files by specified descriptors.
+   * @param {Object} file The file object for which the groupings are being created.
+   * @param {Array<string>} groups An array of strings representing the grouping options.
+   * @returns {HTMLElement} A DOM element representing the row for file groupings.
+   */
+  createFileGroupings(file, groups) {
     const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
     const col2 = Utils.createElement("div", ["col-sm-9"]);
@@ -597,32 +611,38 @@ class SetupView {
     // Build the select.
     const select = Utils.createElement("select", []);
     select.id = id;
-    select.name = "groupBy[]";
+    select.name = "group_by";
     select.setAttribute("autocomplete", "off");
     select.multiple = true;
 
-    // Create and add the first option.
-    const option1 = Utils.createElement("option");
-    option1.value = "test1";
-    option1.textContent = "Test 1";
-    select.appendChild(option1);
-
-    // Create and add the second option.
-    const option2 = Utils.createElement("option");
-    option2.value = "test2";
-    option2.textContent = "Test 2";
-    select.appendChild(option2);
+    // Create a document fragment to append options.
+    const fragment = document.createDocumentFragment();
+    groups.forEach((group) => {
+      const option = Utils.createElement("option");
+      option.value = group;
+      option.textContent = group;
+      fragment.appendChild(option);
+    });
+    select.appendChild(fragment);
 
     // Put together.
     col1.append(label);
     col2.append(select);
     row.append(col1, col2);
 
-    new TomSelect(select, {});
+    new TomSelect(select, {
+      create: false,
+      sortField: { field: "text", director: "asc" },
+    });
 
     return row;
   }
 
+  /**
+   * Creates a dropdown for selecting available file groups after files have been grouped.
+   * @param {Object} file The file object for which the available groups are being displayed.
+   * @returns {HTMLElement} A DOM element representing the row for selecting available file groups.
+   */
   createAvailableFileGroups(file) {
     const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
@@ -640,6 +660,11 @@ class SetupView {
     const select = Utils.createElement("select", ["form-select"]);
     select.id = id;
     select.setAttribute("autocomplete", "off");
+    const option = Utils.createElement("option");
+    option.textContent = "Ungrouped";
+    option.value = "ungrouped";
+    option.selected = true;
+    select.appendChild(option);
 
     // Put together.
     col1.appendChild(label);
@@ -649,8 +674,14 @@ class SetupView {
     return row;
   }
 
+  /**
+   * Constructs a checkbox for the user to specify if strict filtering should be applied.
+   * @param {Object} file The file object for which the strict filter option is being created.
+   * @returns {HTMLElement} A DOM element representing the row containing the strict filter
+   * checkbox.
+   */
   createStrictFileFilter(file) {
-    const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
+    const row = Utils.createElement("div", ["row", "mb-1", "ms-1"]);
     const col = Utils.createElement("div", ["col-sm-9", "ms-auto"]);
     const div = Utils.createElement("div", ["form-check"]);
 
@@ -661,6 +692,8 @@ class SetupView {
     const checkbox = Utils.createElement("input", ["form-check-input"]);
     checkbox.id = id;
     checkbox.setAttribute("type", "checkbox");
+    checkbox.name = "filter_strict";
+    checkbox.checked = false;
 
     // Build the label.
     const label = Utils.createElement("label", ["form-check-label"]);
@@ -673,6 +706,50 @@ class SetupView {
     row.appendChild(col);
 
     return row;
+  }
+
+  /**
+   * Assembles a form containing elements for file groupings and filters, along with action buttons.
+   * This form allows users to specify groupings, filters, and to submit these settings for processing.
+   * @param {Object} file The file object for which the form is being created.
+   * @param {Array<string>} groups An array of strings representing the grouping options.
+   * @returns {HTMLElement} The complete form element ready for user interaction.
+   */
+  createFileGroupingsAndFilterForm(file, groups) {
+    const form = Utils.createElement("form");
+    // Create hidden inputs for file_type and object_name
+    const fileTypeInput = Utils.createElement("input");
+    fileTypeInput.setAttribute("type", "hidden");
+    fileTypeInput.setAttribute("name", "file_type");
+    fileTypeInput.value = file.file_type;
+
+    const objectNameInput = Utils.createElement("input");
+    objectNameInput.setAttribute("type", "hidden");
+    objectNameInput.setAttribute("name", "object_name");
+    objectNameInput.value = file.object_name;
+
+    // Build the elements for the form.
+    const fileFilterRow = this.createFileFilter(file);
+    const fileGroupingsRow = this.createFileGroupings(file, groups);
+    const strictFileFilterRow = this.createStrictFileFilter(file);
+    // TODO: Build the button.
+    const div = Utils.createElement("div", ["d-flex", "justify-content-end"]);
+    const button = Utils.createElement("button", ["btn", "btn-primary"]);
+    button.textContent = "Apply Groupings And Filter";
+    button.dataset.action = "submitFileGroupingsAndFilterForm";
+    button.setAttribute("type", "submit");
+    div.appendChild(button);
+
+    form.append(
+      fileGroupingsRow,
+      fileFilterRow,
+      strictFileFilterRow,
+      fileTypeInput,
+      objectNameInput,
+      div
+    );
+
+    return form;
   }
 
   /**
@@ -769,6 +846,10 @@ class SetupView {
     this.onSwitchTab = handler;
   }
 
+  bindSubmitFileGroupingsAndFilterForm(handler) {
+    this.onSubmitFileGroupingsAndFilterForm = handler;
+  }
+
   /**
    * Initialize local event listeners for the component.
    * Sets up handlers to manage user interactions within the files and recipes container.
@@ -786,6 +867,7 @@ class SetupView {
     // Listen for changes to the run selection dropdown to load different runs.
     this.runSelect.addEventListener("change", (event) => {
       let selectedRun = event.target.value;
+      this.run = selectedRun;
       this.onChangeRun(selectedRun);
     });
 
@@ -825,6 +907,11 @@ class SetupView {
           case "switchTab":
             this.onSwitchTab(event.target.dataset.recipeId);
             this.activateTab(event.target.dataset.recipeId);
+            break;
+          case "submitFileGroupingsAndFilterForm":
+            event.preventDefault();
+            let formData = new FormData(event.target.form);
+            this.onSubmitFileGroupingsAndFilterForm(formData);
             break;
           default:
             break;
@@ -900,6 +987,10 @@ class SetupController {
 
     // When a header is requested.
     this.view.bindShowHeader(this.handleFetchHeader);
+
+    this.view.bindSubmitFileGroupingsAndFilterForm(
+      this.handleSubmitFileGroupsAndFilterForm
+    );
   }
   /**
    * Toggles the enabled state of a specific file and updates the view based on the response.
@@ -945,7 +1036,8 @@ class SetupController {
 
       const files = await this.model.fetchFileList(runId);
       const recipes = await this.model.fetchRecipes(runId);
-      this.view.displayFilesAndRecipes(files, recipes);
+      // Provide the groups for the files grouping.
+      this.view.displayFilesAndRecipes(files, recipes, run.groups);
     } catch (error) {
       console.error("Failed to update files:", error);
     }
@@ -976,5 +1068,31 @@ class SetupController {
     } catch (error) {
       console.error("Failed to fetch runs:", error);
     }
+  };
+
+  /**
+   * Submits form data after formatting it correctly for handling groupings and filters.
+   * @param {FormData} formData The FormData object containing form inputs from the user.
+   */
+  handleSubmitFileGroupsAndFilterForm = async (formData) => {
+    // Put all data in the correct format for the handler.
+    // Create array from 'group_by'.
+    let groupBy = formData.getAll("group_by");
+    // Handle 'strict_filter' to ensure it is boolean.
+    let filterStrict = formData.get("filter_strict") === "on";
+    // Handle 'filter_expression' to ensure it defaults to an empty string if not provided.
+    let filterExpression = formData.get("filter_expression") || "";
+    let fileType = formData.get("file_type");
+    let objectName = formData.get("object_name");
+
+    console.log(this.view.runId, groupBy, fileType, filterExpression);
+    const response = await this.model.fetchGroupAndFilterFiles(
+      this.view.runId,
+      groupBy,
+      fileType,
+      filterExpression
+    );
+    // TODO: Finish by updating the frontend with the response.
+    console.log(response);
   };
 }

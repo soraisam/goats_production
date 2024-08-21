@@ -451,7 +451,7 @@ select.form-control[multiple] {
 }
 
 .files-overflow {
-  max-height: 200px;
+  max-height: 350px;
   overflow-y: auto;
 }
 
