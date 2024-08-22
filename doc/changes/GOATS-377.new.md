@@ -1,0 +1,1 @@
+Enhanced file grouping and filtering: Added functionality to fetch files from the frontend to the grouping and filtering API backend. Implemented listeners for button clicks to query API from the form.

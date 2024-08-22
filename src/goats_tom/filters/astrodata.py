@@ -61,34 +61,37 @@ class AstrodataFilter:
         `Q`
             A Django `Q` object representing the combined conditions.
         """
+        # Split the expression into parts based on logical operations (AND, OR, NOT).
         parts = self.logical_operations_pattern.split(expression)
         q_object = Q()
-        current_operation = "AND"  # Default operation
+        current_operation = "AND"  # Default operation.
 
         for part in parts:
             part = part.strip()  # noqa: PLW2901
+            # Check if the current part is a logical operation.
             if part.upper() in self.logical_operations:
-                # Update current logical operator
+                # Update current logical operator if part is logical operator.
                 current_operation = part.upper()
                 continue
 
+            # Search for matches of field, operator, and value in the part.
             match = self.pattern.search(part)
-            if not match:
-                # Skip if no match is found.
-                continue
+            if match:
+                field, operator, value = match.groups()
+                value = value.strip("\"'")
 
-            field, operator, value = match.groups()
+                # Check if operator is valid and map it to Django's query expression.
+                if operator_match := self.operator_mapping.get(operator):
+                    # Construct a Q object for the current field and value.
+                    new_q = self._construct_query(field, operator_match, value)
+                    # Apply the current logical operation to combine the new Q object.
+                    q_object = self._apply_logical_operation(
+                        q_object,
+                        new_q,
+                        current_operation,
+                    )
 
-            operator_match = self.operator_mapping.get(operator, None)
-            if operator_match is None:
-                # Skip if operator is not recognized.
-                continue
-
-            value = value.strip("\"'")
-
-            new_q = self._construct_query(field, operator_match, value)
-
-            q_object = self._apply_logical_operation(q_object, new_q, current_operation)
+        print(q_object)
 
         return q_object
 
@@ -110,25 +113,30 @@ class AstrodataFilter:
         `Q`
             A Django Q object with the appropriate filtering applied.
         """
-        value, is_number = self._normalize_value(value)
+        value = self._normalize_value(value)
 
-        # Custom behavior for numeric fields with tolerances
+        # If value is None, apply exact match only if operator is '__exact'.
+        if value is None and operator_match == "__exact":
+            return Q(**{self._build_descriptor_key(field, operator_match): value})
+
+        # Custom behavior for numeric fields with tolerances.
         if (
             field in self.numeric_descriptors_tolerances
+            and operator_match == "__exact"
             and not self.strict
-            and is_number
         ):
-            return self._handle_numeric_tolerance(field, operator_match, value)
+            return self._handle_numeric_tolerance(field, value)
 
+        # Apply partial match for specified fields when not strict.
         elif field in self.partial_match_descriptors and not self.strict:
-            return Q(**{f"{self.field_header}{field}__icontains": value})
+            return Q(**{self._build_descriptor_key(field, "__icontains"): value})
 
+        # Default behavior for other cases.
         else:
-            return Q(**{f"{self.field_header}{field}{operator_match}": value})
+            return Q(**{self._build_descriptor_key(field, operator_match): value})
 
-    def _normalize_value(self, value: Any) -> tuple[Any, bool]:
-        """Takes in a value and returns the normalized value, along with it is a number
-        or not.
+    def _normalize_value(self, value: Any) -> Any:
+        """Takes in a value and returns the normalized value.
 
         Parameters
         ----------
@@ -137,22 +145,19 @@ class AstrodataFilter:
 
         Returns
         -------
-        `tuple[Any, bool]`
-            The normalized value and if it is a number or not.
+        `Any`
+            The normalized value to boolean, float, or string.
         """
+        if isinstance(value, str) and value.strip().lower() in ["null", "none"]:
+            return None
         try:
-            value = float(value)
-            is_number = True
+            return float(value)
         except ValueError:
-            value = (
+            return (
                 value.lower() == "true" if value.lower() in ["true", "false"] else value
             )
-            is_number = False
-        return value, is_number
 
-    def _handle_numeric_tolerance(
-        self, field: str, operator_match: str, value: Any
-    ) -> Q:
+    def _handle_numeric_tolerance(self, field: str, value: Any) -> Q:
         """Handles the creation of a `Q` object for numeric fields where a tolerance is
         applied to the filtering.
 
@@ -160,8 +165,6 @@ class AstrodataFilter:
         ----------
         field : `str`
             The database field to filter on.
-        operator_match : `str`
-            The operator to use for filtering, adjusted for tolerance.
         value : `float`
             The numeric value to compare the field against.
 
@@ -172,6 +175,7 @@ class AstrodataFilter:
         """
         relative_tolerance = self.numeric_descriptors_tolerances[field]
 
+        # Calculate the upper and lower bounds.
         lower_bound = value - max(
             relative_tolerance * abs(value), self.absolute_tolerace
         )
@@ -179,22 +183,16 @@ class AstrodataFilter:
             relative_tolerance * abs(value), self.absolute_tolerace
         )
 
-        if operator_match == "__exact":
-            return Q(
-                **{
-                    f"{self.field_header}{field}__gte": lower_bound,
-                    f"{self.field_header}{field}__lte": upper_bound,
-                }
-            )
-        else:
-            return ~Q(
-                **{
-                    f"{self.field_header}{field}__gte": lower_bound,
-                    f"{self.field_header}{field}__lte": upper_bound,
-                }
-            )
+        return Q(
+            **{
+                self._build_descriptor_key(field, "__gte"): lower_bound,
+                self._build_descriptor_key(field, "__lte"): upper_bound,
+            }
+        )
 
-    def _apply_logical_operation(self, q_object: Q, new_q: Q, current_operation: str):
+    def _apply_logical_operation(
+        self, q_object: Q, new_q: Q, current_operation: str
+    ) -> Q:
         """Applies a logical operation to combine two Q objects.
 
         Parameters
@@ -210,6 +208,11 @@ class AstrodataFilter:
         -------
         `Q`
             The resulting `Q` object after applying the logical operation.
+
+        Raises
+        ------
+        ValueError
+            Raised if the current operation does not match 'AND', 'OR', or 'NOT'.
         """
         if current_operation == "AND":
             return q_object & new_q
@@ -219,3 +222,20 @@ class AstrodataFilter:
             return q_object & ~new_q
         else:
             raise ValueError(f"Current operation '{current_operation}' not supported.")
+
+    def _build_descriptor_key(self, field: str, operator_match: str) -> str:
+        """Builds the descriptor key to use for querying.
+
+        Parameters
+        ----------
+        field : `str`
+            The database field to filter on.
+        operator_match : _type_
+            The operator to use for filtering.
+
+        Returns
+        -------
+        `str`
+            The descriptor key and operator match formatted for Django `Q` query.
+        """
+        return f"{self.field_header}{field}{operator_match}"
