@@ -1,1 +1,0 @@
-Added run information panel on DRAGONS UI: Displayed selected run details, including creation date, DRAGONS version, and output directory path.

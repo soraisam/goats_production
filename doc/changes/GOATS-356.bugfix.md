@@ -1,1 +1,0 @@
-Fixed modal and toast closing issues: Resolved a bug caused by the transition to Bootstrap 5.

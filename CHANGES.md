@@ -1,3 +1,27 @@
+## GOATS 24.8.0 (2024-08-22)
+
+
+### New Features
+
+- Added run information panel on DRAGONS UI: Displayed selected run details, including creation date, DRAGONS version, and output directory path. [[#GOATS-332](https://noirlab.atlassian.net/browse/GOATS-332)]
+- Added UI components for file grouping and filtering: Introduced user interface elements that allow grouping and filtering of files, featuring a multiselect dropdown for selecting astrodata descriptors. [[#GOATS-376](https://noirlab.atlassian.net/browse/GOATS-376)]
+- Enhanced file grouping and filtering: Added functionality to fetch files from the frontend to the grouping and filtering API backend. Implemented listeners for button clicks to query API from the form. [[#GOATS-377](https://noirlab.atlassian.net/browse/GOATS-377)]
+- Added API endpoint for groups retrieval: Provided astrodata descriptors (groups) via API for DRAGONS runs and files. [[#GOATS-378](https://noirlab.atlassian.net/browse/GOATS-378)]
+- Grouped files by astrodata descriptors: Implemented an API backend to group files by their astrodata descriptors and count the files accordingly. [[#GOATS-380](https://noirlab.atlassian.net/browse/GOATS-380)]
+- Filtered files by astrodata descriptor values: Created an API backend to filter files based on expressions matching astrodata descriptor values. [[#GOATS-381](https://noirlab.atlassian.net/browse/GOATS-381)]
+
+
+### Changes
+
+- Overhaul recipe assignment logic: Abandoned reliance on observation types for assigning recipes. Transitioned to using recipes modules, instruments, and tags to manage file recipes. This change enables GOATS to efficiently segregate files by their respective recipes and further distinguish different objects that may require unique recipes. The update prepares GOATS for integrating new instruments. [[#GOATS-360](https://noirlab.atlassian.net/browse/GOATS-360)]
+- Extended help page for interactive mode: Enhanced help documentation to show how to enable interactive mode for specific primitives. Interactive mode is no longer the default setting. [[#GOATS-367](https://noirlab.atlassian.net/browse/GOATS-367)]
+
+
+### Bug Fixes
+
+- Fixed modal and toast closing issues: Resolved a bug caused by the transition to Bootstrap 5. [[#GOATS-356](https://noirlab.atlassian.net/browse/GOATS-356)]
+- Fixed help page docstring retrieval: Corrected an issue where docstrings were not properly fetched for the help page. Added  tests to prevent in future. [[#GOATS-371](https://noirlab.atlassian.net/browse/GOATS-371)]
+
 ## GOATS 24.7.0 (2024-07-23)
 
 
