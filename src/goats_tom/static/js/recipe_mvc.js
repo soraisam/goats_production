@@ -65,8 +65,8 @@ class RecipeModel {
    * @throws {Error} If the API request fails, an error is logged to the console.
    * @async
    */
-  async startReduce(recipe) {
-    const data = { recipe_id: recipe };
+  async startReduce(recipe, fileIds) {
+    const data = { recipe_id: recipe, file_ids: fileIds };
     try {
       const response = await this.api.post(`${this.reduceUrl}`, data);
       this.reduce = response;
@@ -224,7 +224,10 @@ class RecipeView {
         switch (action) {
           case "startReduce":
             // On start, pass in the recipe to link to.
-            this.onStartReduce(event.target.dataset.recipeId);
+            this.onStartReduce(
+              event.target.dataset.recipeId,
+              event.target.dataset.fileType
+            );
             break;
           case "stopReduce":
             // On stop, need to specify what specific reduce to stop.
@@ -324,6 +327,9 @@ class RecipeView {
     const startButton = Utils.createElement("button", ["btn", "btn-success", "me-1"]);
     const stopButton = Utils.createElement("button", ["btn", "btn-danger"]);
     startButton.dataset.recipeId = this.recipe.id;
+    startButton.dataset.fileType = this.recipe.object_name
+      ? `${this.recipe.file_type} | ${this.recipe.object_name}`
+      : this.recipe.file_type;
     startButton.dataset.action = "startReduce";
     startButton.textContent = "Start";
     this.startButton = startButton;
@@ -766,12 +772,18 @@ class RecipeController {
   /**
    * Initiates the reduction process for a given recipe ID.
    * @param {number} recipeId The ID of the recipe to start reducing.
+   * @param {string} fileType The file type identifier.
    * @async
    */
-  handleStartReduce = async (recipeId) => {
+  handleStartReduce = async (recipeId, fileType) => {
     // Clear logger before starting.
     this.view.logger.clear();
-    const reduce = await this.model.startReduce(recipeId);
+    // Get the file IDs to run on.
+    const tbody = document.getElementById(`tbody-${fileType}`);
+    const fileIds = Array.from(tbody.querySelectorAll("input[type='checkbox']")).map(
+      (input) => input.dataset.filePk
+    );
+    const reduce = await this.model.startReduce(recipeId, fileIds);
     // Update the view.
     this.handleUpdateReduce(reduce);
   };
@@ -790,7 +802,7 @@ class RecipeController {
 
   /**
    * Handles log messages and updates the logger.
-   * @param {string} message - The log message to add.
+   * @param {string} message The log message to add.
    */
   handleLogMessage = (message) => {
     this.view.logger.log(message);
@@ -801,7 +813,6 @@ class RecipeController {
    * @param {Object} data The data object containing the status to update with.
    */
   handleUpdateReduce = (data) => {
-    console.log(data);
     this.view.updateProgressBar(data.status);
     // Reset the stop button if the status is in these.
     if (["canceled", "done", "error"].includes(data.status)) {

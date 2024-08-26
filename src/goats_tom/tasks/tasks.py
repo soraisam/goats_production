@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 @dramatiq.actor(max_retries=0)
-def run_dragons_reduce(reduce_id: int) -> None:
+def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
     """Executes a reduction process in the background.
 
     This function handles the entire process of setting up and executing a reduction,
@@ -45,6 +45,8 @@ def run_dragons_reduce(reduce_id: int) -> None:
     ----------
     reduce_id : `int`
         The ID of the DRAGONSReduce instance to be processed.
+    file_ids : `list[int]`
+        A list of file IDs to limit to. If empty, use all files.
 
     Raises
     ------
@@ -83,7 +85,12 @@ def run_dragons_reduce(reduce_id: int) -> None:
         os.chdir(run.get_output_dir())
 
         # Filter the files based on the associated DRAGONS run and file type.
-        files = recipes_module.files.filter(enabled=True, dragons_run=run)
+        if file_ids:
+            files = recipes_module.files.filter(
+                enabled=True, dragons_run=run, id__in=file_ids
+            )
+        else:
+            files = recipes_module.files.filter(enabled=True, dragons_run=run)
         file_paths = [file.file_path for file in files]
 
         # Setup the logger.

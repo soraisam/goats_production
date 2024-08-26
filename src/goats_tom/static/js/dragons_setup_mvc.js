@@ -102,6 +102,7 @@ class SetupModel {
    * @param {string} runId The ID of the run for which files are to be fetched.
    * @param {string | string[]} groupBy The descriptor(s) to group the files by.
    * @param {string} fileType The type of files to filter before grouping.
+   * @param {string} [objectName] Optional object name to include in the query.
    * @param {string} [filterExpression] Optional filter expression to apply before grouping.
    * @param {boolean} [filterStrict] Optional filter strictly.
    * @returns {Promise<Object>} A promise that resolves to an object containing grouped files.
@@ -110,6 +111,7 @@ class SetupModel {
     runId,
     groupBy,
     fileType,
+    objectName = "",
     filterExpression = "",
     filterStrict = false
   ) {
@@ -123,17 +125,21 @@ class SetupModel {
       groupByParams = `&group_by=${groupBy}`;
     }
 
-    // Base URL setup with mandatory parameters
+    // Base URL setup with mandatory parameters.
     const baseUrl = `${this.filesUrl}?dragons_run=${runId}${groupByParams}&file_type=${fileType}&filter_strict=${filterStrict}`;
 
-    // Append filter expression if it's provided
+    // Append object name if it's provided.
+    const objectNameParam = objectName
+      ? `&object_name=${encodeURIComponent(objectName)}`
+      : "";
+
+    // Append filter expression if it's provided.
     const filterExpressionParam = filterExpression
       ? `&filter_expression=${encodeURIComponent(filterExpression)}`
       : "";
 
-    // Complete URL construction
-    const url = baseUrl + filterExpressionParam;
-    console.log(url);
+    // Complete URL construction.
+    const url = baseUrl + filterExpressionParam + objectNameParam;
     try {
       const response = await this.api.get(url);
       return response || {};
@@ -529,7 +535,7 @@ class SetupView {
 
     // Build the file filter.
     const form = this.createFileGroupingsAndFilterForm(files[0], groups);
-    const availableFileGroupsRow = this.createAvailableFileGroups(files[0]);
+    const availableFileGroupsRow = this.createAvailableFileGroups(fileType);
 
     const table = Utils.createElement("table", [
       "table",
@@ -537,6 +543,7 @@ class SetupView {
       "table-borderless",
     ]);
     const tbody = Utils.createElement("tbody");
+    tbody.id = `tbody-${fileType}`;
     // Loop through each file and create a detailed view for it.
     files.forEach((file) => {
       const fileRow = this.createFileEntry(file);
@@ -640,16 +647,17 @@ class SetupView {
 
   /**
    * Creates a dropdown for selecting available file groups after files have been grouped.
-   * @param {Object} file The file object for which the available groups are being displayed.
+   * @param {string} fileType The file type of the file, could be combination of file type and
+   * object name.
    * @returns {HTMLElement} A DOM element representing the row for selecting available file groups.
    */
-  createAvailableFileGroups(file) {
+  createAvailableFileGroups(fileType) {
     const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
     const col2 = Utils.createElement("div", ["col-sm-9"]);
 
     // Build the ID.
-    const id = `availableFileGroups-${file.id}`;
+    const id = `availableFileGroups-${fileType}`;
 
     // Build the label.
     const label = Utils.createElement("label", ["col-form-label"]);
@@ -661,8 +669,8 @@ class SetupView {
     select.id = id;
     select.setAttribute("autocomplete", "off");
     const option = Utils.createElement("option");
-    option.textContent = "Ungrouped";
-    option.value = "ungrouped";
+    option.textContent = "All";
+    option.value = "All";
     option.selected = true;
     select.appendChild(option);
 
@@ -965,6 +973,57 @@ class SetupView {
   updateFile(data) {
     document.getElementById(`file${data.id}`).checked = data.enabled;
   }
+
+  /**
+   * Updates the table with files based on the selected file group.
+   * @param {string} fileType The type of the files.
+   * @param {Array<Object>} files Array of file objects to display in the table.
+   */
+  updateFileTable(fileType, files) {
+    const tbody = document.getElementById(`tbody-${fileType}`);
+    // Loop through each file and create a detailed view for it.
+    tbody.innerHTML = "";
+    files.forEach((file) => {
+      const fileRow = this.createFileEntry(file);
+      tbody.appendChild(fileRow);
+    });
+  }
+
+  /**
+   * Populates the file group selection dropdown and sets up the file display.
+   * @param {string} fileType The type of files, used to build unique identifiers for HTML elements.
+   * @param {Array<Object>} groups Array of file group objects.
+   */
+  updateAvailableFileGroups(fileType, groups) {
+    const select = document.getElementById(`availableFileGroups-${fileType}`);
+    // Clear existing options.
+    while (select.options.length > 0) {
+      select.remove(0);
+    }
+
+    // Populate with new options and setup event listeners.
+    groups.forEach((group, index) => {
+      // Determine the correct label for the option.
+      let label = "";
+      if (group.groupName !== "All") {
+        label += group.count === 1 ? "(1 file)" : `(${group.count} files)`;
+      }
+      const option = new Option(`${group.groupName} ${label}`, group.groupName);
+      select.add(option);
+
+      // Set the first option as selected by default and render its files.
+      if (index === 0) {
+        select.selectedIndex = 0;
+        this.updateFileTable(fileType, group.files);
+      }
+    });
+
+    // Handle changes in selection
+    select.onchange = () => {
+      const selectedGroup = groups.find((g) => g.groupName === select.value);
+      this.updateFileTable(fileType, selectedGroup.files);
+    };
+  }
 }
 
 /**
@@ -1085,14 +1144,54 @@ class SetupController {
     let fileType = formData.get("file_type");
     let objectName = formData.get("object_name");
 
-    console.log(this.view.runId, groupBy, fileType, filterExpression);
     const response = await this.model.fetchGroupAndFilterFiles(
       this.view.runId,
       groupBy,
       fileType,
-      filterExpression
+      objectName,
+      filterExpression,
+      filterStrict
     );
-    // TODO: Finish by updating the frontend with the response.
-    console.log(response);
+
+    // Get the accordion to update.
+    const id = objectName ? `${fileType} | ${objectName}` : fileType;
+    const groups = this.extractGroups(response);
+
+    // Determine the identifier based on objectName.
+    const identifier = objectName ? `${fileType} | ${objectName}` : fileType;
+
+    // Update UI components.
+    this.view.updateAvailableFileGroups(identifier, groups);
   };
+
+  /**
+   * Parses JSON data to extract groups and files information.
+   * @param {Object} data The JSON data object.
+   * @returns {Object[]} An array of group objects with their names and files.
+   */
+  extractGroups(data) {
+    let groups = [];
+
+    if (data.hasOwnProperty("results")) {
+      // If the 'results' key exists, treat it as a single group named "All".
+      groups.push({
+        groupName: "All",
+        files: data.results,
+        count: data.count,
+      });
+    } else {
+      // Otherwise, iterate through the top-level keys which are the groups.
+      for (let groupName in data) {
+        if (data.hasOwnProperty(groupName) && typeof data[groupName] === "object") {
+          groups.push({
+            groupName: groupName,
+            files: data[groupName].files,
+            count: data[groupName].count,
+          });
+        }
+      }
+    }
+
+    return groups;
+  }
 }
