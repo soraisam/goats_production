@@ -76,10 +76,15 @@ class DRAGONSReduceSerializer(serializers.ModelSerializer):
     ----------
     recipe_id : `serializers.IntegerField`
         ID of the DRAGONSRecipe instance that the reduction is associated with.
+    file_ids : `serializers.ListField`
+        The file IDs to include in the reduction.
 
     """
 
     recipe_id = serializers.IntegerField(write_only=True, required=True)
+    file_ids = serializers.ListField(
+        child=serializers.IntegerField(), write_only=True, required=False
+    )
 
     class Meta:
         model = DRAGONSReduce
@@ -139,8 +144,10 @@ class DRAGONSReduceFilterSerializer(serializers.Serializer):
         help_text="Status for reduction to filter by.",
     )
     not_finished = serializers.BooleanField(
-        required=False, help_text="Return all reductions that are not finished.",
+        required=False,
+        help_text="Return all reductions that are not finished.",
     )
     run = serializers.IntegerField(
-        required=False, help_text="ID for the DRAGONS run to filter by.",
+        required=False,
+        help_text="ID for the DRAGONS run to filter by.",
     )

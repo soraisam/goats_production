@@ -66,10 +66,12 @@ class DRAGONSReduceViewSet(
             The serializer with data loaded.
 
         """
+        # Retrive the file IDs to include.
+        file_ids = serializer.validated_data.get("file_ids", [])
         reduce = serializer.save()
         reduce.mark_queued()
         DRAGONSProgress.create_and_send(reduce)
-        task_id = run_dragons_reduce.send(reduce.id)
+        task_id = run_dragons_reduce.send(reduce.id, file_ids)
         reduce.task_id = task_id.message_id
         reduce.save()
 
