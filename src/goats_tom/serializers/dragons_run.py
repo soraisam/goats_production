@@ -2,6 +2,8 @@
 
 __all__ = ["DRAGONSRunSerializer"]
 
+import re
+
 from rest_framework import serializers
 
 from goats_tom.models import DRAGONSRun
@@ -60,6 +62,24 @@ class DRAGONSRunSerializer(serializers.ModelSerializer):
 
         """
         return obj.observation_record.observation_id
+
+    def validate_run_id(self, value: str) -> str:
+        """Validate and format the 'run_id' to ensure it is suitable for use as a
+        directory name.
+
+        Parameters
+        ----------
+        value : `str`
+            The 'run_id' to be validated.
+
+        Returns
+        -------
+        `str`
+            The formatted 'run_id' with spaces replaced by underscores.
+        """
+        # Replace spaces with underscores and remove problematic characters.
+        sanitized = re.sub(r"[^a-zA-Z0-9\-_]", "", value.replace(" ", "_"))
+        return sanitized.lower()
 
 
 class DRAGONSRunFilterSerializer(serializers.Serializer):
