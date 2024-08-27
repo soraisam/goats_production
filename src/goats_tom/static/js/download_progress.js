@@ -75,7 +75,18 @@ const updateDownloadProgress = (downloadProgress) => {
     }
 
     // Update the progress bar if done.
-    if (downloadProgress.done) {
+    if (downloadProgress.error) {
+      const progressBarDiv = document.getElementById(
+        `${downloadProgress.unique_id}-progressBar`
+      );
+      progressBarDiv.classList.replace("text-bg-primary", "text-bg-danger");
+      progressBarDiv.classList.remove("placeholder-wave");
+
+      // Remove after 5 seconds.
+      setTimeout(() => {
+        downloadItem.remove();
+      }, 5000);
+    } else if (downloadProgress.done) {
       const progressBarDiv = document.getElementById(
         `${downloadProgress.unique_id}-progressBar`
       );
