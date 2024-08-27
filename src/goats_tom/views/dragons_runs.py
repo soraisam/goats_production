@@ -215,12 +215,16 @@ class DRAGONSRunsViewSet(
                         "is_default": details["is_default"],
                     },
                 )
+
                 if base_recipe_created:
                     print(f"Created a BASE recipe: {recipe_name}")
                 else:
                     print(f"Did not create a BASE recipe: {recipe_name}")
 
                 # Create or get the recipe for this one.
+                # exists = DRAGONSRecipe.objects.filter(
+                #     recipe_id=base_recipe.id, dragons_run_id=dragons_run.id
+                # ).exists()
                 dragons_recipe, dragons_recipe_created = (
                     DRAGONSRecipe.objects.get_or_create(
                         dragons_run=dragons_run,

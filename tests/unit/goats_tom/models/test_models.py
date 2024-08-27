@@ -460,10 +460,10 @@ class TestDRAGONSRecipe:
 
     def test_unique_together_constraint(self):
         """Test that the unique together constraint on recipe and dragons_run is enforced."""
-        first_recipe = DRAGONSRecipeFactory()
+        first_recipe = DRAGONSRecipeFactory(object_name="test")
         with pytest.raises(IntegrityError):
             DRAGONSRecipeFactory(
-                recipe=first_recipe.recipe, dragons_run=first_recipe.dragons_run,
+                recipe=first_recipe.recipe, dragons_run=first_recipe.dragons_run, file_type=first_recipe.file_type, object_name=first_recipe.object_name,
             )
 
     def test_reset_function_definition(self):
