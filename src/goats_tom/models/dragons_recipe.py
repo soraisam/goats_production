@@ -56,7 +56,7 @@ class DRAGONSRecipe(models.Model):
     object_name = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
-        unique_together = ("recipe", "dragons_run")
+        unique_together = (("recipe", "dragons_run", "file_type", "object_name"),)
 
     def __str__(self) -> str:
         return f"v{self.version} {self.short_name} for run {self.dragons_run.run_id}"

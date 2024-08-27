@@ -196,7 +196,7 @@ class SetupView {
     this.filesAndRecipesContainer = this.card.querySelector(
       "#filesAndRecipesContainer"
     );
-    this.observationRecordId = this.card.dataset.observationRecordId;
+    this.observationRecordId = this.card.dataset.observationRecordPk;
     this.deleteRun = this.card.querySelector("#deleteRun");
     this.headerModal = Utils.createModal("header");
     this.runContainer = this.card.querySelector("#runContainer");
