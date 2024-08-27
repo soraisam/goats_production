@@ -1,0 +1,1 @@
+Improved error handling for GOA downloads: Added error handling for file downloads with updates to the webpage's progress bar to reflect errors. Errors are now logged within the download model, providing users with detailed error messages when issues occur.​

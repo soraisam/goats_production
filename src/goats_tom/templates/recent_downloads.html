@@ -13,7 +13,7 @@
         <th>Files Omitted</th>
         <th>Start Time</th>
         <th>Total Time</th>
-        <th>Error Message</th>
+        <th>Message</th>
       </tr>
     </thead>
     <tbody>
@@ -25,7 +25,7 @@
         <td>{{ download.num_files_omitted }}</td>
         <td>{{ download.start_time }}</td>
         <td>{{ download.total_time }}</td>
-        <td>{{ download.error_message|default:"" }}</td>
+        <td>{{ download.message|default:"" }}</td>
       </tr>
       {% empty %}
       <tr>
