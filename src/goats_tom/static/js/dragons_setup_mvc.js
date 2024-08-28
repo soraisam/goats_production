@@ -640,6 +640,7 @@ class SetupView {
     new TomSelect(select, {
       create: false,
       sortField: { field: "text", director: "asc" },
+      maxOptions: null,
     });
 
     return row;
