@@ -641,6 +641,11 @@ class SetupView {
       create: false,
       sortField: { field: "text", director: "asc" },
       maxOptions: null,
+      onItemAdd: function (value, item) {
+        // This handles clearing text and refreshing the options.
+        this.setTextboxValue("");
+        this.refreshOptions(true);
+      },
     });
 
     return row;
