@@ -74,23 +74,27 @@ class DRAGONSRunsViewSet(
         """
         dragons_run = serializer.save()
 
-        self._init_dragons_dir(dragons_run)
 
-        self._init_recipe_and_primitives(dragons_run)
+        self._initialize(dragons_run)
 
-    def _init_dragons_dir(self, dragons_run: DRAGONSRun) -> None:
-        """Initializes the output directory for a given DRAGONSRun instance.
+    def _initialize(self, dragons_run: DRAGONSRun) -> None:
+        """Initializes everything.
 
         This method sets up the output directory, creates a calibration manager
         database, and writes the configuration file necessary for the run. The
         directory structure and files created are essential for the operation of
         DRAGONS data processing.
 
+        This method processes each data product linked to the run, using its tags and
+        instrument data to fetch applicable recipes and create or update corresponding
+        `DRAGONSRecipe` instances. If a file matches the conditions (unprepared and not
+        processed or is a BPM file), it initializes recipes, updates the database, and
+        creates a DRAGONSFile record.
+
         Parameters
         ----------
         dragons_run : `DRAGONSRun`
-            The `DRAGONSRun` instance for which the directory and necessary files are
-            created.
+            The DRAGONS run instance for which recipes are being initialized.
 
         """
         # Create the output directory.
@@ -105,21 +109,8 @@ class DRAGONSRunsViewSet(
             f.write(f"[calibs]\ndatabases = {cal_manager_db_file} get store")
 
         # Create the calibration manager for DRAGONS.
-        cal_service.LocalDB(cal_manager_db_file, force_init=True)
+        cal_db = cal_service.LocalDB(cal_manager_db_file, force_init=True)
 
-    def _init_recipe_and_primitives(self, dragons_run: DRAGONSRun) -> None:
-        """This method processes each data product linked to the run, using its tags and
-        instrument data to fetch applicable recipes and create or update corresponding
-        `DRAGONSRecipe` instances. If a file matches the conditions (unprepared and not
-        processed or is a BPM file), it initializes recipes, updates the database, and
-        creates a DRAGONSFile record.
-
-        Parameters
-        ----------
-        dragons_run : `DRAGONSRun`
-            The DRAGONS run instance for which recipes are being initialized.
-
-        """
         # TODO: Make this more intelligent.
         # Link DataProducts for the run to enable/disable.
         data_products = DataProduct.objects.filter(
@@ -136,7 +127,11 @@ class DRAGONSRunsViewSet(
             descriptors = ad.descriptors
 
             # Skip if file is prepared or processed, unless it's a BPM file.
-            if "BPM" not in tags and ("PREPARED" in tags or "PROCESSED" in tags):
+            if "BPM" in tags:
+                print("Adding BPM to calibration database.")
+                cal_db.add_cal(data_product.data.path)
+                continue
+            if "PREPARED" in tags or "PROCESSED" in tags:
                 print("Skipping prepared or processed file.")
                 continue
 
@@ -150,40 +145,28 @@ class DRAGONSRunsViewSet(
 
             # Create or update recipes in the database.
             for recipe_name, details in recipes_and_primitives["recipes"].items():
-                recipes_module, created = RecipesModule.objects.get_or_create(
+                recipes_module, _ = RecipesModule.objects.get_or_create(
                     name=details["recipes_module"],
                     instrument=instrument,
                     version=dragons_run.version,
                 )
 
                 # Create or fetch the base recipe.
-                base_recipe, base_recipe_created = BaseRecipe.objects.get_or_create(
+                base_recipe, _ = BaseRecipe.objects.get_or_create(
                     name=recipe_name,
                     recipes_module=recipes_module,
+                    defaults={"function_definition": details["function_definition"]},
+                )
+
+                DRAGONSRecipe.objects.get_or_create(
+                    dragons_run=dragons_run,
+                    recipe=base_recipe,
+                    object_name=object_name,
+                    file_type=file_type,
                     defaults={
-                        "function_definition": details["function_definition"],
                         "is_default": details["is_default"],
                     },
                 )
-
-                if base_recipe_created:
-                    print(f"Created a BASE recipe: {recipe_name}")
-                else:
-                    print(f"Did not create a BASE recipe: {recipe_name}")
-
-                dragons_recipe, dragons_recipe_created = (
-                    DRAGONSRecipe.objects.get_or_create(
-                        dragons_run=dragons_run,
-                        recipe=base_recipe,
-                        object_name=object_name,
-                        file_type=file_type,
-                    )
-                )
-
-                if dragons_recipe_created:
-                    print(f"Created a tmp recipe: {recipe_name}")
-                else:
-                    print(f"Did not create a tmp recipe: {recipe_name}")
 
             # Build the astrodata descriptors to save.
             astrodata_descriptors = {}

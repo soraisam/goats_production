@@ -395,19 +395,6 @@ class TestBaseRecipe:
             )
             duplicate_recipe.full_clean()
 
-    def test_default_values(self):
-        """Test default values for 'is_default' field."""
-        recipe_default_true = BaseRecipeFactory(is_default=True)
-        assert (
-            recipe_default_true.is_default is True
-        ), "is_default should be able to be set to True."
-
-        recipe_default_false = BaseRecipeFactory(is_default=False)
-        assert (
-            recipe_default_false.is_default is False
-        ), "is_default should be able to be set to False."
-
-
 @pytest.mark.django_db()
 class TestDRAGONSRecipe:
     """Test suite for the DRAGONSRecipe model."""

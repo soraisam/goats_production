@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 
 from .models import ProgramKey, UserKey
@@ -76,6 +78,12 @@ class GOAQueryForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-control"}),
     )
 
+    observation_id = forms.CharField(
+        label="Observation ID",
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+        required=False,
+    )
+
     raw_reduced = forms.ChoiceField(
         choices=RAW_REDUCED_CHOICES,
         label="Raw/Reduced",
@@ -121,6 +129,7 @@ class GOAQueryForm(forms.Form):
         observation_type = cleaned_data.get("observation_type")
         raw_reduced = cleaned_data.get("raw_reduced")
         download_calibrations = cleaned_data.get("download_calibrations")
+        prog_id = cleaned_data.get("observation_id")
 
         args_list = []
         if qa_state:
@@ -134,9 +143,13 @@ class GOAQueryForm(forms.Form):
 
         query_params = {"args": tuple(args_list), "kwargs": {}}
         if filename_prefix:
+            # Use regex to remove any extension from filename_prefix.
+            filename_prefix = re.sub(r"(\.[^.]+)+$", "", filename_prefix)
             query_params["kwargs"]["filepre"] = filename_prefix
         if download_calibrations:
             query_params["kwargs"]["download_calibrations"] = download_calibrations
+        if prog_id:
+            query_params["kwargs"]["progid"] = prog_id
 
         cleaned_data["query_params"] = query_params
         self.cleaned_data = cleaned_data

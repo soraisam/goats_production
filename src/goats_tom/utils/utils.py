@@ -371,7 +371,6 @@ def get_recipes_and_primitives(tags: set, instrument: str) -> dict[str, Any]:
     RecipeNotFound, ModeError
         Raised if no applicable recipe is found or there's an error in processing modes.
     """
-    default_recipe_name = None
     recipes = {}
 
     # Attempt to get recipes for just "sq" for GOATS.
@@ -380,15 +379,13 @@ def get_recipes_and_primitives(tags: set, instrument: str) -> dict[str, Any]:
             recipe_mapper = RecipeMapper(tags, instrument, mode=mode)
             applicable_recipe = recipe_mapper.get_applicable_recipe()
             module = importlib.import_module(applicable_recipe.__module__)
-
             # Loop through and build the recipe function definition from primitives.
             for func_name, func in inspect.getmembers(
                 module,
                 inspect.isfunction,
             ):
                 if func_name == "_default":
-                    # Capture real name to check later.
-                    default_recipe_name = func.__name__
+                    # Skip the default as this is listed twice if it is included.
                     continue
 
                 recipe_name = f"{func.__module__}::{func.__name__}"
@@ -403,10 +400,10 @@ def get_recipes_and_primitives(tags: set, instrument: str) -> dict[str, Any]:
 
                 # Construct the function definition for the recipe.
                 function_definition = _create_recipe_function_definition(
-                    func_name,
+                    func.__name__,
                     primitives,
                 )
-                is_default = func_name == default_recipe_name
+                is_default = func.__name__ == applicable_recipe.__name__
 
                 recipes[recipe_name] = {
                     "function_definition": function_definition,
