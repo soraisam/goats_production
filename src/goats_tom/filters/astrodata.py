@@ -1,6 +1,7 @@
 __all__ = ["AstrodataFilter"]
 
 import re
+from datetime import datetime
 from typing import Any
 
 from django.db.models import Q
@@ -38,10 +39,21 @@ class AstrodataFilter:
     absolute_tolerace = 1e-1
     field_header = "astrodata_descriptors__"
     partial_match_descriptors = ["filter_name", "detector_name", "disperser"]
+    datetime_descriptors_formats = {
+        "ut_time": ["%H:%M:%S.%f", "%H:%M:%S"],
+        "local_time": ["%H:%M:%S.%f", "%H:%M:%S"],
+        "ut_date": ["%Y-%m-%d"],
+        "ut_datetime": [
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M:%S.%f",
+            "%Y-%m-%dT%H:%M:%S.%f",
+        ],
+    }
 
     def __init__(
         self,
-        absolute_tolerance: float | int | None = 1e-1,
+        absolute_tolerance: float | int | None = 0,
         strict: bool | None = False,
     ) -> None:
         self.absolute_tolerace = absolute_tolerance
@@ -78,7 +90,6 @@ class AstrodataFilter:
             match = self.pattern.search(part)
             if match:
                 field, operator, value = match.groups()
-                value = value.strip("\"'")
 
                 # Check if operator is valid and map it to Django's query expression.
                 if operator_match := self.operator_mapping.get(operator):
@@ -91,9 +102,38 @@ class AstrodataFilter:
                         current_operation,
                     )
 
-        print(q_object)
-
         return q_object
+
+    def _parse_datetime(self, value: str, field: str) -> str | None:
+        """Parses a datetime string according to the specified format.
+
+        Parameters
+        ----------
+        value : `str`
+            The datetime string to parse.
+        field : `str`
+            The field name to get the format for.
+
+        Returns
+        -------
+        `str | None`
+            The parsed datetime in isoformat, or `None` if no format matches.
+        """
+        formats = self.datetime_descriptors_formats[field]
+        for fmt in formats:
+            try:
+                date_obj = datetime.strptime(value, fmt)
+                if field in ["ut_time", "local_time"]:
+                    # Returns only the time part in ISO format.
+                    return date_obj.time().isoformat()
+                elif field == "ut_date":
+                    # Returns only the date part.
+                    return date_obj.date().isoformat()
+                elif field == "ut_datetime":
+                    return date_obj.isoformat()
+            except ValueError:
+                continue
+        return
 
     def _construct_query(self, field: str, operator_match: str, value: Any) -> Q:
         """Constructs a `Q` object based on the field, operator, and value, applying
@@ -113,11 +153,14 @@ class AstrodataFilter:
         `Q`
             A Django Q object with the appropriate filtering applied.
         """
-        value = self._normalize_value(value)
+        value = self._normalize_value(value, field)
 
-        # If value is None, apply exact match only if operator is '__exact'.
-        if value is None and operator_match == "__exact":
-            return Q(**{self._build_descriptor_key(field, operator_match): value})
+        if field in self.datetime_descriptors_formats and value is None:
+            return Q()
+
+        # If value is None, apply exact match.
+        if value is None:
+            return Q(**{self._build_descriptor_key(field, "__exact"): value})
 
         # Custom behavior for numeric fields with tolerances.
         if (
@@ -135,19 +178,26 @@ class AstrodataFilter:
         else:
             return Q(**{self._build_descriptor_key(field, operator_match): value})
 
-    def _normalize_value(self, value: Any) -> Any:
+    def _normalize_value(self, value: Any, field: str) -> Any:
         """Takes in a value and returns the normalized value.
 
         Parameters
         ----------
         value : `Any`
             The value to normalize.
+        field : `str`
+            The field to normalize the value for.
 
         Returns
         -------
         `Any`
-            The normalized value to boolean, float, or string.
+            The normalized value to boolean, float, string, or `None`.
         """
+        value = value.strip("\"'")
+
+        # Handle times and dates.
+        if field in self.datetime_descriptors_formats:
+            return self._parse_datetime(value, field)
         if isinstance(value, str) and value.strip().lower() in ["null", "none"]:
             return None
         try:
