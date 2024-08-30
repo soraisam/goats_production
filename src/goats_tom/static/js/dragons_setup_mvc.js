@@ -535,7 +535,10 @@ class SetupView {
 
     // Build the file filter.
     const form = this.createFileGroupingsAndFilterForm(files[0], groups);
-    const availableFileGroupsRow = this.createAvailableFileGroups(fileType);
+    const availableFileGroupsRow = this.createAvailableFileGroups(
+      fileType,
+      files.length
+    );
 
     const table = Utils.createElement("table", [
       "table",
@@ -655,9 +658,10 @@ class SetupView {
    * Creates a dropdown for selecting available file groups after files have been grouped.
    * @param {string} fileType The file type of the file, could be combination of file type and
    * object name.
+   * @param {number} fileCount The number of available files.
    * @returns {HTMLElement} A DOM element representing the row for selecting available file groups.
    */
-  createAvailableFileGroups(fileType) {
+  createAvailableFileGroups(fileType, fileCount) {
     const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
     const col2 = Utils.createElement("div", ["col-sm-9"]);
@@ -675,7 +679,7 @@ class SetupView {
     select.id = id;
     select.setAttribute("autocomplete", "off");
     const option = Utils.createElement("option");
-    option.textContent = "All";
+    option.textContent = `All ${Utils.getFileCountLabel(fileCount)}`;
     option.value = "All";
     option.selected = true;
     select.appendChild(option);
@@ -1010,11 +1014,10 @@ class SetupView {
     // Populate with new options and setup event listeners.
     groups.forEach((group, index) => {
       // Determine the correct label for the option.
-      let label = "";
-      if (group.groupName !== "All") {
-        label += group.count === 1 ? "(1 file)" : `(${group.count} files)`;
-      }
-      const option = new Option(`${group.groupName} ${label}`, group.groupName);
+      const option = new Option(
+        `${group.groupName} ${Utils.getFileCountLabel(group.count)}`,
+        group.groupName
+      );
       select.add(option);
 
       // Set the first option as selected by default and render its files.
