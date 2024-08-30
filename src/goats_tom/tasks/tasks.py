@@ -14,6 +14,7 @@ import matplotlib
 from django.conf import settings
 from django.core import serializers
 from django.db import IntegrityError
+from dramatiq.middleware import TimeLimitExceeded
 from gempy.utils import logutils
 from recipe_system.reduction.coreReduce import Reduce
 from requests.exceptions import HTTPError
@@ -34,7 +35,9 @@ matplotlib.use("Agg", force=True)
 logger = logging.getLogger(__name__)
 
 
-@dramatiq.actor(max_retries=0)
+@dramatiq.actor(
+    max_retries=0, time_limit=getattr(settings, "DRAMATIQ_ACTOR_TIME_LIMIT", 86400000)
+)
 def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
     """Executes a reduction process in the background.
 
@@ -152,7 +155,15 @@ def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
         )
         reduce.mark_done()
         DRAGONSProgress.create_and_send(reduce)
-
+    except TimeLimitExceeded:
+        reduce.mark_error()
+        DRAGONSProgress.create_and_send(reduce)
+        NotificationInstance.create_and_send(
+            label=reduce.get_label(),
+            message="Background task time limit hit. Consider increasing timeout.",
+            color="danger",
+        )
+        raise
     except DRAGONSReduce.DoesNotExist:
         # Send error to frontend.
         NotificationInstance.create_and_send(
@@ -177,7 +188,9 @@ def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
             print(f"Module {module_name} removed from sys.modules.")
 
 
-@dramatiq.actor(max_retries=0)
+@dramatiq.actor(
+    max_retries=0, time_limit=getattr(settings, "DRAMATIQ_ACTOR_TIME_LIMIT", 86400000)
+)
 def download_goa_files(
     serialized_observation_record: str,
     query_params: dict,
@@ -390,10 +403,20 @@ def download_goa_files(
             color="success",
         )
         print("Done.")
+    except TimeLimitExceeded:
+        download.finish(message="Background task time limit hit.", error=True)
+        download_state.update_and_send(status="Failed.", error=True)
+        NotificationInstance.create_and_send(
+            label=f"{observation_id}",
+            message="Background task time limit hit. Consider increasing timeout.",
+            color="danger",
+        )
+        raise
     except HTTPError as e:
         download.finish(message=str(e), error=True)
         download_state.update_and_send(status="Failed.", error=True)
         NotificationInstance.create_and_send(
+            label=f"{observation_id}",
             message=f"Connection to GOA failed, cannot download files: {e!s}",
             color="danger",
         )
@@ -403,6 +426,7 @@ def download_goa_files(
         download.finish(message=str(e), error=True)
         download_state.update_and_send(status="Failed.", error=True)
         NotificationInstance.create_and_send(
+            label=f"{observation_id}",
             message=f"Error during download from GOA: {e!s}",
             color="danger",
         )
