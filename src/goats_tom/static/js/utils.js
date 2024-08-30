@@ -138,4 +138,13 @@ class Utils {
       })
       .join(" ");
   }
+
+  /**
+   * Generates a label indicating the number of files.
+   * @param {number} count The number of files.
+   * @returns {string} A formatted label displaying the number of files.
+   */
+  static getFileCountLabel(count) {
+    return count === 1 ? "(1 file)" : `(${count} files)`;
+  }
 }

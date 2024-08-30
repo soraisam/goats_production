@@ -1,0 +1,1 @@
+Included file count for 'All': Displayed the number of files when filtering to reduce confusion between filtering only and grouping with filtering.
