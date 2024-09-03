@@ -210,7 +210,7 @@ class DRAGONSRunsViewSet(
                 file_type=file_type,
                 object_name=object_name,
                 astrodata_descriptors=astrodata_descriptors,
-                product_id=data_product.product_id,
+                product_id=data_product.get_file_name(),
                 url=data_product.data.url,
             )
 
