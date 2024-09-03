@@ -19,6 +19,7 @@ from gempy.utils import logutils
 from recipe_system.reduction.coreReduce import Reduce
 from requests.exceptions import HTTPError
 from tom_dataproducts.models import DataProduct
+from tom_observations.models import ObservationRecord
 
 from goats_tom.astroquery import Observations as GOA
 from goats_tom.logging.handlers import DRAGONSHandler
@@ -348,7 +349,7 @@ def download_goa_files(
             if file_path.suffix != ".fits":
                 continue
 
-            product_id = file_path.stem
+            product_id = generate_product_id(file_path.stem, observation_record)
 
             # Use the mapping to get the data product type.
             # If not found, return default for calibration.
@@ -431,3 +432,24 @@ def download_goa_files(
             color="danger",
         )
         raise
+
+
+def generate_product_id(filename: str, observation_record: ObservationRecord) -> str:
+    """Generates the product ID.
+
+    Parameters
+    ----------
+    filename : `str`
+        The name of the file, no extension.
+    observation_record : `ObservationRecord`
+        The observation record for this product.
+
+    Returns
+    -------
+    `str`
+        The detailed product ID.
+    """
+    product_id = f"{observation_record.target.name}__"
+    product_id += f"{observation_record.observation_id}__"
+    product_id += f"{filename}"
+    return product_id

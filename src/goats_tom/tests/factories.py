@@ -25,6 +25,7 @@ from tom_observations.tests.factories import ObservingRecordFactory
 from tom_targets.tests.factories import SiderealTargetFactory
 from datetime import datetime, timedelta
 import random
+import uuid
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -79,7 +80,9 @@ class DataProductFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = DataProduct
 
-    product_id = factory.Faker("uuid4")
+    product_id = factory.LazyAttribute(
+        lambda o: f"{o.target.name}__{o.observation_record.observation_id}__{uuid.uuid4()}"
+    )
     target = factory.SubFactory(SiderealTargetFactory)
     # Ensure observation_record is associated with the same target as
     # DataProduct
