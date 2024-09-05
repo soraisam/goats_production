@@ -450,7 +450,6 @@ class ObservationsClass(QueryWithLogin):
 
         """
         url = self.url_helper.get_summary_url(*args, **kwargs)
-        print("URL: ", url)
 
         response = self._request(
             method="GET",
@@ -717,7 +716,6 @@ class ObservationsClass(QueryWithLogin):
         # Convert destination folder.
         dest_folder = Path(dest_folder).expanduser()
         url = self.url_helper.get_tar_file_url(*query_args, **query_kwargs)
-        print(url)
 
         response = self._session.get(url, stream=True)
         response.raise_for_status()

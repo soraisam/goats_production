@@ -1015,7 +1015,7 @@ class SetupView {
     groups.forEach((group, index) => {
       // Determine the correct label for the option.
       const option = new Option(
-        `${group.groupName} ${Utils.getFileCountLabel(group.count)}`,
+        `${Utils.truncateText(group.groupName)} ${Utils.getFileCountLabel(group.count)}`,
         group.groupName
       );
       select.add(option);
