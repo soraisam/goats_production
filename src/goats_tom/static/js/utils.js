@@ -147,4 +147,25 @@ class Utils {
   static getFileCountLabel(count) {
     return count === 1 ? "(1 file)" : `(${count} files)`;
   }
+
+  /**
+   * Truncates text to a specified length and appends an ellipsis ('...') if the text is longer
+   * than the maximum length.
+   * @param {string} text - The text to be truncated.
+   * @param {number} [maxLength=25] - The maximum length of the text after truncation.
+   * @returns {string} The truncated text with an ellipsis if it was cut off.
+   */
+  static truncateText(text, maxLength = 25) {
+    // Split the text by the pipe character and process each part.
+    return text
+      .split("|")
+      .map((part) => {
+        if (part.length > maxLength) {
+          // Subtract 4 from maxLength to accommodate the ellipsis and space.
+          return part.substring(0, maxLength - 4) + "... ";
+        }
+        return part;
+      })
+      .join("|"); // Join the processed parts back with the pipe character.
+  }
 }

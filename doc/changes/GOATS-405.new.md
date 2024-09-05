@@ -1,0 +1,1 @@
+Added truncation for grouped values: Grouping values are now truncated to include file counts.
