@@ -208,9 +208,6 @@ class TestBaseRecipeFactory:
         )
         assert recipe.name == "Test Recipe", "Factory should use the specified name."
         assert recipe.version == "32.2.0", "Factory should use the specified version."
-        assert isinstance(
-            recipe.is_default, bool,
-        ), "is_default should be a boolean value."
 
 
 @pytest.mark.django_db()

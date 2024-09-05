@@ -5,6 +5,7 @@ __all__ = ["download_goa_files", "run_dragons_reduce"]
 import logging
 import os
 import sys
+import tarfile
 import time
 import types
 import uuid
@@ -276,9 +277,6 @@ def download_goa_files(
         args = query_params.get("args", ())
         kwargs = query_params.get("kwargs", {})
 
-        # Pass in the observation ID to query only for this observation.
-        kwargs["progid"] = observation_id
-
         # Determine what to do with calibration data.
         download_calibration = kwargs.pop("download_calibrations", None)
 
@@ -290,46 +288,59 @@ def download_goa_files(
 
         # Query GOA for science tarfile.
         if download_calibration != "only":
-            print(f"{observation_id}: Downloading science files...")
+            try:
+                print(f"{observation_id}: Downloading science files...")
 
-            download_state.update_and_send(
-                status="Downloading science files...",
-                downloaded_bytes=0,
-            )
-
-            file_list = GOA.query_criteria(*args, **kwargs)
-            # Create the mapping.
-            name_reduction_map = create_name_reduction_map(file_list)
-            sci_out = GOA.get_files(
-                target_facility_path,
-                *args,
-                decompress_fits=True,
-                download_state=download_state,
-                **kwargs,
-            )
-            sci_files = sci_out["downloaded_files"]
-            num_files_omitted += sci_out["num_files_omitted"]
+                download_state.update_and_send(
+                    status="Downloading science files...",
+                    downloaded_bytes=0,
+                )
+                file_list = GOA.query_criteria(*args, **kwargs)
+                # Create the mapping.
+                name_reduction_map = create_name_reduction_map(file_list)
+                sci_out = GOA.get_files(
+                    target_facility_path,
+                    *args,
+                    decompress_fits=True,
+                    download_state=download_state,
+                    **kwargs,
+                )
+                sci_files = sci_out["downloaded_files"]
+                num_files_omitted += sci_out["num_files_omitted"]
+            except tarfile.ReadError:
+                print("Error unpacking downloaded science files, skipping.")
+                NotificationInstance.create_and_send(
+                    label=f"{observation_id}",
+                    message="Error unpacking science tar file. Try again.",
+                    color="warning",
+                )
 
         if download_calibration != "no":
-            print(f"{observation_id}: Downloading calibration files...")
-            download_state.update_and_send(
-                status="Downloading calibration files...",
-                downloaded_bytes=0,
-            )
-
-            # Query GOA for calibration tarfile.
-            # Only need to specify program ID.
-            calibration_kwargs = {"progid": observation_id}
-            cal_out = GOA.get_calibration_files(
-                target_facility_path,
-                *args,
-                decompress_fits=True,
-                download_state=download_state,
-                **calibration_kwargs,
-            )
-            cal_files = cal_out["downloaded_files"]
-            num_files_omitted += cal_out["num_files_omitted"]
-
+            try:
+                if kwargs.get("progid"):
+                    print(f"{observation_id}: Downloading calibration files...")
+                    download_state.update_and_send(
+                        status="Downloading calibration files...",
+                        downloaded_bytes=0,
+                    )
+                    cal_out = GOA.get_calibration_files(
+                        target_facility_path,
+                        *args,
+                        decompress_fits=True,
+                        download_state=download_state,
+                        **kwargs,
+                    )
+                    cal_files = cal_out["downloaded_files"]
+                    num_files_omitted += cal_out["num_files_omitted"]
+                else:
+                    print("No observation ID provided, skipping calibration.")
+            except tarfile.ReadError:
+                print("Error unpacking downloaded calibration files, skipping.")
+                NotificationInstance.create_and_send(
+                    label=f"{observation_id}",
+                    message="Error unpacking calibration tar file. Try again.",
+                    color="warning",
+                )
         download_state.update_and_send(
             status="Finished downloads...",
             downloaded_bytes=None,

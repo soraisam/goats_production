@@ -54,6 +54,12 @@ class DRAGONSRecipe(models.Model):
     modified_at = models.DateTimeField(auto_now=True)
     file_type = models.CharField(max_length=50, null=False, blank=False)
     object_name = models.CharField(max_length=100, null=True, blank=True)
+    is_default = models.BooleanField(
+        editable=False,
+        null=False,
+        blank=False,
+        default=False,
+    )
 
     class Meta:
         unique_together = (("recipe", "dragons_run", "file_type", "object_name"),)
@@ -150,18 +156,6 @@ class DRAGONSRecipe(models.Model):
             if self.function_definition
             else self.recipe.function_definition
         )
-
-    @property
-    def is_default(self) -> bool:
-        """Provides default information from the linked base recipe.
-
-        Returns
-        -------
-        `bool`
-            If the recipe is the default in DRAGONS.
-
-        """
-        return self.recipe.is_default
 
     def list_primitives_and_docstrings(self) -> dict[str, Any]:
         """Retrieves the first file matching a specific file type from a collection

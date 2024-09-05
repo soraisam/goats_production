@@ -27,12 +27,6 @@ class BaseRecipe(models.Model):
 
     name = models.CharField(max_length=255, editable=False, blank=False, null=False)
     function_definition = models.TextField(editable=False, blank=False, null=False)
-    is_default = models.BooleanField(
-        editable=False,
-        null=False,
-        blank=False,
-        default=False,
-    )
     recipes_module = models.ForeignKey(
         "goats_tom.RecipesModule", on_delete=models.CASCADE, related_name="base_recipes"
     )

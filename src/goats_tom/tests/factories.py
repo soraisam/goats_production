@@ -213,7 +213,6 @@ class BaseRecipeFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: f"Recipe{n}")
     function_definition = factory.Faker("paragraph")
-    is_default = factory.Faker("boolean")
     recipes_module = factory.SubFactory(RecipesModuleFactory)
 
 
@@ -228,6 +227,8 @@ class DRAGONSRecipeFactory(factory.django.DjangoModelFactory):
     function_definition = None
     created_at = factory.LazyFunction(timezone.now)
     modified_at = factory.LazyAttribute(lambda o: o.created_at)
+    is_default = factory.Faker("boolean")
+
 
 
 class DRAGONSReduceFactory(factory.django.DjangoModelFactory):

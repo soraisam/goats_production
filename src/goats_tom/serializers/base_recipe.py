@@ -14,6 +14,5 @@ class BaseRecipeSerializer(serializers.ModelSerializer):
         read_only_fields = (
             "name",
             "function_definition",
-            "is_default",
             "recipes_module",
         )

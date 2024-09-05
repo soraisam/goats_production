@@ -386,6 +386,7 @@ class GOATSObservationRecordDetailView(ObservationRecordDetailView):
             },
         )
         context["data_product_form"] = data_product_upload_form
+        context["observation_id"] = observation_record.observation_id
         return context
 
 
