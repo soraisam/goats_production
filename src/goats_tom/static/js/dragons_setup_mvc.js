@@ -589,8 +589,60 @@ class SetupView {
     input.setAttribute("placeholder", "exposure_time > 10 and airmass == 1");
     input.name = "filter_expression";
 
+    // Create information popover button with an icon for filter expressions.
+    const infoButton = Utils.createElement("a", ["link-primary", "ms-1"]);
+    infoButton.setAttribute("type", "button");
+    infoButton.setAttribute("tabindex", "0");
+    infoButton.setAttribute("data-bs-trigger", "focus");
+    infoButton.setAttribute("data-bs-toggle", "popover");
+    infoButton.setAttribute("data-bs-placement", "top");
+    infoButton.setAttribute("data-bs-html", "true");
+    infoButton.setAttribute("data-bs-title", "Filtering Files");
+    infoButton.setAttribute(
+      "data-bs-content",
+      `
+    <p>Filter filing helps with the bookkeeping and creating lists of input files to feed to the reduction. Whatever files are displayed after filtering and checked will be used in the reduction process.</p>
+    <p>Supported Logical Operators:</p>
+    <ul>
+      <li><code>AND</code>/<code>and</code></li>
+      <li><code>OR</code>/<code>or</code></li>
+      <li><code>NOT</code>/<code>not</code></li>
+    </ul>
+    <p>Supported Time/Date Formats:</p>
+    <ul>
+      <li><code>ut_time</code>:
+        <ul>
+          <li><code>"%H:%M:%S.%f"</code></li>
+          <li><code>"%H:%M:%S"</code></li>
+        </ul>
+      </li>
+      <li><code>local_time</code>:
+        <ul>
+          <li><code>"%H:%M:%S.%f"</code></li>
+          <li><code>"%H:%M:%S"</code></li>
+        </ul>
+      </li>
+      <li><code>ut_date</code>: <code>"%Y-%m-%d"</code></li>
+      <li><code>ut_datetime</code>:
+        <ul>
+          <li><code>"%Y-%m-%d %H:%M:%S"</code></li>
+          <li><code>"%Y-%m-%dT%H:%M:%S"</code></li>
+          <li><code>"%Y-%m-%d %H:%M:%S.%f"</code></li>
+          <li><code>"%Y-%m-%dT%H:%M:%S.%f"</code></li>
+        </ul>
+      </li>
+    </ul>
+  `
+    );
+
+    // Create icon element.
+    const icon = Utils.createElement("i", ["fa-solid", "fa-circle-info"]);
+    infoButton.appendChild(icon);
+
+    new bootstrap.Popover(infoButton);
+
     // Put together.
-    col1.append(label);
+    col1.append(label, infoButton);
     col2.append(input);
     row.append(col1, col2);
 
@@ -718,8 +770,40 @@ class SetupView {
     label.setAttribute("for", id);
     label.textContent = "Use strict filter expression matching";
 
+    // Create information popover button with an icon.
+    const infoButton = Utils.createElement("a", ["link-primary", "ms-1"]);
+    infoButton.setAttribute("type", "button");
+    infoButton.setAttribute("tabindex", "0");
+    infoButton.setAttribute("data-bs-toggle", "popover");
+    infoButton.setAttribute("data-bs-placement", "top");
+    infoButton.setAttribute("data-bs-trigger", "focus");
+    infoButton.setAttribute("data-bs-html", "true");
+    infoButton.setAttribute("data-bs-title", "Understanding Strict Matching");
+    infoButton.setAttribute(
+      "data-bs-content",
+      `
+      <p>By default, matching is lenient to improve usability:</p>
+      <ul>
+        <li><code>exposure_time</code> and <code>central_wavelength</code> use 'close enough' matching.</li>
+        <li><code>filter_name</code>, <code>disperser</code>, and <code>detector_name</code> use 'pretty name' matching.</li>
+      </ul>
+      <p>For example:</p>
+      <ul>
+        <li>Header exposure time of 10.001 seconds matches <code>exposure_time==10</code>.</li>
+        <li>Filter 'H_G0203' matches <code>filter_name=='H'</code>.</li>
+      </ul>
+      <p>Activate the strict flag for exact matches when needed.</p>
+    `
+    );
+
+    // Create icon element.
+    const icon = Utils.createElement("i", ["fa-solid", "fa-circle-info"]);
+    infoButton.appendChild(icon);
+
+    new bootstrap.Popover(infoButton);
+
     // Put together.
-    div.append(checkbox, label);
+    div.append(checkbox, label, infoButton);
     col.appendChild(div);
     row.appendChild(col);
 
@@ -1015,7 +1099,9 @@ class SetupView {
     groups.forEach((group, index) => {
       // Determine the correct label for the option.
       const option = new Option(
-        `${Utils.truncateText(group.groupName)} ${Utils.getFileCountLabel(group.count)}`,
+        `${Utils.truncateText(group.groupName)} ${Utils.getFileCountLabel(
+          group.count
+        )}`,
         group.groupName
       );
       select.add(option);
