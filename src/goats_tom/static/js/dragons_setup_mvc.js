@@ -13,24 +13,6 @@ class SetupModel {
   }
 
   /**
-   * Updates the enabled state of a specific file.
-   * @param {string} fileId The ID of the file to update.
-   * @param {boolean} isEnabled The new state to be set for the 'enabled' field of the file.
-   * @returns {Promise<Object>} A promise that resolves to the response object from the server.
-   * @throws {Error} Throws an error if the update operation fails.
-   */
-  async updateFile(fileId, isEnabled) {
-    const fileData = { enabled: isEnabled };
-    try {
-      const response = await this.api.patch(`${this.filesUrl}${fileId}/`, fileData);
-      return response;
-    } catch (error) {
-      console.error("Error updating file state:", error);
-      throw error; // Consider rethrowing to handle in the controller
-    }
-  }
-
-  /**
    * Fetches recipes associated with a specific DRAGONS run.
    * @param {string} runId The identifier for the DRAGONS run to fetch recipes for.
    * @returns {Promise<Object[]>} A promise that resolves to an array of recipe objects.
@@ -547,12 +529,43 @@ class SetupView {
     ]);
     const tbody = Utils.createElement("tbody");
     tbody.id = `tbody-${fileType}`;
+    // Create the header.
+    const thead = Utils.createElement("thead");
+    thead.id = `thead-${fileType}`;
+    const headerRow = Utils.createElement("tr");
+
+    // Create a checkbox in the header for selecting/deselecting all rows.
+    const selectAllTh = Utils.createElement("th");
+    const selectAllCheckbox = Utils.createElement("input", ["form-check-input"]);
+    selectAllCheckbox.type = "checkbox";
+    selectAllCheckbox.dataset.action = "selectAll";
+    selectAllCheckbox.dataset.fileType = `${fileType}`;
+    selectAllCheckbox.checked = true;
+    selectAllCheckbox.id = `selectAll-${fileType}`;
+    selectAllCheckbox.addEventListener("change", (event) => {
+      const isChecked = event.target.checked;
+      const checkboxes = this.runTable.querySelectorAll("input[type='checkbox']");
+      checkboxes.forEach((checkbox) => (checkbox.checked = isChecked));
+    });
+
+    const div = Utils.createElement("div", ["form-check", "mb-0", "h-100"]);
+    const selectAllLabel = Utils.createElement("label", [
+      "form-check-label",
+      "fw-normal",
+    ]);
+    selectAllLabel.htmlFor = `selectAll-${fileType}`;
+    selectAllLabel.textContent = "Select/Deselect All";
+    div.append(selectAllCheckbox, selectAllLabel);
+    selectAllTh.appendChild(div);
+    headerRow.appendChild(selectAllTh);
+
+    thead.appendChild(headerRow);
     // Loop through each file and create a detailed view for it.
     files.forEach((file) => {
       const fileRow = this.createFileEntry(file);
       tbody.appendChild(fileRow);
     });
-    table.appendChild(tbody);
+    table.append(thead, tbody);
     body.append(tableP, form, hr, availableFileGroupsRow, table);
     collapse.appendChild(body);
 
@@ -580,7 +593,7 @@ class SetupView {
     // Build the label.
     const label = Utils.createElement("label", ["col-form-label"]);
     label.setAttribute("for", id);
-    label.textContent = "Filter Files";
+    label.textContent = "Filter";
 
     // Build the input.
     const input = Utils.createElement("input", ["form-control"]);
@@ -601,7 +614,7 @@ class SetupView {
     infoButton.setAttribute(
       "data-bs-content",
       `
-    <p>Filter filing helps with the bookkeeping and creating lists of input files to feed to the reduction. Whatever files are displayed after filtering and checked will be used in the reduction process.</p>
+    <p>Filtering helps with the bookkeeping and creating lists of input files to feed to the reduction. Whatever files are displayed after filtering and checked will be used in the reduction process.</p>
     <p>Supported Logical Operators:</p>
     <ul>
       <li><code>AND</code>/<code>and</code></li>
@@ -871,8 +884,8 @@ class SetupView {
     // Configure the checkbox
     checkbox.type = "checkbox";
     checkbox.id = `file${file.id}`;
-    checkbox.dataset.filePk = file.id; // Store file ID for easy access in event handlers.
-    checkbox.checked = file.enabled;
+    checkbox.dataset.fileType = file.file_type;
+    checkbox.checked = true;
 
     // Configure the label.
     label.htmlFor = checkbox.id; // Connects the label to the checkbox.
@@ -936,14 +949,6 @@ class SetupView {
     this.onShowHeader = handler;
   }
 
-  /**
-   * Binds the file toggle to a handler function.
-   * @param {Function} handler The function to handle file toggle.
-   */
-  bindFileToggle(handler) {
-    this.onFileToggle = handler;
-  }
-
   bindSwitchTab(handler) {
     this.onSwitchTab = handler;
   }
@@ -960,9 +965,24 @@ class SetupView {
     // Listen for changes to checkboxes within the files container to toggle file state.
     this.filesAndRecipesContainer.addEventListener("change", (event) => {
       if (event.target.classList.contains("file-checkbox")) {
-        const filePk = event.target.dataset.filePk;
-        const isChecked = event.target.checked;
-        this.onFileToggle(filePk, isChecked);
+        // Identify the specific table section (tbody) based on the file type
+        const fileType = event.target.dataset.fileType;
+        const tbody = document.getElementById(`tbody-${fileType}`);
+
+        // Collect all checkboxes within the tbody
+        const allCheckboxes = tbody.querySelectorAll("input[type='checkbox']");
+
+        // Determine the overall check state
+        const allChecked = Array.from(allCheckboxes).every(
+          (checkbox) => checkbox.checked
+        );
+
+        // Locate the header checkbox in the corresponding thead
+        const thead = document.getElementById(`thead-${fileType}`);
+        const headerCheckbox = thead.querySelector("input[type='checkbox']");
+
+        // Update the header checkbox state.
+        headerCheckbox.checked = allChecked;
       }
     });
 
@@ -1015,6 +1035,14 @@ class SetupView {
             let formData = new FormData(event.target.form);
             this.onSubmitFileGroupingsAndFilterForm(formData);
             break;
+          case "selectAll":
+            const isChecked = event.target.checked;
+            const tbody = document.getElementById(
+              `tbody-${event.target.dataset.fileType}`
+            );
+            const checkboxes = tbody.querySelectorAll("input[type='checkbox']");
+            checkboxes.forEach((checkbox) => (checkbox.checked = isChecked));
+            break;
           default:
             break;
         }
@@ -1058,14 +1086,6 @@ class SetupView {
    */
   bindFormSubmit(handler) {
     this.formSubmitHandler = handler;
-  }
-
-  /**
-   * Updates the checked state of a checkbox based on the provided file data.
-   * @param {Object} data An object containing the file's ID and its enabled state.
-   */
-  updateFile(data) {
-    document.getElementById(`file${data.id}`).checked = data.enabled;
   }
 
   /**
@@ -1129,9 +1149,6 @@ class SetupController {
     this.model = model;
     this.view = view;
 
-    // When a file is enabled or disabled.
-    this.view.bindFileToggle(this.handleFileToggle);
-
     // When the form is submitted, handle the data submission.
     this.view.bindFormSubmit(this.handleFormSubmit);
 
@@ -1146,21 +1163,6 @@ class SetupController {
       this.handleSubmitFileGroupsAndFilterForm
     );
   }
-  /**
-   * Toggles the enabled state of a specific file and updates the view based on the response.
-   * @param {string} fileId The ID of the file to toggle.
-   * @param {boolean} isChecked The new state to be applied to the file.
-   * @returns {Promise<void>} A promise that resolves when the file has been updated and the view
-   * has been refreshed.
-   */
-  handleFileToggle = async (fileId, isChecked) => {
-    try {
-      const file = await this.model.updateFile(fileId, isChecked);
-      this.view.updateFile(file);
-    } catch (error) {
-      console.error("Failed to toggle file:", error);
-    }
-  };
 
   /**
    * Handles the form submission, invoking the model to submit the form data.

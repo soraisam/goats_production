@@ -45,23 +45,6 @@ class TestDRAGONSFilesViewSet(APITestCase):
         response = self.detail_view(request, pk=dragons_file.id)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["enabled"] == dragons_file.enabled
-
-    def test_partial_update_file(self):
-        """Test partially updating a DRAGONS file."""
-        dragons_file = DRAGONSFileFactory(enabled=True)
-        data = {"enabled": False}
-
-        request = self.factory.patch(
-            reverse("dragonsfile-detail", args=[dragons_file.id]), data, format="json",
-        )
-        self.authenticate(request)
-
-        response = self.update_view(request, pk=dragons_file.id)
-        dragons_file.refresh_from_db()
-
-        assert response.status_code == status.HTTP_200_OK
-        assert dragons_file.enabled == data["enabled"]
 
     def test_filter_by_dragons_run(self):
         """Test filtering DRAGONS files by DRAGONS run."""
@@ -78,20 +61,6 @@ class TestDRAGONSFilesViewSet(APITestCase):
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data.get("results")) == 2
-
-    def test_invalid_partial_update(self):
-        """Test partially updating a DRAGONS file with invalid data."""
-        dragons_file = DRAGONSFileFactory()
-        data = {"enabled": None}  # Invalid data, enabled should be a boolean
-
-        request = self.factory.patch(
-            reverse("dragonsfile-detail", args=[dragons_file.id]), data, format="json",
-        )
-        self.authenticate(request)
-
-        response = self.update_view(request, pk=dragons_file.id)
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_authentication_required(self):
         """Test that authentication is required to access the view."""

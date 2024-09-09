@@ -128,7 +128,6 @@ class DRAGONSFilesViewSet(
             # Fetch and group data based on the composite or single group key.
             queryset = queryset.values(
                 "id",
-                "enabled",
                 "object_name",
                 "file_type",
                 "product_id",
@@ -148,7 +147,6 @@ class DRAGONSFilesViewSet(
                 grouped_data[group_key]["files"].append(
                     {
                         "id": item["id"],
-                        "enabled": item["enabled"],
                         "object_name": item["object_name"],
                         "file_type": item["file_type"],
                         "product_id": item["product_id"],

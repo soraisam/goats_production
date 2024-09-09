@@ -188,7 +188,6 @@ class DRAGONSFileFactory(factory.django.DjangoModelFactory):
 
     dragons_run = factory.SubFactory(DRAGONSRunFactory)
     data_product = factory.SubFactory(DataProductFactory)
-    enabled = factory.Faker("boolean")
     recipes_module = factory.SubFactory(RecipesModuleFactory)
     file_type = factory.Iterator(["bias", "flat", "object", "arc"])
     object_name = factory.Faker("word")

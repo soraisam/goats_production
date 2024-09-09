@@ -22,9 +22,6 @@ class DRAGONSFile(models.Model):
     data_product : `models.ForeignKey`
         A foreign key to the `DataProduct` model that details the data
         product associated with this file.
-    enabled : `models.BooleanField`
-        A boolean flag indicating whether the file is active and should be
-        considered in operations and processes.
     modified : `models.DateTimeField`
         The date and time the file was last modified, automatically set to
         the current timestamp when the file object is updated.
@@ -45,7 +42,6 @@ class DRAGONSFile(models.Model):
         related_name="dragons_run_files",
     )
     data_product = models.ForeignKey(DataProduct, on_delete=models.CASCADE)
-    enabled = models.BooleanField(default=True)
     modified = models.DateTimeField(auto_now=True)
     recipes_module = models.ForeignKey(
         "goats_tom.RecipesModule",

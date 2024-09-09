@@ -179,11 +179,10 @@ class TestDRAGONSFileFactory:
         dragons_run = DRAGONSRunFactory()
         data_product = DataProductFactory()
         dragons_file = DRAGONSFileFactory(
-            dragons_run=dragons_run, data_product=data_product, enabled=False,
+            dragons_run=dragons_run, data_product=data_product,
         )
         assert dragons_file.dragons_run == dragons_run
         assert dragons_file.data_product == data_product
-        assert dragons_file.enabled is False
 
 
 @pytest.mark.django_db()

@@ -32,57 +32,7 @@ class TestDRAGONSFileSerializer(APITestCase):
         self.assertEqual(
             serializer.data["product_id"], dragons_file.product_id,
         )
-
-    def test_invalid_data(self):
-        """Test `DRAGONSFileSerializer` with invalid data."""
-        invalid_data = {
-            "enabled": None,  # Invalid as enabled should not be None
-        }
-        serializer = DRAGONSFileSerializer(data=invalid_data)
-        self.assertFalse(serializer.is_valid())
-
-    def test_partial_update(self):
-        """Test partial update of `DRAGONSFile`."""
-        dragons_file = DRAGONSFileFactory(enabled=True)
-        partial_data = {"enabled": False}
-        serializer = DRAGONSFileSerializer(
-            dragons_file, data=partial_data, partial=True,
-        )
-
-        self.assertTrue(serializer.is_valid())
-        updated_instance = serializer.save()
-        self.assertEqual(updated_instance.enabled, False)
-
-    def test_partial_update_invalid_data(self):
-        """Test partial update of `DRAGONSFile`."""
-        dragons_file = DRAGONSFileFactory()
-        original_product_id = dragons_file.data_product.product_id
-        original_observation_id = (
-            dragons_file.data_product.observation_record.observation_id
-        )
-        original_url = dragons_file.data_product.data.url
-
-        update_data = {
-            "product_id": "new-product-id",
-            "observation_id": "new-observation-id",
-            "url": "new-url",
-            "enabled": not dragons_file.enabled,
-        }
-
-        serializer = DRAGONSFileSerializer(dragons_file, data=update_data, partial=True)
-        self.assertTrue(serializer.is_valid())
-        updated_instance = serializer.save()
-
-        # Check that immutable fields have not changed.
-        self.assertEqual(updated_instance.data_product.product_id, original_product_id)
-        self.assertEqual(
-            updated_instance.data_product.observation_record.observation_id,
-            original_observation_id,
-        )
-        self.assertEqual(updated_instance.data_product.data.url, original_url)
-        # Check that the 'enabled' field has been updated.
-        self.assertEqual(updated_instance.enabled, update_data["enabled"])
-
+        
 
 class TestDRAGONSFileFilterSerializer(APITestCase):
     """Test class for `DRAGONSFileFilterSerializer`."""
