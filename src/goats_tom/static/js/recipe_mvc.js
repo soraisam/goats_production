@@ -780,9 +780,9 @@ class RecipeController {
     this.view.logger.clear();
     // Get the file IDs to run on.
     const tbody = document.getElementById(`tbody-${fileType}`);
-    const fileIds = Array.from(tbody.querySelectorAll("input[type='checkbox']")).map(
-      (input) => input.dataset.filePk
-    );
+    const fileIds = Array.from(
+      tbody.querySelectorAll("input[type='checkbox']:checked")
+    ).map((input) => input.dataset.filePk);
     const reduce = await this.model.startReduce(recipeId, fileIds);
     // Update the view.
     this.handleUpdateReduce(reduce);

@@ -22,7 +22,6 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
             "observation_id",
             "file_type",
             "object_name",
-            "enabled",
             "astrodata_descriptors",
         ]
         read_only_fields = [
@@ -35,11 +34,6 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
             "object_name",
             "astrodata_descriptors",
         ]
-
-    def update(self, instance, validated_data):
-        instance.enabled = validated_data.get("enabled", instance.enabled)
-        instance.save()
-        return instance
 
 
 class DRAGONSFileFilterSerializer(serializers.Serializer):
