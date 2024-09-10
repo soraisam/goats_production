@@ -182,7 +182,8 @@ class SetupView {
     this.deleteRun = this.card.querySelector("#deleteRun");
     this.headerModal = Utils.createModal("header");
     this.runContainer = this.card.querySelector("#runContainer");
-    this.runContainer.appendChild(this.createRunTable());
+    this.runTable = new RunTable(this.runContainer);
+
     this.runId = null;
 
     // Set up event listeners for UI interactions.
@@ -213,92 +214,6 @@ class SetupView {
    */
   hideHeaderModal() {
     this.headerModal.hide();
-  }
-
-  /**
-   * Clears the content of the run table.
-   */
-  clearRunTable() {
-    this.runTable.innerHTML = "";
-  }
-
-  /**
-   * Resets the run table by clearing it and adding a default row indicating no run is selected.
-   */
-  resetRunTable() {
-    this.clearRunTable();
-    // Create a single row that says "No run selected...".
-    const tr = Utils.createElement("tr");
-
-    const td = Utils.createElement("td");
-    td.textContent = "No run selected...";
-    // Spans across both columns.
-    td.setAttribute("colspan", "2");
-    tr.appendChild(td);
-
-    this.runTable.appendChild(tr);
-  }
-
-  /**
-   * Displays the run details in the run table.
-   * @param {Object} run The run object containing data to display in the table.
-   */
-  displayRun(run) {
-    // Clear the existing table rows.
-    this.clearRunTable();
-
-    // Define the keys you want to display.
-    const keysToDisplay = [
-      "created",
-      "version",
-      "directory",
-      "config_filename",
-      "cal_manager_filename",
-      "log_filename",
-    ];
-
-    // Loop through the filtered keys in the run object to create table rows.
-    keysToDisplay.forEach((key) => {
-      if (run.hasOwnProperty(key)) {
-        // Ensure the key exists in the run object.
-        const formattedKey = Utils.formatDisplayText(key);
-
-        const tr = Utils.createElement("tr");
-
-        const th = Utils.createElement("td");
-        th.textContent = formattedKey;
-        tr.appendChild(th);
-
-        const td = Utils.createElement("td");
-        td.textContent = run[key];
-        tr.appendChild(td);
-
-        this.runTable.appendChild(tr);
-      }
-    });
-    this.runId = run.id;
-  }
-
-  /**
-   * Creates the run table with initial setup.
-   * The table is initially populated with a single row indicating no run is selected.
-   * @returns {Element} The created table element.
-   */
-  createRunTable() {
-    // Create a table.
-    const table = Utils.createElement("table", [
-      "table",
-      "table-borderless",
-      "table-sm",
-      "small",
-    ]);
-    const tbody = Utils.createElement("tbody");
-    this.runTable = tbody;
-    table.appendChild(tbody);
-
-    this.resetRunTable();
-
-    return table;
   }
 
   /**
@@ -1000,7 +915,7 @@ class SetupView {
       this.filesAndRecipesContainer.innerHTML = "";
       this.setRunControlsDisabledState(true);
       // Reset the run table.
-      this.resetRunTable();
+      this.runTable.reset();
     });
 
     // Handle visibility toggling for using an existing run form.
@@ -1188,7 +1103,7 @@ class SetupController {
       // Fetch the run information so I can display that.
       // TODO: Use the stored runs and make it so I just grab it by ID.
       const run = await this.model.fetchRun(runId);
-      this.view.displayRun(run);
+      this.view.runTable.update(run);
 
       const files = await this.model.fetchFileList(runId);
       const recipes = await this.model.fetchRecipes(runId);
