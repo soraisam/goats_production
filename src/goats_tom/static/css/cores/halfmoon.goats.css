@@ -471,6 +471,13 @@ select.form-control[multiple] {
   pointer-events: none;
 }
 
+/* Fix for jquery and fontawesome */
+
+/* https://docs.fontawesome.com/web/use-with/jquery */
+[data-fa-i2svg] {
+  pointer-events: none;
+}
+
 /* stylelint-disable */
 /* Fix for JS9 inheriting from parent. */
 .JS9Button {
@@ -484,3 +491,4 @@ select.form-control[multiple] {
   color: #4d494d;
 }
 /* stylelint-enable */
+

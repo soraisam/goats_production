@@ -1,4 +1,69 @@
+/**
+ * Provides static utility functions for DOM manipulation and general utility tasks.
+ */
 class Utils {
+  /**
+   * Returns the first element within the document that matches the specified selector.
+   * @param {string} selector - The CSS selector to match elements against.
+   * @param {Element|Document} [scope=document] - The root element to search within.
+   * @return {Element|null} The first matching element or null if no matches are found.
+   */
+  static qs(selector, scope = document) {
+    return scope.querySelector(selector);
+  }
+
+  /**
+   * Returns a list of elements within the document that match the specified selector.
+   * @param {string} selector - The CSS selector to match elements against.
+   * @param {Element|Document} [scope=document] - The root element to search within.
+   * @return {NodeList} A NodeList of matching elements.
+   */
+  static qsa(selector, scope = document) {
+    return scope.querySelectorAll(selector);
+  }
+
+  /**
+   * Adds an event listener to a specified element.
+   * @param {EventTarget} target - The target element to attach the event listener to.
+   * @param {string} type - The type of event to listen for.
+   * @param {Function} callback - The function to be called when the event is triggered.
+   * @param {boolean} [useCapture=false] - A Boolean indicating whether the event should be
+   * captured before it reaches the target (capture phase) or after it bubbles up (bubbling phase).
+   */
+  static on(target, type, callback, useCapture = false) {
+    target.addEventListener(type, callback, useCapture);
+  }
+
+  /**
+   * Delegates an event to a target element based on a selector.
+   * @param {Element} target - The element on which to listen for the event.
+   * @param {string} selector - The selector to match against when the event is triggered.
+   * @param {string} type - The type of event to delegate.
+   * @param {Function} handler - The function to execute when the event occurs on an element
+   * matching the selector.
+   */
+  static delegate(target, selector, type, handler) {
+    // Determine if the event should be captured during the capture phase.
+    // This is necessary for events that do not bubble naturally, such as "focus" or "blur".
+    const useCapture = type === "blur" || type === "focus";
+
+    function dispatchEvent(event) {
+      const targetElement = event.target;
+      // Find all elements within the target that match the provided selector.
+      const potentialElements = Utils.qsa(selector, target);
+      const hasMatch = Array.from(potentialElements).includes(targetElement);
+
+      // If there's a match and the handler is supposed to be executed, call the handler function
+      // and set 'this' to the targetElement which is the element that matched the selector.
+      if (hasMatch) handler.call(targetElement, event);
+    }
+
+    // Attach the dispatchEvent function as an event listener to the target.
+    // This setup allows the event to be captured at the target or bubble up to it, depending on
+    // the event type.
+    Utils.on(target, type, dispatchEvent, useCapture);
+  }
+
   static capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
   }
