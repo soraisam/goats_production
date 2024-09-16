@@ -34,9 +34,9 @@ class RunTableTemplate {
    * @returns {HTMLTableSectionElement} A tbody element containing a default message.
    */
   createTBodyDefault() {
-    const tbody = document.createElement("tbody");
-    const tr = document.createElement("tr");
-    const td = document.createElement("td");
+    const tbody = Utils.createElement("tbody");
+    const tr = Utils.createElement("tr");
+    const td = Utils.createElement("td");
     td.colSpan = 2;
     td.textContent = "No run selected...";
     tr.appendChild(td);
@@ -50,14 +50,14 @@ class RunTableTemplate {
    * @returns {HTMLTableSectionElement} A tbody element containing data rows.
    */
   createTBodyData(data) {
-    const tbody = document.createElement("tbody");
+    const tbody = Utils.createElement("tbody");
 
     KEYS_TO_DISPLAY.forEach((key) => {
       if (data.hasOwnProperty(key)) {
-        const tr = document.createElement("tr");
-        const tdKey = document.createElement("td");
+        const tr = Utils.createElement("tr");
+        const tdKey = Utils.createElement("td");
         tdKey.textContent = Utils.formatDisplayText(key);
-        const tdValue = document.createElement("td");
+        const tdValue = Utils.createElement("td");
         tdValue.textContent = data[key];
         tr.appendChild(tdKey);
         tr.appendChild(tdValue);
