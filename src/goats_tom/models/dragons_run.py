@@ -8,6 +8,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.db import models
+from recipe_system import cal_service
 from tom_observations.models import ObservationRecord
 
 from goats_tom.models import DRAGONSRecipe
@@ -145,6 +146,17 @@ class DRAGONSRun(models.Model):
         """
         return self.get_output_dir() / self.cal_manager_filename
 
+    def get_caldb(self) -> cal_service.LocalDB:
+        """Gets the calibration database instance.
+
+        Returns
+        -------
+        `cal_service.LocalDB`
+            Instance of the calibration database.
+        """
+        # TODO: Error handling.
+        return cal_service.LocalDB(self.get_cal_manager_db_file(), force_init=False)
+
     def get_log_file(self) -> Path:
         """Returns the full path to the log file.
 
@@ -201,3 +213,60 @@ class DRAGONSRun(models.Model):
             return first_file.list_groups()
 
         return []
+
+    def close_caldb(self, caldb) -> None:
+        """Closes the calibration manager to protect threads.
+
+        Parameters
+        ----------
+        caldb : `cal_service.LocalDB`
+            The instance of the calibration database.
+        """
+        try:
+            caldb._calmgr.session.close()
+        except Exception:
+            pass
+
+    def add_caldb_file(self, filepath: str | Path) -> None:
+        """Adds a file to the calibration database.
+
+        Parameters
+        ----------
+        filepath : `str | Path`
+            The path to the file to add.
+        """
+        caldb = self.get_caldb()
+        try:
+            caldb.add_cal(filepath)
+        finally:
+            self.close_caldb(caldb)
+
+    def remove_caldb_file(self, filename: str) -> None:
+        """Removes a file from the calibration database.
+
+        Parameters
+        ----------
+        filename : `str`
+            The file to remove.
+        """
+        caldb = self.get_caldb()
+        try:
+            caldb.remove_cal(filename)
+        finally:
+            self.close_caldb(caldb)
+
+    def list_caldb_files(self) -> list[dict[str, str]]:
+        """Lists all files in the calibration database.
+
+        Returns
+        -------
+        `list[dict[str, str]]`
+            The list of dicts of all files in the calibration database.
+        """
+        caldb = self.get_caldb()
+        # Can also provide path if needed.
+        try:
+            files = [{"name": f.name, "path": f.path} for f in caldb.list_files()]
+        finally:
+            self.close_caldb(caldb)
+        return files
