@@ -800,6 +800,7 @@ class SetupView {
     checkbox.type = "checkbox";
     checkbox.id = `file${file.id}`;
     checkbox.dataset.fileType = file.file_type;
+    checkbox.dataset.filePk = file.id;
     checkbox.checked = true;
 
     // Configure the label.
