@@ -1,0 +1,1 @@
+Added file management capabilities to the calibration database: Users can now add files to, remove files from, and list files in the calibration database directly via the API.
