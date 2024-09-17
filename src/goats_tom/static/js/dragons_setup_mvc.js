@@ -459,7 +459,7 @@ class SetupView {
     selectAllCheckbox.id = `selectAll-${fileType}`;
     selectAllCheckbox.addEventListener("change", (event) => {
       const isChecked = event.target.checked;
-      const checkboxes = this.runTable.querySelectorAll("input[type='checkbox']");
+      const checkboxes = tbody.querySelectorAll("input[type='checkbox']");
       checkboxes.forEach((checkbox) => (checkbox.checked = isChecked));
     });
 
