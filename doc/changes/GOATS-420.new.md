@@ -1,0 +1,1 @@
+Connected frontend with backend API for file removal and refresh: Integrated the frontend user interface with the backend API to enable file removal from the calibration database. Added a refresh button to update the database view.
