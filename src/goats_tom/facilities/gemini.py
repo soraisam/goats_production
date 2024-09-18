@@ -27,6 +27,7 @@ from tom_targets.models import Target
 from goats_tom.astroquery import Observations as GOA
 from goats_tom.ocs import GeminiID, OCSClient
 from goats_tom.utils import get_key_info
+from requests.exceptions import ConnectTimeout
 
 try:
     AUTO_THUMBNAILS = settings.AUTO_THUMBNAILS
@@ -749,7 +750,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
             files = GOA.query_criteria(program_id=observation_id)
         except HTTPError as e:
             logger.error("HTTP Error occured: %s", e)
-        except ReadTimeout:
+        except (ConnectTimeout, ReadTimeout):
             logger.error("Timeout hit querying GOA.")
 
         # Query DataProduct objects associated with the observation record.
