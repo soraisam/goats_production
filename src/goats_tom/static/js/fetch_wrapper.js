@@ -33,6 +33,11 @@ class FetchWrapper {
     // Merge provided headers with defaults.
     options.headers = { ...this.defaultHeaders, ...options.headers };
 
+    // If the body is FormData, remove the 'Content-Type' header to let the browser set it.
+    if (options.body instanceof FormData) {
+      delete options.headers["Content-Type"];
+    }
+
     try {
       const response = await fetch(url, { ...options, credentials: "same-origin" });
 
@@ -64,13 +69,14 @@ class FetchWrapper {
    * @param {string} endpoint - The endpoint for the POST request.
    * @param {Object} body - The body data to send with the POST request.
    * @param {Object} [options={}] - Additional options for the POST request.
+   * @param {boolean} [stringify=true] - Whether to stringify the body.
    * @returns {Promise<Object>} - A promise resolving to the response data.
    */
-  post(endpoint, body, options = {}) {
+  post(endpoint, body, options = {}, stringify = true) {
     return this.request(endpoint, {
       ...options,
       method: "POST",
-      body: JSON.stringify(body),
+      body: stringify ? JSON.stringify(body) : body,
     });
   }
 
@@ -79,13 +85,14 @@ class FetchWrapper {
    * @param {string} endpoint - The endpoint for the PUT request.
    * @param {Object} body - The body data to send with the PUT request.
    * @param {Object} [options={}] - Additional options for the PUT request.
+   * @param {boolean} [stringify=true] - Whether to stringify the body.
    * @returns {Promise<Object>} - A promise resolving to the response data.
    */
-  put(endpoint, body, options = {}) {
+  put(endpoint, body, options = {}, stringify = true) {
     return this.request(endpoint, {
       ...options,
       method: "PUT",
-      body: JSON.stringify(body),
+      body: stringify ? JSON.stringify(body) : body,
     });
   }
 
@@ -104,13 +111,14 @@ class FetchWrapper {
    * @param {string} endpoint - The endpoint for the PATCH request.
    * @param {Object} body - The body data to send with the PATCH request.
    * @param {Object} [options={}] - Additional options for the PATCH request.
+   * @param {boolean} [stringify=true] - Whether to stringify the body.
    * @returns {Promise<Object>} - A promise resolving to the response data.
    */
-  patch(endpoint, body, options = {}) {
+  patch(endpoint, body, options = {}, stringify = true) {
     return this.request(endpoint, {
       ...options,
       method: "PATCH",
-      body: JSON.stringify(body),
+      body: stringify ? JSON.stringify(body) : body,
     });
   }
 }
