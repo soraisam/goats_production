@@ -157,6 +157,23 @@ class DRAGONSRun(models.Model):
         # TODO: Error handling.
         return cal_service.LocalDB(self.get_cal_manager_db_file(), force_init=False)
 
+    def get_calibrations_uploaded_dir(self) -> Path:
+        """Retrieves the path to the uploaded calibrations directory within the output
+        directory, creating it if it does not exist.
+
+        Returns
+        -------
+        `Path`
+            The path to the uploaded calibrations directory.
+        """
+        # Define the path to the uploaded calibrations directory.
+        uploaded_dir = self.get_output_dir() / "calibrations" / "uploaded"
+
+        # Ensure the directory exists.
+        uploaded_dir.mkdir(parents=True, exist_ok=True)
+
+        return uploaded_dir
+
     def get_log_file(self) -> Path:
         """Returns the full path to the log file.
 
@@ -214,7 +231,7 @@ class DRAGONSRun(models.Model):
 
         return []
 
-    def close_caldb(self, caldb) -> None:
+    def close_caldb(self, caldb: cal_service.LocalDB) -> None:
         """Closes the calibration manager to protect threads.
 
         Parameters
@@ -270,3 +287,18 @@ class DRAGONSRun(models.Model):
         finally:
             self.close_caldb(caldb)
         return files
+
+    def clean_caldb_uploaded_files(self) -> None:
+        """Removes files in uploaded directory that are not part of the database."""
+        caldb = self.get_caldb()
+        uploaded_dir = self.get_calibrations_uploaded_dir()
+
+        try:
+            files = [Path(f.path) / f.name for f in caldb.list_files()]
+            # Iterate over each file in the uploaded directory.
+            for filepath in uploaded_dir.iterdir():
+                if filepath not in files:
+                    # Remove files not in database in uploaded.
+                    filepath.unlink()
+        finally:
+            self.close_caldb(caldb)

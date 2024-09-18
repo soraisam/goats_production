@@ -31,15 +31,33 @@ class DRAGONSCaldbViewSet(
             The serializer containing validated data for the update.
         """
         action = serializer.validated_data["action"]
-        file_path_or_name = serializer.validated_data["file"]
 
-        try:
-            if action == "add":
-                serializer.instance.add_caldb_file(file_path_or_name)
+        if action == "add":
+            file_obj = serializer.validated_data["file"]
+            cal_dir = serializer.instance.get_calibrations_uploaded_dir()
+            filepath = cal_dir / file_obj.name
 
-            elif action == "remove":
-                serializer.instance.remove_caldb_file(file_path_or_name)
+            try:
+                # Write the uploaded file to the calibrations uploaded directory.
+                with open(filepath, "wb+") as destination:
+                    for chunk in file_obj.chunks():
+                        destination.write(chunk)
+            except (IOError, PermissionError):
+                return
 
-        except Exception:
-            # TODO: Add erorr handling?
-            pass
+            try:
+                # Update the database with the new file.
+                serializer.instance.add_caldb_file(filepath)
+            except Exception:
+                pass
+            # DRAGONS does not raise an error if it's not valid for use, so need to
+            # check if in database and remove if not.
+            serializer.instance.clean_caldb_uploaded_files()
+
+        elif action == "remove":
+            filename = serializer.validated_data["filename"]
+            try:
+                # Remove the file from the database.
+                serializer.instance.remove_caldb_file(filename)
+            except Exception:
+                return

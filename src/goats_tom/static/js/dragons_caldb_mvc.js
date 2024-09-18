@@ -194,7 +194,7 @@ class CaldbTemplate {
 
       const removeButton = Utils.createElement("a", ["link-danger"]);
       removeButton.setAttribute("type", "button");
-      removeButton.setAttribute("data-file", item.name);
+      removeButton.setAttribute("data-filename", item.name);
       removeButton.setAttribute("data-action", "remove");
       // Create icon element for button.
       const icon = Utils.createElement("i", ["fa-solid", "fa-circle-minus"]);
@@ -283,7 +283,7 @@ class CaldbView {
         break;
       case "remove":
         Utils.delegate(this.table, selector, "click", (e) =>
-          handler({ filename: e.target.dataset.file })
+          handler({ filename: e.target.dataset.filename })
         );
         break;
       case "refresh":
@@ -337,7 +337,7 @@ class CaldbModel {
   async removeFile(filename) {
     try {
       const body = {
-        file: filename,
+        filename: filename,
         action: "remove",
       };
       const response = await this.api.patch(`${this.caldbUrl}${this.runId}/`, body);
@@ -348,18 +348,25 @@ class CaldbModel {
     }
   }
 
-  // TODO:
+  /**
+   * Adds a file to the calibration database.
+   * @async
+   * @param {File} file - The file object to upload.
+   * @returns {Promise<void>} - A promise that resolves when the file has been added successfully.
+   */
   async addFile(file) {
-    // await this._addOrRemoveFile(file, "add");
-    console.log(`Called 'model.addFile' ${file.name}`);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("action", "add");
 
-    return;
     try {
-      const body = {
-        file: file,
-        action: "add",
-      };
-      const response = await this.api.patch(`${this.caldbUrl}${this.runId}/`, body);
+      const body = formData;
+      const response = await this.api.patch(
+        `${this.caldbUrl}${this.runId}/`,
+        body,
+        {},
+        false
+      );
       this.setData(response);
     } catch (error) {
       console.error(`Error adding file:`, error);
@@ -432,7 +439,6 @@ class CaldbController {
    * @param {string} filename - The filename of the item to remove.
    */
   async remove(filename) {
-    console.log("Called 'remove': ", filename);
     await this.model.removeFile(filename);
     this.view.render("update", { data: this.model.getData() });
   }
@@ -443,7 +449,6 @@ class CaldbController {
    * @param {File} file - A file object to add to the database.
    */
   async add(file) {
-    console.log(`Called 'controller.add' ${file.name}`);
     await this.model.addFile(file);
     this.view.render("update", { data: this.model.getData() });
   }
