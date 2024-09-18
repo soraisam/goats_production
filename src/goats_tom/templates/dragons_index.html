@@ -71,7 +71,7 @@
   <div class="col-lg-6 col-12">
     <div id="recipesContainer"></div>
   </div>
-  <div class="col-6">
+  <div class="col-lg-6 col-12">
     <div id="caldbContainer"></div>
   </div>
 </div>
@@ -83,12 +83,12 @@
 {{ block.super }}
 <script src="{% static 'tom-select/tom-select.base.js' %}"></script>
 <script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/fetch_wrapper.js' %}"></script>
 <script src="{% static 'js/dragons_caldb_mvc.js' %}"></script>
 <script src="{% static 'js/run_table_mvc.js' %}"></script>
 <script src="{% static 'js/help_offcanvas.js' %}"></script>
 <script src="{% static 'js/logger.js' %}"></script>
 <script src="{% static 'js/get_csrf_token.js' %}"></script>
-<script src="{% static 'js/fetch_wrapper.js' %}"></script>
 <script src="{% static 'js/dragons_setup_mvc.js' %}"></script>
 <script src="{% static 'js/recipe_mvc.js' %}"></script>
 <script src="{% static 'js/recipes_manager_mvc.js' %}"></script>
@@ -107,8 +107,7 @@
     const api = new FetchWrapper("/api/");
     api.setCsrfToken("{{ csrf_token }}");
 
-    const caldb = new Caldb(document.getElementById("caldbContainer"));
-    caldb.update()
+    const caldb = new Caldb(document.getElementById("caldbContainer"), api);
 
     // Initialize models, views, and controllers.
     const setupModel = new SetupModel(api);
@@ -128,6 +127,7 @@
       await setupController.handleUpdateFiles(runId);
       await recipeManagerController.updateRecipesCard(runId);
       await recipeManagerController.updateReducesProgress(runId);
+      await caldb.update(runId);
     };
 
     const handleSwitchTab = async (recipeId) => {
