@@ -74,6 +74,9 @@
   <div class="col-lg-6 col-12">
     <div id="caldbContainer"></div>
   </div>
+  <div class="col-lg-6 col-12">
+    <div id="outputFilesContainer"></div>
+  </div>
 </div>
 <div id="helpOffcanvasContainer"></div>
 <link rel="stylesheet" href="{% static 'tom-select/tom-select.bootstrap5.css' %}">
@@ -85,6 +88,7 @@
 <script src="{% static 'js/utils.js' %}"></script>
 <script src="{% static 'js/fetch_wrapper.js' %}"></script>
 <script src="{% static 'js/dragons_caldb_mvc.js' %}"></script>
+<script src="{% static 'js/output_files_mvc.js' %}"></script>
 <script src="{% static 'js/run_table_mvc.js' %}"></script>
 <script src="{% static 'js/help_offcanvas.js' %}"></script>
 <script src="{% static 'js/logger.js' %}"></script>
@@ -108,6 +112,7 @@
     api.setCsrfToken("{{ csrf_token }}");
 
     const caldb = new Caldb(document.getElementById("caldbContainer"), api);
+    const outputFiles = new OutputFiles(document.getElementById("outputFilesContainer"), api)
 
     // Initialize models, views, and controllers.
     const setupModel = new SetupModel(api);
@@ -128,6 +133,7 @@
       await recipeManagerController.updateRecipesCard(runId);
       await recipeManagerController.updateReducesProgress(runId);
       await caldb.update(runId);
+      await outputFiles.update(runId);
     };
 
     const handleSwitchTab = async (recipeId) => {
