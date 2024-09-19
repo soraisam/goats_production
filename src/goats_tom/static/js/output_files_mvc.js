@@ -1,9 +1,6 @@
-CALDB_ID = "Caldb";
+const OUTPUT_FILES_ID = "OutputFiles";
 
-/**
- * Class to manage calibration database UI components.
- */
-class CaldbTemplate {
+class OutputFilesTemplate {
   /**
    * Creates a card container.
    * @return {HTMLElement} The card element.
@@ -32,22 +29,22 @@ class CaldbTemplate {
    */
   createAccordion() {
     const accordion = Utils.createElement("div", ["accordion"]);
-    const accordionId = `accordion${CALDB_ID}`;
+    const accordionId = `accordion${OUTPUT_FILES_ID}`;
     accordion.id = accordionId;
 
     const header = Utils.createElement("h6", ["accordion-header"]);
-    const headerId = `header${CALDB_ID}`;
+    const headerId = `header${OUTPUT_FILES_ID}`;
     header.id = headerId;
 
     const button = Utils.createElement("button");
-    const collapseId = `collapse${CALDB_ID}`;
+    const collapseId = `collapse${OUTPUT_FILES_ID}`;
     button.className = "accordion-button collapsed";
     button.setAttribute("type", "button");
     button.setAttribute("data-bs-toggle", "collapse");
     button.setAttribute("data-bs-target", `#${collapseId}`);
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", collapseId);
-    button.textContent = "Calibration Database";
+    button.textContent = "Output Files";
 
     header.appendChild(button);
 
@@ -58,7 +55,7 @@ class CaldbTemplate {
     collapseDiv.setAttribute("data-bs-parent", `#${accordionId}`);
 
     const accordionBody = Utils.createElement("div", ["accordion-body"]);
-    accordionBody.appendChild(this.createTable());
+    accordionBody.append(this.createToolbar(), this.createTable());
 
     collapseDiv.appendChild(accordionBody);
     accordion.append(header, collapseDiv);
@@ -91,54 +88,11 @@ class CaldbTemplate {
     return tbody;
   }
 
-  /**
-   * Creates a default thead element.
-   * @return {HTMLElement} The newly created thead element.
-   */
-  createTHeadDefault() {
-    const thead = Utils.createElement("thead");
-
-    return thead;
-  }
-
-  /**
-   * Creates a thead element with controls for adding files.
-   * @return {HTMLElement} The thead element containing file upload controls.
-   */
-  createTHeadData() {
-    const thead = Utils.createElement("thead");
-    const tr = Utils.createElement("tr");
-
-    // Creating a cell for the form.
-    const thForm = Utils.createElement("th");
-    thForm.setAttribute("scope", "col");
-
-    // Create form to handle file input.
-    const form = Utils.createElement("form");
-    form.id = `form${CALDB_ID}`;
-
-    const fileLabel = Utils.createElement("label", ["btn", "btn-secondary", "btn-sm"]);
-    fileLabel.textContent = " Add File";
-    fileLabel.setAttribute("for", "fileInputCaldb");
-
-    // Create and prepend the icon.
-    const fileIcon = Utils.createElement("i", ["fa-solid", "fa-plus"]);
-    fileLabel.prepend(fileIcon);
-
-    // Hide file input to use custom text for button.
-    const fileInput = Utils.createElement("input");
-    fileInput.type = "file";
-    fileInput.name = "file";
-    fileInput.style.display = "none";
-    fileInput.dataset.action = "add";
-    fileInput.id = `fileInput${CALDB_ID}`;
-
-    form.append(fileLabel, fileInput);
-    thForm.appendChild(form);
-
-    // Create another cell for the refresh button.
-    const thRefresh = Utils.createElement("th", ["text-end"]);
-    thRefresh.setAttribute("scope", "col");
+  createToolbar() {
+    const div = Utils.createElement("div");
+    div.id = `toolbar${OUTPUT_FILES_ID}`;
+    const row = Utils.createElement("div", ["row", "g-3"]);
+    const col = Utils.createElement("div", ["col", "text-end"]);
 
     const refreshButton = Utils.createElement("button", [
       "btn",
@@ -152,9 +106,33 @@ class CaldbTemplate {
     const refreshIcon = Utils.createElement("i", ["fa-solid", "fa-arrow-rotate-right"]);
     refreshButton.prepend(refreshIcon);
 
-    thRefresh.appendChild(refreshButton);
+    col.append(refreshButton);
+    row.append(col);
+    div.append(row);
 
-    tr.append(thForm, thRefresh);
+    return div;
+  }
+
+  /**
+   * Creates a default thead element.
+   * @return {HTMLElement} The newly created thead element.
+   */
+  createTHeadDefault() {
+    const thead = Utils.createElement("thead");
+    const tr = Utils.createElement("tr");
+
+    // Creating a cell.
+    const thName = Utils.createElement("th", ["fw-normal"]);
+    thName.setAttribute("scope", "col");
+    thName.textContent = "Filename";
+    thName.id = `thName${OUTPUT_FILES_ID}`;
+
+    // Create another cell.
+    const thAdd = Utils.createElement("th", ["text-end", "fw-normal"]);
+    thAdd.setAttribute("scope", "col");
+    thAdd.textContent = "Add To Data Products";
+
+    tr.append(thName, thAdd);
     thead.appendChild(tr);
 
     return thead;
@@ -173,7 +151,7 @@ class CaldbTemplate {
       const tr = Utils.createElement("tr");
       const td = Utils.createElement("td");
       td.setAttribute("colspan", "2");
-      td.textContent = "No calibration files found...";
+      td.textContent = "No files found...";
       tr.appendChild(td);
       tbody.appendChild(tr);
       return tbody;
@@ -185,25 +163,35 @@ class CaldbTemplate {
 
       // Create the filename cell with a data attribute.
       const tdFilename = Utils.createElement("td", ["py-0", "mb-0"]);
-      // TODO: Change back when formatter is figured out.
-      // tdFilename.textContent = `${item.path}/${item.name}`;
       tdFilename.textContent = item.name;
 
-      // Create the delete button cell.
-      const tdRemove = Utils.createElement("td", ["text-end", "py-0", "mb-0"]);
+      // Create the add to data products button cell.
+      const tdAdd = Utils.createElement("td", ["text-end", "py-0", "mb-0"]);
 
-      const removeButton = Utils.createElement("a", ["link-danger"]);
-      removeButton.setAttribute("type", "button");
-      removeButton.setAttribute("data-filename", item.name);
-      removeButton.setAttribute("data-action", "remove");
-      // Create icon element for button.
-      const icon = Utils.createElement("i", ["fa-solid", "fa-circle-minus"]);
-      removeButton.appendChild(icon);
+      if (item.is_dataproduct) {
+        // If item is a data product, just show a check icon as text.
+        const checkIcon = Utils.createElement("i", [
+          "fa-solid",
+          "fa-circle-check",
+          "text-success",
+        ]);
+        tdAdd.appendChild(checkIcon);
+      } else {
+        // Otherwise, create a clickable button to add to data products.
+        const addButton = Utils.createElement("a", ["link-secondary"]);
+        addButton.setAttribute("type", "button");
+        addButton.setAttribute("data-filename", item.name);
+        addButton.setAttribute("data-action", "add");
 
-      tdRemove.appendChild(removeButton);
+        // Create icon element for button.
+        const icon = Utils.createElement("i", ["fa-solid", "fa-circle-plus"]);
+        addButton.appendChild(icon);
+
+        tdAdd.appendChild(addButton);
+      }
 
       // Append the cells to the row.
-      tr.append(tdFilename, tdRemove);
+      tr.append(tdFilename, tdAdd);
 
       // Append the row to the tbody.
       tbody.appendChild(tr);
@@ -213,17 +201,13 @@ class CaldbTemplate {
   }
 }
 
-/**
- * Constructs the view with a specified template and parent element.
- * @param {Object} template - The template object used for rendering components.
- * @param {HTMLElement} parentElement - The container where the view will be mounted.
- */
-class CaldbView {
+class OutputFilesView {
   constructor(template, parentElement) {
     this.template = template;
     this.parentElement = parentElement;
 
     this.card = this._create();
+    this.body = this.card.querySelector(".accordion-body");
     this.table = this.card.querySelector("table");
     this.tbody = this.card.querySelector("tbody");
     this.thead = this.card.querySelector("thead");
@@ -249,12 +233,14 @@ class CaldbView {
    * @param {Array} data - The new data to render in the table.
    */
   update(data) {
-    const newThead = this.template.createTHeadData();
     const newTbody = this.template.createTBodyData(data);
-    this.table.replaceChild(newThead, this.thead);
     this.table.replaceChild(newTbody, this.tbody);
-    this.thead = newThead;
     this.tbody = newTbody;
+
+    // Update the file count.
+    this.thead.querySelector(
+      `#thName${OUTPUT_FILES_ID}`
+    ).textContent = `Filename ${Utils.getFileCountLabel(data.length)}`;
   }
 
   /**
@@ -279,97 +265,58 @@ class CaldbView {
     const selector = `[data-action="${event}"]`;
     switch (event) {
       case "add":
-        Utils.delegate(this.table, selector, "change", (e) =>
-          handler({ file: e.target.files[0] })
-        );
-        break;
-      case "remove":
         Utils.delegate(this.table, selector, "click", (e) =>
           handler({ filename: e.target.dataset.filename })
         );
         break;
       case "refresh":
-        Utils.delegate(this.table, selector, "click", () => handler());
+        Utils.delegate(this.body, selector, "click", () => handler());
     }
   }
 }
 
-/**
- * Manages the data for the calibration database.
- * @param {FetchWrapper} api - Instance of the API wrapper to use.
- */
-class CaldbModel {
+class OutputFilesModel {
   constructor(api) {
-    this.runId = null;
+    this._runId = null;
     this.rawData = null;
     this.data = null;
     this.api = api;
-    this.caldbUrl = "dragonscaldb/";
+    this.caldbUrl = "dragonsoutputfiles/";
   }
 
   /**
-   * Sets the run ID for the calibration database operations.
-   * @param {number} runId - The run ID to set for future API requests.
+   * Gets the run ID.
+   * @return {number} The run ID.
    */
-  setRunId(runId) {
-    this.runId = runId;
+  get runId() {
+    return this._runId;
   }
 
   /**
-   * Fetches files from the calibration database for the set run ID.
+   * Sets the run ID.
+   * @param {number} value - The run ID to set for future API requests.
+   */
+  set runId(value) {
+    this._runId = value;
+  }
+
+  /**
+   * Fetches files from the output directory for the set run ID.
    * @async
    * @throws {Error} Throws an error if the network request fails.
    */
   async fetchFiles() {
     try {
-      const response = await this.api.get(`${this.caldbUrl}${this.runId}/`);
-      this.setData(response);
+      console.log("Called 'fetchFiles'.");
     } catch (error) {
-      console.error("Error fetching list of calibration database files:", error);
+      console.error("Error fetching list of output files:", error);
       throw error;
     }
   }
 
-  /**
-   * Removes a file from the calibration database.
-   * @async
-   * @param {string} filename - The name of the file to be removed.
-   * @throws {Error} Throws an error if the removal operation fails.
-   */
-  async removeFile(filename) {
+  async addFile(filename) {
     try {
-      const body = {
-        filename: filename,
-        action: "remove",
-      };
-      const response = await this.api.patch(`${this.caldbUrl}${this.runId}/`, body);
-      this.setData(response);
-    } catch (error) {
-      console.error(`Error removing file:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Adds a file to the calibration database.
-   * @async
-   * @param {File} file - The file object to upload.
-   * @returns {Promise<void>} - A promise that resolves when the file has been added successfully.
-   */
-  async addFile(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("action", "add");
-
-    try {
-      const body = formData;
-      const response = await this.api.patch(
-        `${this.caldbUrl}${this.runId}/`,
-        body,
-        {},
-        false
-      );
-      this.setData(response);
+      console.log(`Called 'addFile' ${filename}`);
     } catch (error) {
       console.error(`Error adding file:`, error);
       throw error;
@@ -408,50 +355,40 @@ class CaldbModel {
     this.rawData = null;
     this.data = null;
   }
+
+  setFakeData() {
+    const data = {
+      files: [
+        { name: "test1.fits", is_dataproduct: true },
+        { name: "test2.fits", is_dataproduct: false },
+      ],
+    };
+    this.rawData = data;
+    this.data = data.files;
+  }
 }
 
-/**
- * Initializes a new controller instance.
- * @param {CaldbModel} model - The data model for the application.
- * @param {CaldbView} view - The UI view for the application.
- */
-class CaldbController {
+class OutputFilesController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
 
     this.view.bindCallback("refresh", () => this.refresh());
-    this.view.bindCallback("remove", (item) => this.remove(item.filename));
-    this.view.bindCallback("add", (item) => this.add(item.file));
+    this.view.bindCallback("add", (item) => this.add(item.filename));
   }
 
   /**
    * Updates the model run ID and view with data.
    * @async
-   * @param {number} runId - The run ID for the calibration database.
+   * @param {number} runId - The run ID to get output files for.
    */
   async update(runId) {
-    this.model.setRunId(runId);
+    this.model.runId = runId;
     await this.refresh();
   }
 
-  /**
-   * Removes an item by its filename.
-   * @async
-   * @param {string} filename - The filename of the item to remove.
-   */
-  async remove(filename) {
-    await this.model.removeFile(filename);
-    this.view.render("update", { data: this.model.getData() });
-  }
-
-  /**
-   * Adds a new file to the calibration database.
-   * @async
-   * @param {File} file - A file object to add to the database.
-   */
-  async add(file) {
-    await this.model.addFile(file);
+  async add(filename) {
+    await this.model.addFile(filename);
     this.view.render("update", { data: this.model.getData() });
   }
 
@@ -461,32 +398,28 @@ class CaldbController {
    */
   async refresh() {
     await this.model.fetchFiles();
+    this.model.setFakeData();
     this.view.render("update", { data: this.model.getData() });
   }
 }
 
-/**
- * Constructs the calibration database application and initializes all components.
- * @param {HTMLElement} parentElement - The parent element where the application is mounted.
- * @param {FetchWrapper} api - An API instance to use for fetching.
- */
-class Caldb {
+class OutputFiles {
   constructor(parentElement, api) {
-    this.model = new CaldbModel(api);
-    this.template = new CaldbTemplate();
-    this.view = new CaldbView(this.template, parentElement);
-    this.controller = new CaldbController(this.model, this.view);
+    this.model = new OutputFilesModel(api);
+    this.template = new OutputFilesTemplate();
+    this.view = new OutputFilesView(this.template, parentElement);
+    this.controller = new OutputFilesController(this.model, this.view);
   }
 
   /**
-   * Sets the run ID and triggers an update of the calibration database.
+   * Sets the run ID and triggers an update of the output directory.
    */
   update(runId) {
     this.controller.update(runId);
   }
 
   /**
-   * Refreshes the view of the files in the calibration database.
+   * Refreshes the view of the files in the output directory.
    */
   refresh() {
     this.controller.refresh();
