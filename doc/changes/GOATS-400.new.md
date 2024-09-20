@@ -1,1 +1,0 @@
-Extended background worker timeout and made configurable: Allowed users to configure the time limit for background tasks via Django settings, enabling better control over task execution duration.

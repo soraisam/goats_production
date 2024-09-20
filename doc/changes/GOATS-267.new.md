@@ -1,1 +1,0 @@
-Enabled extended downloading from GOA: Added capability to download and link missing data from other observation IDs or calibration files. Users can now use standard stars, BPMs, and other resources from other observation IDs for use in DRAGONS reduction.​

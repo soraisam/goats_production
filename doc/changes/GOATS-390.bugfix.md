@@ -1,1 +1,0 @@
-Removed limit on multiselect dropdown options: The maximum number of options displayed in the multiselect dropdown has been removed, allowing for unrestricted selection from all available options.

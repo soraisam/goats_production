@@ -1,1 +1,0 @@
-Developed output files UI: Developed a user interface container to manage and display output files for a DRAGONS reduction.

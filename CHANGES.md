@@ -1,3 +1,40 @@
+## GOATS 24.9.0 (2024-09-20)
+
+
+### New Features
+
+- Enabled extended downloading from GOA: Added capability to download and link missing data from other observation IDs or calibration files. Users can now use standard stars, BPMs, and other resources from other observation IDs for use in DRAGONS reduction.​ [[#GOATS-267](https://noirlab.atlassian.net/browse/GOATS-267)]
+- Updated file UI interactions: Connected UI components and API fetch functionalities to update, filter, group, and query available files for DRAGONS reductions. [[#GOATS-379](https://noirlab.atlassian.net/browse/GOATS-379)]
+- Added date and time filtering: Enhanced DRAGONS file filtering by adding support for date, time, and datetime descriptors. Comprehensive tests were implemented for the new astrodata descriptor filtering features. [[#GOATS-391](https://noirlab.atlassian.net/browse/GOATS-391)]
+- Refreshed dropdown on selection: Added a handler to clear the input text and refresh available options whenever a user selects an item from the multiselect dropdown for descriptor groups. [[#GOATS-394](https://noirlab.atlassian.net/browse/GOATS-394)]
+- Included file count for 'All': Displayed the number of files when filtering to reduce confusion between filtering only and grouping with filtering. [[#GOATS-396](https://noirlab.atlassian.net/browse/GOATS-396)]
+- Extended background worker timeout and made configurable: Allowed users to configure the time limit for background tasks via Django settings, enabling better control over task execution duration. [[#GOATS-400](https://noirlab.atlassian.net/browse/GOATS-400)]
+- Added truncation for grouped values: Grouping values are now truncated to include file counts. [[#GOATS-405](https://noirlab.atlassian.net/browse/GOATS-405)]
+- Enhanced UI with informational tooltips: Added clickable icons to the DRAGONS frontend that display tooltips explaining strict filtering options and available logical operators for filter expressions. [[#GOATS-409](https://noirlab.atlassian.net/browse/GOATS-409)]
+- Added select-all/deselect-all functionality for files for observation types. [[#GOATS-410](https://noirlab.atlassian.net/browse/GOATS-410)]
+- Design UI for calibration database: Completed the UI design and development for the calibration database. [[#GOATS-415](https://noirlab.atlassian.net/browse/GOATS-415)]
+- Added file management capabilities to the calibration database: Users can now add files to, remove files from, and list files in the calibration database directly via the API. [[#GOATS-417](https://noirlab.atlassian.net/browse/GOATS-417)]
+- Connected frontend with backend API for file removal and refresh: Integrated the frontend user interface with the backend API to enable file removal from the calibration database. Added a refresh button to update the database view. [[#GOATS-420](https://noirlab.atlassian.net/browse/GOATS-420)]
+- Added file upload support: Enabled uploading files to the calibration database for DRAGONS reduction. [[#GOATS-421](https://noirlab.atlassian.net/browse/GOATS-421)]
+- Developed output files UI: Developed a user interface container to manage and display output files for a DRAGONS reduction. [[#GOATS-425](https://noirlab.atlassian.net/browse/GOATS-425)]
+- Enhanced file upload feedback and usability: Added a new column in the user interface to indicate which files were uploaded by users. Fixed an issue that prevented the re-upload of the same file consecutively. [[#GOATS-427](https://noirlab.atlassian.net/browse/GOATS-427)]
+
+
+### Changes
+
+- Improved error handling for GOA downloads: Added error handling for file downloads with updates to the webpage's progress bar to reflect errors. Errors are now logged within the download model, providing users with detailed error messages when issues occur.​ [[#GOATS-312](https://noirlab.atlassian.net/browse/GOATS-312)]
+- Sanitized run IDs for folder names: When a user provides a run ID for DRAGONS reduction, all characters unsuitable for a folder directory name are removed, and spaces are replaced with underscores. [[#GOATS-337](https://noirlab.atlassian.net/browse/GOATS-337)]
+- Removed old bias filtering: Replaced with a more powerful file filtering system. [[#GOATS-399](https://noirlab.atlassian.net/browse/GOATS-399)]
+- Enhanced product ID uniqueness: Made the product ID for a dataproduct more robust to fix integrity issues when adding the same dataproduct under different observations and targets. [[#GOATS-401](https://noirlab.atlassian.net/browse/GOATS-401)]
+- Refactored run table classes for clarity and improve the maintainability of the DRAGONS UI. [[#GOATS-413](https://noirlab.atlassian.net/browse/GOATS-413)]
+
+
+### Bug Fixes
+
+- Removed limit on multiselect dropdown options: The maximum number of options displayed in the multiselect dropdown has been removed, allowing for unrestricted selection from all available options. [[#GOATS-390](https://noirlab.atlassian.net/browse/GOATS-390)]
+- Updated database model for DRAGONS runs: Corrected the database model to handle unique recipes per observation type and object name when the observation type is an object, addressing crashes for observation records with similar recipe requirements. [[#GOATS-392](https://noirlab.atlassian.net/browse/GOATS-392)]
+- Fixed dataset referencing in DRAGONS interface: The observation record ID dataset attached to the DRAGONS interface was referenced improperly and has been corrected. [[#GOATS-393](https://noirlab.atlassian.net/browse/GOATS-393)]
+
 ## GOATS 24.8.0 (2024-08-22)
 
 

@@ -1,1 +1,0 @@
-Sanitized run IDs for folder names: When a user provides a run ID for DRAGONS reduction, all characters unsuitable for a folder directory name are removed, and spaces are replaced with underscores.

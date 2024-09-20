@@ -1,1 +1,0 @@
-Design UI for calibration database: Completed the UI design and development for the calibration database.

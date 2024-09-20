@@ -1,1 +1,0 @@
-Enhanced UI with informational tooltips: Added clickable icons to the DRAGONS frontend that display tooltips explaining strict filtering options and available logical operators for filter expressions. 

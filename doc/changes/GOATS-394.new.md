@@ -1,1 +1,0 @@
-Refreshed dropdown on selection: Added a handler to clear the input text and refresh available options whenever a user selects an item from the multiselect dropdown for descriptor groups.

@@ -1,1 +1,0 @@
-Added select-all/deselect-all functionality for files for observation types.

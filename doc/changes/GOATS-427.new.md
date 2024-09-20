@@ -1,1 +1,0 @@
-Enhanced file upload feedback and usability: Added a new column in the user interface to indicate which files were uploaded by users. Fixed an issue that prevented the re-upload of the same file consecutively.
