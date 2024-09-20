@@ -72,6 +72,7 @@ class OutputFilesTemplate {
       "table",
       "table-borderless",
       "table-sm",
+      "table-striped",
     ]);
     table.append(this.createTHeadDefault(), this.createTBodyDefault());
 
@@ -162,11 +163,11 @@ class OutputFilesTemplate {
       const tr = Utils.createElement("tr");
 
       // Create the filename cell with a data attribute.
-      const tdFilename = Utils.createElement("td", ["py-0", "mb-0"]);
+      const tdFilename = Utils.createElement("td");
       tdFilename.textContent = item.name;
 
       // Create the add to data products button cell.
-      const tdAdd = Utils.createElement("td", ["text-end", "py-0", "mb-0"]);
+      const tdAdd = Utils.createElement("td", ["text-end"]);
 
       if (item.is_dataproduct) {
         // If item is a data product, just show a check icon as text.

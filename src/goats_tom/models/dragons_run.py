@@ -281,9 +281,15 @@ class DRAGONSRun(models.Model):
             The list of dicts of all files in the calibration database.
         """
         caldb = self.get_caldb()
-        # Can also provide path if needed.
         try:
-            files = [{"name": f.name, "path": f.path} for f in caldb.list_files()]
+            files = []
+            for f in caldb.list_files():
+                path = Path(f.path)
+                files.append({
+                    "name": f.name,
+                    "path": str(path),
+                    "is_user_uploaded": path.name == 'uploaded'
+                })
         finally:
             self.close_caldb(caldb)
         return files

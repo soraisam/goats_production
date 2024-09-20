@@ -58,7 +58,7 @@ class CaldbTemplate {
     collapseDiv.setAttribute("data-bs-parent", `#${accordionId}`);
 
     const accordionBody = Utils.createElement("div", ["accordion-body"]);
-    accordionBody.appendChild(this.createTable());
+    accordionBody.append(this.createToolbar(), this.createTable());
 
     collapseDiv.appendChild(accordionBody);
     accordion.append(header, collapseDiv);
@@ -75,10 +75,65 @@ class CaldbTemplate {
       "table",
       "table-borderless",
       "table-sm",
+      "table-striped",
     ]);
     table.append(this.createTHeadDefault(), this.createTBodyDefault());
 
     return table;
+  }
+
+  /**
+   * Builds a toolbar with important actions.
+   * @returns {HTMLElement} The toolbar.
+   */
+  createToolbar() {
+    const div = Utils.createElement("div");
+    div.id = `toolbar${CALDB_ID}`;
+    const row = Utils.createElement("div", ["row", "g-3"]);
+    const colAdd = Utils.createElement("div", ["col"]);
+
+    // Create form to handle file input.
+    const form = Utils.createElement("form");
+    form.id = `form${CALDB_ID}`;
+
+    const fileLabel = Utils.createElement("label", ["btn", "btn-secondary", "btn-sm"]);
+    fileLabel.textContent = " Add File";
+    fileLabel.setAttribute("for", "fileInputCaldb");
+
+    // Create and prepend the icon.
+    const fileIcon = Utils.createElement("i", ["fa-solid", "fa-plus"]);
+    fileLabel.prepend(fileIcon);
+
+    // Hide file input to use custom text for button.
+    const fileInput = Utils.createElement("input");
+    fileInput.type = "file";
+    fileInput.name = "file";
+    fileInput.style.display = "none";
+    fileInput.dataset.action = "add";
+    fileInput.id = `fileInput${CALDB_ID}`;
+
+    form.append(fileLabel, fileInput);
+    colAdd.appendChild(form);
+
+    const colRefresh = Utils.createElement("div", ["col", "text-end"]);
+    const refreshButton = Utils.createElement("button", [
+      "btn",
+      "btn-secondary",
+      "btn-sm",
+    ]);
+    refreshButton.textContent = " Refresh";
+    refreshButton.dataset.action = "refresh";
+
+    // Create and prepend the icon.
+    const refreshIcon = Utils.createElement("i", ["fa-solid", "fa-arrow-rotate-right"]);
+    refreshButton.prepend(refreshIcon);
+
+    colRefresh.appendChild(refreshButton);
+
+    row.append(colAdd, colRefresh);
+    div.appendChild(row);
+
+    return div;
   }
 
   /**
@@ -97,6 +152,24 @@ class CaldbTemplate {
    */
   createTHeadDefault() {
     const thead = Utils.createElement("thead");
+    const tr = Utils.createElement("tr");
+
+    // Creating a cell.
+    const thName = Utils.createElement("th", ["fw-normal"]);
+    thName.setAttribute("scope", "col");
+    thName.textContent = "Filename";
+    thName.id = `thName${CALDB_ID}`;
+
+    // Create cell for user uploaded.
+    const thUserUploaded = Utils.createElement("th", ["fw-normal"]);
+    thUserUploaded.setAttribute("scope", "col");
+
+    // Create another cell.
+    const thRemove = Utils.createElement("th", ["text-end", "fw-normal"]);
+    thRemove.setAttribute("scope", "col");
+
+    tr.append(thName, thUserUploaded, thRemove);
+    thead.appendChild(tr);
 
     return thead;
   }
@@ -136,6 +209,10 @@ class CaldbTemplate {
     form.append(fileLabel, fileInput);
     thForm.appendChild(form);
 
+    // Create cell for user uplaoded.
+    const thUserUploaded = Utils.createElement("th");
+    thUserUploaded.setAttribute("scope", "col");
+
     // Create another cell for the refresh button.
     const thRefresh = Utils.createElement("th", ["text-end"]);
     thRefresh.setAttribute("scope", "col");
@@ -154,7 +231,7 @@ class CaldbTemplate {
 
     thRefresh.appendChild(refreshButton);
 
-    tr.append(thForm, thRefresh);
+    tr.append(thForm, thUserUploaded, thRefresh);
     thead.appendChild(tr);
 
     return thead;
@@ -172,7 +249,7 @@ class CaldbTemplate {
       // If no data, show a message row
       const tr = Utils.createElement("tr");
       const td = Utils.createElement("td");
-      td.setAttribute("colspan", "2");
+      td.setAttribute("colspan", "3");
       td.textContent = "No calibration files found...";
       tr.appendChild(td);
       tbody.appendChild(tr);
@@ -184,13 +261,17 @@ class CaldbTemplate {
       const tr = Utils.createElement("tr");
 
       // Create the filename cell with a data attribute.
-      const tdFilename = Utils.createElement("td", ["py-0", "mb-0"]);
+      const tdFilename = Utils.createElement("td");
       // TODO: Change back when formatter is figured out.
       // tdFilename.textContent = `${item.path}/${item.name}`;
       tdFilename.textContent = item.name;
 
+      // Create user uploaded flag cell.
+      const tdUserUploaded = Utils.createElement("td");
+      tdUserUploaded.textContent = item.is_user_uploaded ? "User uploaded" : "";
+
       // Create the delete button cell.
-      const tdRemove = Utils.createElement("td", ["text-end", "py-0", "mb-0"]);
+      const tdRemove = Utils.createElement("td", ["text-end"]);
 
       const removeButton = Utils.createElement("a", ["link-danger"]);
       removeButton.setAttribute("type", "button");
@@ -203,7 +284,7 @@ class CaldbTemplate {
       tdRemove.appendChild(removeButton);
 
       // Append the cells to the row.
-      tr.append(tdFilename, tdRemove);
+      tr.append(tdFilename, tdUserUploaded, tdRemove);
 
       // Append the row to the tbody.
       tbody.appendChild(tr);
@@ -224,6 +305,7 @@ class CaldbView {
     this.parentElement = parentElement;
 
     this.card = this._create();
+    this.body = this.card.querySelector(".accordion-body");
     this.table = this.card.querySelector("table");
     this.tbody = this.card.querySelector("tbody");
     this.thead = this.card.querySelector("thead");
@@ -249,12 +331,14 @@ class CaldbView {
    * @param {Array} data - The new data to render in the table.
    */
   update(data) {
-    const newThead = this.template.createTHeadData();
     const newTbody = this.template.createTBodyData(data);
-    this.table.replaceChild(newThead, this.thead);
     this.table.replaceChild(newTbody, this.tbody);
-    this.thead = newThead;
     this.tbody = newTbody;
+
+    // Update the file count.
+    this.thead.querySelector(
+      `#thName${CALDB_ID}`
+    ).textContent = `Filename ${Utils.getFileCountLabel(data.length)}`;
   }
 
   /**
@@ -279,9 +363,13 @@ class CaldbView {
     const selector = `[data-action="${event}"]`;
     switch (event) {
       case "add":
-        Utils.delegate(this.table, selector, "change", (e) =>
-          handler({ file: e.target.files[0] })
-        );
+        Utils.delegate(this.body, selector, "change", (e) => {
+          if (e.target.files.length > 0) {
+            handler({ file: e.target.files[0] });
+          }
+          // Clear the file input after handling to allow the same file to be selected again.
+          e.target.value = "";
+        });
         break;
       case "remove":
         Utils.delegate(this.table, selector, "click", (e) =>
@@ -289,7 +377,7 @@ class CaldbView {
         );
         break;
       case "refresh":
-        Utils.delegate(this.table, selector, "click", () => handler());
+        Utils.delegate(this.body, selector, "click", () => handler());
     }
   }
 }
@@ -441,6 +529,7 @@ class CaldbController {
    * @param {string} filename - The filename of the item to remove.
    */
   async remove(filename) {
+    if (!this.model.runId) return;
     await this.model.removeFile(filename);
     this.view.render("update", { data: this.model.getData() });
   }
@@ -451,6 +540,7 @@ class CaldbController {
    * @param {File} file - A file object to add to the database.
    */
   async add(file) {
+    if (!this.model.runId) return;
     await this.model.addFile(file);
     this.view.render("update", { data: this.model.getData() });
   }
@@ -460,6 +550,7 @@ class CaldbController {
    * @async
    */
   async refresh() {
+    if (!this.model.runId) return;
     await this.model.fetchFiles();
     this.view.render("update", { data: this.model.getData() });
   }
