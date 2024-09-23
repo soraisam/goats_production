@@ -12,6 +12,11 @@ router.register(r"dragonsreduce", views.DRAGONSReduceViewSet, basename="dragonsr
 router.register(r"baserecipes", views.BaseRecipeViewSet)
 router.register(r"recipesmodule", views.RecipesModuleViewSet)
 router.register(r"dragonscaldb", views.DRAGONSCaldbViewSet, basename="dragonscaldb")
+router.register(
+    r"dragonsoutputfiles",
+    views.DRAGONSOutputFilesViewSet,
+    basename="dragonsoutputfiles",
+)
 
 
 # TODO: Add app_name and update paths and URL lookups.
