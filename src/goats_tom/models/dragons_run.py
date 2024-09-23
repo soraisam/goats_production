@@ -2,7 +2,7 @@
 
 __all__ = ["DRAGONSRun"]
 
-from datetime import datetime
+import datetime
 from importlib import metadata
 from pathlib import Path
 
@@ -115,7 +115,7 @@ class DRAGONSRun(models.Model):
         Applies default values for "run_id" and assigns `output_directory`.
         """
         # TODO: Do we want to allow spaces in `run_id`?
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         if not self.run_id:
             self.run_id = f"run-{timestamp}"
 
@@ -285,11 +285,13 @@ class DRAGONSRun(models.Model):
             files = []
             for f in caldb.list_files():
                 path = Path(f.path)
-                files.append({
-                    "name": f.name,
-                    "path": str(path),
-                    "is_user_uploaded": path.name == 'uploaded'
-                })
+                files.append(
+                    {
+                        "name": f.name,
+                        "path": str(path),
+                        "is_user_uploaded": path.name == "uploaded",
+                    }
+                )
         finally:
             self.close_caldb(caldb)
         return files
@@ -308,3 +310,31 @@ class DRAGONSRun(models.Model):
                     filepath.unlink()
         finally:
             self.close_caldb(caldb)
+
+    def get_output_files(self) -> list[dict[str, str]]:
+        """Returns all the output files (*.fits) of the output directory.
+
+        Returns
+        -------
+        `list[dict[str, str]]`
+            List of the name and path of the files in the output directory.
+        """
+        output_dir = self.get_output_dir()
+
+        output_files = []  # This will store the information about each file.
+        for f in output_dir.glob("*.fits"):
+            # Get the file's last modified time, convert it to UTC, and format it.
+            last_modified_time = datetime.datetime.fromtimestamp(
+                f.stat().st_mtime, datetime.timezone.utc
+            ).strftime("%Y-%m-%d %H:%M:%S")
+
+            # Append the file information to the list as a dictionary.
+            output_files.append(
+                {
+                    "name": f.name,
+                    "path": str(f.parent),
+                    "last_modified": last_modified_time,
+                }
+            )
+
+        return sorted(output_files, key=lambda x: x["last_modified"], reverse=True)
