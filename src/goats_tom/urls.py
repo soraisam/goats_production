@@ -17,6 +17,9 @@ router.register(
     views.DRAGONSOutputFilesViewSet,
     basename="dragonsoutputfiles",
 )
+router.register(
+    r"dragonsdataproducts", views.DataProductsViewSet, basename="dragonsdataproducts"
+)
 
 
 # TODO: Add app_name and update paths and URL lookups.

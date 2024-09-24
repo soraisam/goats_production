@@ -1,4 +1,5 @@
 from .base_recipe import BaseRecipeViewSet
+from .dataproducts import DataProductsViewSet
 from .dragons_caldb import DRAGONSCaldbViewSet
 from .dragons_files import DRAGONSFilesViewSet
 from .dragons_output_files import DRAGONSOutputFilesViewSet
@@ -54,4 +55,5 @@ __all__ = [
     "RecipesModuleViewSet",
     "BaseRecipeViewSet",
     "DRAGONSOutputFilesViewSet",
+    "DataProductsViewSet",
 ]

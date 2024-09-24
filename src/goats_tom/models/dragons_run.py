@@ -9,6 +9,7 @@ from pathlib import Path
 from django.conf import settings
 from django.db import models
 from recipe_system import cal_service
+from tom_dataproducts.models import DataProduct
 from tom_observations.models import ObservationRecord
 
 from goats_tom.models import DRAGONSRecipe
@@ -311,6 +312,41 @@ class DRAGONSRun(models.Model):
         finally:
             self.close_caldb(caldb)
 
+    def generate_dragons_run_product_id(self, filename) -> str:
+        """Generates the run data product ID.
+
+        Parameters
+        ----------
+        filename : `str`
+            The filename.
+
+        Returns
+        -------
+        `str`
+            The product ID with the run ID.
+        """
+        product_id = ""
+        product_id += f"{self.observation_record.target.name}"
+        product_id += f"__{self.observation_record.observation_id}"
+        product_id += f"__{self.run_id}__{filename}"
+
+        return product_id
+
+    def remove_output_file(self, filename: str) -> None:
+        """Removes the filename from the output directory.
+
+        Parameters
+        ----------
+        filename : `str`
+            The filename to remove.
+
+        """
+        filepath = self.get_output_dir() / filename
+        try:
+            filepath.unlink()
+        except OSError as e:
+            print(f"Failed to remove file {filename}: {e}")
+
     def get_output_files(self) -> list[dict[str, str]]:
         """Returns all the output files (*.fits) of the output directory.
 
@@ -321,20 +357,40 @@ class DRAGONSRun(models.Model):
         """
         output_dir = self.get_output_dir()
 
-        output_files = []  # This will store the information about each file.
+        output_files = []
+
+        # Retrieve all DataProducts associated with the observation_record and map them
+        # by product_id.
+        data_products = {
+            dp.product_id: dp.id
+            for dp in DataProduct.objects.filter(
+                observation_record=self.observation_record
+            )
+        }
+
         for f in output_dir.glob("*.fits"):
             # Get the file's last modified time, convert it to UTC, and format it.
             last_modified_time = datetime.datetime.fromtimestamp(
                 f.stat().st_mtime, datetime.timezone.utc
             ).strftime("%Y-%m-%d %H:%M:%S")
 
+            # Generate the product ID for the file.
+            potential_product_id = self.generate_dragons_run_product_id(f.stem)
+
+            # Check if this file is a data product.
+            dataproduct_id = data_products.get(potential_product_id)
+            is_dataproduct = dataproduct_id is not None
+
             # Append the file information to the list as a dictionary.
             output_files.append(
                 {
                     "name": f.name,
-                    "path": str(f.parent),
+                    # Don't want to provide full path.
+                    "path": str(f.parent.relative_to(settings.MEDIA_ROOT)),
                     "last_modified": last_modified_time,
-                    "is_dataproduct": False,
+                    "is_dataproduct": is_dataproduct,
+                    "dataproduct_id": dataproduct_id,
+                    "product_id": potential_product_id,
                 }
             )
 
