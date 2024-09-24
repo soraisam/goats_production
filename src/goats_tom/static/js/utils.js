@@ -233,4 +233,20 @@ class Utils {
       })
       .join("|"); // Join the processed parts back with the pipe character.
   }
+
+  /**
+   * Ensures an operation takes at least a minimum amount of time to complete, used to avoid
+   * flickering in loading states.
+   * @param {Promise} operationPromise - The promise of the operation that is being executed.
+   * @param {number} minDuration - The minimum duration in milliseconds that the operation should
+   * last.
+   * @return {Promise} A promise that resolves when both the operation and the minimum duration
+   * have completed.
+   */
+  static ensureMinimumDuration(operationPromise, minDuration) {
+    const minDurationPromise = new Promise((resolve) =>
+      setTimeout(resolve, minDuration)
+    );
+    return Promise.all([operationPromise, minDurationPromise]);
+  }
 }

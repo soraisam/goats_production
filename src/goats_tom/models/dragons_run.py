@@ -334,6 +334,7 @@ class DRAGONSRun(models.Model):
                     "name": f.name,
                     "path": str(f.parent),
                     "last_modified": last_modified_time,
+                    "is_dataproduct": False,
                 }
             )
 

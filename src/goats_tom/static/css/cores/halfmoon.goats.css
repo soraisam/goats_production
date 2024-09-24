@@ -471,6 +471,11 @@ select.form-control[multiple] {
   pointer-events: none;
 }
 
+.accordion-body-overflow {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
 /* Fix for jquery and fontawesome */
 
 /* https://docs.fontawesome.com/web/use-with/jquery */
