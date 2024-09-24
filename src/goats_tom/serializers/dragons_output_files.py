@@ -29,8 +29,7 @@ class DRAGONSOutputFilesSerializer(serializers.ModelSerializer):
         Returns
         -------
         `list[dict[str, str]]`
-            A list of dictionaries, each containing 'name', 'path' and 'last_modified'
-            of a file.
+            A list of dictionaries of information about a file.
         """
         return obj.get_output_files()
 

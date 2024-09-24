@@ -1,0 +1,1 @@
+Linked API with UI for output directory display: Integrated the API and UI to enhance visibility of the output file directory. Added user feedback mechanisms for updates and refresh actions.

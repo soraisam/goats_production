@@ -54,8 +54,15 @@ class OutputFilesTemplate {
     collapseDiv.setAttribute("aria-labelledby", headerId);
     collapseDiv.setAttribute("data-bs-parent", `#${accordionId}`);
 
-    const accordionBody = Utils.createElement("div", ["accordion-body"]);
-    accordionBody.append(this.createToolbar(), this.createTable());
+    const accordionBody = Utils.createElement("div", [
+      "accordion-body",
+      "accordion-body-overflow",
+    ]);
+    accordionBody.append(
+      this.createToolbar(),
+      this.createTable(),
+      this.createLoadingDiv()
+    );
 
     collapseDiv.appendChild(accordionBody);
     accordion.append(header, collapseDiv);
@@ -80,6 +87,23 @@ class OutputFilesTemplate {
   }
 
   /**
+   * Creates a loading indicator element.
+   * @return {HTMLElement} The loading div element with a spinner.
+   */
+  createLoadingDiv() {
+    const div = Utils.createElement("div", ["d-none", "text-center"]);
+    div.id = `loading${OUTPUT_FILES_ID}`;
+    const spinner = Utils.createElement("div", ["spinner-border", "text-secondary"]);
+    const spinnerInner = Utils.createElement("span", ["visually-hidden"]);
+    spinnerInner.textContent = "Loading ...";
+
+    spinner.appendChild(spinnerInner);
+    div.appendChild(spinner);
+
+    return div;
+  }
+
+  /**
    * Creates a default tbody element.
    * @return {HTMLElement} The newly created tbody element.
    */
@@ -89,6 +113,10 @@ class OutputFilesTemplate {
     return tbody;
   }
 
+  /**
+   * Creates a toolbar containing action buttons.
+   * @return {HTMLElement} The toolbar element containing buttons.
+   */
   createToolbar() {
     const div = Utils.createElement("div");
     div.id = `toolbar${OUTPUT_FILES_ID}`;
@@ -128,12 +156,17 @@ class OutputFilesTemplate {
     thName.textContent = "Filename";
     thName.id = `thName${OUTPUT_FILES_ID}`;
 
+    // Create cell for last modified.
+    const thLastModified = Utils.createElement("th", ["fw-normal"]);
+    thLastModified.setAttribute("scope", "col");
+    thLastModified.textContent = "Last Modified (UTC)";
+
     // Create another cell.
     const thAdd = Utils.createElement("th", ["text-end", "fw-normal"]);
     thAdd.setAttribute("scope", "col");
     thAdd.textContent = "Add To Data Products";
 
-    tr.append(thName, thAdd);
+    tr.append(thName, thLastModified, thAdd);
     thead.appendChild(tr);
 
     return thead;
@@ -166,6 +199,10 @@ class OutputFilesTemplate {
       const tdFilename = Utils.createElement("td");
       tdFilename.textContent = item.name;
 
+      // Create a last modified cell.
+      const tdLastModified = Utils.createElement("td");
+      tdLastModified.textContent = item.last_modified;
+
       // Create the add to data products button cell.
       const tdAdd = Utils.createElement("td", ["text-end"]);
 
@@ -182,6 +219,7 @@ class OutputFilesTemplate {
         const addButton = Utils.createElement("a", ["link-secondary"]);
         addButton.setAttribute("type", "button");
         addButton.setAttribute("data-filename", item.name);
+        addButton.setAttribute("data-filepath", item.path);
         addButton.setAttribute("data-action", "add");
 
         // Create icon element for button.
@@ -192,7 +230,7 @@ class OutputFilesTemplate {
       }
 
       // Append the cells to the row.
-      tr.append(tdFilename, tdAdd);
+      tr.append(tdFilename, tdLastModified, tdAdd);
 
       // Append the row to the tbody.
       tbody.appendChild(tr);
@@ -212,6 +250,8 @@ class OutputFilesView {
     this.table = this.card.querySelector("table");
     this.tbody = this.card.querySelector("tbody");
     this.thead = this.card.querySelector("thead");
+    this.loadingDiv = this.card.querySelector(`#loading${OUTPUT_FILES_ID}`);
+    this.toolbar = this.card.querySelector(`#toolbar${OUTPUT_FILES_ID}`);
 
     this.parentElement.appendChild(this.card);
 
@@ -245,6 +285,33 @@ class OutputFilesView {
   }
 
   /**
+   * Shows the loading animation and hides the data table.
+   */
+  loading() {
+    this.table.classList.add("d-none");
+    this.loadingDiv.classList.remove("d-none");
+    this._toggleToolbarButtonsDisabled(true);
+  }
+
+  /**
+   * Hides the loading animation and shows the data table.
+   */
+  loaded() {
+    this.table.classList.remove("d-none");
+    this.loadingDiv.classList.add("d-none");
+    this._toggleToolbarButtonsDisabled(false);
+  }
+
+  /**
+   * Toggles the disabled state of all buttons in the toolbar.
+   * @param {boolean} disable - True to disable the buttons, false to enable them.
+   */
+  _toggleToolbarButtonsDisabled(disable) {
+    const buttons = this.toolbar.querySelectorAll("button");
+    buttons.forEach((button) => (button.disabled = disable));
+  }
+
+  /**
    * Renders changes to the view based on a command.
    * @param {string} viewCmd - The command that dictates the rendering action.
    * @param {Object} parameter - Parameters used for rendering.
@@ -253,6 +320,16 @@ class OutputFilesView {
     switch (viewCmd) {
       case "update":
         this.update(parameter.data);
+        this.loaded();
+        break;
+      case "loading":
+        this.loading();
+        break;
+      case "loaded":
+        this.loaded();
+        break;
+      case "error":
+        console.log("View found error.");
         break;
     }
   }
@@ -279,10 +356,10 @@ class OutputFilesView {
 class OutputFilesModel {
   constructor(api) {
     this._runId = null;
-    this.rawData = null;
-    this.data = null;
+    this._rawData = {};
+    this._data = [];
     this.api = api;
-    this.caldbUrl = "dragonsoutputfiles/";
+    this.outputFilesUrl = "dragonsoutputfiles/";
   }
 
   /**
@@ -309,6 +386,8 @@ class OutputFilesModel {
   async fetchFiles() {
     try {
       console.log("Called 'fetchFiles'.");
+      const response = await this.api.get(`${this.outputFilesUrl}${this.runId}/`);
+      this.data = response;
     } catch (error) {
       console.error("Error fetching list of output files:", error);
       throw error;
@@ -324,48 +403,25 @@ class OutputFilesModel {
     }
   }
 
-  /**
-   * Sets the data for the model.
-   * @param {Object} data - The complete data object.
-   */
-  setData(data) {
-    this.rawData = data;
-    this.data = data.files;
+  get data() {
+    return this._data;
   }
 
-  /**
-   * Returns the raw data stored in the model.
-   * @return {Object} The raw data.
-   */
-  getRawData() {
-    return this.rawData;
+  get rawData() {
+    return this._rawData;
   }
 
-  /**
-   * Returns the processed data stored in the model.
-   * @return {Array} The processed results data.
-   */
-  getData() {
-    return this.data;
+  set data(value) {
+    this._rawData = value;
+    this._data = value.files;
   }
 
   /**
    * Clears all data stored in the model.
    */
   clearData() {
-    this.rawData = null;
-    this.data = null;
-  }
-
-  setFakeData() {
-    const data = {
-      files: [
-        { name: "test1.fits", is_dataproduct: true },
-        { name: "test2.fits", is_dataproduct: false },
-      ],
-    };
-    this.rawData = data;
-    this.data = data.files;
+    this._rawData = {};
+    this._data = [];
   }
 }
 
@@ -390,7 +446,7 @@ class OutputFilesController {
 
   async add(filename) {
     await this.model.addFile(filename);
-    this.view.render("update", { data: this.model.getData() });
+    this.view.render("update", { data: this.model.data });
   }
 
   /**
@@ -398,9 +454,9 @@ class OutputFilesController {
    * @async
    */
   async refresh() {
-    await this.model.fetchFiles();
-    this.model.setFakeData();
-    this.view.render("update", { data: this.model.getData() });
+    this.view.render("loading");
+    await Utils.ensureMinimumDuration(this.model.fetchFiles(), 1000);
+    this.view.render("update", { data: this.model.data });
   }
 }
 
