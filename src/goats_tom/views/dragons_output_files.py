@@ -10,6 +10,7 @@ from tom_dataproducts.models import DataProduct
 
 from goats_tom.models import DRAGONSRun
 from goats_tom.serializers import DRAGONSOutputFilesSerializer
+from goats_tom.utils import delete_associated_data_products
 
 
 class DRAGONSOutputFilesViewSet(
@@ -34,7 +35,7 @@ class DRAGONSOutputFilesViewSet(
                     # Check if there is a dataproduct.
                     try:
                         dataproduct = DataProduct.objects.get(product_id=product_id)
-                        dataproduct.delete()
+                        delete_associated_data_products(dataproduct)
 
                     except ObjectDoesNotExist:
                         # Use the instance to remove the file.

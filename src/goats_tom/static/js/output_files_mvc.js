@@ -166,7 +166,12 @@ class OutputFilesTemplate {
     thAdd.setAttribute("scope", "col");
     thAdd.textContent = "Add To Data Products";
 
-    tr.append(thName, thLastModified, thAdd);
+    // Create remove cell.
+    const thRemove = Utils.createElement("th", ["text-end", "fw-normal"]);
+    thRemove.setAttribute("scope", "col");
+    thRemove.textContent = "Delete";
+
+    tr.append(thName, thLastModified, thAdd, thRemove);
     thead.appendChild(tr);
 
     return thead;
@@ -179,12 +184,11 @@ class OutputFilesTemplate {
    */
   createTBodyData(data) {
     const tbody = Utils.createElement("tbody");
-
     if (data.length === 0) {
       // If no data, show a message row
       const tr = Utils.createElement("tr");
       const td = Utils.createElement("td");
-      td.setAttribute("colspan", "2");
+      td.setAttribute("colspan", "4");
       td.textContent = "No files found...";
       tr.appendChild(td);
       tbody.appendChild(tr);
@@ -194,6 +198,9 @@ class OutputFilesTemplate {
     // Loop through each item in the data array to create table rows.
     data.forEach((item) => {
       const tr = Utils.createElement("tr");
+      tr.dataset.filename = item.name;
+      tr.dataset.filepath = item.path;
+      tr.dataset.productId = item.product_id;
 
       // Create the filename cell with a data attribute.
       const tdFilename = Utils.createElement("td");
@@ -218,8 +225,6 @@ class OutputFilesTemplate {
         // Otherwise, create a clickable button to add to data products.
         const addButton = Utils.createElement("a", ["link-secondary"]);
         addButton.setAttribute("type", "button");
-        addButton.setAttribute("data-filename", item.name);
-        addButton.setAttribute("data-filepath", item.path);
         addButton.setAttribute("data-action", "add");
 
         // Create icon element for button.
@@ -229,8 +234,19 @@ class OutputFilesTemplate {
         tdAdd.appendChild(addButton);
       }
 
+      // Build the remove icon.
+      const tdRemove = Utils.createElement("td", ["text-end"]);
+      const removeButton = Utils.createElement("a", ["link-danger"]);
+      removeButton.setAttribute("type", "button");
+      removeButton.setAttribute("data-action", "remove");
+
+      // Create icon element for button.
+      const icon = Utils.createElement("i", ["fa-solid", "fa-trash-can"]);
+      removeButton.appendChild(icon);
+      tdRemove.appendChild(removeButton);
+
       // Append the cells to the row.
-      tr.append(tdFilename, tdLastModified, tdAdd);
+      tr.append(tdFilename, tdLastModified, tdAdd, tdRemove);
 
       // Append the row to the tbody.
       tbody.appendChild(tr);
@@ -320,7 +336,6 @@ class OutputFilesView {
     switch (viewCmd) {
       case "update":
         this.update(parameter.data);
-        this.loaded();
         break;
       case "loading":
         this.loading();
@@ -343,12 +358,30 @@ class OutputFilesView {
     const selector = `[data-action="${event}"]`;
     switch (event) {
       case "add":
-        Utils.delegate(this.table, selector, "click", (e) =>
-          handler({ filename: e.target.dataset.filename })
-        );
+        Utils.delegate(this.table, selector, "click", (e) => {
+          // Find the closest table row to the event target.
+          const row = e.target.closest("tr");
+          if (!row) return;
+          handler({
+            filename: row.dataset.filename,
+            filepath: row.dataset.filepath,
+          });
+        });
+        break;
+      case "remove":
+        Utils.delegate(this.table, selector, "click", (e) => {
+          // Find the closest table row to the event target.
+          const row = e.target.closest("tr");
+          if (!row) return;
+          handler({
+            filename: row.dataset.filename,
+            productId: row.dataset.productId,
+          });
+        });
         break;
       case "refresh":
         Utils.delegate(this.body, selector, "click", () => handler());
+        break;
     }
   }
 }
@@ -356,10 +389,12 @@ class OutputFilesView {
 class OutputFilesModel {
   constructor(api) {
     this._runId = null;
-    this._rawData = {};
-    this._data = [];
+    this._rawData = null;
+    this._data = null;
+    this._previousData = null;
     this.api = api;
     this.outputFilesUrl = "dragonsoutputfiles/";
+    this.dragonsDataProductsUrl = "dragonsdataproducts/";
   }
 
   /**
@@ -385,7 +420,6 @@ class OutputFilesModel {
    */
   async fetchFiles() {
     try {
-      console.log("Called 'fetchFiles'.");
       const response = await this.api.get(`${this.outputFilesUrl}${this.runId}/`);
       this.data = response;
     } catch (error) {
@@ -394,44 +428,109 @@ class OutputFilesModel {
     }
   }
 
-  async addFile(filename) {
+  /**
+   * Adds a new file to the data product repository and fetches the updated file list.
+   * @param {string} filename - The name of the file to add.
+   * @param {string} filepath - The path of the file to add.
+   */
+  async addFile(filename, filepath) {
     try {
-      console.log(`Called 'addFile' ${filename}`);
+      const body = {
+        filename: filename,
+        filepath: filepath,
+        data_product_type: "fits_file",
+        dragons_run: this.runId,
+      };
+      await this.api.post(`${this.dragonsDataProductsUrl}`, body);
+      // Fetch the files if the creating was successful.
     } catch (error) {
       console.error(`Error adding file:`, error);
       throw error;
     }
+    await this.fetchFiles();
   }
 
+  /**
+   * Removes a file from the data product repository.
+   * @param {string} filename - The name of the file to remove.
+   * @param {string} productId - The product ID associated with the file.
+   */
+  async removeFile(filename, productId) {
+    try {
+      const body = {
+        filename: filename,
+        product_id: productId,
+        action: "remove",
+      };
+      const response = await this.api.patch(
+        `${this.outputFilesUrl}${this.runId}/`,
+        body
+      );
+      this.data = response;
+    } catch (error) {
+      console.error(`Error removing file:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Returns the current data stored in the model.
+   * @return {Array} The current array of files.
+   */
   get data() {
     return this._data;
   }
 
+  /**
+   * Returns the raw data stored in the model.
+   * @return {Object} The raw data object.
+   */
   get rawData() {
     return this._rawData;
   }
 
+  /**
+   * Sets the current data for the model and updates the previous data state.
+   * @param {Array} value - The new data to set.
+   */
   set data(value) {
     this._rawData = value;
+    this._previousData = this._data;
     this._data = value.files;
+  }
+
+  /**
+   * Checks if the current data differs from the previous data.
+   * @return {boolean} True if data has changed, false otherwise.
+   */
+  dataChanged() {
+    return JSON.stringify(this._data) !== JSON.stringify(this._previousData);
   }
 
   /**
    * Clears all data stored in the model.
    */
   clearData() {
-    this._rawData = {};
-    this._data = [];
+    this._rawData = null;
+    this._data = null;
   }
 }
 
+/**
+ * Constructs the controller for managing model and view interactions in the OutputFiles component.
+ * @param {OutputFilesModel} model - The model managing the data state.
+ * @param {OutputFilesView} view - The view displaying the data.
+ */
 class OutputFilesController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
 
     this.view.bindCallback("refresh", () => this.refresh());
-    this.view.bindCallback("add", (item) => this.add(item.filename));
+    this.view.bindCallback("add", (item) => this.add(item.filename, item.filepath));
+    this.view.bindCallback("remove", (item) =>
+      this.remove(item.filename, item.productId)
+    );
   }
 
   /**
@@ -444,9 +543,28 @@ class OutputFilesController {
     await this.refresh();
   }
 
-  async add(filename) {
-    await this.model.addFile(filename);
-    this.view.render("update", { data: this.model.data });
+  /**
+   * Initiates the file addition process and updates the view if data has changed.
+   * @param {string} filename - The name of the file to add.
+   * @param {string} filepath - The path of the file to add.
+   */
+  async add(filename, filepath) {
+    await this.model.addFile(filename, filepath);
+    if (this.model.dataChanged()) {
+      this.view.render("update", { data: this.model.data });
+    }
+  }
+
+  /**
+   * Initiates the file removal process and updates the view if data has changed.
+   * @param {string} filename - The name of the file to remove.
+   * @param {string} productId - The product ID associated with the file.
+   */
+  async remove(filename, productId) {
+    await this.model.removeFile(filename, productId);
+    if (this.model.dataChanged()) {
+      this.view.render("update", { data: this.model.data });
+    }
   }
 
   /**
@@ -455,11 +573,19 @@ class OutputFilesController {
    */
   async refresh() {
     this.view.render("loading");
-    await Utils.ensureMinimumDuration(this.model.fetchFiles(), 1000);
-    this.view.render("update", { data: this.model.data });
+    await Utils.ensureMinimumDuration(this.model.fetchFiles(), 500);
+    if (this.model.dataChanged()) {
+      this.view.render("update", { data: this.model.data });
+    }
+    this.view.render("loaded");
   }
 }
 
+/**
+ * Constructs the OutputFiles component and initializes its subcomponents.
+ * @param {HTMLElement} parentElement - The DOM element to which the component will be attached.
+ * @param {Object} api - The API interface used for data interactions.
+ */
 class OutputFiles {
   constructor(parentElement, api) {
     this.model = new OutputFilesModel(api);
