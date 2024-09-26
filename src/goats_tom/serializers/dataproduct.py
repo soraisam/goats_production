@@ -37,10 +37,14 @@ class DataProductSerializer(BaseDataProductSerializer):
     )
 
     class Meta(BaseDataProductSerializer.Meta):
-        fields = BaseDataProductSerializer.Meta.fields + (
+        fields = (
+            "id",
             "filepath",
-            "dragons_run",
             "filename",
+            "dragons_run",
+            "data_product_type",
+            "data",
+            "extra_data",
         )
 
     def validate(self, data):
@@ -55,8 +59,8 @@ class DataProductSerializer(BaseDataProductSerializer):
     def create(self, validated_data):
         fullpath = Path(validated_data.pop("filepath")) / validated_data.pop("filename")
         filename = fullpath.stem
-        observation_record = validated_data.get("observation_record")
         dragons_run = validated_data.pop("dragons_run")
+        observation_record = dragons_run.observation_record
 
         # TODO: Determine the data_product_type for these special cases.
         data_product_type = validated_data.pop("data_product_type", "fits_file")

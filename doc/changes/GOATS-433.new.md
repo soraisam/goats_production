@@ -1,0 +1,1 @@
+Linked backend and frontend for DRAGONS output file operations: The integration now allows adding output files to data products and removing them directly through the frontend interface.

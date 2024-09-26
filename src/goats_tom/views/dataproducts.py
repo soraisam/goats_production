@@ -12,6 +12,7 @@ from django.conf import settings
 from guardian.shortcuts import assign_perm
 from rest_framework import status
 from rest_framework.mixins import CreateModelMixin
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from tom_common.hooks import run_hook
 from tom_dataproducts.api_views import DataProductViewSet as BaseDataProductViewSet
@@ -23,6 +24,8 @@ from goats_tom.serializers import DataProductSerializer
 
 class DataProductsViewSet(BaseDataProductViewSet):
     """Overrides the TOMToolkit view set to handle custom creation."""
+
+    parser_classes = [JSONParser]
 
     def get_serializer_class(self):
         if self.action == "create":
