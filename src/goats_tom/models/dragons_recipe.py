@@ -50,6 +50,12 @@ class DRAGONSRecipe(models.Model):
         null=True,
         help_text="Function definition by the user.",
     )
+    uparms = models.TextField(
+        editable=True,
+        blank=True,
+        null=True,
+        help_text="The uparms to apply to the recipe.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
     file_type = models.CharField(max_length=50, null=False, blank=False)
@@ -66,19 +72,6 @@ class DRAGONSRecipe(models.Model):
 
     def __str__(self) -> str:
         return f"v{self.version} {self.short_name} for run {self.dragons_run.run_id}"
-
-    def reset(self, save: bool | None = True) -> None:
-        """Resets the modified function definition to `None`.
-
-        Parameters
-        ----------
-        save : `bool`, optional
-            If `True`, saves the instance after resetting the function definition.
-
-        """
-        self.function_definition = None
-        if save:
-            self.save()
 
     @property
     def short_name(self) -> str:

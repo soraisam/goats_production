@@ -23,6 +23,7 @@ class DRAGONSRecipeSerializer(serializers.ModelSerializer):
             "instrument",
             "recipes_module_name",
             "object_name",
+            "uparms",
         )
         read_only_fields = (
             "id",
@@ -39,17 +40,41 @@ class DRAGONSRecipeSerializer(serializers.ModelSerializer):
         extra_kwargs = {"function_definition": {"write_only": True}}
 
     def update(self, instance: DRAGONSRecipe, validated_data: dict) -> DRAGONSRecipe:
-        # Check if "function_definition" key exists in the validated data.
-        if "function_definition" in validated_data:
-            func_def = validated_data["function_definition"]
+        """Update specific fields of a DRAGONSRecipe instance with new data.
 
-            # Check if "function_definition" is `None` or effectively empty.
-            if func_def is None or func_def.strip() == "":
-                instance.reset(save=False)
-            else:
-                instance.function_definition = func_def
+        Parameters
+        ----------
+        instance : `DRAGONSRecipe`
+            The `DRAGONSRecipe` instance to update.
+        validated_data : `dict`
+            A dictionary containing the data to update, which may include
+            'uparms' and 'function_definition' fields.
+
+        Returns
+        -------
+        `DRAGONSRecipe`
+            The updated `DRAGONSRecipe` instance.
+
+        """
+        fields_to_update = ["uparms", "function_definition"]
+        # Flag to track if any data has been changed.
+        changed = False
+
+        for field in fields_to_update:
+            if field in validated_data:
+                new_value = validated_data[field]
+                # Check if new_value is None or empty after potential stripping.
+                if new_value is not None and new_value.strip() == "":
+                    new_value = None
+                # Only assign new value if it has changed.
+                if getattr(instance, field) != new_value:
+                    setattr(instance, field, new_value)
+                    changed = True
+
+        # Only save if something has changed.
+        if changed:
             instance.save()
-        # If the key is not present, do nothing regarding the function field.
+
         return instance
 
 

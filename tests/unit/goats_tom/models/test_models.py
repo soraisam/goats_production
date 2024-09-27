@@ -453,16 +453,6 @@ class TestDRAGONSRecipe:
                 recipe=first_recipe.recipe, dragons_run=first_recipe.dragons_run, file_type=first_recipe.file_type, object_name=first_recipe.object_name,
             )
 
-    def test_reset_function_definition(self):
-        """Verify that the reset method clears the custom function definition."""
-        dragons_recipe = DRAGONSRecipeFactory(
-            function_definition="def custom_func(): pass",
-        )
-        dragons_recipe.reset()
-        assert (
-            dragons_recipe.function_definition is None
-        ), "Reset should clear the custom function definition."
-
     def test_properties(self):
         """Test that model properties return correct values derived from the base recipe."""
         base_recipe = BaseRecipeFactory(name="ComplexRecipe::Simple",
