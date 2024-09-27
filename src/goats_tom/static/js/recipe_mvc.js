@@ -425,19 +425,18 @@ class RecipeView {
     // Create and configure accordion button.
     const accordionButton = Utils.createElement("button", [
       "accordion-button",
-      "collapsed",
     ]);
     accordionButton.setAttribute("type", "button");
     accordionButton.setAttribute("data-toggle", "collapse");
     accordionButton.setAttribute("data-target", `#${collapseId}`);
-    accordionButton.setAttribute("aria-expanded", "false");
+    accordionButton.setAttribute("aria-expanded", "true");
     accordionButton.setAttribute("aria-controls", collapseId);
     accordionButton.textContent = this.accordionSetups.buttons[name];
     accordionHeader.appendChild(accordionButton);
     accordionItem.appendChild(accordionHeader);
 
     // Create the collaspible body section that will contain recipe.
-    const collapse = Utils.createElement("div", ["accordion-collapse", "collapse"]);
+    const collapse = Utils.createElement("div", ["accordion-collapse", "collapse", "show"]);
     collapse.id = collapseId;
     collapse.setAttribute("aria-labelledby", accordionHeaderId);
 
@@ -685,6 +684,7 @@ class RecipeView {
     input.id = uparmsId;
     input.placeholder =
       "[('stackFrames:memory', None), ('darkCorrect:dark', 'blah_dark.fits')]";
+    input.value = this.recipe.uparms;
     input.disabled = true;
     this.uparms = input;
 
