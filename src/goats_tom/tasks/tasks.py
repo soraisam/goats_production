@@ -2,6 +2,7 @@
 
 __all__ = ["download_goa_files", "run_dragons_reduce"]
 
+import ast
 import logging
 import os
 import sys
@@ -62,6 +63,10 @@ def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
     try:
         # Get the reduction to run in the background.
         print("Running background reduce task.")
+        # Generate a unique module name to avoid conflicts in sys.modules.
+        unique_id = uuid.uuid4()
+        module_name = f"dynamic_recipes_{unique_id}"
+
         # Get the recipe instance.
         reduce = DRAGONSReduce.objects.get(id=reduce_id)
 
@@ -108,6 +113,13 @@ def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
         # Get error if passing in Path.
         r.config_file = str(run.get_config_file())
 
+        # Set the recipe uparms.
+        if recipe.uparms is not None:
+            try:
+                r.uparms = ast.literal_eval(recipe.uparms)
+            except Exception:
+                raise Exception("Failed to parse provided uparms.")
+
         r.files.extend(file_paths)
 
         # Prepare a namespace to execute the user-provided function definition safely.
@@ -126,10 +138,6 @@ def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
         # Ensure a function was successfully defined and retrieved.
         if function_definition is None:
             raise ValueError("No recipe was defined in the provided recipe.")
-
-        # Generate a unique module name to avoid conflicts in sys.modules.
-        unique_id = uuid.uuid4()
-        module_name = f"dynamic_recipes_{unique_id}"
 
         # Create a new module and add it to `sys.modules`.
         recipe_module = types.ModuleType(module_name)

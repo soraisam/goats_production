@@ -73,7 +73,7 @@ class TestDRAGONSRecipeSerializer(APITestCase):
 
     def test_partial_update(self):
         """Test partial update of `DRAGONSRecipe`."""
-        partial_data = {"function_definition": "Updated function definition"}
+        partial_data = {"function_definition": "Updated function definition", "uparms": "test"}
         serializer = DRAGONSRecipeSerializer(self.recipe, data=partial_data, partial=True)
 
         self.assertTrue(serializer.is_valid())
@@ -83,6 +83,9 @@ class TestDRAGONSRecipeSerializer(APITestCase):
         )
         self.assertEqual(
             updated_instance.function_definition, "Updated function definition",
+        )
+        self.assertEqual(
+            updated_instance.uparms, "test",
         )
 
     def test_update_with_whitespace_only(self):
