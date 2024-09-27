@@ -39,6 +39,7 @@ class RecipeModel {
     this.reduceUrl = "dragonsreduce/";
     this.reduce = null;
     this.functionDefinition = null;
+    this.uparms = null;
   }
 
   /**
@@ -122,11 +123,16 @@ class RecipeModel {
    * @returns {Promise<Object|null>} The updated recipe object if successful, or null if an error
    * occurs.
    */
-  async updateFunctionDefinition(recipeId, functionDefinition = null) {
-    const data = { function_definition: functionDefinition };
+  async updateFunctionDefinitionAndUparms(
+    recipeId,
+    functionDefinition = null,
+    uparms = null
+  ) {
+    const data = { function_definition: functionDefinition, uparms: uparms };
     try {
       const response = await this.api.patch(`${this.recipesUrl}${recipeId}/`, data);
       this.functionDefinition = response;
+      this.uparms = response;
       return response;
     } catch (error) {
       console.error("Error updating function definition:", error);
@@ -192,16 +198,16 @@ class RecipeView {
    * Binds the handler for updating a function definition.
    * @param {Function} handler The handler function to invoke.
    */
-  bindUpdateFunctionDefinition(handler) {
-    this.onUpdateFunctionDefinition = handler;
+  bindUpdateFunctionDefinitionAndUparms(handler) {
+    this.onUpdateFunctionDefinitionAndUparms = handler;
   }
 
   /**
    * Binds the handler for resetting a function definition.
    * @param {Function} handler The handler function to invoke.
    */
-  bindResetFunctionDefinition(handler) {
-    this.onResetFunctionDefinition = handler;
+  bindResetFunctionDefinitionAndUparms(handler) {
+    this.onResetFunctionDefinitionAndUparms = handler;
   }
 
   /**
@@ -234,13 +240,13 @@ class RecipeView {
             this.onStopReduce(event.target.dataset.reduceId);
             break;
           case "editRecipe":
-            this.onUpdateFunctionDefinition(event.target.dataset.recipeId);
+            this.onUpdateFunctionDefinitionAndUparms(event.target.dataset.recipeId);
             break;
           case "helpRecipe":
             this.onShowHelp(event.target.dataset.recipeId);
             break;
           case "resetRecipe":
-            this.onResetFunctionDefinition(event.target.dataset.recipeId);
+            this.onResetFunctionDefinitionAndUparms(event.target.dataset.recipeId);
             break;
           default:
             console.log("No action defined for this button");
@@ -649,10 +655,46 @@ class RecipeView {
    * @param {HTMLElement} accordionBody The accordion section where the editor and buttons will be appended.
    */
   createRecipeAccordionItem(accordionBody) {
+    const uparmsInput = this.createUparms();
     const editor = this.createEditor();
     const editorButtons = this.createEditorButtons();
 
-    accordionBody.append(editor, editorButtons);
+    accordionBody.append(uparmsInput, editor, editorButtons);
+  }
+
+  /**
+   * Creates an input element for modifying 'uparms' parameters.
+   * @returns {HTMLElement} The input element with associated label for 'uparms' parameters.
+   */
+  createUparms() {
+    // Create a container.
+    const div = Utils.createElement("div", "mb-3");
+    const row = Utils.createElement("div", ["row", "g-3"]);
+    const labelCol = Utils.createElement("div", ["col-sm-3"]);
+    const inputCol = Utils.createElement("div", ["col-sm-9"]);
+
+    // Create a label element.
+    const uparmsId = `uparms-${this.recipe.id}`;
+    const label = Utils.createElement("label", ["col-form-label"]);
+    label.textContent = "Set Uparms";
+    label.htmlFor = uparmsId;
+
+    // Create an input element.
+    const input = Utils.createElement("input", ["form-control"]);
+    input.type = "text";
+    input.id = uparmsId;
+    input.placeholder =
+      "[('stackFrames:memory', None), ('darkCorrect:dark', 'blah_dark.fits')]";
+    input.disabled = true;
+    this.uparms = input;
+
+    // Append the label and input to the container.
+    inputCol.appendChild(input);
+    labelCol.appendChild(label);
+    row.append(labelCol, inputCol);
+    div.appendChild(row);
+
+    return div;
   }
 
   /**
@@ -672,6 +714,7 @@ class RecipeView {
     this.editToggleButton.textContent = "Save";
     this.isEditMode = true;
     this.editor.container.classList.remove("editor-disabled");
+    this.uparms.disabled = false;
   }
 
   /**
@@ -682,6 +725,7 @@ class RecipeView {
     this.editToggleButton.textContent = "Edit";
     this.isEditMode = false;
     this.editor.container.classList.add("editor-disabled");
+    this.uparms.disabled = true;
   }
 
   /**
@@ -690,6 +734,14 @@ class RecipeView {
    */
   setEditorText(text) {
     this.editor.setValue(text, -1);
+  }
+
+  setUparms(text) {
+    this.uparms.value = text;
+  }
+
+  getUparms() {
+    return this.uparms.value;
   }
 
   /**
@@ -717,9 +769,13 @@ class RecipeController {
     // When stopping a recipe reduce.
     this.view.bindStopReduce(this.handleStopReduce);
 
-    this.view.bindUpdateFunctionDefinition(this.handleUpdateFunctionDefinition);
+    this.view.bindUpdateFunctionDefinitionAndUparms(
+      this.handleUpdateFunctionDefinitionAndUparms
+    );
 
-    this.view.bindResetFunctionDefinition(this.handleResetFunctionDefinition);
+    this.view.bindResetFunctionDefinitionAndUparms(
+      this.handleResetFunctionDefinitionAndUparms
+    );
 
     this.view.bindShowHelp(this.handleShowHelp);
   }
@@ -728,11 +784,12 @@ class RecipeController {
    * Resets the function definition for the specified recipe and updates the editor.
    * @param {number} recipeId The ID of the recipe to reset.
    */
-  handleResetFunctionDefinition = async (recipeId) => {
+  handleResetFunctionDefinitionAndUparms = async (recipeId) => {
     // Pass nothing to reset.
-    const recipe = await this.model.updateFunctionDefinition(recipeId);
+    const recipe = await this.model.updateFunctionDefinitionAndUparms(recipeId);
     // Update the editor with the new value.
     this.view.setEditorText(recipe.active_function_definition);
+    this.view.setUparms(recipe.uparms);
   };
 
   /**
@@ -754,16 +811,19 @@ class RecipeController {
    * depending on the mode.
    * @param {number} recipeId The ID of the recipe to update.
    */
-  handleUpdateFunctionDefinition = async (recipeId) => {
+  handleUpdateFunctionDefinitionAndUparms = async (recipeId) => {
     if (this.view.isEditMode) {
       this.view.saveRecipeChanges();
       // Update the recipe.
       const functionDefinition = this.view.getFunctionDefinition();
-      const recipe = await this.model.updateFunctionDefinition(
+      const uparms = this.view.getUparms();
+      const recipe = await this.model.updateFunctionDefinitionAndUparms(
         recipeId,
-        functionDefinition
+        functionDefinition,
+        uparms
       );
       this.view.setEditorText(recipe.active_function_definition);
+      this.view.setUparms(recipe.uparms);
     } else {
       this.view.enableEditMode();
     }
