@@ -1,50 +1,120 @@
-const MAX_LOG_ENTRIES = 500;
+const LOGGER_OPTIONS = {
+  maxEntries: 500,
+};
 
-class Logger {
+/**
+ * Model for Logger, potentially for future expansion.
+ */ class LoggerModel {}
+
+/**
+ * Template handling HTML structure for logger components.
+ */
+class LoggerTemplate {
   /**
-   * Initializes a new instance of the Logger class.
-   * @param {HTMLElement} container The DOM element where logs should be displayed.
-   * @param {number} maxEntries The maximum number of log entries to maintain in the log view.
+   * Creates a single log entry DOM element.
+   * @param {string} data The log message.
+   * @returns {HTMLElement} A div element containing the log message.
    */
-  constructor(container, maxEntries = MAX_LOG_ENTRIES) {
-    this.container = container;
-    this.maxEntries = maxEntries;
+  createLogEntry(data) {
+    const div = Utils.createElement("div");
+    div.textContent = `${data}`;
+
+    return div;
   }
 
   /**
-   * Logs messages to the container. Can handle both single message and an array of messages.
-   * @param {string|string[]} messages The message or array of messages to log.
+   * Creates the container for log entries.
+   * @returns {HTMLElement} A div configured as a log container.
+   */
+  createContainer() {
+    const div = Utils.createElement("div", ["log-container", "log-overflow"]);
+    return div;
+  }
+}
+
+/**
+ * View for Logger, manages rendering of log entries.
+ * @param {LoggerTemplate} template Instance of LoggerTemplate to render log entries.
+ * @param {HTMLElement} parentElement Container where the logger will be appended.
+ * @param {Object} options Configuration options passed to the view.
+ */
+class LoggerView {
+  constructor(template, parentElement, options) {
+    this.template = template;
+    this.parentElement = parentElement;
+    this.options = options;
+
+    this.container = this._create();
+
+    this.parentElement.appendChild(this.container);
+
+    this.render = this.render.bind(this);
+    this.bindCallback = this.bindCallback.bind(this);
+  }
+
+  /**
+   * Initializes the log container.
+   * @private
+   * @returns {HTMLElement} The container element.
+   */
+  _create() {
+    const container = this.template.createContainer();
+    return container;
+  }
+
+  /**
+   * Renders changes in the view based on commands.
+   * @param {string} viewCmd The command that dictates the action to be taken.
+   * @param {Object} parameter Parameters needed for the command.
+   */
+  render(viewCmd, parameter) {
+    switch (viewCmd) {
+      case "log":
+        this.log(parameter.messages);
+        break;
+      case "clear":
+        this.clear();
+        break;
+    }
+  }
+
+  // Placeholder for if needed in future.
+  bindCallback() {}
+
+  /**
+   * Clears the log display.
+   */
+  clear() {
+    this.container.innerHTML = ``;
+  }
+
+  /**
+   * Logs messages to the container. Handles both single messages and arrays.
+   * @param {string|string[]} messages The messages to log.
    */
   log(messages) {
     // Check if the log viewer is scrolled to the bottom before adding new entries.
     // This is important to decide whether to auto-scroll after appending new log entries.
-    const shouldScroll = this._isScrolledToBottom();
+    const isScrolledToBottom = this._isScrolledToBottom();
+    const fragment = document.createDocumentFragment();
 
-    if (Array.isArray(messages)) {
-      messages.forEach((message) => this._addLogEntry(message, type));
-    } else {
-      this._addLogEntry(messages);
-    }
+    const processMessage = (message) => {
+      const entry = this.template.createLogEntry(message);
+      fragment.appendChild(entry);
+    };
+
+    Array.isArray(messages)
+      ? messages.forEach(processMessage)
+      : processMessage(messages);
+
+    this.container.appendChild(fragment);
 
     // Scroll to bottom only if user hasn't scrolled up.
-    if (shouldScroll) {
-      this.container.scrollTop = this.container.scrollHeight;
+    if (isScrolledToBottom) {
+      this._scrollToBottom();
     }
 
     this._trimLogEntries();
-  }
-
-  /**
-   * Adds a single log entry to the log container.
-   * @private
-   * @param {string} message The message to log.
-   */
-  _addLogEntry(message) {
-    const entry = document.createElement("div");
-    entry.textContent = `${message}`;
-    // entry.className = `alert alert-${type} mb-2`;
-
-    this.container.appendChild(entry);
   }
 
   /**
@@ -64,19 +134,81 @@ class Logger {
   }
 
   /**
+   * Scrolls the log container to the bottom.
+   * @private
+   */
+  _scrollToBottom() {
+    this.container.scrollTop = this.container.scrollHeight;
+  }
+
+  /**
    * Ensures the number of log entries does not exceed the maximum set.
    * @private
    */
   _trimLogEntries() {
-    while (this.container.children.length > this.maxEntries) {
+    while (this.container.children.length > this.options.maxEntries) {
       this.container.removeChild(this.container.firstChild);
     }
   }
+}
+
+/**
+ * Controller for Logger, handles business logic and data management.
+ * @param {LoggerModel} model The model for logger data.
+ * @param {LoggerView} view The view for the logger.
+ */
+class LoggerController {
+  constructor(model, view) {
+    this.model = model;
+    this.view = view;
+
+    // No callbacks to bind.
+  }
 
   /**
-   * Clears all logs from the log container.
+   * Logs a message or array of messages.
+   * @param {string|string[]} messages The messages to log.
+   */
+  log(messages) {
+    this.view.render("log", { messages: messages });
+  }
+
+  /**
+   * Clears all log entries.
    */
   clear() {
-    this.container.innerHTML = ""; // Remove all child nodes
+    this.view.render("clear");
+  }
+}
+
+/**
+ * Logger is a comprehensive logging utility that can be embedded within web applications
+ * to display runtime messages. It is designed to provide a real-time log output to a specified
+ * DOM element.
+ * @param {HTMLElement} parentElement The parent element where the logger will be appended.
+ * @param {Object} [options={}] Configuration options for logger behavior.
+ */
+class Logger {
+  constructor(parentElement, options = {}) {
+    this.options = { ...LOGGER_OPTIONS, ...options };
+    this.model = new LoggerModel();
+    this.template = new LoggerTemplate();
+    this.view = new LoggerView(this.template, parentElement, options);
+    this.controller = new LoggerController(this.model, this.view);
+  }
+
+  /**
+   * Log messages.
+   * @param {string|string[]} messages The messages to log.
+   */
+  log(messages) {
+    this.controller.log(messages);
+  }
+
+  /**
+   * Clear the log.
+   */
+  clear() {
+    this.controller.clear();
   }
 }
