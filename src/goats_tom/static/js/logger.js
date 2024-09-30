@@ -170,7 +170,7 @@ class LoggerController {
    * @param {string|string[]} messages The messages to log.
    */
   log(messages) {
-    this.view.render("log", { messages: messages });
+    this.view.render("log", { messages });
   }
 
   /**

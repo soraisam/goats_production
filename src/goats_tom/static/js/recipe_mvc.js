@@ -165,11 +165,10 @@ class RecipeView {
     this.editor = null;
     this.recipe = null;
     this.logger = null;
-    this.progressBar = null;
+    this.progress = null;
     this.card = null;
     this.cardHeader = null;
     this.reduce = null;
-    this.progressStatus = null;
     this.stopButton = null;
     this.startButton = null;
     this.editToggleButton = null;
@@ -280,7 +279,7 @@ class RecipeView {
     const cardBody = this.createCardBody();
     card.append(cardBody);
 
-    // Build and append first footer (progress bar).
+    // Build and append first footer (Modify Recipe).
     const cardFooter1 = this.createCardFooter1();
     card.appendChild(cardFooter1);
 
@@ -301,16 +300,7 @@ class RecipeView {
    */
   createCardBody() {
     const cardBody = Utils.createElement("div", "card-body");
-    const row = Utils.createElement("div", ["row", "g-0"]);
-    const col1 = Utils.createElement("div", ["col-12"]);
-    const col2 = Utils.createElement("div", ["col-12"]);
-    const progressBarDiv = this.createProgressBar();
-    const progressStatusDiv = this.createProgressStatus();
-
-    col1.appendChild(progressStatusDiv);
-    col2.appendChild(progressBarDiv);
-    row.append(col1, col2);
-    cardBody.appendChild(row);
+    this.progress = new Progress(cardBody);
     return cardBody;
   }
 
@@ -533,58 +523,6 @@ class RecipeView {
   }
 
   /**
-   * Creates and returns a div element containing the progress status.
-   * @returns {HTMLElement} The div element containing the progress status.
-   */
-  createProgressStatus() {
-    const progressStatusDiv = Utils.createElement("div");
-    this.progressStatus = Utils.createElement("p", ["mb-0", "fst-italic"]);
-    this.progressStatus.textContent = "Not Started";
-    progressStatusDiv.appendChild(this.progressStatus);
-    return progressStatusDiv;
-  }
-
-  /**
-   * Creates and returns a progress bar element with initial configurations.
-   * @returns {HTMLElement} The progress bar element.
-   */
-  createProgressBar() {
-    const progressBarDiv = Utils.createElement("div", "progress");
-    progressBarDiv.setAttribute("role", "progressbar");
-    progressBarDiv.setAttribute("aria-label", "Recipe progress");
-    progressBarDiv.setAttribute("aria-valuemin", "0");
-    progressBarDiv.setAttribute("aria-valuemax", "100");
-
-    this.progressBar = Utils.createElement("div", "progress-bar");
-    this.progressBar.style.width = "0";
-
-    progressBarDiv.appendChild(this.progressBar);
-
-    return progressBarDiv;
-  }
-
-  /**
-   * Updates the progress bar's visual appearance and textual status based on the current status of the operation.
-   * @param {string} status The current status which determines the appearance of the progress bar.
-   */
-  updateProgressBar(status) {
-    const colorClass = STATUS_2_PROGRESS_BAR_COLOR[status] || "bg-primary";
-
-    // Set the progress bar's width and color based on the status.
-    this.progressBar.style.width = "100%";
-    this.progressBar.className = `progress-bar ${colorClass}`;
-
-    // Optionally, add animation class if not idle.
-    if (status === "running" || status === "initializing") {
-      this.progressBar.classList.add("placeholder-wave");
-    } else {
-      this.progressBar.classList.remove("placeholder-wave");
-    }
-
-    // Update the status text below the progress bar.
-    this.progressStatus.textContent = this.capitalizeFirstLetter(status);
-  }
-  /**
    * Capitalizes the first letter of the given string.
    * @param {string} string The string to capitalize.
    * @return {string} The string with the first letter capitalized.
@@ -602,7 +540,6 @@ class RecipeView {
   createLogger() {
     const div = Utils.createElement("div", [
       "ps-2",
-      "py-2",
     ]);
     div.id = `loggerRecipe-${this.recipe.id}`;
     this.logger = new Logger(div);
@@ -871,7 +808,7 @@ class RecipeController {
    * @param {Object} data The data object containing the status to update with.
    */
   handleUpdateReduce = (data) => {
-    this.view.updateProgressBar(data.status);
+    this.view.progress.update(data.status);
     // Reset the stop button if the status is in these.
     if (["canceled", "done", "error"].includes(data.status)) {
       this.view.disableStopButton();
