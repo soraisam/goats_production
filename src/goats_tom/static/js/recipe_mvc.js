@@ -601,8 +601,6 @@ class RecipeView {
    */
   createLogger() {
     const div = Utils.createElement("div", [
-      "log-container",
-      "log-overflow",
       "ps-2",
       "py-2",
     ]);
