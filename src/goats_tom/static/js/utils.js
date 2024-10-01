@@ -235,15 +235,20 @@ class Utils {
   }
 
   /**
-   * Ensures an operation takes at least a minimum amount of time to complete, used to avoid
-   * flickering in loading states.
-   * @param {Promise} operationPromise - The promise of the operation that is being executed.
-   * @param {number} minDuration - The minimum duration in milliseconds that the operation should
-   * last.
-   * @return {Promise} A promise that resolves when both the operation and the minimum duration
+   * Ensures that the provided operation lasts at least the specified minimum duration.
+   * If no operation is provided, the function will simply wait for the minimum duration.
+   *
+   * @param {Promise} [operationPromise=Promise.resolve()] - The operation to wait for. Defaults to 
+   * an immediately resolved promise if not provided.
+   * @param {number} [minDuration=500] - The minimum duration in milliseconds to wait. Defaults to 
+   * 500 milliseconds if not provided.
+   * @returns {Promise} A promise that resolves once both the operation and the minimum duration 
    * have completed.
    */
-  static ensureMinimumDuration(operationPromise, minDuration) {
+  static ensureMinimumDuration(
+    operationPromise = Promise.resolve(),
+    minDuration = 500
+  ) {
     const minDurationPromise = new Promise((resolve) =>
       setTimeout(resolve, minDuration)
     );
