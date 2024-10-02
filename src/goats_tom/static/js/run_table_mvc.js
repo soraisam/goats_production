@@ -12,8 +12,17 @@ const KEYS_TO_DISPLAY = [
  * @class
  */
 class RunTableTemplate {
-  constructor() {}
+  createContainer() {
+    const container = Utils.createElement("div");
+    return container;
+  }
 
+  create() {
+    const container = this.createContainer();
+    container.appendChild(this.createTable());
+
+    return container;
+  }
   /**
    * Creates the main table HTML structure.
    * @returns {HTMLTableElement} A table element with a default tbody.
@@ -76,30 +85,26 @@ class RunTableTemplate {
  */
 class RunTableModel {
   constructor() {
-    this.data = null;
+    this._rawData = null;
+    this._data = null;
   }
 
-  /**
-   * Sets the run data.
-   * @param {Object} data - The run data.
-   */
-  setData(data) {
-    this.data = data;
+  get data() {
+    return this._data
   }
 
-  /**
-   * Retrieves the run data.
-   * @return {Object} The run data.
-   */
-  getData() {
-    return this.data;
+  set data(value) {
+    this._rawData = value;
+    this._data = value;
   }
 
-  /**
-   * Clears the stored run data.
-   */
+  get rawData() {
+    return this._rawData;
+  }
+
   clearData() {
-    this.data = null;
+    this._rawData = null;
+    this._data = null;
   }
 }
 
@@ -114,8 +119,9 @@ class RunTableView {
     this.template = template;
     this.parentElement = parentElement;
 
-    this.table = this._create();
-    this.parentElement.appendChild(this.table);
+    this.container = this._create();
+    this.table = this.container.querySelector(".table");
+    this.parentElement.appendChild(this.container);
 
     this.render = this.render.bind(this);
     this.bindCallback = this.bindCallback.bind(this);
@@ -139,13 +145,13 @@ class RunTableView {
       this.table.querySelector("tbody")
     );
   }
-  /**
-   * Creates and returns a new table element using the template.
-   * @returns {HTMLTableElement} A new table element.
-   */
+
   _create() {
-    const table = this.template.createTable();
-    return table;
+    return this.template.create();
+  }
+
+  setVisibility(isVisible) {
+    this.container.classList.toggle("d-none", !isVisible);
   }
 
   /**
@@ -160,6 +166,12 @@ class RunTableView {
         break;
       case "reset":
         this.reset();
+        break;
+      case "show":
+        this.setVisibility(true);
+        break;
+      case "hide":
+        this.setVisibility(false);
         break;
     }
   }
@@ -189,8 +201,8 @@ class RunTableController {
    * @param {Object} data - The data to display.
    */
   update(data) {
-    this.model.setData(data);
-    this.view.render("update", { data: this.model.getData() });
+    this.model.data = data;
+    this.view.render("update", { data: this.model.data });
   }
 
   /**
@@ -199,6 +211,14 @@ class RunTableController {
   reset() {
     this.model.clearData();
     this.view.render("reset");
+  }
+
+  show() {
+    this.view.render("show");
+  }
+
+  hide() {
+    this.view.render("hide");
   }
 }
 
@@ -228,5 +248,13 @@ class RunTable {
    */
   reset() {
     this.controller.reset();
+  }
+
+  show() {
+    this.controller.show();
+  }
+
+  hide() {
+    this.controller.hide();
   }
 }
