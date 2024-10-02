@@ -125,10 +125,10 @@ class ObservationsClass(QueryWithLogin):
 
         """
         url = self.url_helper.get_login_url()
-        params = {"username": username, "password": password}
-        r = self._session.request("POST", url, params=params)
+        data = {"username": username, "password": password}
+        r = self._session.post(url, data=data)
 
-        if b"<P>Welcome, you are sucessfully logged in" not in r.content:
+        if b"<P>Welcome, you are successfully logged in" not in r.content:
             log.error("Unable to login, please check your credentials")
             return False
 

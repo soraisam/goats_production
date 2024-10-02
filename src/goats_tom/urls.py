@@ -5,12 +5,14 @@ from tom_common.api_router import SharedAPIRootRouter
 from . import views
 
 router = SharedAPIRootRouter()
-router.register(r"dragonsruns", views.DRAGONSRunsViewSet)
-router.register(r"dragonsfiles", views.DRAGONSFilesViewSet)
-router.register(r"dragonsrecipes", views.DRAGONSRecipesViewSet)
+router.register(r"dragonsruns", views.DRAGONSRunsViewSet, basename="dragonsruns")
+router.register(r"dragonsfiles", views.DRAGONSFilesViewSet, basename="dragonsfiles")
+router.register(
+    r"dragonsrecipes", views.DRAGONSRecipesViewSet, basename="dragonsrecipes"
+)
 router.register(r"dragonsreduce", views.DRAGONSReduceViewSet, basename="dragonsreduce")
-router.register(r"baserecipes", views.BaseRecipeViewSet)
-router.register(r"recipesmodule", views.RecipesModuleViewSet)
+router.register(r"baserecipes", views.BaseRecipeViewSet, basename="baserecipes")
+router.register(r"recipesmodule", views.RecipesModuleViewSet, basename="recipesmodule")
 router.register(r"dragonscaldb", views.DRAGONSCaldbViewSet, basename="dragonscaldb")
 router.register(
     r"dragonsoutputfiles",
