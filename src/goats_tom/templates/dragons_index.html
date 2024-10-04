@@ -72,6 +72,9 @@
     <div id="recipesContainer"></div>
   </div>
   <div class="col-12">
+    <div id="filesTableContainer"></div>
+  </div>
+  <div class="col-12">
     <div id="runSetupContainer"></div>
   </div>
   <div class="col-12">
@@ -92,6 +95,7 @@
 <script src="{% static 'js/fetch_wrapper.js' %}"></script>
 <script src="{% static 'js/run.js' %}"></script>
 <script src="{% static 'js/progress.js' %}"></script>
+<script src="{% static 'js/files_table.js' %}"></script>
 <script src="{% static 'js/dragons_caldb_mvc.js' %}"></script>
 <script src="{% static 'js/output_files_mvc.js' %}"></script>
 <script src="{% static 'js/run_table_mvc.js' %}"></script>
@@ -120,6 +124,58 @@
     const outputFiles = new OutputFiles(document.getElementById("outputFilesContainer"), api)
     const run = new RunSetup(1, document.getElementById("runSetupContainer"), api)
     run.init();
+
+    // FIXME: Just for testing.
+    const filesTable = new FilesTable(document.getElementById("filesTableContainer"), api)
+    const testData = {
+      "count": 2,
+      "results": [
+        {
+          "group_id": 1,
+          "group_name": "1.0",
+          "file_count": 2,
+          "files": [
+            {
+              "id": 1,
+              "object_name": null,
+              "file_type": "bias1",
+              "product_id": "S20210216S0164.fits",
+              "url": "/data/test2/GEM/GS-2021A-DD-102-9/S20210216S0164.fits"
+            },
+            {
+              "id": 2,
+              "object_name": null,
+              "file_type": "bias2",
+              "product_id": "S20210216S0165.fits",
+              "url": "/data/test2/GEM/GS-2021A-DD-102-9/S20210216S0165.fits"
+            }
+          ]
+        },
+        {
+          "group_id": 2,
+          "group_name": "1.00000037528312",
+          "file_count": 2,
+          "files": [
+            {
+              "id": 3,
+              "object_name": null,
+              "file_type": "bias3",
+              "product_id": "S20210221S0345.fits",
+              "url": "/data/test2/GEM/GS-2021A-DD-102-9/S20210221S0345.fits"
+            },
+            {
+              "id": 4,
+              "object_name": null,
+              "file_type": "bias4",
+              "product_id": "S20210221S0345.fits",
+              "url": "/data/test2/GEM/GS-2021A-DD-102-9/S20210221S0346.fits"
+            }
+          ]
+        }
+      ]
+    }
+    filesTable.update(testData)
+
     // Initialize models, views, and controllers.
     const setupModel = new SetupModel(api);
     const setupView = new SetupView();
