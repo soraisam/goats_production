@@ -1,24 +1,25 @@
 /**
  * Simplifies making fetch requests by encapsulating common settings and behaviors.
  */
-class FetchWrapper {
+class API {
   /**
-   * Initializes a new instance of the FetchWrapper class.
+   * Initializes a new instance of the API class.
    * @param {string} baseUrl - The base URL for all requests made by this instance.
    */
-  constructor(baseUrl) {
+  static #instance = null;
+
+  constructor(baseUrl, csrfToken) {
+    // Singleton design.
+    if (API.#instance) {
+      return API.#instance;
+    }
+    API.#instance = this;
+
     this.baseUrl = baseUrl;
     this.defaultHeaders = {
       "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken,
     };
-  }
-
-  /**
-   * Sets the CSRF token for all requests.
-   * @param {string} csrfToken - The CSRF token to include in request headers.
-   */
-  setCsrfToken(csrfToken) {
-    this.defaultHeaders["X-CSRFToken"] = csrfToken;
   }
 
   /**

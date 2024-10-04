@@ -1,7 +1,3 @@
-const FILES_TABLE_OPTIONS = {
-  id: "FilesTable",
-};
-
 /**
  * Class representing the template for the Files Table.
  * @param {Object} options - Configuration options for the template.
@@ -261,9 +257,9 @@ class FilesTableTemplate {
  * @param {Object} options - Configuration options for the model.
  */
 class FilesTableModel {
-  constructor(api, options) {
-    this.api = api;
+  constructor(options) {
     this.options = options;
+    this.api = this.options.api;
     this._rawData = null;
     this._data = null;
     this.filesUrl = "dragonsfiles/";
@@ -553,7 +549,6 @@ class FilesTableController {
    */
   async _showHeaderModal(fileId) {
     const data = await this.model.fetchFile(fileId);
-    console.log(data);
     // Show the modal.
     this.view.render("showHeaderModal", { data });
   }
@@ -603,9 +598,13 @@ class FilesTableController {
  * @param {Object} [options={}] - Optional configuration options for the files table.
  */
 class FilesTable {
-  constructor(parentElement, api, data = [], options = {}) {
-    this.options = { ...RUN_OPTIONS, ...options };
-    this.model = new FilesTableModel(api, this.options);
+  static #defaultOptions = {
+    id: "FilesTable",
+  };
+
+  constructor(parentElement, data = [], options = {}) {
+    this.options = { ...FilesTable.#defaultOptions, ...options, api: window.api };
+    this.model = new FilesTableModel(this.options);
     this.template = new FilesTableTemplate(this.options);
     this.view = new FilesTableView(this.template, this.options);
     this.controller = new FilesTableController(this.model, this.view, this.options);

@@ -92,7 +92,7 @@
 {{ block.super }}
 <script src="{% static 'tom-select/tom-select.base.js' %}"></script>
 <script src="{% static 'js/utils.js' %}"></script>
-<script src="{% static 'js/fetch_wrapper.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
 <script src="{% static 'js/run.js' %}"></script>
 <script src="{% static 'js/progress.js' %}"></script>
 <script src="{% static 'js/files_table.js' %}"></script>
@@ -117,16 +117,15 @@
     // TODO: When switching to single recipe can be done there.
     window.helpOffcanvas = new HelpOffcanvas(document.getElementById("helpOffcanvasContainer"))
 
-    const api = new FetchWrapper("/api/");
-    api.setCsrfToken("{{ csrf_token }}");
+    window.api = new API("/api/", "{{ csrf_token }}");
 
-    const caldb = new Caldb(document.getElementById("caldbContainer"), api);
-    const outputFiles = new OutputFiles(document.getElementById("outputFilesContainer"), api)
-    const run = new RunSetup(1, document.getElementById("runSetupContainer"), api)
+    const caldb = new Caldb(document.getElementById("caldbContainer"));
+    const outputFiles = new OutputFiles(document.getElementById("outputFilesContainer"))
+    const run = new RunSetup(1, document.getElementById("runSetupContainer"))
     run.init();
 
     // FIXME: Just for testing.
-    const filesTable = new FilesTable(document.getElementById("filesTableContainer"), api)
+    const filesTable = new FilesTable(document.getElementById("filesTableContainer"))
     const testData = {
       "count": 2,
       "results": [
@@ -177,10 +176,10 @@
     filesTable.update(testData)
 
     // Initialize models, views, and controllers.
-    const setupModel = new SetupModel(api);
+    const setupModel = new SetupModel(window.api);
     const setupView = new SetupView();
     const setupController = new SetupController(setupModel, setupView);
-    const recipeManagerModel = new RecipeManagerModel(api);
+    const recipeManagerModel = new RecipeManagerModel(window.api);
     const recipeManagerView = new RecipeManagerView();
     const recipeManagerController = new RecipeManagerController(recipeManagerModel, recipeManagerView);
 

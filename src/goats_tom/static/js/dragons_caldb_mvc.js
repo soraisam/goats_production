@@ -1,9 +1,10 @@
-CALDB_ID = "Caldb";
-
 /**
  * Class to manage calibration database UI components.
  */
 class CaldbTemplate {
+  constructor(options) {
+    this.options = options;
+  }
   /**
    * Creates a card container.
    * @return {HTMLElement} The card element.
@@ -32,15 +33,15 @@ class CaldbTemplate {
    */
   createAccordion() {
     const accordion = Utils.createElement("div", ["accordion"]);
-    const accordionId = `accordion${CALDB_ID}`;
+    const accordionId = `accordion${this.options.id}`;
     accordion.id = accordionId;
 
     const header = Utils.createElement("h6", ["accordion-header"]);
-    const headerId = `header${CALDB_ID}`;
+    const headerId = `header${this.options.id}`;
     header.id = headerId;
 
     const button = Utils.createElement("button");
-    const collapseId = `collapse${CALDB_ID}`;
+    const collapseId = `collapse${this.options.id}`;
     button.className = "accordion-button collapsed";
     button.setAttribute("type", "button");
     button.setAttribute("data-bs-toggle", "collapse");
@@ -88,13 +89,13 @@ class CaldbTemplate {
    */
   createToolbar() {
     const div = Utils.createElement("div");
-    div.id = `toolbar${CALDB_ID}`;
+    div.id = `toolbar${this.options.id}`;
     const row = Utils.createElement("div", ["row", "g-3"]);
     const colAdd = Utils.createElement("div", ["col"]);
 
     // Create form to handle file input.
     const form = Utils.createElement("form");
-    form.id = `form${CALDB_ID}`;
+    form.id = `form${this.options.id}`;
 
     const fileLabel = Utils.createElement("label", ["btn", "btn-secondary", "btn-sm"]);
     fileLabel.textContent = " Add File";
@@ -110,7 +111,7 @@ class CaldbTemplate {
     fileInput.name = "file";
     fileInput.style.display = "none";
     fileInput.dataset.action = "add";
-    fileInput.id = `fileInput${CALDB_ID}`;
+    fileInput.id = `fileInput${this.options.id}`;
 
     form.append(fileLabel, fileInput);
     colAdd.appendChild(form);
@@ -158,7 +159,7 @@ class CaldbTemplate {
     const thName = Utils.createElement("th", ["fw-normal"]);
     thName.setAttribute("scope", "col");
     thName.textContent = "Filename";
-    thName.id = `thName${CALDB_ID}`;
+    thName.id = `thName${this.options.id}`;
 
     // Create cell for user uploaded.
     const thUserUploaded = Utils.createElement("th", ["fw-normal"]);
@@ -188,7 +189,7 @@ class CaldbTemplate {
 
     // Create form to handle file input.
     const form = Utils.createElement("form");
-    form.id = `form${CALDB_ID}`;
+    form.id = `form${this.options.id}`;
 
     const fileLabel = Utils.createElement("label", ["btn", "btn-secondary", "btn-sm"]);
     fileLabel.textContent = " Add File";
@@ -204,7 +205,7 @@ class CaldbTemplate {
     fileInput.name = "file";
     fileInput.style.display = "none";
     fileInput.dataset.action = "add";
-    fileInput.id = `fileInput${CALDB_ID}`;
+    fileInput.id = `fileInput${this.options.id}`;
 
     form.append(fileLabel, fileInput);
     thForm.appendChild(form);
@@ -300,9 +301,10 @@ class CaldbTemplate {
  * @param {HTMLElement} parentElement - The container where the view will be mounted.
  */
 class CaldbView {
-  constructor(template, parentElement) {
+  constructor(template, parentElement, options) {
     this.template = template;
     this.parentElement = parentElement;
+    this.options = options;
 
     this.card = this._create();
     this.body = this.card.querySelector(".accordion-body");
@@ -337,7 +339,7 @@ class CaldbView {
 
     // Update the file count.
     this.thead.querySelector(
-      `#thName${CALDB_ID}`
+      `#thName${this.options.id}`
     ).textContent = `Filename ${Utils.getFileCountLabel(data.length)}`;
   }
 
@@ -387,11 +389,12 @@ class CaldbView {
  * @param {FetchWrapper} api - Instance of the API wrapper to use.
  */
 class CaldbModel {
-  constructor(api) {
+  constructor(options) {
+    this.options = options;
     this.runId = null;
     this.rawData = null;
     this.data = null;
-    this.api = api;
+    this.api = this.options.api;
     this.caldbUrl = "dragonscaldb/";
   }
 
@@ -504,9 +507,10 @@ class CaldbModel {
  * @param {CaldbView} view - The UI view for the application.
  */
 class CaldbController {
-  constructor(model, view) {
+  constructor(model, view, options) {
     this.model = model;
     this.view = view;
+    this.options = options;
 
     this.view.bindCallback("refresh", () => this.refresh());
     this.view.bindCallback("remove", (item) => this.remove(item.filename));
@@ -562,11 +566,16 @@ class CaldbController {
  * @param {FetchWrapper} api - An API instance to use for fetching.
  */
 class Caldb {
-  constructor(parentElement, api) {
-    this.model = new CaldbModel(api);
-    this.template = new CaldbTemplate();
-    this.view = new CaldbView(this.template, parentElement);
-    this.controller = new CaldbController(this.model, this.view);
+  static #defaultOptions = {
+    id: "Caldb",
+  };
+
+  constructor(parentElement, options = {}) {
+    this.options = { ...Caldb.#defaultOptions, ...options, api: window.api };
+    this.model = new CaldbModel(this.options);
+    this.template = new CaldbTemplate(this.options);
+    this.view = new CaldbView(this.template, parentElement, this.options);
+    this.controller = new CaldbController(this.model, this.view, this.options);
   }
 
   /**
