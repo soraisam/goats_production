@@ -1,0 +1,1 @@
+Refactored files table: Improved display of groups and file toggling for runs. 

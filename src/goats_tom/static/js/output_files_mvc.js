@@ -1,6 +1,7 @@
-const OUTPUT_FILES_ID = "OutputFiles";
-
 class OutputFilesTemplate {
+  constructor(options) {
+    this.options = options;
+  }
   /**
    * Creates a card container.
    * @return {HTMLElement} The card element.
@@ -29,15 +30,15 @@ class OutputFilesTemplate {
    */
   createAccordion() {
     const accordion = Utils.createElement("div", ["accordion"]);
-    const accordionId = `accordion${OUTPUT_FILES_ID}`;
+    const accordionId = `accordion${this.options.id}`;
     accordion.id = accordionId;
 
     const header = Utils.createElement("h6", ["accordion-header"]);
-    const headerId = `header${OUTPUT_FILES_ID}`;
+    const headerId = `header${this.options.id}`;
     header.id = headerId;
 
     const button = Utils.createElement("button");
-    const collapseId = `collapse${OUTPUT_FILES_ID}`;
+    const collapseId = `collapse${this.options.id}`;
     button.className = "accordion-button collapsed";
     button.setAttribute("type", "button");
     button.setAttribute("data-bs-toggle", "collapse");
@@ -92,7 +93,7 @@ class OutputFilesTemplate {
    */
   createLoadingDiv() {
     const div = Utils.createElement("div", ["d-none", "text-center"]);
-    div.id = `loading${OUTPUT_FILES_ID}`;
+    div.id = `loading${this.options.id}`;
     const spinner = Utils.createElement("div", ["spinner-border", "text-secondary"]);
     const spinnerInner = Utils.createElement("span", ["visually-hidden"]);
     spinnerInner.textContent = "Loading ...";
@@ -119,7 +120,7 @@ class OutputFilesTemplate {
    */
   createToolbar() {
     const div = Utils.createElement("div");
-    div.id = `toolbar${OUTPUT_FILES_ID}`;
+    div.id = `toolbar${this.options.id}`;
     const row = Utils.createElement("div", ["row", "g-3"]);
     const col = Utils.createElement("div", ["col", "text-end"]);
 
@@ -154,7 +155,7 @@ class OutputFilesTemplate {
     const thName = Utils.createElement("th", ["fw-normal"]);
     thName.setAttribute("scope", "col");
     thName.textContent = "Filename";
-    thName.id = `thName${OUTPUT_FILES_ID}`;
+    thName.id = `thName${this.options.id}`;
 
     // Create cell for last modified.
     const thLastModified = Utils.createElement("th", ["fw-normal"]);
@@ -257,17 +258,18 @@ class OutputFilesTemplate {
 }
 
 class OutputFilesView {
-  constructor(template, parentElement) {
+  constructor(template, parentElement, options) {
     this.template = template;
     this.parentElement = parentElement;
+    this.options = options;
 
     this.card = this._create();
     this.body = this.card.querySelector(".accordion-body");
     this.table = this.card.querySelector("table");
     this.tbody = this.card.querySelector("tbody");
     this.thead = this.card.querySelector("thead");
-    this.loadingDiv = this.card.querySelector(`#loading${OUTPUT_FILES_ID}`);
-    this.toolbar = this.card.querySelector(`#toolbar${OUTPUT_FILES_ID}`);
+    this.loadingDiv = this.card.querySelector(`#loading${this.options.id}`);
+    this.toolbar = this.card.querySelector(`#toolbar${this.options.id}`);
 
     this.parentElement.appendChild(this.card);
 
@@ -296,7 +298,7 @@ class OutputFilesView {
 
     // Update the file count.
     this.thead.querySelector(
-      `#thName${OUTPUT_FILES_ID}`
+      `#thName${this.options.id}`
     ).textContent = `Filename ${Utils.getFileCountLabel(data.length)}`;
   }
 
@@ -387,12 +389,13 @@ class OutputFilesView {
 }
 
 class OutputFilesModel {
-  constructor(api) {
+  constructor(options) {
+    this.options = options
     this._runId = null;
     this._rawData = null;
     this._data = null;
     this._previousData = null;
-    this.api = api;
+    this.api = this.options.api;
     this.outputFilesUrl = "dragonsoutputfiles/";
     this.dragonsDataProductsUrl = "dragonsdataproducts/";
   }
@@ -572,6 +575,7 @@ class OutputFilesController {
    * @async
    */
   async refresh() {
+    if (!this.model.runId) return;
     this.view.render("loading");
     await Utils.ensureMinimumDuration(this.model.fetchFiles(), 500);
     if (this.model.dataChanged()) {
@@ -587,11 +591,16 @@ class OutputFilesController {
  * @param {Object} api - The API interface used for data interactions.
  */
 class OutputFiles {
-  constructor(parentElement, api) {
-    this.model = new OutputFilesModel(api);
-    this.template = new OutputFilesTemplate();
-    this.view = new OutputFilesView(this.template, parentElement);
-    this.controller = new OutputFilesController(this.model, this.view);
+  static #defaultOptions = {
+    id: "OutputFiles",
+  };
+
+  constructor(parentElement, options) {
+    this.options = { ...OutputFiles.#defaultOptions, ...options, api: window.api };
+    this.model = new OutputFilesModel(this.options);
+    this.template = new OutputFilesTemplate(this.options);
+    this.view = new OutputFilesView(this.template, parentElement, this.options);
+    this.controller = new OutputFilesController(this.model, this.view, this.options);
   }
 
   /**

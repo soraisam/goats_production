@@ -1,7 +1,3 @@
-const RUN_OPTIONS = {
-  id: "Run",
-};
-
 /**
  * Class to generate HTML templates.
  * @param {Object} options - Configuration options for the template.
@@ -270,9 +266,10 @@ class RunSetupTemplate {
  * @param {Object} api - The API object for making requests.
  */
 class RunSetupModel {
-  constructor(observationRecordId, api) {
+  constructor(observationRecordId, options) {
     this._observationRecordId = observationRecordId;
-    this.api = api;
+    this.options = options
+    this.api = this.options.api;
     this._rawData = {};
     this._data = [];
     this.url = "dragonsruns/";
@@ -442,7 +439,6 @@ class RunSetupView {
    * @private
    */
   _setLoading(isLoading) {
-    console.log("am i loading", isLoading);
     // Always want to go back to the existing view.
     this.form.classList.toggle("d-none", true);
     this.runSelect.classList.toggle("d-none", isLoading);
@@ -566,9 +562,10 @@ class RunSetupView {
  * @param {Object} view - The view for displaying and interacting with the run setup UI.
  */
 class RunSetupController {
-  constructor(model, view) {
+  constructor(model, view, options) {
     this.model = model;
     this.view = view;
+    this.options = options;
 
     // Bind the callbacks.
     this.view.bindCallback("showNewRunForm", () => this.showNewRunForm());
@@ -646,12 +643,16 @@ class RunSetupController {
  * @param {Object} [options={}] - Optional configuration options for customizing the run setup.
  */
 class RunSetup {
+  static #defaultOptions = {
+    id: "Run",
+  };
+
   constructor(observationRecordId, parentElement, api, options = {}) {
-    this.options = { ...RUN_OPTIONS, ...options };
-    this.model = new RunSetupModel(observationRecordId, api);
+    this.options = { ...RunSetup.#defaultOptions, ...options, api: window.api };
+    this.model = new RunSetupModel(observationRecordId, this.options);
     this.template = new RunSetupTemplate(this.options);
     this.view = new RunSetupView(this.template, parentElement, this.options);
-    this.controller = new RunSetupController(this.model, this.view);
+    this.controller = new RunSetupController(this.model, this.view, this.options);
   }
 
   /**
