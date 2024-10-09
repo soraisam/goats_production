@@ -21,11 +21,6 @@ class FilesTableTemplate {
     return container;
   }
 
-  // TODO: Remove this when modal is global in next ticket.
-  createHeaderModal() {
-    return Utils.createModal("header");
-  }
-
   /**
    * Formats header data into a table with rows of key-value pairs.
    * @param {Object} data The data object containing key-value pairs to display.
@@ -325,7 +320,7 @@ class FilesTableView {
     this.thead = null;
     this.groupSelect = null;
     this.toggleFilesCheckbox = null;
-    this.modal = this.template.createHeaderModal();
+    this.modal = window.modal;
 
     this.parentElement = null;
 
@@ -359,11 +354,10 @@ class FilesTableView {
    * @param {Object} data - The data object containing file information and astrodata descriptors.
    */
   _showHeaderModal(data) {
-    this.modal.updateTitle(`Viewing header for ${data.product_id}`);
-
+    const header = `Viewing header for ${data.product_id}`;
     // Format and apply to body.
-    const content = this.template.createHeaderModalTable(data.astrodata_descriptors);
-    this.modal.updateBody(content);
+    const body = this.template.createHeaderModalTable(data.astrodata_descriptors);
+    this.modal.update(header, body);
     this.modal.show();
   }
 

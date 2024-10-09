@@ -92,6 +92,7 @@
 {{ block.super }}
 <script src="{% static 'tom-select/tom-select.base.js' %}"></script>
 <script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/modal.js' %}"></script>
 <script src="{% static 'js/api.js' %}"></script>
 <script src="{% static 'js/run.js' %}"></script>
 <script src="{% static 'js/progress.js' %}"></script>
@@ -116,8 +117,8 @@
     // Create help offcanvas used throughout SPA.
     // TODO: When switching to single recipe can be done there.
     window.helpOffcanvas = new HelpOffcanvas(document.getElementById("helpOffcanvasContainer"))
-
     window.api = new API("/api/", "{{ csrf_token }}");
+    window.modal = new Modal(document.getElementById("modalContainer"));
 
     const caldb = new Caldb(document.getElementById("caldbContainer"));
     const outputFiles = new OutputFiles(document.getElementById("outputFilesContainer"))

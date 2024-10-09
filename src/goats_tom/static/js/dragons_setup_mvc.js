@@ -180,7 +180,7 @@ class SetupView {
     );
     this.observationRecordId = this.card.dataset.observationRecordPk;
     this.deleteRun = this.card.querySelector("#deleteRun");
-    this.headerModal = Utils.createModal("header");
+    this.headerModal = window.modal;
     this.runContainer = this.card.querySelector("#runContainer");
     this.runTable = new RunTable(this.runContainer);
 
@@ -195,11 +195,10 @@ class SetupView {
    * @param {Object} data Data object containing information to display in the modal.
    */
   updateHeaderModal(data) {
-    this.headerModal.updateTitle(`Viewing header for ${data.product_id}`);
-
+    const header = `Viewing header for ${data.product_id}`;
     // Format and apply to body.
     const content = this.formatHeaderData(data);
-    this.headerModal.updateBody(content);
+    this.headerModal.update(header, content);
   }
 
   /**
