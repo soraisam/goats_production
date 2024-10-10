@@ -438,6 +438,8 @@ class SetupView {
       fileType,
       files.length
     );
+    // FIXME: Testing
+    const newThing = new AvailableFiles(body, { file: files[0], groups });
 
     const table = Utils.createElement("table", [
       "table",
@@ -1106,7 +1108,7 @@ class SetupController {
       // Fetch the run information so I can display that.
       // TODO: Use the stored runs and make it so I just grab it by ID.
       const run = await this.model.fetchRun(runId);
-      this.view.runId = run.id
+      this.view.runId = run.id;
       this.view.runTable.update(run);
 
       const files = await this.model.fetchFileList(runId);

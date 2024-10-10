@@ -368,6 +368,7 @@ class FilesTableView {
    * @private
    */
   _create(data, parentElement) {
+    console.log(data);
     this.container = this.template.create(data);
     this.table = this.container.querySelector("table");
     this.tbody = this.table.querySelector("tbody");
@@ -516,7 +517,7 @@ class FilesTableController {
    */
   create(data, parentElement) {
     this.model.data = data;
-    this.view.render("create", { data, parentElement });
+    this.view.render("create", { data: this.model.data, parentElement });
     this._bindCallbacks();
   }
 
