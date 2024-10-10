@@ -159,11 +159,11 @@ class Utils {
    * Ensures that the provided operation lasts at least the specified minimum duration.
    * If no operation is provided, the function will simply wait for the minimum duration.
    *
-   * @param {Promise} [operationPromise=Promise.resolve()] - The operation to wait for. Defaults to 
+   * @param {Promise} [operationPromise=Promise.resolve()] - The operation to wait for. Defaults to
    * an immediately resolved promise if not provided.
-   * @param {number} [minDuration=500] - The minimum duration in milliseconds to wait. Defaults to 
+   * @param {number} [minDuration=500] - The minimum duration in milliseconds to wait. Defaults to
    * 500 milliseconds if not provided.
-   * @returns {Promise} A promise that resolves once both the operation and the minimum duration 
+   * @returns {Promise} A promise that resolves once both the operation and the minimum duration
    * have completed.
    */
   static ensureMinimumDuration(
@@ -174,5 +174,21 @@ class Utils {
       setTimeout(resolve, minDuration)
     );
     return Promise.all([operationPromise, minDurationPromise]);
+  }
+
+  static createObservationId(observationType, observationClass, objectName) {
+    // Normalize each part to lowercase and replace spaces or special characters with underscores
+    const normalize = (str) =>
+      str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "_");
+
+    // Create the ID by joining the normalized parts with double underscores
+    const id = `${normalize(observationType)}__${normalize(
+      observationClass
+    )}__${normalize(objectName)}`;
+
+    return id;
   }
 }
