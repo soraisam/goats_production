@@ -291,6 +291,9 @@ class SetupView {
               groups
             );
             this.filesAndRecipesContainer.appendChild(accordionItem);
+
+            // FIXME: Hack to test
+            new AvailableRecipes(this.filesAndRecipesContainer, recipe);
           });
         } else {
           // Regular handling for other file types.
