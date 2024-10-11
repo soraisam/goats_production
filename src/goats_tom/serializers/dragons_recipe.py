@@ -13,7 +13,7 @@ class DRAGONSRecipeSerializer(serializers.ModelSerializer):
         model = DRAGONSRecipe
         fields = (
             "id",
-            "file_type",
+            "observation_type",
             "name",
             "active_function_definition",
             "short_name",
@@ -24,10 +24,12 @@ class DRAGONSRecipeSerializer(serializers.ModelSerializer):
             "recipes_module_name",
             "object_name",
             "uparms",
+            "observation_class",
+            "dragons_run",
         )
         read_only_fields = (
             "id",
-            "file_type",
+            "observation_type",
             "name",
             "short_name",
             "version",
@@ -36,6 +38,8 @@ class DRAGONSRecipeSerializer(serializers.ModelSerializer):
             "instrument",
             "recipes_module_name",
             "object_name",
+            "observation_class",
+            "dragons_run"
         )
         extra_kwargs = {"function_definition": {"write_only": True}}
 
@@ -89,8 +93,13 @@ class DRAGONSRecipeFilterSerializer(serializers.Serializer):
         child=serializers.ChoiceField(choices=["help"]),
         required=False,
     )
+    group_by = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        allow_empty=True,
+        help_text="A list of groups to filter by.",
+    )
     version = serializers.CharField(
         required=False,
         help_text="DRAGONS version to filter recipes by.",
     )
-    group_by_file_type = serializers.BooleanField(required=False, default=False)

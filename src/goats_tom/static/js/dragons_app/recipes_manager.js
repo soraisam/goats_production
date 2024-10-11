@@ -92,7 +92,7 @@ class RecipeManagerView {
     // Iterate through and build the content. Hiding everything.
     recipesAndContent.forEach(({ recipe, content }, index) => {
       content.classList.add("d-none");
-      content.dataset.fileType = recipe.file_type;
+      content.dataset.observationType = recipe.observation_type;
       content.dataset.recipeId = recipe.id;
       contentContainer.appendChild(content);
     });
@@ -195,7 +195,7 @@ class RecipeManagerController {
 
     // Create the recipe content.
     recipes.forEach((recipe) => {
-      if (recipe.file_type !== "other") {
+      if (recipe.observation_type !== "other") {
         // Create MVC per recipe.
         let recipeModel = new RecipeModel(this.model.api);
         let recipeView = new RecipeView();

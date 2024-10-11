@@ -41,11 +41,11 @@ class AvailableRecipesTemplate {
   _createNav(data) {
     const title = Utils.createElement("p", "mb-2");
     title.textContent = "Available Recipes";
-    // TODO: Where to get filetype??
-    const fileType = "FAKE";
+    // TODO: Where to get observationType??
+    const observationType = "FAKE";
 
     const nav = Utils.createElement("ul", ["nav", "nav-pills", "flex-column"]);
-    nav.setAttribute("id", `${fileType}${this.options.id}`);
+    nav.setAttribute("id", `${observationType}${this.options.id}`);
     nav.setAttribute("role", "tablist");
     nav.setAttribute("aria-orientation", "vertical");
 
@@ -99,7 +99,7 @@ class AvailableRecipesTemplate {
     navLink.dataset.action = "selectRecipe";
     navLink.dataset.recipeId = data.id;
 
-    if (data.file_type !== "other") {
+    if (data.observation_type !== "other") {
       navLink.textContent = `${data.short_name}${data.is_default ? " (default)" : ""}`;
     } else {
       navLink.classList.add("disabled");

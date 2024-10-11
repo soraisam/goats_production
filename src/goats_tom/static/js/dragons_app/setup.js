@@ -20,6 +20,7 @@ class SetupModel {
   async fetchRecipes(runId) {
     try {
       const response = await this.api.get(
+        // TODO: Fix this after API change
         `${this.recipesUrl}?dragons_run=${runId}&group_by_file_type=true`
       );
       this.recipes = response.results || [];
@@ -56,6 +57,7 @@ class SetupModel {
   async fetchFileList(runId) {
     try {
       const response = await this.api.get(
+        // TODO: Fix this after API change.
         `${this.filesUrl}?group_by_file_type=true&dragons_run=${runId}`
       );
       this.files = response.results || [];
@@ -83,7 +85,7 @@ class SetupModel {
    * Fetches, groups, and optionally filters files based on their descriptors.
    * @param {string} runId The ID of the run for which files are to be fetched.
    * @param {string | string[]} groupBy The descriptor(s) to group the files by.
-   * @param {string} fileType The type of files to filter before grouping.
+   * @param {string} observationType The type of files to filter before grouping.
    * @param {string} [objectName] Optional object name to include in the query.
    * @param {string} [filterExpression] Optional filter expression to apply before grouping.
    * @param {boolean} [filterStrict] Optional filter strictly.
@@ -92,7 +94,7 @@ class SetupModel {
   async fetchGroupAndFilterFiles(
     runId,
     groupBy,
-    fileType,
+    observationType,
     objectName = "",
     filterExpression = "",
     filterStrict = false
@@ -108,7 +110,8 @@ class SetupModel {
     }
 
     // Base URL setup with mandatory parameters.
-    const baseUrl = `${this.filesUrl}?dragons_run=${runId}${groupByParams}&file_type=${fileType}&filter_strict=${filterStrict}`;
+    // TODO: Fix this after API change.
+    const baseUrl = `${this.filesUrl}?dragons_run=${runId}${groupByParams}&file_type=${observationType}&filter_strict=${filterStrict}`;
 
     // Append object name if it's provided.
     const objectNameParam = objectName
@@ -277,14 +280,14 @@ class SetupView {
         a[0].localeCompare(b[0])
       );
 
-      sortedEntries.forEach(([fileType, fileGroup], index) => {
+      sortedEntries.forEach(([observationType, fileGroup], index) => {
         // TODO: Fix this object check need to determine if we always want lower
-        if (fileType === "object") {
+        if (observationType === "object") {
           // Special handling for 'object' category.
           Object.entries(fileGroup).forEach(([objectName, fileList], objectIndex) => {
-            const recipe = recipes[fileType][objectName]; // Assuming a generic recipe for simplicity.
+            const recipe = recipes[observationType][objectName]; // Assuming a generic recipe for simplicity.
             const accordionItem = this.createAccordionItem(
-              `${fileType} | ${objectName}`,
+              `${observationType} | ${objectName}`,
               fileList,
               recipe,
               `${index}-${objectIndex}`,
@@ -297,9 +300,9 @@ class SetupView {
           });
         } else {
           // Regular handling for other file types.
-          const recipe = recipes[fileType];
+          const recipe = recipes[observationType];
           const accordionItem = this.createAccordionItem(
-            fileType,
+            observationType,
             fileGroup,
             recipe,
             index,
@@ -341,13 +344,13 @@ class SetupView {
 
   /**
    * Create an accordion item for a specific file type and its associated files and recipes.
-   * @param {string} fileType The type of the files.
+   * @param {string} observationType The type of the files.
    * @param {Array} files The files associated with this file type.
    * @param {Array} recipes The recipes associated with the files.
    * @param {number} index The index used to generate unique IDs for DOM elements.
    * @returns {HTMLElement} The constructed accordion item.
    */
-  createAccordionItem(fileType, files, recipes, index, groups) {
+  createAccordionItem(observationType, files, recipes, index, groups) {
     const hr = Utils.createElement("hr");
     // Create the outer container for the accordion item with the 'accordion-item' class.
     const accordionItem = Utils.createElement("div", "accordion-item");
@@ -369,7 +372,7 @@ class SetupView {
     button.setAttribute("data-target", `#${collapseId}`);
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", collapseId);
-    button.textContent = fileType;
+    button.textContent = observationType;
     header.appendChild(button);
 
     // Create the collapsible body section that will contain the file details.
@@ -385,7 +388,7 @@ class SetupView {
     const navP = Utils.createElement("p", "mb-2");
     navP.textContent = "Available Recipes";
     const navContainer = Utils.createElement("ul", ["nav", "nav-pills", "flex-column"]);
-    navContainer.setAttribute("id", `js-pills-${fileType}`);
+    navContainer.setAttribute("id", `js-pills-${observationType}`);
 
     navContainer.setAttribute("role", "tablist");
     navContainer.setAttribute("aria-orientation", "vertical");
@@ -404,7 +407,7 @@ class SetupView {
         "d-flex",
         "align-items-center",
       ]);
-      if (recipe.file_type !== "other") {
+      if (recipe.observation_type !== "other") {
         navLink.setAttribute("id", pillId);
         navLink.setAttribute("data-bs-toggle", "pill");
         navLink.setAttribute("data-bs-target", `#${paneId}`);
@@ -435,7 +438,7 @@ class SetupView {
     // Build the file filter.
     const form = this.createFileGroupingsAndFilterForm(files[0], groups);
     const availableFileGroupsRow = this.createAvailableFileGroups(
-      fileType,
+      observationType,
       files.length
     );
     // FIXME: Testing
@@ -447,10 +450,10 @@ class SetupView {
       "table-borderless",
     ]);
     const tbody = Utils.createElement("tbody");
-    tbody.id = `tbody-${fileType}`;
+    tbody.id = `tbody-${observationType}`;
     // Create the header.
     const thead = Utils.createElement("thead");
-    thead.id = `thead-${fileType}`;
+    thead.id = `thead-${observationType}`;
     const headerRow = Utils.createElement("tr");
 
     // Create a checkbox in the header for selecting/deselecting all rows.
@@ -458,9 +461,9 @@ class SetupView {
     const selectAllCheckbox = Utils.createElement("input", ["form-check-input"]);
     selectAllCheckbox.type = "checkbox";
     selectAllCheckbox.dataset.action = "selectAll";
-    selectAllCheckbox.dataset.fileType = `${fileType}`;
+    selectAllCheckbox.dataset.observationType = `${observationType}`;
     selectAllCheckbox.checked = true;
-    selectAllCheckbox.id = `selectAll-${fileType}`;
+    selectAllCheckbox.id = `selectAll-${observationType}`;
     selectAllCheckbox.addEventListener("change", (event) => {
       const isChecked = event.target.checked;
       const checkboxes = tbody.querySelectorAll("input[type='checkbox']");
@@ -472,7 +475,7 @@ class SetupView {
       "form-check-label",
       "fw-normal",
     ]);
-    selectAllLabel.htmlFor = `selectAll-${fileType}`;
+    selectAllLabel.htmlFor = `selectAll-${observationType}`;
     selectAllLabel.textContent = "Select/Deselect All";
     div.append(selectAllCheckbox, selectAllLabel);
     selectAllTh.appendChild(div);
@@ -640,18 +643,18 @@ class SetupView {
 
   /**
    * Creates a dropdown for selecting available file groups after files have been grouped.
-   * @param {string} fileType The file type of the file, could be combination of file type and
+   * @param {string} observationType The file type of the file, could be combination of file type and
    * object name.
    * @param {number} fileCount The number of available files.
    * @returns {HTMLElement} A DOM element representing the row for selecting available file groups.
    */
-  createAvailableFileGroups(fileType, fileCount) {
+  createAvailableFileGroups(observationType, fileCount) {
     const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
     const col2 = Utils.createElement("div", ["col-sm-9"]);
 
     // Build the ID.
-    const id = `availableFileGroups-${fileType}`;
+    const id = `availableFileGroups-${observationType}`;
 
     // Build the label.
     const label = Utils.createElement("label", ["col-form-label"]);
@@ -751,11 +754,11 @@ class SetupView {
    */
   createFileGroupingsAndFilterForm(file, groups) {
     const form = Utils.createElement("form");
-    // Create hidden inputs for file_type and object_name
-    const fileTypeInput = Utils.createElement("input");
-    fileTypeInput.setAttribute("type", "hidden");
-    fileTypeInput.setAttribute("name", "file_type");
-    fileTypeInput.value = file.file_type;
+    // Create hidden inputs for observation_type and object_name
+    const observationTypeInput = Utils.createElement("input");
+    observationTypeInput.setAttribute("type", "hidden");
+    observationTypeInput.setAttribute("name", "observation_type");
+    observationTypeInput.value = file.observation_type;
 
     const objectNameInput = Utils.createElement("input");
     objectNameInput.setAttribute("type", "hidden");
@@ -778,7 +781,7 @@ class SetupView {
       fileGroupingsRow,
       fileFilterRow,
       strictFileFilterRow,
-      fileTypeInput,
+      observationTypeInput,
       objectNameInput,
       div
     );
@@ -803,7 +806,7 @@ class SetupView {
     // Configure the checkbox
     checkbox.type = "checkbox";
     checkbox.id = `file${file.id}`;
-    checkbox.dataset.fileType = file.file_type;
+    checkbox.dataset.observationType = file.observation_type;
     checkbox.dataset.filePk = file.id;
     checkbox.checked = true;
 
@@ -886,8 +889,8 @@ class SetupView {
     this.filesAndRecipesContainer.addEventListener("change", (event) => {
       if (event.target.classList.contains("file-checkbox")) {
         // Identify the specific table section (tbody) based on the file type
-        const fileType = event.target.dataset.fileType;
-        const tbody = document.getElementById(`tbody-${fileType}`);
+        const observationType = event.target.dataset.observationType;
+        const tbody = document.getElementById(`tbody-${observationType}`);
 
         // Collect all checkboxes within the tbody
         const allCheckboxes = tbody.querySelectorAll("input[type='checkbox']");
@@ -898,7 +901,7 @@ class SetupView {
         );
 
         // Locate the header checkbox in the corresponding thead
-        const thead = document.getElementById(`thead-${fileType}`);
+        const thead = document.getElementById(`thead-${observationType}`);
         const headerCheckbox = thead.querySelector("input[type='checkbox']");
 
         // Update the header checkbox state.
@@ -958,7 +961,7 @@ class SetupView {
           case "selectAll":
             const isChecked = event.target.checked;
             const tbody = document.getElementById(
-              `tbody-${event.target.dataset.fileType}`
+              `tbody-${event.target.dataset.observationType}`
             );
             const checkboxes = tbody.querySelectorAll("input[type='checkbox']");
             checkboxes.forEach((checkbox) => (checkbox.checked = isChecked));
@@ -978,7 +981,7 @@ class SetupView {
 
   /**
    * Activates the tab that matches the specified file type and deactivates the rest.
-   * @param {string} fileType The file type of the tab to activate.
+   * @param {string} observationType The file type of the tab to activate.
    */
   activateTab(recipeId) {
     Array.from(this.filesAndRecipesContainer.querySelectorAll(".nav-link")).forEach(
@@ -1010,11 +1013,11 @@ class SetupView {
 
   /**
    * Updates the table with files based on the selected file group.
-   * @param {string} fileType The type of the files.
+   * @param {string} observationType The type of the files.
    * @param {Array<Object>} files Array of file objects to display in the table.
    */
-  updateFileTable(fileType, files) {
-    const tbody = document.getElementById(`tbody-${fileType}`);
+  updateFileTable(observationType, files) {
+    const tbody = document.getElementById(`tbody-${observationType}`);
     // Loop through each file and create a detailed view for it.
     tbody.innerHTML = "";
     files.forEach((file) => {
@@ -1025,11 +1028,11 @@ class SetupView {
 
   /**
    * Populates the file group selection dropdown and sets up the file display.
-   * @param {string} fileType The type of files, used to build unique identifiers for HTML elements.
+   * @param {string} observationType The type of files, used to build unique identifiers for HTML elements.
    * @param {Array<Object>} groups Array of file group objects.
    */
-  updateAvailableFileGroups(fileType, groups) {
-    const select = document.getElementById(`availableFileGroups-${fileType}`);
+  updateAvailableFileGroups(observationType, groups) {
+    const select = document.getElementById(`availableFileGroups-${observationType}`);
     // Clear existing options.
     while (select.options.length > 0) {
       select.remove(0);
@@ -1049,14 +1052,14 @@ class SetupView {
       // Set the first option as selected by default and render its files.
       if (index === 0) {
         select.selectedIndex = 0;
-        this.updateFileTable(fileType, group.files);
+        this.updateFileTable(observationType, group.files);
       }
     });
 
     // Handle changes in selection
     select.onchange = () => {
       const selectedGroup = groups.find((g) => g.groupName === select.value);
-      this.updateFileTable(fileType, selectedGroup.files);
+      this.updateFileTable(observationType, selectedGroup.files);
     };
   }
 }
@@ -1159,24 +1162,24 @@ class SetupController {
     let filterStrict = formData.get("filter_strict") === "on";
     // Handle 'filter_expression' to ensure it defaults to an empty string if not provided.
     let filterExpression = formData.get("filter_expression") || "";
-    let fileType = formData.get("file_type");
+    let observationType = formData.get("observation_type");
     let objectName = formData.get("object_name");
 
     const response = await this.model.fetchGroupAndFilterFiles(
       this.view.runId,
       groupBy,
-      fileType,
+      observationType,
       objectName,
       filterExpression,
       filterStrict
     );
 
     // Get the accordion to update.
-    const id = objectName ? `${fileType} | ${objectName}` : fileType;
+    const id = objectName ? `${observationType} | ${objectName}` : observationType;
     const groups = this.extractGroups(response);
 
     // Determine the identifier based on objectName.
-    const identifier = objectName ? `${fileType} | ${objectName}` : fileType;
+    const identifier = objectName ? `${observationType} | ${objectName}` : observationType;
 
     // Update UI components.
     this.view.updateAvailableFileGroups(identifier, groups);

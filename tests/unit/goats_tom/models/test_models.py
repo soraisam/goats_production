@@ -190,63 +190,6 @@ class TestDRAGONSRun:
             duplicate_run.full_clean()
 
 
-# @pytest.mark.django_db()
-# class TestDataProductMetadata:
-#     """Class to test `DataProductMetadata` model."""
-
-#     def test_create_metadata(self):
-#         """Test creating a metadata instance."""
-#         metadata = DataProductMetadataFactory()
-#         assert metadata.pk is not None, "Metadata should be created successfully."
-
-#     def test_null_fields(self):
-#         """Test metadata creation with null fields."""
-#         metadata = DataProductMetadataFactory(
-#             file_type=None,
-#             group_id=None,
-#             exposure_time=None,
-#             object_name=None,
-#             central_wavelength=None,
-#             wavelength_band=None,
-#             observation_date=None,
-#             roi_setting=None,
-#         )
-#         assert (
-#             metadata.pk is not None
-#         ), "Metadata with null fields should be created successfully."
-
-#     def test_empty_strings(self):
-#         """Test metadata creation with empty strings."""
-#         metadata = DataProductMetadataFactory(
-#             file_type="",
-#             group_id="",
-#             object_name="",
-#             wavelength_band="",
-#             roi_setting="",
-#         )
-#         assert (
-#             metadata.pk is not None
-#         ), "Metadata with empty strings should be created successfully."
-
-#     def test_invalid_exposure_time(self):
-#         """Test metadata creation with negative exposure time."""
-#         with pytest.raises(ValidationError):
-#             metadata = DataProductMetadataFactory.build(exposure_time=-1)
-#             metadata.full_clean()
-
-#     def test_invalid_central_wavelength(self):
-#         """Test metadata creation with negative central wavelength."""
-#         with pytest.raises(ValidationError):
-#             metadata = DataProductMetadataFactory.build(central_wavelength=-1)
-#             metadata.full_clean()
-
-#     def test_string_representation(self):
-#         """Test the string representation of the metadata."""
-#         metadata = DataProductMetadataFactory()
-#         assert str(metadata) == f"Metadata for {metadata.data_product.product_id}"
-
-
-
 @pytest.mark.django_db
 class RecipesModuleTests(TestCase):
     def test_create_recipes_module(self):
@@ -450,7 +393,8 @@ class TestDRAGONSRecipe:
         first_recipe = DRAGONSRecipeFactory(object_name="test")
         with pytest.raises(IntegrityError):
             DRAGONSRecipeFactory(
-                recipe=first_recipe.recipe, dragons_run=first_recipe.dragons_run, file_type=first_recipe.file_type, object_name=first_recipe.object_name,
+                recipe=first_recipe.recipe, dragons_run=first_recipe.dragons_run, observation_type=first_recipe.observation_type, object_name=first_recipe.object_name,
+                observation_class=first_recipe.observation_class,
             )
 
     def test_properties(self):

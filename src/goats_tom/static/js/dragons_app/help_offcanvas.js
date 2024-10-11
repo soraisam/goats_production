@@ -136,7 +136,7 @@ class HelpOffcanvas {
    */
   updateAndShowPrimitivesDocumentation(recipe) {
     this.setTitle(
-      `${Utils.formatDisplayText(recipe.file_type)} Primitives Documentation`
+      `${Utils.formatDisplayText(recipe.observation_type)} Primitives Documentation`
     );
     const primitivesDocumentation = this._renderPrimitivesDocumentation(recipe);
     this.contentElement.appendChild(primitivesDocumentation);

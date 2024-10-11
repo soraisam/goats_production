@@ -1,6 +1,5 @@
 """Module that handles the DRAGONS recipe API."""
 
-from collections import defaultdict
 
 from django.db.models import QuerySet
 from django.http import HttpRequest
@@ -63,28 +62,35 @@ class DRAGONSRecipesViewSet(
         # Validates the provided query parameters.
         filter_serializer = self.filter_serializer_class(data=request.query_params)
         filter_serializer.is_valid(raise_exception=False)
-        group_by_file_type = filter_serializer.validated_data.get("group_by_file_type")
+        group_by = filter_serializer.validated_data.get("group_by")
 
         # Gets the query.
         queryset = self.filter_queryset(self.get_queryset())
 
-        if group_by_file_type:
-            # Don't worry about pagination and group by file type.
+        if group_by:
+            # Serialize the queryset.
             serializer = self.get_serializer(queryset, many=True)
-            grouped_data = defaultdict(list)
-            for item in serializer.data:
-                grouped_data[(item["file_type"]).lower()].append(item)
+            data = serializer.data
 
-            if "object" in grouped_data:
-                object_group = defaultdict(list)
-                for obj_item in grouped_data["object"]:
-                    sub_type = obj_item.get(
-                        "object_name", ""
-                    )
-                    object_group[sub_type].append(obj_item)
-                grouped_data["object"] = dict(object_group)
-            data = dict(grouped_data)
-            return Response({"results": data})
+            # Dynamically create nested grouping based on the group_by list.
+            grouped_data = {}
+            for item in data:
+                # Dynamic nested grouping using nested dictionaries
+                pointer = grouped_data
+                for i, key in enumerate(group_by):
+                    if key not in pointer:
+                        pointer[key] = {}
+                    if item[key] not in pointer[key]:
+                        pointer[key][item[key]] = (
+                            {} if i < len(group_by) - 1 else []
+                        )
+                    pointer = pointer[key][item[key]]
+
+                # Append file info at the deepest level
+                pointer.append(item)
+
+            # Return grouped data.
+            return Response(grouped_data)
 
         # Paginate and return data.
         page = self.paginate_queryset(queryset)

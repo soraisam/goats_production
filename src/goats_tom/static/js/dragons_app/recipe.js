@@ -1,4 +1,4 @@
-const FILE_TYPE_2_DISPLAY = {
+const OBSERVATION_TYPE_2_DISPLAY = {
   bias: "Bias reduction",
   flat: "Flat reduction",
   dark: "Dark reduction",
@@ -231,7 +231,7 @@ class RecipeView {
             // On start, pass in the recipe to link to.
             this.onStartReduce(
               event.target.dataset.recipeId,
-              event.target.dataset.fileType
+              event.target.dataset.observationType
             );
             break;
           case "stopReduce":
@@ -255,11 +255,11 @@ class RecipeView {
   }
   /**
    * Retrieves the display name for a given recipe file type.
-   * @param {string} recipeFileType The file type of the recipe.
+   * @param {string} recipeObservationType The file type of the recipe.
    * @returns {string} The user-friendly name corresponding to the recipe file type.
    */
-  getDisplayName(recipeFileType) {
-    return FILE_TYPE_2_DISPLAY[recipeFileType] || `Name Not Found: ${recipeFileType}`;
+  getDisplayName(recipeObservationType) {
+    return OBSERVATION_TYPE_2_DISPLAY[recipeObservationType] || `Name Not Found: ${recipeObservationType}`;
   }
 
   /**
@@ -316,16 +316,16 @@ class RecipeView {
 
     // Create content for column 1.
     const p = Utils.createElement("p", ["my-0"]);
-    p.textContent = this.getDisplayName(this.recipe.file_type);
+    p.textContent = this.getDisplayName(this.recipe.observation_type);
     col1.appendChild(p);
 
     // Create content for column 2
     const startButton = Utils.createElement("button", ["btn", "btn-success", "me-1"]);
     const stopButton = Utils.createElement("button", ["btn", "btn-danger"]);
     startButton.dataset.recipeId = this.recipe.id;
-    startButton.dataset.fileType = this.recipe.object_name
-      ? `${this.recipe.file_type} | ${this.recipe.object_name}`
-      : this.recipe.file_type;
+    startButton.dataset.observationType = this.recipe.object_name
+      ? `${this.recipe.observation_type} | ${this.recipe.object_name}`
+      : this.recipe.observation_type;
     startButton.dataset.action = "startReduce";
     startButton.textContent = "Start";
     this.startButton = startButton;
@@ -767,14 +767,14 @@ class RecipeController {
   /**
    * Initiates the reduction process for a given recipe ID.
    * @param {number} recipeId The ID of the recipe to start reducing.
-   * @param {string} fileType The file type identifier.
+   * @param {string} observationType The file type identifier.
    * @async
    */
-  handleStartReduce = async (recipeId, fileType) => {
+  handleStartReduce = async (recipeId, observationType) => {
     // Clear logger before starting.
     this.view.logger.clear();
     // Get the file IDs to run on.
-    const tbody = document.getElementById(`tbody-${fileType}`);
+    const tbody = document.getElementById(`tbody-${observationType}`);
     const fileIds = Array.from(
       tbody.querySelectorAll("input[type='checkbox']:checked")
     ).map((input) => input.dataset.filePk);
