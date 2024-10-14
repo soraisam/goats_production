@@ -1,5 +1,4 @@
 from goats_tom.models.base_recipe import BaseRecipe
-from goats_tom.models.data_product_metadata import DataProductMetadata
 from goats_tom.models.download import Download
 from goats_tom.models.dragons_file import DRAGONSFile
 from goats_tom.models.dragons_recipe import DRAGONSRecipe
@@ -19,7 +18,6 @@ __all__ = [
     "Key",
     "ProgramKey",
     "UserKey",
-    "DataProductMetadata",
     "DRAGONSRecipe",
     "DRAGONSReduce",
     "BaseRecipe",

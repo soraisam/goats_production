@@ -1,10 +1,8 @@
 """Module that handles the DRAGONS files API."""
 
-from collections import defaultdict
 
-from django.db.models import CharField, F, QuerySet, Value
+from django.db.models import QuerySet
 from django.db.models.fields.json import KeyTransform
-from django.db.models.functions import Concat
 from django.http import HttpRequest
 from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated
@@ -53,15 +51,15 @@ class DRAGONSFilesViewSet(
         filter_serializer.is_valid(raise_exception=True)
 
         dragons_run_pk = filter_serializer.validated_data.get("dragons_run")
-        file_type = filter_serializer.validated_data.get("file_type")
+        observation_type = filter_serializer.validated_data.get("observation_type")
         object_name = filter_serializer.validated_data.get("object_name")
 
         if dragons_run_pk is not None:
             queryset = queryset.filter(dragons_run__pk=dragons_run_pk)
 
-        if file_type is not None:
-            queryset = queryset.filter(file_type=file_type)
-            if file_type == "object":
+        if observation_type is not None:
+            queryset = queryset.filter(observation_type=observation_type)
+            if observation_type == "object":
                 queryset = queryset.filter(object_name=object_name)
 
         # Apply select_related to optimize related object retrieval.
@@ -90,7 +88,6 @@ class DRAGONSFilesViewSet(
         filter_serializer.is_valid(raise_exception=True)
 
         # Extract validated data.
-        group_by_file_type = filter_serializer.validated_data.get("group_by_file_type")
         group_by = filter_serializer.validated_data.get("group_by", [])
         filter_expression = filter_serializer.validated_data.get(
             "filter_expression", ""
@@ -104,91 +101,57 @@ class DRAGONSFilesViewSet(
         queryset = self.filter_queryset(self.get_queryset())
         queryset = queryset.filter(query_filter)
 
+        # Group by dynamic fields if specified
+
         if group_by:
-            annotations = {
-                f"group_value_{i}": KeyTransform(key, "astrodata_descriptors")
-                for i, key in enumerate(group_by)
-            }
-            queryset = queryset.annotate(**annotations)
-
-            concat_args = []
-            for i, _ in enumerate(group_by):
-                if i > 0:
-                    concat_args.append(Value(" | "))
-                concat_args.append(F(f"group_value_{i}"))
-
-            if len(concat_args) > 1:
-                queryset = queryset.annotate(
-                    composite_group_value=Concat(*concat_args, output_field=CharField())
-                )
-                group_field = "composite_group_value"
-            else:
-                group_field = "group_value_0"
-
-            # Fetch and group data based on the composite or single group key.
-            queryset = queryset.values(
+            queryset = queryset.annotate(
+                **{
+                    f"group_{i}": KeyTransform(key, "astrodata_descriptors")
+                    for i, key in enumerate(group_by)
+                }
+            ).values(
                 "id",
                 "object_name",
-                "file_type",
+                "observation_type",
                 "product_id",
                 "url",
-                group_field,
-            ).order_by(group_field)
+                *[f"group_{i}" for i in range(len(group_by))],
+            )
 
-            # Manually aggregate grouped data.
             grouped_data = {}
             for item in queryset:
-                group_key = item[group_field]
-                if group_key not in grouped_data:
-                    grouped_data[group_key] = {
-                        "count": 0,  # Initialize count
-                        "files": [],
-                    }
-                grouped_data[group_key]["files"].append(
+                # Dynamic nested grouping using nested dictionaries
+                pointer = grouped_data
+                for i, key in enumerate(group_by):
+                    group_key = f"group_{i}"
+                    if key not in pointer:
+                        pointer[key] = {}
+                    if item[group_key] not in pointer[key]:
+                        pointer[key][item[group_key]] = (
+                            {} if i < len(group_by) - 1 else []
+                        )
+                    pointer = pointer[key][item[group_key]]
+
+                # Append file info at the deepest level
+                pointer.append(
                     {
-                        "id": item["id"],
-                        "object_name": item["object_name"],
-                        "file_type": item["file_type"],
-                        "product_id": item["product_id"],
+                        "file_id": item["id"],
+                        "file_name": item["product_id"],
                         "url": item["url"],
+                        "object_name": item["object_name"],
+                        "observation_type": item["observation_type"],
                     }
                 )
-                grouped_data[group_key]["count"] += 1
-
             return Response(grouped_data)
 
-        if group_by_file_type:
-            # Don't worry about pagination and group by file type.
-            serializer = self.get_serializer(queryset, many=True)
-            grouped_data = defaultdict(list)
-            for item in serializer.data:
-                grouped_data[(item["file_type"]).lower()].append(item)
-
-            if "object" in grouped_data:
-                object_group = defaultdict(list)
-                for obj_item in grouped_data["object"]:
-                    sub_type = obj_item.get("object_name", "")
-                    object_group[sub_type].append(obj_item)
-                grouped_data["object"] = dict(
-                    object_group
-                )  # Replace the list with a dictionary of sub_types
-
-            data = dict(grouped_data)
-            return Response({"results": data})
-
-        # Paginate and return data.
         page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(
-            page if page is not None else queryset,
-            many=True,
-        )
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        data = serializer.data
-        return (
-            self.get_paginated_response(serializer.data)
-            if page is not None
-            else Response(serializer.data)
-        )
+        # No grouping specified; serialize and return all records.
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def retrieve(self, request: HttpRequest, *args, **kwargs) -> Response:
         """Retrieve a DRAGONS file instance along with optional included data based on

@@ -23,7 +23,7 @@ class DRAGONSRecipe(models.Model):
         Timestamp when the recipe modification was created.
     modified_at : `models.DateTimeField`
         Timestamp when the recipe modification was last updated.
-    file_type : `models.CharField`
+    observation_type : `models.CharField`
         A character field storing the type of the file.
     object_name : `models.CharField`
         An optional character field storing the name of the object related to
@@ -58,7 +58,7 @@ class DRAGONSRecipe(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    file_type = models.CharField(max_length=50, null=False, blank=False)
+    observation_type = models.CharField(max_length=50, null=False, blank=False)
     object_name = models.CharField(max_length=100, null=True, blank=True)
     is_default = models.BooleanField(
         editable=False,
@@ -66,9 +66,18 @@ class DRAGONSRecipe(models.Model):
         blank=False,
         default=False,
     )
+    observation_class = models.CharField(max_length=50, null=False, blank=False)
 
     class Meta:
-        unique_together = (("recipe", "dragons_run", "file_type", "object_name"),)
+        unique_together = (
+            (
+                "recipe",
+                "dragons_run",
+                "observation_type",
+                "object_name",
+                "observation_class",
+            ),
+        )
 
     def __str__(self) -> str:
         return f"v{self.version} {self.short_name} for run {self.dragons_run.run_id}"
@@ -164,7 +173,7 @@ class DRAGONSRecipe(models.Model):
 
         """
         first_file = self.recipe.recipes_module.files.filter(
-            file_type=self.file_type
+            observation_type=self.observation_type
         ).first()
 
         if first_file:
@@ -182,7 +191,7 @@ class DRAGONSRecipe(models.Model):
 
         """
         first_file = self.recipe.recipes_module.files.fileter(
-            file_type=self.file_type
+            observation_type=self.observation_type
         ).first()
 
         if first_file:

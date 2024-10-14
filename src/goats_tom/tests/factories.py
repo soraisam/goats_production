@@ -5,7 +5,6 @@ used in the application, particularly for testing purposes.
 import factory
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
-from django.core.files.base import ContentFile
 from django.utils import timezone
 from goats_tom.models import (
     BaseRecipe,
@@ -189,7 +188,8 @@ class DRAGONSFileFactory(factory.django.DjangoModelFactory):
     dragons_run = factory.SubFactory(DRAGONSRunFactory)
     data_product = factory.SubFactory(DataProductFactory)
     recipes_module = factory.SubFactory(RecipesModuleFactory)
-    file_type = factory.Iterator(["bias", "flat", "object", "arc"])
+    observation_type = factory.Iterator(["bias", "flat", "object", "arc"])
+    observation_class = factory.Iterator(["partnerCal", "science"])
     object_name = factory.Faker("word")
     astrodata_descriptors = factory.LazyAttribute(lambda x: {
         "airmass": random.uniform(1.0, 3.0),
@@ -227,7 +227,9 @@ class DRAGONSRecipeFactory(factory.django.DjangoModelFactory):
     created_at = factory.LazyFunction(timezone.now)
     modified_at = factory.LazyAttribute(lambda o: o.created_at)
     is_default = factory.Faker("boolean")
-
+    observation_type = factory.Iterator(["bias", "flat", "object", "arc"])
+    observation_class = factory.Iterator(["partnerCal", "science"])
+    object_name = factory.Faker("word")
 
 
 class DRAGONSReduceFactory(factory.django.DjangoModelFactory):

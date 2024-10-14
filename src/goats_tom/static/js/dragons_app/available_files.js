@@ -54,12 +54,12 @@ class AvailableFilesTemplate {
    */
   _createForm(file, groups) {
     const form = Utils.createElement("form");
-    // Create hidden inputs for file_type and object_name
-    // TODO: Make sure file_type and object_name are datasets
-    const fileTypeInput = Utils.createElement("input");
-    fileTypeInput.setAttribute("type", "hidden");
-    fileTypeInput.setAttribute("name", "file_type");
-    fileTypeInput.value = file.file_type;
+    // Create hidden inputs for observation_type and object_name
+    // TODO: Make sure observation_type and object_name are datasets
+    const observationTypeInput = Utils.createElement("input");
+    observationTypeInput.setAttribute("type", "hidden");
+    observationTypeInput.setAttribute("name", "observation_type");
+    observationTypeInput.value = file.observation_type;
 
     const objectNameInput = Utils.createElement("input");
     objectNameInput.setAttribute("type", "hidden");
@@ -82,7 +82,7 @@ class AvailableFilesTemplate {
       fileGroupingsRow,
       fileFilterRow,
       strictFileFilterRow,
-      fileTypeInput,
+      observationTypeInput,
       objectNameInput,
       div
     );
@@ -375,14 +375,14 @@ class AvailableFilesView {
             {
               id: 1,
               object_name: null,
-              file_type: "bias1",
+              observation_type: "bias1",
               product_id: "S20210216S0164.fits",
               url: "/data/test2/GEM/GS-2021A-DD-102-9/S20210216S0164.fits",
             },
             {
               id: 2,
               object_name: null,
-              file_type: "bias2",
+              observation_type: "bias2",
               product_id: "S20210216S0165.fits",
               url: "/data/test2/GEM/GS-2021A-DD-102-9/S20210216S0165.fits",
             },
@@ -396,14 +396,14 @@ class AvailableFilesView {
             {
               id: 3,
               object_name: null,
-              file_type: "bias3",
+              observation_type: "bias3",
               product_id: "S20210221S0345.fits",
               url: "/data/test2/GEM/GS-2021A-DD-102-9/S20210221S0345.fits",
             },
             {
               id: 4,
               object_name: null,
-              file_type: "bias4",
+              observation_type: "bias4",
               product_id: "S20210221S0345.fits",
               url: "/data/test2/GEM/GS-2021A-DD-102-9/S20210221S0346.fits",
             },

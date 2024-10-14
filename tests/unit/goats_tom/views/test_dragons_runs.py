@@ -29,7 +29,7 @@ class TestDRAGONSRunViewSet(APITestCase):
         """Test listing all DRAGONS runs."""
         DRAGONSRunFactory.create_batch(3)
 
-        request = self.factory.get(reverse("dragonsrun-list"))
+        request = self.factory.get(reverse("dragonsruns-list"))
         self.authenticate(request)
 
         response = self.list_view(request)
@@ -50,7 +50,7 @@ class TestDRAGONSRunViewSet(APITestCase):
             "log_filename": "test-log.log",
         }
 
-        request = self.factory.post(reverse("dragonsrun-list"), data, format="json")
+        request = self.factory.post(reverse("dragonsruns-list"), data, format="json")
         self.authenticate(request)
 
         response = self.list_view(request)
@@ -63,7 +63,7 @@ class TestDRAGONSRunViewSet(APITestCase):
         """Test retrieving a single DRAGONS run."""
         dragons_run = DRAGONSRunFactory()
 
-        request = self.factory.get(reverse("dragonsrun-detail", args=[dragons_run.id]))
+        request = self.factory.get(reverse("dragonsruns-detail", args=[dragons_run.id]))
         self.authenticate(request)
 
         response = self.detail_view(request, pk=dragons_run.id)
@@ -76,7 +76,7 @@ class TestDRAGONSRunViewSet(APITestCase):
         dragons_run = DRAGONSRunFactory()
 
         request = self.factory.delete(
-            reverse("dragonsrun-detail", args=[dragons_run.id]),
+            reverse("dragonsruns-detail", args=[dragons_run.id]),
         )
         self.authenticate(request)
 
@@ -93,7 +93,7 @@ class TestDRAGONSRunViewSet(APITestCase):
         DRAGONSRunFactory.create_batch(3)
 
         request = self.factory.get(
-            reverse("dragonsrun-list"), {"observation_record": observation_record.pk},
+            reverse("dragonsruns-list"), {"observation_record": observation_record.pk},
         )
         self.authenticate(request)
 
@@ -113,7 +113,7 @@ class TestDRAGONSRunViewSet(APITestCase):
             "log_filename": "test-log.log",
         }
 
-        request = self.factory.post(reverse("dragonsrun-list"), data, format="json")
+        request = self.factory.post(reverse("dragonsruns-list"), data, format="json")
         self.authenticate(request)
 
         response = self.list_view(request)
@@ -122,7 +122,7 @@ class TestDRAGONSRunViewSet(APITestCase):
 
     def test_authentication_required(self):
         """Test that authentication is required to access the view."""
-        request = self.factory.get(reverse("dragonsrun-list"))
+        request = self.factory.get(reverse("dragonsruns-list"))
 
         response = self.list_view(request)
 

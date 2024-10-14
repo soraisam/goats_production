@@ -25,7 +25,7 @@ class TestDRAGONSFilesViewSet(APITestCase):
         """Test listing all DRAGONS files."""
         DRAGONSFileFactory.create_batch(3)
 
-        request = self.factory.get(reverse("dragonsfile-list"))
+        request = self.factory.get(reverse("dragonsfiles-list"))
         self.authenticate(request)
 
         response = self.list_view(request)
@@ -38,7 +38,7 @@ class TestDRAGONSFilesViewSet(APITestCase):
         dragons_file = DRAGONSFileFactory()
 
         request = self.factory.get(
-            reverse("dragonsfile-detail", args=[dragons_file.id]),
+            reverse("dragonsfiles-detail", args=[dragons_file.id]),
         )
         self.authenticate(request)
 
@@ -53,7 +53,7 @@ class TestDRAGONSFilesViewSet(APITestCase):
         DRAGONSFileFactory.create_batch(3)
 
         request = self.factory.get(
-            reverse("dragonsfile-list"), {"dragons_run": dragons_run.pk},
+            reverse("dragonsfiles-list"), {"dragons_run": dragons_run.pk},
         )
         self.authenticate(request)
 
@@ -64,7 +64,7 @@ class TestDRAGONSFilesViewSet(APITestCase):
 
     def test_authentication_required(self):
         """Test that authentication is required to access the view."""
-        request = self.factory.get(reverse("dragonsfile-list"))
+        request = self.factory.get(reverse("dragonsfiles-list"))
 
         response = self.list_view(request)
 

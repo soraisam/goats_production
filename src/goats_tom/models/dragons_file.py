@@ -28,7 +28,7 @@ class DRAGONSFile(models.Model):
     recipes_module : `models.ForeignKey`
         An optional foreign key to the `RecipesModule`, indicating which
         recipes module is associated with this file.
-    file_type : `models.CharField`
+    observation_type : `models.CharField`
         A character field storing the type of the file.
     object_name : `models.CharField`
         An optional character field storing the name of the object related to
@@ -49,11 +49,13 @@ class DRAGONSFile(models.Model):
         null=True,
         related_name="files",
     )
-    file_type = models.CharField(max_length=50, null=True, blank=True)
+    observation_type = models.CharField(max_length=50, null=True, blank=True)
     object_name = models.CharField(max_length=100, null=True, blank=True)
     astrodata_descriptors = models.JSONField(default=dict)
     url = models.CharField(max_length=255, null=False, blank=False)
     product_id = models.CharField(max_length=100, null=False, blank=False)
+    observation_class = models.CharField(max_length=50, null=False, blank=False)
+
 
     class Meta:
         unique_together = ("dragons_run", "data_product")

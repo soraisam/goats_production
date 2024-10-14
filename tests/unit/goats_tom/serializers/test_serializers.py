@@ -40,7 +40,6 @@ class TestDRAGONSFileFilterSerializer(APITestCase):
     def test_valid_data(self):
         """Test `DRAGONSFileFilterSerializer` with valid data."""
         valid_data = {
-            "group_by_file_type": True,
             "dragons_run": 1,
             "include": ["header"],
         }
@@ -64,7 +63,7 @@ class TestDRAGONSRecipeSerializer(APITestCase):
         """Test `DRAGONSRecipeSerializer` with valid data."""
         serializer = DRAGONSRecipeSerializer(self.recipe)
 
-        self.assertEqual(serializer.data["file_type"], self.recipe.file_type)
+        self.assertEqual(serializer.data["observation_type"], self.recipe.observation_type)
         self.assertEqual(serializer.data["name"], self.recipe.name)
         self.assertEqual(
             serializer.data["active_function_definition"], self.recipe.active_function_definition,
@@ -108,13 +107,9 @@ class TestDRAGONSRecipeFilterSerializer(APITestCase):
 
     def test_valid_data(self):
         """Test `DRAGONSRecipeFilterSerializer` with valid data."""
-        valid_data = {"dragons_run": 1, "file_type": "BIAS", "include": ["help"]}
+        valid_data = {"dragons_run": 1, "observation_type": "BIAS", "include": ["help"]}
         serializer = DRAGONSRecipeFilterSerializer(data=valid_data)
         self.assertTrue(serializer.is_valid())
-
-    def test_invalid_data(self):
-        """Test `DRAGONSRecipeFilterSerializer` with invalid data."""
-        # TODO: This should be testing the options for file_type.
 
 
 class TestDRAGONSRunSerializer(APITestCase):
