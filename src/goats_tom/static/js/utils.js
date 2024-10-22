@@ -187,8 +187,12 @@ class Utils {
     // Create the ID by joining the normalized parts with double underscores
     const id = `${normalize(observationType)}__${normalize(
       observationClass
-    )}__${normalize(objectName)}`;
+    )}__${normalize(objectName)}__`;
 
     return id;
+  }
+
+  static createObservationHeaderText(observationType, observationClass, objectName) {
+    return `${observationType} (${observationClass}) | ${objectName}`;
   }
 }

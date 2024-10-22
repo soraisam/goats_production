@@ -1,6 +1,5 @@
 """Module that handles the DRAGONS recipe API."""
 
-
 from django.db.models import QuerySet
 from django.http import HttpRequest
 from rest_framework import mixins
@@ -100,6 +99,7 @@ class DRAGONSRecipesViewSet(
         )
 
         data = serializer.data
+
         return (
             self.get_paginated_response(serializer.data)
             if page is not None
@@ -134,5 +134,7 @@ class DRAGONSRecipesViewSet(
 
             if "help" in include:
                 data["help"] = instance.list_primitives_and_docstrings()
+            if "groups" in include:
+                data["groups"] = instance.list_groups()
 
         return Response(data)

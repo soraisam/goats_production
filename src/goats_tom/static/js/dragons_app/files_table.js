@@ -266,7 +266,7 @@ class FilesTableModel {
 
   set data(value) {
     this._rawData = value;
-    this._data = value.results;
+    this._data = value;
   }
 
   get rawData() {
@@ -368,7 +368,7 @@ class FilesTableView {
    * @private
    */
   _create(data, parentElement) {
-    console.log(data);
+    console.log(data, "in files table");
     this.container = this.template.create(data);
     this.table = this.container.querySelector("table");
     this.tbody = this.table.querySelector("tbody");

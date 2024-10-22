@@ -268,7 +268,7 @@ class RunSetupTemplate {
 class RunSetupModel {
   constructor(observationRecordId, options) {
     this._observationRecordId = observationRecordId;
-    this.options = options
+    this.options = options;
     this.api = this.options.api;
     this._rawData = {};
     this._data = [];
@@ -389,6 +389,7 @@ class RunSetupView {
     // Bind the renders and callbacks.
     this.render = this.render.bind(this);
     this.bindCallback = this.bindCallback.bind(this);
+    this.bindGlobalCallback = this.bindGlobalCallback.bind(this);
   }
 
   /**
@@ -521,7 +522,7 @@ class RunSetupView {
 
   /**
    * Binds callback functions to the appropriate UI events.
-   * @param {string} event - The event name to bind (e.g., "showNewRunForm", "changeRun").
+   * @param {string} event - The event name to bind (e.g., "showNewRunForm").
    * @param {Function} handler - The callback function to bind to the event.
    */
   bindCallback(event, handler) {
@@ -547,9 +548,25 @@ class RunSetupView {
           handler({ formData });
         });
         break;
-      case "changeRun":
+      case "selectRun":
         Utils.on(this.runSelect, "change", (e) => {
           handler({ runId: e.target.value });
+        });
+        break;
+    }
+  }
+
+  /**
+   * Bind a global callback to a specific event.
+   * @param {string} event - The event to bind.
+   * @param {function} handler - The function to handle the event.
+   */
+  bindGlobalCallback(event, handler) {
+    switch (event) {
+      case "updateRun":
+        document.addEventListener("updateRun", (e) => {
+          const runId = e.detail.runId;
+          handler({ runId });
         });
         break;
     }
@@ -573,7 +590,8 @@ class RunSetupController {
     this.view.bindCallback("submitNewRunForm", (item) =>
       this.submitNewRunForm(item.formData)
     );
-    this.view.bindCallback("changeRun", (item) => this.changeRun(item.runId));
+    this.view.bindCallback("selectRun", (item) => this._selectRun(item.runId));
+    this.view.bindGlobalCallback("updateRun", (item) => this._updateRun(item.runId));
   }
 
   /**
@@ -585,6 +603,14 @@ class RunSetupController {
   async init() {
     await this.model.fetchRuns();
     this.view.render("update", { data: this.model.data });
+  }
+
+  _updateRun(runId) {
+    console.log("HERE IN UPDATE RUN");
+    this.model.runId = runId;
+    const data = this.model.getRunData();
+    console.log(data);
+    this.view.render("updateRunTable", { data });
   }
 
   /**
@@ -606,6 +632,14 @@ class RunSetupController {
     this.view.render("loaded");
   }
 
+  _selectRun(runId) {
+    const event = new CustomEvent("updateRun", {
+      detail: { runId },
+    });
+    // Dispatch the event globally on the document.
+    document.dispatchEvent(event);
+  }
+
   /**
    * Shows the existing runs by rendering the appropriate view.
    */
@@ -618,17 +652,6 @@ class RunSetupController {
    */
   showNewRunForm() {
     this.view.render("showNewRunForm");
-  }
-
-  /**
-   * Handles the change of the selected run by updating the model with the new run ID
-   * and updating the run table in the view.
-   * @param {number} runId - The ID of the selected run.
-   */
-  changeRun(runId) {
-    this.model.runId = runId;
-    const data = this.model.getRunData();
-    this.view.render("updateRunTable", { data });
   }
 }
 

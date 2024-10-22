@@ -74,7 +74,6 @@ class DRAGONSRunsViewSet(
         """
         dragons_run = serializer.save()
 
-
         self._initialize(dragons_run)
 
     def _initialize(self, dragons_run: DRAGONSRun) -> None:
@@ -123,7 +122,6 @@ class DRAGONSRunsViewSet(
             tags = ad.tags
             # TODO: Should we store lowercase for instrument and observation_type?
             instrument = ad.instrument(generic=True)
-            object_name = None
             # TODO: Is there a better place for this?
             descriptors = ad.descriptors
 
@@ -142,7 +140,9 @@ class DRAGONSRunsViewSet(
             observation_class = ad.observation_class()
 
             # if observation_type not in processed_base_recipe_observation_types:
-            recipes_and_primitives = get_recipes_and_primitives(tags, instrument)
+            recipes_and_primitives = get_recipes_and_primitives(
+                tags, instrument.lower()
+            )
 
             # Create or update recipes in the database.
             for recipe_name, details in recipes_and_primitives["recipes"].items():
