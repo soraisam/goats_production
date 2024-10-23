@@ -1,0 +1,1 @@
+Refactored observation data organization: Enhanced how observation type, observation class, and object name organize recipes and files. Added a new endpoint to set up initial data for recipes and files for a specific run.

@@ -1,6 +1,5 @@
 """Module that handles the DRAGONS files API."""
 
-
 from django.db.models import QuerySet
 from django.db.models.fields.json import KeyTransform
 from django.http import HttpRequest
@@ -51,16 +50,9 @@ class DRAGONSFilesViewSet(
         filter_serializer.is_valid(raise_exception=True)
 
         dragons_run_pk = filter_serializer.validated_data.get("dragons_run")
-        observation_type = filter_serializer.validated_data.get("observation_type")
-        object_name = filter_serializer.validated_data.get("object_name")
 
         if dragons_run_pk is not None:
             queryset = queryset.filter(dragons_run__pk=dragons_run_pk)
-
-        if observation_type is not None:
-            queryset = queryset.filter(observation_type=observation_type)
-            if observation_type == "object":
-                queryset = queryset.filter(object_name=object_name)
 
         # Apply select_related to optimize related object retrieval.
         queryset = queryset.select_related(
@@ -113,6 +105,7 @@ class DRAGONSFilesViewSet(
                 "id",
                 "object_name",
                 "observation_type",
+                "observation_class",
                 "product_id",
                 "url",
                 *[f"group_{i}" for i in range(len(group_by))],
@@ -140,6 +133,7 @@ class DRAGONSFilesViewSet(
                         "url": item["url"],
                         "object_name": item["object_name"],
                         "observation_type": item["observation_type"],
+                        "observation_class": item["observation_class"],
                     }
                 )
             return Response(grouped_data)

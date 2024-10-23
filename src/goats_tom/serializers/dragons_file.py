@@ -22,7 +22,6 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
             "observation_id",
             "observation_type",
             "object_name",
-            "astrodata_descriptors",
             "observation_class",
         ]
         read_only_fields = [
@@ -33,7 +32,6 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
             "observation_id",
             "observation_type",
             "object_name",
-            "astrodata_descriptors",
             "observation_class"
         ]
 

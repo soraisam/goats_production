@@ -39,7 +39,7 @@ class DRAGONSRecipeSerializer(serializers.ModelSerializer):
             "recipes_module_name",
             "object_name",
             "observation_class",
-            "dragons_run"
+            "dragons_run",
         )
         extra_kwargs = {"function_definition": {"write_only": True}}
 
@@ -90,11 +90,14 @@ class DRAGONSRecipeFilterSerializer(serializers.Serializer):
         help_text="Primary key for the DRAGONS run to filter by.",
     )
     include = serializers.ListField(
-        child=serializers.ChoiceField(choices=["help"]),
+        child=serializers.ChoiceField(choices=["help", "groups"]),
         required=False,
     )
+    # Values to allow grouping for display, change this to add more grouping.
     group_by = serializers.ListField(
-        child=serializers.CharField(),
+        child=serializers.ChoiceField(
+            choices=["observation_type", "observation_class", "object_name"]
+        ),
         required=False,
         allow_empty=True,
         help_text="A list of groups to filter by.",

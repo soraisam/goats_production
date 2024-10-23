@@ -15,7 +15,10 @@ class AvailableFilesTemplate {
   create(data) {
     const container = this._createContainer();
     const p = this._createHeader();
-    const form = this._createForm(data.file, data.groups);
+    console.log(data);
+    console.log(data.files);
+    const file = data.files[0]
+    const form = this._createForm(file, data.groups);
     const hr = Utils.createElement("hr");
 
     container.append(p, form, hr);
@@ -329,6 +332,16 @@ class AvailableFilesModel {
     return this._rawData;
   }
 
+  async fetchData() {
+    try {
+      const response = await this.api.get(`${this.url}${this.runId}`);
+      this.data = response;
+    } catch (error) {
+      console.error("Error fetching list of recipes:", error);
+      throw error;
+    }
+  }
+
   /**
    * Clear the stored data.
    */
@@ -362,57 +375,10 @@ class AvailableFilesView {
    * @private
    */
   _create(parentElement, data) {
+    console.log(data);
     this.container = this.template.create(data);
-    // Assign the other important stuff to manage.
-    const testData = {
-      count: 2,
-      results: [
-        {
-          group_id: 1,
-          group_name: "1.0",
-          file_count: 2,
-          files: [
-            {
-              id: 1,
-              object_name: null,
-              observation_type: "bias1",
-              product_id: "S20210216S0164.fits",
-              url: "/data/test2/GEM/GS-2021A-DD-102-9/S20210216S0164.fits",
-            },
-            {
-              id: 2,
-              object_name: null,
-              observation_type: "bias2",
-              product_id: "S20210216S0165.fits",
-              url: "/data/test2/GEM/GS-2021A-DD-102-9/S20210216S0165.fits",
-            },
-          ],
-        },
-        {
-          group_id: 2,
-          group_name: "1.00000037528312",
-          file_count: 2,
-          files: [
-            {
-              id: 3,
-              object_name: null,
-              observation_type: "bias3",
-              product_id: "S20210221S0345.fits",
-              url: "/data/test2/GEM/GS-2021A-DD-102-9/S20210221S0345.fits",
-            },
-            {
-              id: 4,
-              object_name: null,
-              observation_type: "bias4",
-              product_id: "S20210221S0345.fits",
-              url: "/data/test2/GEM/GS-2021A-DD-102-9/S20210221S0346.fits",
-            },
-          ],
-        },
-      ],
-    };
-    console.log(testData);
-    this.filesTable = new FilesTable(this.container, testData);
+
+    this.filesTable = new FilesTable(this.container, data.files);
 
     this.parentElement = parentElement;
     this.parentElement.appendChild(this.container);
