@@ -54,24 +54,24 @@ class ObservationTypeManagerTemplate {
    * Creates an accordion for collapsible content.
    * @return {HTMLElement} The accordion element.
    */
-  createAccordion(recipesData, filesData, groupsData, headerText, id) {
+  createAccordion(recipesData, filesData, groupsData, identifier) {
     const accordion = Utils.createElement("div", ["accordion"]);
-    const accordionId = `${id}accordion${this.options.id}`;
+    const accordionId = `${identifier.idPrefix}accordion${this.options.id}`;
     accordion.id = accordionId;
 
     const header = Utils.createElement("h6", ["accordion-header"]);
-    const headerId = `${id}header${this.options.id}`;
+    const headerId = `${identifier.idPrefix}header${this.options.id}`;
     header.id = headerId;
 
     const button = Utils.createElement("button");
-    const collapseId = `${id}collapse${this.options.id}`;
+    const collapseId = `${identifier.idPrefix}collapse${this.options.id}`;
     button.className = "accordion-button collapsed";
     button.setAttribute("type", "button");
     button.setAttribute("data-bs-toggle", "collapse");
     button.setAttribute("data-bs-target", `#${collapseId}`);
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", collapseId);
-    button.textContent = headerText;
+    button.textContent = identifier.displayText;
 
     header.appendChild(button);
 
@@ -81,13 +81,20 @@ class ObservationTypeManagerTemplate {
     collapseDiv.setAttribute("aria-labelledby", headerId);
     collapseDiv.setAttribute("data-bs-parent", `#${accordionId}`);
 
-    const accordionBody = Utils.createElement("div", ["accordion-body"]);
+    const accordionBody = Utils.createElement("div", [
+      "accordion-body",
+      "accordion-body-overflow",
+    ]);
 
     // Create the available recipes.
     new AvailableRecipes(accordionBody, recipesData);
 
     // FIXME: Create the available files.
-    //new AvailableFiles(accordionBody, { files: filesData, groups: groupsData });
+    new AvailableFiles(
+      accordionBody,
+      { files: filesData, groups: groupsData },
+      identifier
+    );
 
     collapseDiv.appendChild(accordionBody);
     accordion.append(header, collapseDiv);
@@ -179,25 +186,18 @@ class ObservationTypeManagerView {
           // Check if there are recipes and files to display
           if (recipes.length === 0 && files.length === 0) return; // Skip if no recipes and no files
 
-          // Build header text and ID for the accordion
-          const headerText = Utils.createObservationHeaderText(
+          // Create identifier to use for each nested data.
+          const identifier = new Identifier(
             observationType,
             observationClass,
             objectName
           );
-          const id = Utils.createObservationId(
-            observationType,
-            observationClass,
-            objectName
-          );
-          console.log(recipes, files, "TESTS")
           // Build the accordion item
           const accordion = this.template.createAccordion(
             recipes,
             files,
             groupsData,
-            headerText,
-            id
+            identifier
           );
           this.cardBody.appendChild(accordion);
         });

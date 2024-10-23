@@ -606,10 +606,8 @@ class RunSetupController {
   }
 
   _updateRun(runId) {
-    console.log("HERE IN UPDATE RUN");
     this.model.runId = runId;
     const data = this.model.getRunData();
-    console.log(data);
     this.view.render("updateRunTable", { data });
   }
 

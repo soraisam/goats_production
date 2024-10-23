@@ -3,7 +3,8 @@
  * @param {Object} options - Configuration options for the template.
  */
 class FilesTableTemplate {
-  constructor(options) {
+  constructor(identifier, options) {
+    this.identifier = identifier;
     this.options = options;
   }
 
@@ -85,14 +86,14 @@ class FilesTableTemplate {
   _createThead(data) {
     const thead = Utils.createElement("thead");
     const tr = Utils.createElement("tr");
-    const checkboxDiv = Utils.createElement("div", ["form-check", "mb-0", "h-100"]);
 
-    // Create a checkbox in the header for selecting/deselecting all rows.
+    // Checkbox for selecting/deselecting all rows.
     const checkboxTh = Utils.createElement("th");
+    const checkboxDiv = Utils.createElement("div", ["form-check", "mb-0", "h-100"]);
     const checkbox = Utils.createElement("input", ["form-check-input"]);
     checkbox.type = "checkbox";
     checkbox.checked = true;
-    checkbox.id = `selectAll${this.options.id}`;
+    checkbox.id = `${this.identifier.idPrefix}selectAll`;
     const checkboxLabel = Utils.createElement("label", [
       "form-check-label",
       "fw-normal",
@@ -101,25 +102,27 @@ class FilesTableTemplate {
     checkboxLabel.textContent = "Select/Deselect All";
     checkboxDiv.append(checkbox, checkboxLabel);
     checkboxTh.appendChild(checkboxDiv);
+    tr.append(checkboxTh);
 
-    // Create a dropdown in the header to select grouping to display.
+    // Dropdown for file group selection, dynamically populated based on file group keys.
     const selectTh = Utils.createElement("th");
-
-    // Build the select.
     const select = Utils.createElement("select", ["form-select"]);
-    select.id = `groups${this.options.id}`;
+    select.id = `${this.identifier.idPrefix}groups`;
     select.setAttribute("autocomplete", "off");
-    const option = Utils.createElement("option");
-    option.textContent = `All ${Utils.getFileCountLabel(data.length)}`;
-    option.value = "All";
-    option.selected = true;
-    select.appendChild(option);
+
+    // Populate select options dynamically from the files data groups.
+    Object.keys(data).forEach((groupKey) => {
+      const option = Utils.createElement("option");
+      option.value = groupKey;
+      option.textContent = `${groupKey} (${data[groupKey].count} files)`;
+      if (groupKey === "All") option.selected = true;
+      select.appendChild(option);
+    });
 
     selectTh.appendChild(select);
-    tr.append(checkboxTh, selectTh);
+    tr.append(selectTh);
 
     thead.appendChild(tr);
-
     return thead;
   }
 
@@ -147,24 +150,27 @@ class FilesTableTemplate {
    */
   createTbody(data) {
     const tbody = Utils.createElement("tbody");
-    const fragment = document.createDocumentFragment();
 
-    // Handle the case where data is empty.
-    if (data.length === 0) {
+    // Check if there are no files across all groups
+    const allFiles = Object.values(data).flatMap((group) => group.files);
+    if (allFiles.length === 0) {
       const tr = Utils.createElement("tr");
-      const td = Utils.createElement("td", "text-center");
+      const td = Utils.createElement("td", ["text-center"]);
       td.setAttribute("colspan", "2");
       td.textContent = "No files found...";
       tr.appendChild(td);
       tbody.appendChild(tr);
-    } else {
-      data.forEach((file) => {
-        const tr = this._createFileTr(file);
-        fragment.appendChild(tr);
-      });
+      return tbody;
     }
 
-    tbody.appendChild(fragment);
+    // Iterate over each file group
+    Object.entries(data).forEach(([groupKey, group]) => {
+      group.files.forEach((file) => {
+        const tr = this._createFileTr(file);
+        tbody.appendChild(tr);
+      });
+    });
+
     return tbody;
   }
 
@@ -335,6 +341,7 @@ class FilesTableView {
    */
   _update(data) {
     // Update the select.
+    // FIXME: With new structure later
     while (this.groupsSelect.options.length > 0) {
       this.groupsSelect.remove(0);
     }
@@ -368,7 +375,6 @@ class FilesTableView {
    * @private
    */
   _create(data, parentElement) {
-    console.log(data, "in files table");
     this.container = this.template.create(data);
     this.table = this.container.querySelector("table");
     this.tbody = this.table.querySelector("tbody");
@@ -390,6 +396,7 @@ class FilesTableView {
     switch (viewCmd) {
       case "create":
         this._create(parameter.data, parameter.parentElement);
+        break;
       case "update":
         this._update(parameter.data);
         break;
@@ -517,6 +524,7 @@ class FilesTableController {
    */
   create(data, parentElement) {
     this.model.data = data;
+
     this.view.render("create", { data: this.model.data, parentElement });
     this._bindCallbacks();
   }
@@ -597,10 +605,11 @@ class FilesTable {
     id: "FilesTable",
   };
 
-  constructor(parentElement, data = [], options = {}) {
+  constructor(parentElement, identifier, data = [], options = {}) {
     this.options = { ...FilesTable.#defaultOptions, ...options, api: window.api };
+    this.identifier = identifier;
     this.model = new FilesTableModel(this.options);
-    this.template = new FilesTableTemplate(this.options);
+    this.template = new FilesTableTemplate(this.identifier, this.options);
     this.view = new FilesTableView(this.template, this.options);
     this.controller = new FilesTableController(this.model, this.view, this.options);
 
