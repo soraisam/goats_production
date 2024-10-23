@@ -3,7 +3,8 @@
  * @param {Object} options - Configuration options for the template.
  */
 class AvailableFilesTemplate {
-  constructor(options) {
+  constructor(identifier, options) {
+    this.identifier = identifier;
     this.options = options;
   }
 
@@ -15,10 +16,7 @@ class AvailableFilesTemplate {
   create(data) {
     const container = this._createContainer();
     const p = this._createHeader();
-    console.log(data);
-    console.log(data.files);
-    const file = data.files[0]
-    const form = this._createForm(file, data.groups);
+    const form = this._createForm(data.groups);
     const hr = Utils.createElement("hr");
 
     container.append(p, form, hr);
@@ -50,29 +48,32 @@ class AvailableFilesTemplate {
 
   /**
    * Creates a form for filtering and grouping files.
-   * @param {Object} file - The file data.
    * @param {Array<string>} groups - The available grouping options.
    * @returns {HTMLElement} The form element.
    * @private
    */
-  _createForm(file, groups) {
+  _createForm(groups) {
     const form = Utils.createElement("form");
     // Create hidden inputs for observation_type and object_name
-    // TODO: Make sure observation_type and object_name are datasets
     const observationTypeInput = Utils.createElement("input");
     observationTypeInput.setAttribute("type", "hidden");
     observationTypeInput.setAttribute("name", "observation_type");
-    observationTypeInput.value = file.observation_type;
+    observationTypeInput.value = this.identifier.observationType;
 
     const objectNameInput = Utils.createElement("input");
     objectNameInput.setAttribute("type", "hidden");
     objectNameInput.setAttribute("name", "object_name");
-    objectNameInput.value = file.object_name;
+    objectNameInput.value = this.identifier.objectName;
+
+    const observationClassInput = Utils.createElement("input");
+    observationClassInput.setAttribute("type", "hidden");
+    observationClassInput.setAttribute("name", "object_name");
+    observationClassInput.value = this.identifier.observationClass;
 
     // Build the elements for the form.
-    const fileFilterRow = this._createFilter(file);
-    const fileGroupingsRow = this._createGroupings(file, groups);
-    const strictFileFilterRow = this._createStrictFilterCheckbox(file);
+    const fileFilterRow = this._createFilter();
+    const fileGroupingsRow = this._createGroupings(groups);
+    const strictFileFilterRow = this._createStrictFilterCheckbox();
     // Build the button.
     const div = Utils.createElement("div", ["d-flex", "justify-content-end"]);
     const button = Utils.createElement("button", ["btn", "btn-primary"]);
@@ -87,6 +88,7 @@ class AvailableFilesTemplate {
       strictFileFilterRow,
       observationTypeInput,
       objectNameInput,
+      observationClassInput,
       div
     );
 
@@ -95,19 +97,16 @@ class AvailableFilesTemplate {
 
   /**
    * Creates a filter input row for file filtering based on user-defined criteria.
-   * @param {Object} file The file object for which the filter is being created.
    * @returns {HTMLElement} A DOM element representing the row for file filtering input.
    * @private
    */
-  _createFilter(file) {
+  _createFilter() {
     // TODO: Again dont use file id
     const row = Utils.createElement("div", ["row", "ms-1", "mb-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
     const col2 = Utils.createElement("div", ["col-sm-9"]);
 
-    // Build the ID.
-    const id = `filterExpression-${file.id}`;
-
+    const id = `${this.identifier.idPrefix}filterExpression`;
     // Build the label.
     const label = Utils.createElement("label", ["col-form-label"]);
     label.setAttribute("for", id);
@@ -182,19 +181,18 @@ class AvailableFilesTemplate {
 
   /**
    * Generates a row with a multiple selection dropdown for grouping files by specified descriptors.
-   * @param {Object} file The file object for which the groupings are being created.
    * @param {Array<string>} groups An array of strings representing the grouping options.
    * @returns {HTMLElement} A DOM element representing the row for file groupings.
    * @private
    */
-  _createGroupings(file, groups) {
+  _createGroupings(groups) {
     // TODO: Dont use the file id
     const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
     const col2 = Utils.createElement("div", ["col-sm-9"]);
 
     // Build the ID.
-    const id = `fileGroupings-${file.id}`;
+    const id = `${this.identifier.idPrefix}fileGroupings`;
     // tom-select has a different ID.
     const tsId = `${id}-ts-control`;
 
@@ -241,19 +239,17 @@ class AvailableFilesTemplate {
 
   /**
    * Constructs a checkbox for the user to specify if strict filtering should be applied.
-   * @param {Object} file The file object for which the strict filter option is being created.
    * @returns {HTMLElement} A DOM element representing the row containing the strict filter
    * checkbox.
    * @private
    */
-  _createStrictFilterCheckbox(file) {
-    // TODO: A better way than using the file.id because we can allow access to all files.
+  _createStrictFilterCheckbox() {
     const row = Utils.createElement("div", ["row", "mb-1", "ms-1"]);
     const col = Utils.createElement("div", ["col-sm-9", "ms-auto"]);
     const div = Utils.createElement("div", ["form-check"]);
 
     // Build the ID.
-    const id = `strictFileFilter-${file.id}`;
+    const id = `${this.identifier.idPrefix}strictFileFilter`;
 
     // Build the checkbox.
     const checkbox = Utils.createElement("input", ["form-check-input"]);
@@ -375,10 +371,8 @@ class AvailableFilesView {
    * @private
    */
   _create(parentElement, data) {
-    console.log(data);
     this.container = this.template.create(data);
-
-    this.filesTable = new FilesTable(this.container, data.files);
+    this.filesTable = new FilesTable(this.container, this.template.identifier, data.files);
 
     this.parentElement = parentElement;
     this.parentElement.appendChild(this.container);
@@ -433,10 +427,11 @@ class AvailableFiles {
     id: "AvailableFiles",
   };
 
-  constructor(parentElement, data, options = {}) {
+  constructor(parentElement, data, identifier, options = {}) {
     this.options = { ...AvailableFiles.#defaultOptions, ...options };
+    this.identifier = identifier;
     const model = new AvailableFilesModel(this.options);
-    const template = new AvailableFilesTemplate(this.options);
+    const template = new AvailableFilesTemplate(this.identifier, this.options);
     const view = new AvailableFilesView(template, parentElement, this.options);
     this.controller = new AvailableFilesController(model, view, this.options);
 

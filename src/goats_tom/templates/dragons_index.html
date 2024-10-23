@@ -6,8 +6,11 @@
 <div class="row g-3">
   <div class="col-12">
     <div class="card bg-primary">
-      <div class="card-body my-3 py-0 text-center">
-        <div class="h3 mb-0">{{ observation_record.observation_id }}</div>
+      <div class="card-body my-3 py-0 text-center d-flex align-items-center justify-content-center">
+        <!-- Logo Image -->
+        <img src="{% static 'img/dragons-logo.png' %}" alt="DRAGONS Logo" class="img-fluid" style="height: 30px">
+        <!-- Observation ID -->
+        <div class="h3 mb-0 ms-3">{{ observation_record.observation_id }}</div>
       </div>
     </div>
   </div>
@@ -15,13 +18,13 @@
     <div id="runSetupContainer"></div>
   </div>
   <div class="col-12">
+    <div id="observationTypeManagerContainer"></div>
+  </div>
+  <div class="col-12">
     <div id="caldbContainer"></div>
   </div>
   <div class="col-12">
     <div id="outputFilesContainer"></div>
-  </div>
-  <div class="col-12">
-    <div id="observationTypeManagerContainer"></div>
   </div>
 </div>
 <div id="helpOffcanvasContainer"></div>
@@ -31,6 +34,7 @@
 <script src="{% static 'js/utils.js' %}"></script>
 <script src="{% static 'js/dragons_app/modal.js' %}"></script>
 <script src="{% static 'js/dragons_app/api.js' %}"></script>
+<script src="{% static 'js/dragons_app/identifier.js' %}"></script>
 <script src="{% static 'js/dragons_app/run_setup.js' %}"></script>
 <script src="{% static 'js/dragons_app/progress.js' %}"></script>
 <script src="{% static 'js/dragons_app/files_table.js' %}"></script>

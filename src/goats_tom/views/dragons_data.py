@@ -21,7 +21,8 @@ class DRAGONSDataViewSet(mixins.RetrieveModelMixin, GenericViewSet):
     permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
-        """Retrieve a `DRAGONSRun` instance along with grouped data of related recipes
+        """
+        Retrieve a `DRAGONSRun` instance along with grouped data of related recipes
         and files.
 
         Parameters
@@ -71,14 +72,21 @@ class DRAGONSDataViewSet(mixins.RetrieveModelMixin, GenericViewSet):
             ):
                 recipes_and_files_data["observation_type"][obs_type][obs_class][
                     obj_name
-                ] = {
-                    "recipes": [],
-                    "files": [],
-                }
+                ] = {"recipes": [], "files": {"All": {"count": 0, "files": []}}}
 
-            recipes_and_files_data["observation_type"][obs_type][obs_class][obj_name][
-                entry_type
-            ].append(item)
+            if entry_type == "files":
+                # Append the file and update the count.
+                recipes_and_files_data["observation_type"][obs_type][obs_class][
+                    obj_name
+                ]["files"]["All"]["files"].append(item)
+                recipes_and_files_data["observation_type"][obs_type][obs_class][
+                    obj_name
+                ]["files"]["All"]["count"] += 1
+            else:
+                # Append the recipe.
+                recipes_and_files_data["observation_type"][obs_type][obs_class][
+                    obj_name
+                ][entry_type].append(item)
 
         data["recipes_and_files"] = recipes_and_files_data
         return Response(data)

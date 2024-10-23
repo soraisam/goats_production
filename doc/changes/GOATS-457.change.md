@@ -1,0 +1,1 @@
+Refactored file identifiers in accordions: Refactored how files are displayed in accordions based on observation type, class, and object name. Introduced a helper class to manage these identifiers efficiently.

@@ -175,24 +175,4 @@ class Utils {
     );
     return Promise.all([operationPromise, minDurationPromise]);
   }
-
-  static createObservationId(observationType, observationClass, objectName) {
-    // Normalize each part to lowercase and replace spaces or special characters with underscores
-    const normalize = (str) =>
-      str
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "_");
-
-    // Create the ID by joining the normalized parts with double underscores
-    const id = `${normalize(observationType)}__${normalize(
-      observationClass
-    )}__${normalize(objectName)}__`;
-
-    return id;
-  }
-
-  static createObservationHeaderText(observationType, observationClass, objectName) {
-    return `${observationType} (${observationClass}) | ${objectName}`;
-  }
 }
