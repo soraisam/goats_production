@@ -1,5 +1,6 @@
 class Identifier {
-  constructor(observationType, observationClass, objectName) {
+  constructor(runId, observationType, observationClass, objectName) {
+    this.runId = runId;
     this.observationType = observationType;
     this.observationClass = observationClass;
     this.objectName = objectName;
@@ -9,6 +10,11 @@ class Identifier {
       this.objectName
     );
     this.displayText = this.createDisplayText(
+      this.observationType,
+      this.observationClass,
+      this.objectName
+    );
+    this.defaultFilterExpression = this.createDefaultFilterExpression(
       this.observationType,
       this.observationClass,
       this.objectName
@@ -33,5 +39,9 @@ class Identifier {
 
   createDisplayText(observationType, observationClass, objectName) {
     return `${observationType} (${observationClass}) | ${objectName}`;
+  }
+
+  createDefaultFilterExpression(observationType, observationClass, objectName) {
+    return `observation_type=="${observationType}" AND observation_class=="${observationClass}" AND object=="${objectName}"`;
   }
 }

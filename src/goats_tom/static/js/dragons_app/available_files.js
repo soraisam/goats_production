@@ -54,6 +54,8 @@ class AvailableFilesTemplate {
    */
   _createForm(groups) {
     const form = Utils.createElement("form");
+    form.method = "post";
+
     // Create hidden inputs for observation_type and object_name
     const observationTypeInput = Utils.createElement("input");
     observationTypeInput.setAttribute("type", "hidden");
@@ -78,7 +80,6 @@ class AvailableFilesTemplate {
     const div = Utils.createElement("div", ["d-flex", "justify-content-end"]);
     const button = Utils.createElement("button", ["btn", "btn-primary"]);
     button.textContent = "Apply Groupings And Filter";
-    button.dataset.action = "submitFileGroupingsAndFilterForm";
     button.setAttribute("type", "submit");
     div.appendChild(button);
 
@@ -309,10 +310,13 @@ class AvailableFilesTemplate {
  * @param {Object} options - Configuration options for the model.
  */
 class AvailableFilesModel {
-  constructor(options) {
+  constructor(identifier, options) {
+    this.identifier = identifier;
     this.options = options;
+    this.api = this.options.api;
     this._rawData = null;
     this._data = null;
+    this.url = "dragonsfiles/";
   }
 
   get data() {
@@ -328,13 +332,53 @@ class AvailableFilesModel {
     return this._rawData;
   }
 
-  async fetchData() {
+  /**
+   * Fetches, groups, and optionally filters files based on their descriptors.
+   * @param {string} runId The ID of the run for which files are to be fetched.
+   * @param {string | string[]} groupBy The descriptor(s) to group the files by.
+   * @param {string} [filterExpression] Optional filter expression to apply before grouping.
+   * @param {boolean} [filterStrict] Optional filter strictly.
+   * @returns {Promise<Object>} A promise that resolves to an object containing grouped files.
+   */
+  async fetchGroupAndFilterFiles(formData) {
+    // Fetch individual items from formData
+    const groupBy = formData.getAll("group_by");
+    if (groupBy.length === 0) {
+      groupBy.push("all");
+    }
+    const filterExpression = formData.get("filter_expression") || "";
+    const filterStrict = formData.get("filter_strict") === "on";
+    let groupByParams = "";
+
+    if (Array.isArray(groupBy)) {
+      // Build URL with multiple group_by parameters.
+      groupByParams = groupBy.map((gb) => `&group_by=${gb}`).join("");
+    } else {
+      // Single group_by parameter.
+      groupByParams = `&group_by=${groupBy}`;
+    }
+
+    // Base URL setup with mandatory parameters.
+    const baseUrl = `${this.url}?dragons_run=${this.identifier.runId}${groupByParams}&filter_strict=${filterStrict}`;
+
+    // Combine default filter with user-provided filter if available.
+    const combinedFilterExpression = filterExpression
+      ? `${this.identifier.defaultFilterExpression} AND (${filterExpression})`
+      : this.identifier.defaultFilterExpression;
+
+    // Encode the combined filter expression for URL.
+    const filterExpressionParam = `&filter_expression=${encodeURIComponent(
+      combinedFilterExpression
+    )}`;
+
+    // Complete URL construction.
+    const url = baseUrl + filterExpressionParam;
+    console.log(url);
     try {
-      const response = await this.api.get(`${this.url}${this.runId}`);
-      this.data = response;
+      const response = await this.api.get(url);
+      return response;
     } catch (error) {
-      console.error("Error fetching list of recipes:", error);
-      throw error;
+      console.error("Error fetching, grouping, and filtering files:", error);
     }
   }
 
@@ -353,11 +397,13 @@ class AvailableFilesModel {
  * @param {Object} options - Configuration options for the view.
  */
 class AvailableFilesView {
-  constructor(template, options) {
+  constructor(template, identifier, options) {
     this.template = template;
+    this.identifier = identifier;
     this.options = options;
 
     this.container = null;
+    this.form = null;
 
     this.parentElement = null;
     this.render = this.render.bind(this);
@@ -372,10 +418,19 @@ class AvailableFilesView {
    */
   _create(parentElement, data) {
     this.container = this.template.create(data);
-    this.filesTable = new FilesTable(this.container, this.template.identifier, data.files);
+    this.filesTable = new FilesTable(
+      this.container,
+      this.template.identifier,
+      data.files
+    );
+    this.form = this.container.querySelector("form");
 
     this.parentElement = parentElement;
     this.parentElement.appendChild(this.container);
+  }
+
+  _updateFiles(filteredFiles) {
+    this.filesTable.update(filteredFiles);
   }
 
   render(viewCmd, parameter) {
@@ -383,10 +438,23 @@ class AvailableFilesView {
       case "create":
         this._create(parameter.parentElement, parameter.data);
         break;
+      case "updateFiles":
+        this._updateFiles(parameter.filteredFiles);
+        break;
     }
   }
 
-  bindCallback(event, handler) {}
+  bindCallback(event, handler) {
+    switch (event) {
+      case "submitForm":
+        Utils.on(this.form, "submit", (e) => {
+          e.preventDefault();
+          const formData = new FormData(this.form);
+          handler({ formData });
+        });
+        break;
+    }
+  }
 }
 
 /**
@@ -396,9 +464,10 @@ class AvailableFilesView {
  * @param {Object} options - Configuration options for the controller.
  */
 class AvailableFilesController {
-  constructor(model, view, options) {
+  constructor(model, view, identifier, options) {
     this.model = model;
     this.view = view;
+    this.identifier = identifier;
     this.options = options;
   }
 
@@ -413,7 +482,14 @@ class AvailableFilesController {
     this._bindCallbacks();
   }
 
-  _bindCallbacks() {}
+  async _submitForm(formData) {
+    const filteredFiles = await this.model.fetchGroupAndFilterFiles(formData);
+    this.view.render("updateFiles", { filteredFiles });
+  }
+
+  _bindCallbacks() {
+    this.view.bindCallback("submitForm", (item) => this._submitForm(item.formData));
+  }
 }
 
 /**
@@ -428,12 +504,22 @@ class AvailableFiles {
   };
 
   constructor(parentElement, data, identifier, options = {}) {
-    this.options = { ...AvailableFiles.#defaultOptions, ...options };
+    this.options = { ...AvailableFiles.#defaultOptions, ...options, api: window.api };
     this.identifier = identifier;
-    const model = new AvailableFilesModel(this.options);
+    const model = new AvailableFilesModel(this.identifier, this.options);
     const template = new AvailableFilesTemplate(this.identifier, this.options);
-    const view = new AvailableFilesView(template, parentElement, this.options);
-    this.controller = new AvailableFilesController(model, view, this.options);
+    const view = new AvailableFilesView(
+      template,
+      parentElement,
+      this.identifier,
+      this.options
+    );
+    this.controller = new AvailableFilesController(
+      model,
+      view,
+      this.identifier,
+      this.options
+    );
 
     this._create(parentElement, data);
   }

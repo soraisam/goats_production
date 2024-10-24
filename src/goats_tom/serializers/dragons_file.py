@@ -39,7 +39,7 @@ class DRAGONSFileSerializer(serializers.ModelSerializer):
 class DRAGONSFileFilterSerializer(serializers.Serializer):
     dragons_run = serializers.IntegerField(required=False)
     include = serializers.ListField(
-        child=serializers.ChoiceField(choices=["header", "groups"]),
+        child=serializers.ChoiceField(choices=["astrodata_descriptors", "groups"]),
         required=False,
     )
     group_by = serializers.ListField(
