@@ -72,7 +72,7 @@ class FilesTableTemplate {
       "table-striped",
     ]);
 
-    table.append(this._createThead(data), this.createTbody(data));
+    table.append(this._createThead(data), this.createTbody(data.All.files));
 
     return table;
   }
@@ -126,18 +126,11 @@ class FilesTableTemplate {
     return thead;
   }
 
-  /**
-   * Creates an option for the group selection dropdown.
-   * @param {Object} data - The data used to create the group selection option.
-   * @returns {HTMLOptionElement} The option element.
-   */
-  createGroupsSelectOption(data) {
+  createGroupsSelectOption(groupKey, count) {
     // Determine the correct label for the option.
     const option = new Option(
-      `${Utils.truncateText(data.group_name)} ${Utils.getFileCountLabel(
-        data.file_count
-      )}`,
-      data.group_id
+      `${Utils.truncateText(groupKey)} ${Utils.getFileCountLabel(count)}`,
+      groupKey
     );
 
     return option;
@@ -145,31 +138,27 @@ class FilesTableTemplate {
 
   /**
    * Creates the table body (tbody) element.
-   * @param {Array} data - The data used to populate the tbody.
+   * @param {Array} data - The data used to populate the tbody, directly containing files.
    * @returns {HTMLElement} The tbody element.
    */
   createTbody(data) {
     const tbody = Utils.createElement("tbody");
 
-    // Check if there are no files across all groups
-    const allFiles = Object.values(data).flatMap((group) => group.files);
-    if (allFiles.length === 0) {
+    if (data.length === 0) {
+      // Handle the case where no files are present
       const tr = Utils.createElement("tr");
       const td = Utils.createElement("td", ["text-center"]);
       td.setAttribute("colspan", "2");
       td.textContent = "No files found...";
       tr.appendChild(td);
       tbody.appendChild(tr);
-      return tbody;
-    }
-
-    // Iterate over each file group
-    Object.entries(data).forEach(([groupKey, group]) => {
-      group.files.forEach((file) => {
+    } else {
+      // Iterate over each file and create a row for each
+      data.forEach((file) => {
         const tr = this._createFileTr(file);
         tbody.appendChild(tr);
       });
-    });
+    }
 
     return tbody;
   }
@@ -290,7 +279,7 @@ class FilesTableModel {
    * @returns {Object|null} The group data object if found, otherwise null.
    */
   getGroupData(groupId) {
-    return this.data.find((group) => group.group_id === parseInt(groupId));
+    return this.data[groupId] || null;
   }
 
   /**
@@ -302,7 +291,9 @@ class FilesTableModel {
    */
   async fetchFile(fileId) {
     try {
-      const response = await this.api.get(`${this.filesUrl}${fileId}`);
+      const response = await this.api.get(
+        `${this.filesUrl}${fileId}/?include=astrodata_descriptors`
+      );
       return response;
     } catch (error) {
       console.error("Error fetching header:", error);
@@ -319,6 +310,7 @@ class FilesTableView {
   constructor(template, options) {
     this.template = template;
     this.options = options;
+    this.modal = options.modal;
 
     this.container = null;
     this.table = null;
@@ -345,8 +337,8 @@ class FilesTableView {
     while (this.groupsSelect.options.length > 0) {
       this.groupsSelect.remove(0);
     }
-    data.forEach((group, index) => {
-      const option = this.template.createGroupsSelectOption(group);
+    Object.entries(data).forEach(([groupKey, group], index) => {
+      const option = this.template.createGroupsSelectOption(groupKey, group.count);
       this.groupsSelect.add(option);
 
       if (index === 0) {
@@ -606,7 +598,12 @@ class FilesTable {
   };
 
   constructor(parentElement, identifier, data = [], options = {}) {
-    this.options = { ...FilesTable.#defaultOptions, ...options, api: window.api };
+    this.options = {
+      ...FilesTable.#defaultOptions,
+      ...options,
+      api: window.api,
+      modal: window.modal,
+    };
     this.identifier = identifier;
     this.model = new FilesTableModel(this.options);
     this.template = new FilesTableTemplate(this.identifier, this.options);

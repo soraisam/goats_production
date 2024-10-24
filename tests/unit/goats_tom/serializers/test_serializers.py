@@ -41,7 +41,7 @@ class TestDRAGONSFileFilterSerializer(APITestCase):
         """Test `DRAGONSFileFilterSerializer` with valid data."""
         valid_data = {
             "dragons_run": 1,
-            "include": ["header"],
+            "include": ["astrodata_descriptors"],
         }
         serializer = DRAGONSFileFilterSerializer(data=valid_data)
         self.assertTrue(serializer.is_valid())

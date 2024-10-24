@@ -46,7 +46,9 @@ class ObservationTypeManagerTemplate {
    */
   _createCardBody() {
     const cardBody = Utils.createElement("div", ["card-body"]);
-
+    const accordion = Utils.createElement("div", ["accordion", "accordion-flush"]);
+    accordion.id = "observationTypeManagerAccordion";
+    cardBody.appendChild(accordion);
     return cardBody;
   }
 
@@ -55,9 +57,7 @@ class ObservationTypeManagerTemplate {
    * @return {HTMLElement} The accordion element.
    */
   createAccordion(recipesData, filesData, groupsData, identifier) {
-    const accordion = Utils.createElement("div", ["accordion"]);
-    const accordionId = `${identifier.idPrefix}accordion${this.options.id}`;
-    accordion.id = accordionId;
+    const accordion = Utils.createElement("div", ["accordion-item"]);
 
     const header = Utils.createElement("h6", ["accordion-header"]);
     const headerId = `${identifier.idPrefix}header${this.options.id}`;
@@ -79,7 +79,7 @@ class ObservationTypeManagerTemplate {
     collapseDiv.id = collapseId;
     collapseDiv.className = "accordion-collapse collapse";
     collapseDiv.setAttribute("aria-labelledby", headerId);
-    collapseDiv.setAttribute("data-bs-parent", `#${accordionId}`);
+    collapseDiv.setAttribute("data-bs-parent", "#observationTypeManagerAccordion");
 
     const accordionBody = Utils.createElement("div", [
       "accordion-body",
@@ -164,15 +164,15 @@ class ObservationTypeManagerView {
     this.bindCallback = this.bindCallback.bind(this);
   }
 
-  _create(parentElement, recipesAndFilesData, groupsData) {
+  _create(parentElement, runId, recipesAndFilesData, groupsData) {
     this.container = this.template.create();
-    this.cardBody = this.container.querySelector(".card-body");
-    this._createAccordions(recipesAndFilesData, groupsData);
+    this.cardBody = this.container.querySelector(".accordion");
+    this._createAccordions(runId, recipesAndFilesData, groupsData);
 
     this.parentElement = parentElement;
     this.parentElement.appendChild(this.container);
   }
-  _createAccordions(recipesAndFilesData, groupsData) {
+  _createAccordions(runId, recipesAndFilesData, groupsData) {
     // Build the accordions with the data.
     const { observation_type } = recipesAndFilesData; // Destructure to get observation types directly
     // Loop through each observation_type
@@ -188,6 +188,7 @@ class ObservationTypeManagerView {
 
           // Create identifier to use for each nested data.
           const identifier = new Identifier(
+            runId,
             observationType,
             observationClass,
             objectName
@@ -205,9 +206,9 @@ class ObservationTypeManagerView {
     });
   }
 
-  _update(recipesAndFilesData, groupsData) {
+  _update(runId, recipesAndFilesData, groupsData) {
     this._clearCardBody();
-    this._createAccordions(recipesAndFilesData, groupsData);
+    this._createAccordions(runId, recipesAndFilesData, groupsData);
   }
 
   _clearCardBody() {
@@ -219,12 +220,17 @@ class ObservationTypeManagerView {
       case "create":
         this._create(
           parameter.parentElement,
+          parameter.runId,
           parameter.recipesAndFilesData,
           parameter.groupsData
         );
         break;
       case "update":
-        this._update(parameter.recipesAndFilesData, parameter.groupsData);
+        this._update(
+          parameter.runId,
+          parameter.recipesAndFilesData,
+          parameter.groupsData
+        );
         break;
     }
   }
@@ -244,6 +250,7 @@ class ObservationTypeManagerController {
     await this.model.fetchData();
     this.view.render("create", {
       parentElement,
+      runId,
       recipesAndFilesData: this.model.recipesAndFilesData,
       groupsData: this.model.groupsData,
     });
@@ -255,6 +262,7 @@ class ObservationTypeManagerController {
     this.model.runId = runId;
     await this.model.fetchData();
     this.view.render("update", {
+      runId,
       recipesAndFilesData: this.model.recipesAndFilesData,
       groupsData: this.model.groupsData,
     });

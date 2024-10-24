@@ -1,7 +1,8 @@
 """Module that handles the DRAGONS files API."""
 
-from django.db.models import QuerySet
+from django.db.models import CharField, F, QuerySet, Value
 from django.db.models.fields.json import KeyTransform
+from django.db.models.functions import Concat
 from django.http import HttpRequest
 from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated
@@ -14,7 +15,6 @@ from goats_tom.serializers import (
     DRAGONSFileFilterSerializer,
     DRAGONSFileSerializer,
 )
-from goats_tom.utils import get_astrodata_header
 
 
 class DRAGONSFilesViewSet(
@@ -93,49 +93,75 @@ class DRAGONSFilesViewSet(
         queryset = self.filter_queryset(self.get_queryset())
         queryset = queryset.filter(query_filter)
 
-        # Group by dynamic fields if specified
-
+        # Group by dynamic fields if specified.
         if group_by:
-            queryset = queryset.annotate(
-                **{
-                    f"group_{i}": KeyTransform(key, "astrodata_descriptors")
-                    for i, key in enumerate(group_by)
-                }
-            ).values(
+            if "all" in group_by:
+                # Return all files under the "All" key with a count
+                files_data = list(
+                    queryset.values(
+                        "id",
+                        "product_id",
+                        "url",
+                        "observation_type",
+                        "object_name",
+                        "observation_class",
+                    )
+                )
+                grouped_data = {"All": {"count": len(files_data), "files": files_data}}
+                return Response(grouped_data)
+
+            annotations = {
+                f"group_value_{i}": KeyTransform(key, "astrodata_descriptors")
+                for i, key in enumerate(group_by)
+            }
+            queryset = queryset.annotate(**annotations)
+
+            concat_args = []
+            for i, _ in enumerate(group_by):
+                if i > 0:
+                    concat_args.append(Value(" | "))
+                concat_args.append(F(f"group_value_{i}"))
+
+            if len(concat_args) > 1:
+                queryset = queryset.annotate(
+                    composite_group_value=Concat(*concat_args, output_field=CharField())
+                )
+                group_field = "composite_group_value"
+            else:
+                group_field = "group_value_0"
+
+            # Fetch and group data based on the composite or single group key.
+            queryset = queryset.values(
                 "id",
                 "object_name",
                 "observation_type",
                 "observation_class",
                 "product_id",
                 "url",
-                *[f"group_{i}" for i in range(len(group_by))],
-            )
+                group_field,
+            ).order_by(group_field)
 
+            # Manually aggregate grouped data.
             grouped_data = {}
             for item in queryset:
-                # Dynamic nested grouping using nested dictionaries
-                pointer = grouped_data
-                for i, key in enumerate(group_by):
-                    group_key = f"group_{i}"
-                    if key not in pointer:
-                        pointer[key] = {}
-                    if item[group_key] not in pointer[key]:
-                        pointer[key][item[group_key]] = (
-                            {} if i < len(group_by) - 1 else []
-                        )
-                    pointer = pointer[key][item[group_key]]
-
-                # Append file info at the deepest level
-                pointer.append(
+                group_key = item[group_field]
+                if group_key not in grouped_data:
+                    grouped_data[group_key] = {
+                        "count": 0,  # Initialize count
+                        "files": [],
+                    }
+                grouped_data[group_key]["files"].append(
                     {
-                        "file_id": item["id"],
-                        "file_name": item["product_id"],
+                        "id": item["id"],
+                        "product_id": item["product_id"],
                         "url": item["url"],
                         "object_name": item["object_name"],
                         "observation_type": item["observation_type"],
                         "observation_class": item["observation_class"],
                     }
                 )
+                grouped_data[group_key]["count"] += 1
+
             return Response(grouped_data)
 
         page = self.paginate_queryset(queryset)
@@ -172,9 +198,8 @@ class DRAGONSFilesViewSet(
         if filter_serializer.is_valid(raise_exception=False):
             include = filter_serializer.validated_data.get("include", [])
 
-            if "header" in include:
-                header = get_astrodata_header(instance.data_product)
-                data["header"] = header
+            if "astrodata_descriptors" in include:
+                data["astrodata_descriptors"] = instance.astrodata_descriptors
 
             if "groups" in include:
                 data["groups"] = instance.list_groups()
