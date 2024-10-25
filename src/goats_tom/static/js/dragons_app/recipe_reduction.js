@@ -1,0 +1,674 @@
+class RecipeReductionModel {
+  constructor(options) {
+    this.options = options;
+    this.api = this.options.api;
+    this.recipesUrl = "dragonsrecipes/";
+    this.reducesUrl = "dragonsreduce/";
+    this._recipeId = null;
+    this._currentReduceData = null;
+    this.isEditMode = false;
+  }
+
+  async startReduce(fileIds) {
+    const data = { recipe_id: this.recipeId, file_ids: fileIds };
+    try {
+      const response = await this.api.post(`${this.reducesUrl}`, data);
+      this.currentReduceData = response;
+      return response;
+    } catch (error) {
+      console.error("Error starting reduce:", error);
+    }
+  }
+
+  /**
+   * Stops the reduction process.
+   * @param {number} reduceId The ID of the reduction to be stopped.
+   * @returns {Promise<Object>} A promise that resolves to the response from the server.
+   * @throws {Error} If the API request fails, an error is logged to the console.
+   * @async
+   */
+  async stopReduce() {
+    const data = { status: "canceled" };
+    try {
+      const response = await this.api.patch(
+        `${this.reducesUrl}${this.reduceId}/`,
+        data
+      );
+      this.reduce = response;
+      return response;
+    } catch (error) {
+      console.error("Error stopping reduce:", error);
+    }
+  }
+
+  /**
+   * Asynchronously fetches help documentation for a specified recipe.
+   * @param {string} recipeId The ID of the recipe for which help documentation is being requested.
+   * @returns {Promise<Object>} A promise that resolves with the help documentation for the
+   * specified recipe.
+   * @throws {Error} If the API request fails, an error is logged to the console.
+   * @async
+   */
+  async fetchHelp() {
+    try {
+      const response = await this.api.get(
+        `${this.recipesUrl}${this.recipeId}/?include=help`
+      );
+      return response;
+    } catch (error) {
+      console.error("Error fetching recipe help:", error);
+    }
+  }
+
+  /**
+   * Asynchronously updates the function definition of a recipe by sending a PATCH request.
+   * @param {number} recipeId The unique identifier of the recipe.
+   * @param {string|null} functionDefinition The new function definition to update, or null to
+   * reset.
+   * @returns {Promise<Object|null>} The updated recipe object if successful, or null if an error
+   * occurs.
+   */
+  async updateFunctionDefinitionAndUparms(functionDefinition = null, uparms = null) {
+    const data = { function_definition: functionDefinition, uparms };
+    try {
+      const response = await this.api.patch(
+        `${this.recipesUrl}${this.recipeId}/`,
+        data
+      );
+      return response;
+    } catch (error) {
+      console.error("Error updating function definition and uparms:", error);
+    }
+  }
+
+  get currentReduceData() {
+    return this._currentReduceData;
+  }
+
+  set currentReduceData(value) {
+    this._currentReduceData = value;
+  }
+
+  get recipeId() {
+    return this._recipeId;
+  }
+
+  set recipeId(value) {
+    this._recipeId = value;
+  }
+}
+
+class RecipeReductionTemplate {
+  constructor(options) {
+    this.options = options;
+    this.accordionSetups = {
+      buttons: {
+        recipeAccordion: "Modify Recipe",
+        logAccordion: "Log",
+      },
+      callbacks: {
+        recipeAccordion: this._createRecipeAccordionItem.bind(this),
+        logAccordion: this._createLogAccordionItem.bind(this),
+      },
+      classes: {
+        recipeAccordion: [],
+        logAccordion: ["p-0", "border", "border-top-0", "rounded-bottom"],
+      },
+    };
+  }
+
+  /**
+   * Creates the main container for the files table.
+   * @param {Array} data - The data used to create the table.
+   * @returns {HTMLElement} The container element.
+   */
+  create(data) {
+    const container = this._createContainer();
+    const card = this._createCard(data);
+
+    container.appendChild(card);
+    return container;
+  }
+
+  /**
+   * Creates a container element.
+   * @returns {HTMLElement} The container element.
+   * @private
+   */
+  _createContainer() {
+    // Don't show anything until a recipe is selected.
+    const container = Utils.createElement("div", "d-none");
+    return container;
+  }
+
+  /**
+   * Creates a card container.
+   * @return {HTMLElement} The card element.
+   */
+  _createCard(data) {
+    const card = Utils.createElement("div", ["card"]);
+    card.append(
+      this._createCardHeader(data),
+      this._createCardBody(data),
+      this._createCardFooter1(data),
+      this._createCardFooter2(data)
+    );
+
+    return card;
+  }
+
+  /**
+   * Creates the card body.
+   * @returns {HTMLElement} The card body.
+   */
+  _createCardBody() {
+    const cardBody = Utils.createElement("div", "card-body");
+    return cardBody;
+  }
+
+  _createCardHeader(data) {
+    const cardHeader = Utils.createElement("div", "card-header");
+    const row = Utils.createElement("div", ["row"]);
+    const col1 = Utils.createElement("div", ["col", "align-self-center"]);
+    const col2 = Utils.createElement("div", ["col", "text-end"]);
+
+    // Create content for column 1.
+    const p = Utils.createElement("p", ["my-0", "h5"]);
+    p.textContent = `${
+      this.options.observationTypeToDisplay[data.observation_type.toLowerCase()]
+    } Reduction`;
+    col1.appendChild(p);
+
+    // Create content for column 2
+    const startButton = Utils.createElement("button", ["btn", "btn-success", "me-1"]);
+    const stopButton = Utils.createElement("button", ["btn", "btn-danger"]);
+    startButton.dataset.action = "startReduce";
+    startButton.textContent = "Start";
+    stopButton.textContent = "Stop";
+    stopButton.dataset.action = "stopReduce";
+    stopButton.disabled = true;
+    col2.append(startButton, stopButton);
+
+    // Build the layout.
+    row.append(col1, col2);
+
+    cardHeader.appendChild(row);
+    return cardHeader;
+  }
+
+  /**
+   * Creates the first footer for the recipe.
+   * @return {HTMLElement} The footer.
+   */
+  _createCardFooter1(data) {
+    // Create footer.
+    const cardFooter = Utils.createElement("div", "card-footer");
+    const recipeAccordion = this._createAccordion("recipeAccordion", data);
+    cardFooter.appendChild(recipeAccordion);
+    return cardFooter;
+  }
+
+  /**
+   * Creates the second footer for the recipe, showing the log.
+   * @returns {HTMLElement} The footer.
+   */
+  _createCardFooter2(data) {
+    const cardFooter = Utils.createElement("div", ["card-footer"]);
+    const loggerAccordion = this._createAccordion("logAccordion", data);
+
+    cardFooter.appendChild(loggerAccordion);
+
+    return cardFooter;
+  }
+
+  _createAccordion(name, data) {
+    // Set the ID to reference the recipe ID all the recipe belong to.
+    const accordionId = this._createId(data, name);
+    const accordion = Utils.createElement("div", ["accordion", "accordion-flush"]);
+    accordion.id = accordionId;
+
+    const accordionItem = this._createAccordionItem(name, data);
+
+    accordion.appendChild(accordionItem);
+
+    return accordion;
+  }
+
+  _createAccordionItem(name, data) {
+    // Create IDs to use to link.
+    const collapseId = this._createId(data, `${name}Collapse`);
+    const accordionHeaderId = this._createId(data, `${name}AccordionHeader`);
+
+    // Create accordion item.
+    const accordionItem = Utils.createElement("div", "accordion-item");
+
+    // Create and configure header.
+    const accordionHeader = Utils.createElement("h2", "accordion-header");
+    accordionHeader.id = accordionHeaderId;
+
+    // Create and configure accordion button.
+    const accordionButton = Utils.createElement("button", ["accordion-button"]);
+    accordionButton.setAttribute("type", "button");
+    accordionButton.setAttribute("data-toggle", "collapse");
+    accordionButton.setAttribute("data-target", `#${collapseId}`);
+    accordionButton.setAttribute("aria-expanded", "true");
+    accordionButton.setAttribute("aria-controls", collapseId);
+    accordionButton.textContent = this.accordionSetups.buttons[name];
+    accordionHeader.appendChild(accordionButton);
+    accordionItem.appendChild(accordionHeader);
+
+    // Create the collaspible body section that will contain recipe.
+    const collapse = Utils.createElement("div", [
+      "accordion-collapse",
+      "collapse",
+      "show",
+    ]);
+    collapse.id = collapseId;
+    collapse.setAttribute("aria-labelledby", accordionHeaderId);
+
+    collapse.setAttribute("data-parent", `#${this._createId(data, name)}`);
+
+    const accordionBody = Utils.createElement("div", [
+      "accordion-body",
+      ...this.accordionSetups.classes[name],
+    ]);
+
+    this.accordionSetups.callbacks[name](accordionBody, data);
+
+    collapse.appendChild(accordionBody);
+    accordionItem.appendChild(collapse);
+
+    return accordionItem;
+  }
+
+  _createId(data, suffix) {
+    return `recipe${data.id}${suffix}`;
+  }
+
+  _createEditor(data) {
+    // Create code viewer.
+    const div = Utils.createElement("div", "mb-1");
+    div.id = this._createId(data, "Editor");
+
+    return div;
+  }
+
+  /**
+   * Creates a set of buttons for actions related to the editor within the card.
+   * @returns {HTMLElement} A div containing the configured buttons.
+   */
+  _createEditorButtons() {
+    const row = Utils.createElement("div", "row");
+    const col1 = Utils.createElement("div", "col");
+    const col2 = Utils.createElement("div", ["col", "text-end"]);
+
+    const editOrSaveButton = Utils.createElement("button", [
+      "btn",
+      "btn-primary",
+      "me-1",
+    ]);
+    editOrSaveButton.textContent = "Edit";
+    editOrSaveButton.dataset.action = "editOrSaveRecipe";
+
+    const resetButton = Utils.createElement("button", ["btn", "btn-secondary"]);
+    resetButton.textContent = "Reset";
+    resetButton.dataset.action = "resetRecipe";
+
+    const helpButton = Utils.createElement("button", ["btn", "btn-link"]);
+    helpButton.textContent = "Help";
+    helpButton.dataset.action = "helpRecipe";
+    helpButton.setAttribute("data-bs-toggle", "offcanvas");
+    helpButton.setAttribute("data-bs-target", `#helpOffcanvas`);
+
+    // Build the layout.
+    col1.append(editOrSaveButton, resetButton);
+    col2.appendChild(helpButton);
+    row.append(col1, col2);
+
+    return row;
+  }
+
+  /**
+   * Appends editor and editor button components to the provided accordion body.
+   * @param {HTMLElement} accordionBody The accordion section where the editor and buttons will be appended.
+   */
+  _createRecipeAccordionItem(accordionBody, data) {
+    const uparmsInput = this._createUparms(data);
+    const editorDiv = this._createEditor(data);
+    const editorButtons = this._createEditorButtons();
+
+    accordionBody.append(uparmsInput, editorDiv, editorButtons);
+  }
+
+  _createUparms(data) {
+    // Create a container.
+    const div = Utils.createElement("div", "mb-3");
+    const row = Utils.createElement("div", ["row", "g-3"]);
+    const labelCol = Utils.createElement("div", ["col-sm-3"]);
+    const inputCol = Utils.createElement("div", ["col-sm-9"]);
+
+    // Create a label element.
+    const uparmsId = this._createId(data, "Uparms");
+    const label = Utils.createElement("label", ["col-form-label"]);
+    label.textContent = "Set Uparms";
+    label.htmlFor = uparmsId;
+
+    // Create an input element.
+    const input = Utils.createElement("input", ["form-control"]);
+    input.type = "text";
+    input.id = uparmsId;
+    input.placeholder =
+      "[('stackFrames:memory', None), ('darkCorrect:dark', 'blah_dark.fits')]";
+    input.value = data.uparms;
+    input.disabled = true;
+    this.uparms = input;
+
+    // Append the label and input to the container.
+    inputCol.appendChild(input);
+    labelCol.appendChild(label);
+    row.append(labelCol, inputCol);
+    div.appendChild(row);
+
+    return div;
+  }
+
+  _createLogAccordionItem(accordionBody, data) {
+    const div = Utils.createElement("div", ["ps-2"]);
+    div.id = this._createId(data, "Logger");
+    // this.logger = new Logger(div);
+
+    accordionBody.appendChild(div);
+  }
+}
+
+class RecipeReductionView {
+  constructor(template, options) {
+    this.template = template;
+    this.options = options;
+
+    this.container = null;
+    this.editor = null;
+    this.logger = null;
+    this.recipe = null;
+    this.progress = null;
+    this.stopButton = null;
+    this.startButton = null;
+    this.editOrSaveButton = null;
+    this.resetButton = null;
+    this.helpButton = null;
+    this.isEditMode = false;
+  }
+
+  render(viewCmd, parameter) {
+    switch (viewCmd) {
+      case "create":
+        this._create(parameter.parentElement, parameter.data);
+        break;
+      case "show":
+        this._show();
+        break;
+      case "hide":
+        this._hide();
+        break;
+      case "logMessage":
+        this._logMessage(parameter.message);
+        break;
+      case "enableEditRecipe":
+        this._enableEditRecipe();
+        break;
+      case "disableEdit":
+        this._disableEdit();
+        break;
+      case "updateRecipe":
+        this._updateRecipe(parameter.data);
+        break;
+      case "disableSaveRecipe":
+        this._disableSaveRecipe();
+        break;
+    }
+  }
+
+  _updateRecipe(data) {
+    this.editor.setValue(data.active_function_definition, -1);
+    this.uparmsInput.value = data.uparms;
+  }
+
+  _enableEditRecipe() {
+    this.editor.setReadOnly(false);
+    this.editOrSaveButton.textContent = "Save";
+    this.editor.container.classList.remove("editor-disabled");
+    this.uparmsInput.disabled = false;
+  }
+
+  _disableSaveRecipe() {
+    this.editor.setReadOnly(true);
+    this.editOrSaveButton.textContent = "Edit";
+    this.editor.container.classList.add("editor-disabled");
+    this.uparmsInput.disabled = true;
+  }
+
+  _logMessage(message) {
+    this.logger.log(message);
+  }
+
+  _show() {
+    this.container.classList.remove("d-none");
+  }
+
+  _hide() {
+    this.container.classList.add("d-none");
+  }
+
+  _create(parentElement, data) {
+    this.container = this.template.create(data);
+
+    // Append and build rest of things here.
+    this.editor = this._createEditor(data);
+    this._updateEditorTheme();
+    this.logger = new Logger(this.container.querySelector(`#recipe${data.id}Logger`));
+    this.progress = new Progress(this.container.querySelector(".card-body"));
+    this.stopButton = this.container.querySelector('[data-action="stopReduce"]');
+    this.startButton = this.container.querySelector('[data-action="startReduce"]');
+    this.editOrSaveButton = this.container.querySelector(
+      '[data-action="editOrSaveRecipe"]'
+    );
+    this.resetButton = this.container.querySelector('[data-action="resetRecipe"]');
+    this.helpButton = this.container.querySelector('[data-action="helpRecipe"]');
+    this.uparmsInput = this.container.querySelector(`#recipe${data.id}Uparms`);
+    this.parentElement = parentElement;
+    this.parentElement.appendChild(this.container);
+  }
+
+  _createEditor(data) {
+    const editorDiv = this.container.querySelector(`#recipe${data.id}Editor`);
+    const editor = ace.edit(null);
+
+    // Move cursor back to start with -1.
+    editor.setValue(data.active_function_definition, -1);
+    editor.session.setMode("ace/mode/python");
+
+    editor.container.style.height = "100%";
+    editor.container.style.width = "100%";
+    editor.container.style.minHeight = "300px";
+    editor.container.classList.add("editor-disabled");
+    editor.setReadOnly(true);
+
+    editorDiv.appendChild(editor.container);
+
+    return editor;
+  }
+
+  /**
+   * Updates the theme of the Ace editor based on the stored theme preference.
+   */
+  _updateEditorTheme() {
+    const storedTheme = localStorage.getItem("theme");
+    const theme =
+      storedTheme === "dark"
+        ? this.options.editor_themes.dark
+        : this.options.editor_themes.light;
+    this.editor.setTheme(theme);
+  }
+
+  bindCallback(event, handler) {
+    switch (event) {
+      case "stopReduce":
+        Utils.on(this.stopButton, "click", () => {
+          handler();
+        });
+        break;
+      case "startReduce":
+        Utils.on(this.startButton, "click", () => {
+          handler();
+        });
+        break;
+      case "editOrSaveRecipe":
+        Utils.on(this.editOrSaveButton, "click", () => {
+          handler({
+            uparms: this.uparmsInput.value,
+            functionDefinition: this.editor.getValue(),
+          });
+        });
+        break;
+      case "resetRecipe":
+        Utils.on(this.resetButton, "click", () => {
+          handler();
+        });
+        break;
+      case "helpRecipe":
+        Utils.on(this.helpButton, "click", () => {
+          handler();
+        });
+        break;
+    }
+  }
+}
+
+class RecipeReductionController {
+  constructor(model, view, options) {
+    this.model = model;
+    this.view = view;
+    this.options = options;
+  }
+
+  create(parentElement, data) {
+    this.model.recipeId = data.id;
+    this.view.render("create", { parentElement, data });
+    this._bindCallbacks();
+  }
+
+  _bindCallbacks() {
+    this.view.bindCallback("stopReduce", () => this._stopReduce());
+    this.view.bindCallback("startReduce", () => this._startReduce());
+    this.view.bindCallback("editOrSaveRecipe", (item) =>
+      this._editOrSaveRecipe(item.uparms, item.functionDefinition)
+    );
+    this.view.bindCallback("resetRecipe", () => this._resetRecipe());
+    this.view.bindCallback("helpRecipe", () => this._helpRecipe());
+  }
+
+  _startReduce() {
+    this.model.startReduce();
+    // TODO:
+  }
+
+  async _editOrSaveRecipe(uparms, functionDefinition) {
+    this.model.isEditMode = !this.model.isEditMode;
+    if (this.model.isEditMode) {
+      this.view.render("enableEditRecipe");
+    } else {
+      this.view.render("disableSaveRecipe");
+      const data = await this.model.updateFunctionDefinitionAndUparms(
+        functionDefinition,
+        uparms
+      );
+      this.view.render("updateRecipe", { data });
+    }
+  }
+
+  async _resetRecipe() {
+    const data = await this.model.updateFunctionDefinitionAndUparms();
+    this.view.render("updateRecipe", { data });
+    // TODO:
+  }
+
+  _logMessage(message) {
+    this.view.render("logMessage", { message });
+  }
+
+  async _helpRecipe() {
+    // Clear and show loading bar since it is not hidden.
+    window.helpOffcanvas.clearTitleAndContent();
+    window.helpOffcanvas.isLoading();
+
+    // Pass in the recipe to get the help for it.
+    const data = await this.model.fetchHelp();
+    window.helpOffcanvas.updateAndShowPrimitivesDocumentation(data);
+  }
+
+  _stopReduce() {
+    this.model.stopReduce();
+    // TODO:
+  }
+
+  show() {
+    this.view.render("show");
+  }
+
+  hide() {
+    this.view.render("hide");
+  }
+}
+
+class RecipeReduction {
+  static #defaultOptions = {
+    id: "RecipeReduction",
+    observationTypeToDisplay: {
+      bias: "Bias",
+      flat: "Flat",
+      dark: "Dark",
+      arc: "Arc",
+      pinhole: "Pinhole",
+      ronchi: "Ronchi",
+      fringe: "Fringe",
+      bpm: "BPM",
+      standard: "Standard",
+      object: "Science",
+      other: "Error",
+    },
+    editor_themes: {
+      dark: "ace/theme/cloud9_night",
+      light: "ace/theme/dawn",
+    },
+  };
+
+  constructor(parentElement, runId, data, options = {}) {
+    this.options = {
+      ...RecipeReduction.#defaultOptions,
+      ...options,
+      api: window.api,
+    };
+    const model = new RecipeReductionModel(this.options);
+    const template = new RecipeReductionTemplate(this.options);
+    const view = new RecipeReductionView(template, this.options);
+    this.controller = new RecipeReductionController(model, view, this.options);
+
+    this._init(parentElement, runId, data);
+  }
+
+  _init(parentElement, runId, data) {
+    this._create(parentElement, runId, data);
+  }
+
+  _create(parentElement, runId, data) {
+    this.controller.create(parentElement, runId, data);
+  }
+
+  show() {
+    this.controller.show();
+  }
+
+  hide() {
+    this.controller.hide();
+  }
+}

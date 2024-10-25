@@ -6,9 +6,14 @@
 <div class="row g-3">
   <div class="col-12">
     <div class="card bg-primary">
-      <div class="card-body my-3 py-0 text-center d-flex align-items-center justify-content-center">
+      <div
+        class="card-body my-3 py-0 text-center d-flex align-items-center justify-content-center">
         <!-- Logo Image -->
-        <img src="{% static 'img/dragons-logo.png' %}" alt="DRAGONS Logo" class="img-fluid" style="height: 30px">
+        <img
+          src="{% static 'img/dragons-logo.png' %}"
+          alt="DRAGONS Logo"
+          class="img-fluid"
+          style="height: 30px" />
         <!-- Observation ID -->
         <div class="h3 mb-0 ms-3">{{ observation_record.observation_id }}</div>
       </div>
@@ -17,8 +22,11 @@
   <div class="col-12">
     <div id="runSetupContainer"></div>
   </div>
-  <div class="col-12">
+  <div class="col-xl-6">
     <div id="observationTypeManagerContainer"></div>
+  </div>
+  <div class="col-xl-6">
+    <div id="recipeReductionsContainer"></div>
   </div>
   <div class="col-12">
     <div id="caldbContainer"></div>
@@ -32,9 +40,12 @@
 {% endblock %} {% block javascript %} {{ block.super }}
 <script src="{% static 'tom-select/tom-select.base.js' %}"></script>
 <script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/dragons_app/logger.js' %}"></script>
 <script src="{% static 'js/dragons_app/modal.js' %}"></script>
 <script src="{% static 'js/dragons_app/api.js' %}"></script>
 <script src="{% static 'js/dragons_app/identifier.js' %}"></script>
+<script src="{% static 'js/dragons_app/recipe_reductions_manager.js' %}"></script>
+<script src="{% static 'js/dragons_app/recipe_reduction.js' %}"></script>
 <script src="{% static 'js/dragons_app/run_setup.js' %}"></script>
 <script src="{% static 'js/dragons_app/progress.js' %}"></script>
 <script src="{% static 'js/dragons_app/files_table.js' %}"></script>
@@ -42,13 +53,9 @@
 <script src="{% static 'js/dragons_app/output_files.js' %}"></script>
 <script src="{% static 'js/dragons_app/run_table.js' %}"></script>
 <script src="{% static 'js/dragons_app/help_offcanvas.js' %}"></script>
-<script src="{% static 'js/dragons_app/logger.js' %}"></script>
-<script src="{% static 'js/dragons_app/setup.js' %}"></script>
 <script src="{% static 'js/dragons_app/observation_type_manager.js' %}"></script>
 <script src="{% static 'js/dragons_app/available_recipes.js' %}"></script>
 <script src="{% static 'js/dragons_app/available_files.js' %}"></script>
-<script src="{% static 'js/dragons_app/recipe.js' %}"></script>
-<script src="{% static 'js/dragons_app/recipes_manager.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/ace.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/mode-python.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/theme-cloud9_night.js' %}"></script>
@@ -88,6 +95,212 @@
         );
         this.outputFiles.update(runId);
         this.initialized = true;
+
+        // Testing
+        const testData = {
+          count: 12,
+          next: null,
+          previous: null,
+          results: [
+            {
+              id: 1,
+              observation_type: "BIAS",
+              name: "geminidr.gmos.recipes.sq.recipes_BIAS::makeProcessedBias",
+              active_function_definition:
+                "def makeProcessedBias(p):\n    p.prepare()\n    p.addDQ(add_illum_mask=False)\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.stackBiases()\n    p.makeIRAFCompatible()\n    p.storeProcessedBias()\n",
+              short_name: "makeProcessedBias",
+              version: "3.2.0",
+              is_default: true,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_BIAS",
+              object_name: "Bias",
+              uparms: null,
+              observation_class: "dayCal",
+              dragons_run: 1,
+            },
+            {
+              id: 2,
+              observation_type: "FLAT",
+              name: "geminidr.gmos.recipes.sq.recipes_FLAT_LS_SPECT::makeProcessedFlatNoStack",
+              active_function_definition:
+                "def makeProcessedFlatNoStack(p):\n    p.prepare()\n    p.addDQ()\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.normalizeFlat()\n    p.thresholdFlatfield()\n    p.makeIRAFCompatible()\n    p.storeProcessedFlat()\n",
+              short_name: "makeProcessedFlatNoStack",
+              version: "3.2.0",
+              is_default: true,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_FLAT_LS_SPECT",
+              object_name: "GCALflat",
+              uparms: null,
+              observation_class: "partnerCal",
+              dragons_run: 1,
+            },
+            {
+              id: 3,
+              observation_type: "FLAT",
+              name: "geminidr.gmos.recipes.sq.recipes_FLAT_LS_SPECT::makeProcessedFlatStack",
+              active_function_definition:
+                "def makeProcessedFlatStack(p):\n    p.prepare()\n    p.addDQ()\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.stackFrames()\n    p.normalizeFlat()\n    p.thresholdFlatfield()\n    p.makeIRAFCompatible()\n    p.storeProcessedFlat()\n",
+              short_name: "makeProcessedFlatStack",
+              version: "3.2.0",
+              is_default: false,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_FLAT_LS_SPECT",
+              object_name: "GCALflat",
+              uparms: null,
+              observation_class: "partnerCal",
+              dragons_run: 1,
+            },
+            {
+              id: 4,
+              observation_type: "FLAT",
+              name: "geminidr.gmos.recipes.sq.recipes_FLAT_LS_SPECT::makeProcessedSlitIllum",
+              active_function_definition:
+                "def makeProcessedSlitIllum(p):\n    p.prepare()\n    p.addDQ(static_bpm=None)\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.stackFrames()\n    p.makeSlitIllum()\n    p.makeIRAFCompatible()\n    p.storeProcessedSlitIllum()\n",
+              short_name: "makeProcessedSlitIllum",
+              version: "3.2.0",
+              is_default: false,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_FLAT_LS_SPECT",
+              object_name: "GCALflat",
+              uparms: null,
+              observation_class: "partnerCal",
+              dragons_run: 1,
+            },
+            {
+              id: 5,
+              observation_type: "OBJECT",
+              name: "geminidr.gmos.recipes.sq.recipes_LS_SPECT::reduceScience",
+              active_function_definition:
+                'def reduceScience(p):\n    p.prepare()\n    p.addDQ()\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.attachWavelengthSolution()\n    p.flatCorrect()\n    p.QECorrect()\n    p.flagCosmicRays()\n    p.distortionCorrect()\n    p.findApertures()\n    p.skyCorrectFromSlit()\n    p.adjustWCSToReference()\n    p.resampleToCommonFrame(conserve=True)  # default force_linear=True, ie. linearized.\n    p.scaleCountsToReference()\n    p.stackFrames()\n    p.findApertures()\n    p.traceApertures()\n    p.storeProcessedScience(suffix="_2D")\n    p.extractSpectra()\n    p.fluxCalibrate()\n    p.storeProcessedScience(suffix="_1D")\n',
+              short_name: "reduceScience",
+              version: "3.2.0",
+              is_default: true,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_LS_SPECT",
+              object_name: "AT2020caa",
+              uparms: null,
+              observation_class: "science",
+              dragons_run: 1,
+            },
+            {
+              id: 6,
+              observation_type: "OBJECT",
+              name: "geminidr.gmos.recipes.sq.recipes_LS_SPECT::reduceStandard",
+              active_function_definition:
+                "def reduceStandard(p):\n    p.prepare()\n    p.addDQ()\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.attachWavelengthSolution()\n    p.flatCorrect()\n    p.QECorrect()\n    p.distortionCorrect()\n    p.findApertures(max_apertures=1)\n    p.skyCorrectFromSlit()\n    p.traceApertures()\n    p.extractSpectra()\n    p.resampleToCommonFrame(conserve=True)  # default force_linear=True, ie. linearized.\n    p.scaleCountsToReference()\n    p.stackFrames()\n    p.calculateSensitivity()\n    p.storeProcessedStandard()\n    p.writeOutputs()\n",
+              short_name: "reduceStandard",
+              version: "3.2.0",
+              is_default: false,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_LS_SPECT",
+              object_name: "AT2020caa",
+              uparms: null,
+              observation_class: "science",
+              dragons_run: 1,
+            },
+            {
+              id: 7,
+              observation_type: "OBJECT",
+              name: "geminidr.gmos.recipes.sq.recipes_LS_SPECT::reduceWithMultipleStandards",
+              active_function_definition:
+                'def reduceWithMultipleStandards(p):\n    p.prepare()\n    p.addDQ()\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.attachWavelengthSolution()\n    p.flatCorrect()\n    p.QECorrect()\n    p.flagCosmicRays()\n    p.distortionCorrect()\n    p.findApertures()\n    p.skyCorrectFromSlit()\n    p.adjustWCSToReference()\n    p.fluxCalibrate()\n    p.resampleToCommonFrame(conserve=True)  # default force_linear=True, ie. linearized.\n    p.scaleCountsToReference()\n    p.stackFrames()\n    p.findApertures()\n    p.traceApertures()\n    p.storeProcessedScience(suffix="_2D")\n    p.extractSpectra()\n    p.storeProcessedScience(suffix="_1D")\n',
+              short_name: "reduceWithMultipleStandards",
+              version: "3.2.0",
+              is_default: false,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_LS_SPECT",
+              object_name: "AT2020caa",
+              uparms: null,
+              observation_class: "science",
+              dragons_run: 1,
+            },
+            {
+              id: 8,
+              observation_type: "ARC",
+              name: "geminidr.gmos.recipes.sq.recipes_ARC_LS_SPECT::makeProcessedArc",
+              active_function_definition:
+                "def makeProcessedArc(p):\n    p.prepare()\n    p.addDQ()\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.mosaicDetectors()\n    p.makeIRAFCompatible()\n    p.determineWavelengthSolution()\n    p.determineDistortion()\n    p.storeProcessedArc()\n    p.writeOutputs()\n",
+              short_name: "makeProcessedArc",
+              version: "3.2.0",
+              is_default: true,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_ARC_LS_SPECT",
+              object_name: "CuAr",
+              uparms: null,
+              observation_class: "dayCal",
+              dragons_run: 1,
+            },
+            {
+              id: 9,
+              observation_type: "OBJECT",
+              name: "geminidr.gmos.recipes.sq.recipes_LS_SPECT::reduceScience",
+              active_function_definition:
+                'def reduceScience(p):\n    p.prepare()\n    p.addDQ()\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.attachWavelengthSolution()\n    p.flatCorrect()\n    p.QECorrect()\n    p.flagCosmicRays()\n    p.distortionCorrect()\n    p.findApertures()\n    p.skyCorrectFromSlit()\n    p.adjustWCSToReference()\n    p.resampleToCommonFrame(conserve=True)  # default force_linear=True, ie. linearized.\n    p.scaleCountsToReference()\n    p.stackFrames()\n    p.findApertures()\n    p.traceApertures()\n    p.storeProcessedScience(suffix="_2D")\n    p.extractSpectra()\n    p.fluxCalibrate()\n    p.storeProcessedScience(suffix="_1D")\n',
+              short_name: "reduceScience",
+              version: "3.2.0",
+              is_default: false,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_LS_SPECT",
+              object_name: "LTT6248",
+              uparms: null,
+              observation_class: "partnerCal",
+              dragons_run: 1,
+            },
+            {
+              id: 10,
+              observation_type: "OBJECT",
+              name: "geminidr.gmos.recipes.sq.recipes_LS_SPECT::reduceStandard",
+              active_function_definition:
+                "def reduceStandard(p):\n    p.prepare()\n    p.addDQ()\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.attachWavelengthSolution()\n    p.flatCorrect()\n    p.QECorrect()\n    p.distortionCorrect()\n    p.findApertures(max_apertures=1)\n    p.skyCorrectFromSlit()\n    p.traceApertures()\n    p.extractSpectra()\n    p.resampleToCommonFrame(conserve=True)  # default force_linear=True, ie. linearized.\n    p.scaleCountsToReference()\n    p.stackFrames()\n    p.calculateSensitivity()\n    p.storeProcessedStandard()\n    p.writeOutputs()\n",
+              short_name: "reduceStandard",
+              version: "3.2.0",
+              is_default: true,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_LS_SPECT",
+              object_name: "LTT6248",
+              uparms: null,
+              observation_class: "partnerCal",
+              dragons_run: 1,
+            },
+            {
+              id: 11,
+              observation_type: "OBJECT",
+              name: "geminidr.gmos.recipes.sq.recipes_LS_SPECT::reduceWithMultipleStandards",
+              active_function_definition:
+                'def reduceWithMultipleStandards(p):\n    p.prepare()\n    p.addDQ()\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.attachWavelengthSolution()\n    p.flatCorrect()\n    p.QECorrect()\n    p.flagCosmicRays()\n    p.distortionCorrect()\n    p.findApertures()\n    p.skyCorrectFromSlit()\n    p.adjustWCSToReference()\n    p.fluxCalibrate()\n    p.resampleToCommonFrame(conserve=True)  # default force_linear=True, ie. linearized.\n    p.scaleCountsToReference()\n    p.stackFrames()\n    p.findApertures()\n    p.traceApertures()\n    p.storeProcessedScience(suffix="_2D")\n    p.extractSpectra()\n    p.storeProcessedScience(suffix="_1D")\n',
+              short_name: "reduceWithMultipleStandards",
+              version: "3.2.0",
+              is_default: false,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_LS_SPECT",
+              object_name: "LTT6248",
+              uparms: null,
+              observation_class: "partnerCal",
+              dragons_run: 1,
+            },
+            {
+              id: 12,
+              observation_type: "OBJECT",
+              name: "geminidr.gmos.recipes.sq.recipes_SLITILLUM_LS_SPECT::makeProcessedSlitIllum",
+              active_function_definition:
+                "def makeProcessedSlitIllum(p):\n    p.prepare()\n    p.addDQ(static_bpm=None)\n    p.addVAR(read_noise=True)\n    p.overscanCorrect()\n    p.biasCorrect()\n    p.ADUToElectrons()\n    p.addVAR(poisson_noise=True)\n    p.stackFrames()\n    p.makeSlitIllum()\n    p.makeIRAFCompatible()\n    p.storeProcessedSlitIllum()\n",
+              short_name: "makeProcessedSlitIllum",
+              version: "3.2.0",
+              is_default: true,
+              instrument: "GMOS",
+              recipes_module_name: "recipes_SLITILLUM_LS_SPECT",
+              object_name: "Twilight",
+              uparms: null,
+              observation_class: "dayCal",
+              dragons_run: 1,
+            },
+          ],
+        };
+        this.recipeReductionsManager = new RecipeReductionsManager(
+          document.getElementById("recipeReductionsContainer"),
+          runId,
+          testData
+        );
       } else {
         this.observationTypeManager.update(runId);
         this.caldb.update(runId);
@@ -97,6 +310,6 @@
   }
   document.addEventListener("DOMContentLoaded", () => {
     new App();
-  })
+  });
 </script>
 {% endblock %}
