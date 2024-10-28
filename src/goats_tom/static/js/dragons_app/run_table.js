@@ -80,32 +80,10 @@ class RunTableTemplate {
 
 /**
  * Stores and manages the run data for the application.
- *
  * @class
  */
 class RunTableModel {
-  constructor() {
-    this._rawData = null;
-    this._data = null;
-  }
-
-  get data() {
-    return this._data
-  }
-
-  set data(value) {
-    this._rawData = value;
-    this._data = value;
-  }
-
-  get rawData() {
-    return this._rawData;
-  }
-
-  clearData() {
-    this._rawData = null;
-    this._data = null;
-  }
+  constructor() {}
 }
 
 /**
@@ -201,15 +179,13 @@ class RunTableController {
    * @param {Object} data - The data to display.
    */
   update(data) {
-    this.model.data = data;
-    this.view.render("update", { data: this.model.data });
+    this.view.render("update", { data });
   }
 
   /**
    * Resets the data model and view to their initial state.
    */
   reset() {
-    this.model.clearData();
     this.view.render("reset");
   }
 

@@ -37,8 +37,8 @@ class AvailableFilesTemplate {
   }
 
   /**
-   * Creates a container element.
-   * @returns {HTMLElement} The container element.
+   * Creates a primary container element for the UI.
+   * @returns {HTMLElement} The newly created container element.
    * @private
    */
   _createContainer() {
@@ -48,29 +48,13 @@ class AvailableFilesTemplate {
 
   /**
    * Creates a form for filtering and grouping files.
-   * @param {Array<string>} groups - The available grouping options.
-   * @returns {HTMLElement} The form element.
+   * @param {Array<string>} groups - An array of grouping options available for files.
+   * @returns {HTMLElement} The form element containing input fields and grouping options.
    * @private
    */
   _createForm(groups) {
     const form = Utils.createElement("form");
     form.method = "post";
-
-    // Create hidden inputs for observation_type and object_name
-    const observationTypeInput = Utils.createElement("input");
-    observationTypeInput.setAttribute("type", "hidden");
-    observationTypeInput.setAttribute("name", "observation_type");
-    observationTypeInput.value = this.identifier.observationType;
-
-    const objectNameInput = Utils.createElement("input");
-    objectNameInput.setAttribute("type", "hidden");
-    objectNameInput.setAttribute("name", "object_name");
-    objectNameInput.value = this.identifier.objectName;
-
-    const observationClassInput = Utils.createElement("input");
-    observationClassInput.setAttribute("type", "hidden");
-    observationClassInput.setAttribute("name", "object_name");
-    observationClassInput.value = this.identifier.observationClass;
 
     // Build the elements for the form.
     const fileFilterRow = this._createFilter();
@@ -83,15 +67,7 @@ class AvailableFilesTemplate {
     button.setAttribute("type", "submit");
     div.appendChild(button);
 
-    form.append(
-      fileGroupingsRow,
-      fileFilterRow,
-      strictFileFilterRow,
-      observationTypeInput,
-      objectNameInput,
-      observationClassInput,
-      div
-    );
+    form.append(fileGroupingsRow, fileFilterRow, strictFileFilterRow, div);
 
     return form;
   }
@@ -102,7 +78,6 @@ class AvailableFilesTemplate {
    * @private
    */
   _createFilter() {
-    // TODO: Again dont use file id
     const row = Utils.createElement("div", ["row", "ms-1", "mb-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
     const col2 = Utils.createElement("div", ["col-sm-9"]);
@@ -181,13 +156,13 @@ class AvailableFilesTemplate {
   }
 
   /**
-   * Generates a row with a multiple selection dropdown for grouping files by specified descriptors.
-   * @param {Array<string>} groups An array of strings representing the grouping options.
+   * Generates a row with a dropdown for grouping files by specified descriptors.
+   * Utilizes the TomSelect library to enhance the dropdown functionality.
+   * @param {Array<string>} groups - An array of strings representing the grouping options.
    * @returns {HTMLElement} A DOM element representing the row for file groupings.
    * @private
    */
   _createGroupings(groups) {
-    // TODO: Dont use the file id
     const row = Utils.createElement("div", ["row", "mb-3", "ms-1"]);
     const col1 = Utils.createElement("div", ["col-sm-3"]);
     const col2 = Utils.createElement("div", ["col-sm-9"]);
@@ -307,6 +282,7 @@ class AvailableFilesTemplate {
 
 /**
  * Class representing the data model.
+ * @param {Identifier} identifer - Instance of indentifying information.
  * @param {Object} options - Configuration options for the model.
  */
 class AvailableFilesModel {
@@ -314,31 +290,13 @@ class AvailableFilesModel {
     this.identifier = identifier;
     this.options = options;
     this.api = this.options.api;
-    this._rawData = null;
-    this._data = null;
     this.url = "dragonsfiles/";
   }
 
-  get data() {
-    return this._data;
-  }
-
-  set data(value) {
-    this._rawData = value;
-    this._data = value;
-  }
-
-  get rawData() {
-    return this._rawData;
-  }
-
   /**
-   * Fetches, groups, and optionally filters files based on their descriptors.
-   * @param {string} runId The ID of the run for which files are to be fetched.
-   * @param {string | string[]} groupBy The descriptor(s) to group the files by.
-   * @param {string} [filterExpression] Optional filter expression to apply before grouping.
-   * @param {boolean} [filterStrict] Optional filter strictly.
-   * @returns {Promise<Object>} A promise that resolves to an object containing grouped files.
+   * Fetches, groups, and filters files based on user input from the form.
+   * @param {FormData} formData - Form data containing filter and grouping parameters.
+   * @returns {Promise<Object>} A promise that resolves to an object containing grouped and filtered files.
    */
   async fetchGroupAndFilterFiles(formData) {
     // Fetch individual items from formData
@@ -373,21 +331,12 @@ class AvailableFilesModel {
 
     // Complete URL construction.
     const url = baseUrl + filterExpressionParam;
-    console.log(url);
     try {
       const response = await this.api.get(url);
       return response;
     } catch (error) {
       console.error("Error fetching, grouping, and filtering files:", error);
     }
-  }
-
-  /**
-   * Clear the stored data.
-   */
-  clearData() {
-    this._rawData = null;
-    this._data = null;
   }
 }
 
@@ -404,6 +353,7 @@ class AvailableFilesView {
 
     this.container = null;
     this.form = null;
+    this.filesTable = null;
 
     this.parentElement = null;
     this.render = this.render.bind(this);
@@ -429,10 +379,22 @@ class AvailableFilesView {
     this.parentElement.appendChild(this.container);
   }
 
+  /**
+   * Updates the files table with filtered files.
+   * @param {Array<Object>} filteredFiles - An array of file objects that have been filtered.
+   */
+  _updateFiles(filteredFiles) {
+    this.filesTable.update(filteredFiles);
+  }
   _updateFiles(filteredFiles) {
     this.filesTable.update(filteredFiles);
   }
 
+  /**
+   * Renders different components based on the command provided.
+   * @param {string} viewCmd - A command that determines what action to perform in the view.
+   * @param {Object} parameter - Parameters needed for rendering, such as parent element and data.
+   */
   render(viewCmd, parameter) {
     switch (viewCmd) {
       case "create":
@@ -444,6 +406,11 @@ class AvailableFilesView {
     }
   }
 
+  /**
+   * Binds UI events to handlers based on the event type.
+   * @param {string} event - The event name to bind to an action.
+   * @param {Function} handler - The function to execute when the event is triggered.
+   */
   bindCallback(event, handler) {
     switch (event) {
       case "submitForm":
@@ -477,11 +444,16 @@ class AvailableFilesController {
    * @param {Object} data - The data to populate the model and view.
    */
   create(parentElement, data) {
-    this.model.data = data;
-    this.view.render("create", { parentElement, data: this.model.data });
+    this.view.render("create", { parentElement, data });
     this._bindCallbacks();
   }
 
+  /**
+   * Handles form submission for filtering files.
+   * @param {FormData} formData - FormData object containing data from the form fields.
+   * @returns {Promise<void>} - Returns a promise that resolves when the filtered files are successfully fetched and rendered.
+   * @async
+   */
   async _submitForm(formData) {
     const filteredFiles = await this.model.fetchGroupAndFilterFiles(formData);
     this.view.render("updateFiles", { filteredFiles });
@@ -496,6 +468,7 @@ class AvailableFilesController {
  * Class for the available files.
  * @param {HTMLElement} parentElement - The parent element to append the available files to.
  * @param {Object} data - The data used to initialize the available files.
+ * @param {Identifier} identifier - Instance of indentifying information.
  * @param {Object} [options={}] - Optional configuration options for the available files.
  */
 class AvailableFiles {
@@ -533,6 +506,4 @@ class AvailableFiles {
   _create(parentElement, data) {
     this.controller.create(parentElement, data);
   }
-
-  // TODO: update files
 }

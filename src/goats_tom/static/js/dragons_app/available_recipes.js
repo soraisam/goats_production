@@ -117,29 +117,6 @@ class AvailableRecipesTemplate {
 class AvailableRecipesModel {
   constructor(options) {
     this.options = options;
-    this._rawData = null;
-    this._data = null;
-  }
-
-  get data() {
-    return this._data;
-  }
-
-  set data(value) {
-    this._rawData = value;
-    this._data = value;
-  }
-
-  get rawData() {
-    return this._rawData;
-  }
-
-  /**
-   * Clear the stored data.
-   */
-  clearData() {
-    this._rawData = null;
-    this._data = null;
   }
 }
 
@@ -265,8 +242,7 @@ class AvailableRecipesController {
    * @param {HTMLElement} parentElement - The parent element.
    */
   create(data, parentElement) {
-    this.model.data = data;
-    this.view.render("create", { data: this.model.data, parentElement });
+    this.view.render("create", { data, parentElement });
     this._bindCallbacks();
     this._bindGlobalCallbacks();
   }

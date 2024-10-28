@@ -1,4 +1,4 @@
-class ObservationTypeManagerTemplate {
+class RecipesAndFilesManagerTemplate {
   constructor(options) {
     this.options = options;
   }
@@ -103,7 +103,7 @@ class ObservationTypeManagerTemplate {
   }
 }
 
-class ObservationTypeManagerModel {
+class RecipesAndFilesManagerModel {
   constructor(options) {
     this.options = options;
     this.api = this.options.api;
@@ -151,7 +151,7 @@ class ObservationTypeManagerModel {
   }
 }
 
-class ObservationTypeManagerView {
+class RecipesAndFilesManagerView {
   constructor(template, options) {
     this.template = template;
     this.options = options;
@@ -238,7 +238,7 @@ class ObservationTypeManagerView {
   bindCallback(event, handler) {}
 }
 
-class ObservationTypeManagerController {
+class RecipesAndFilesManagerController {
   constructor(model, view, options) {
     this.model = model;
     this.view = view;
@@ -271,21 +271,21 @@ class ObservationTypeManagerController {
   _bindCallbacks() {}
 }
 
-class ObservationTypeManager {
+class RecipesAndFilesManager {
   static #defaultOptions = {
-    id: "ObservationTypeManager",
+    id: "RecipesAndFilesManager",
   };
 
   constructor(parentElement, runId, options = {}) {
     this.options = {
-      ...ObservationTypeManager.#defaultOptions,
+      ...RecipesAndFilesManager.#defaultOptions,
       ...options,
       api: window.api,
     };
-    const model = new ObservationTypeManagerModel(this.options);
-    const template = new ObservationTypeManagerTemplate(this.options);
-    const view = new ObservationTypeManagerView(template, parentElement, this.options);
-    this.controller = new ObservationTypeManagerController(model, view, this.options);
+    const model = new RecipesAndFilesManagerModel(this.options);
+    const template = new RecipesAndFilesManagerTemplate(this.options);
+    const view = new RecipesAndFilesManagerView(template, parentElement, this.options);
+    this.controller = new RecipesAndFilesManagerController(model, view, this.options);
 
     this._create(parentElement, runId);
   }
