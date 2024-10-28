@@ -1,3 +1,9 @@
+/**
+ * Manages the recipe reduction process including starting, stopping, and updating reduction
+ * operations.
+ * @param {Object} options - Configuration options for the model.
+ * @class
+ */
 class RecipeReductionModel {
   constructor(options) {
     this.options = options;
@@ -9,6 +15,12 @@ class RecipeReductionModel {
     this.isEditMode = false;
   }
 
+  /**
+   * Starts the reduction process for a given set of file IDs associated with a recipe.
+   * @param {Array<number>} fileIds - Array of file IDs to be reduced.
+   * @returns {Promise<Object>} A promise that resolves to the response from the server.
+   * @async
+   */
   async startReduce(fileIds) {
     const data = { recipe_id: this.recipeId, file_ids: fileIds };
     try {
@@ -166,6 +178,12 @@ class RecipeReductionTemplate {
     return cardBody;
   }
 
+  /**
+   * Creates the card header element with action buttons.
+   * @param {Object} data - Data necessary for building the header.
+   * @returns {HTMLElement} - A populated card header element.
+   * @private
+   */
   _createCardHeader(data) {
     const cardHeader = Utils.createElement("div", "card-header");
     const row = Utils.createElement("div", ["row"]);
@@ -197,8 +215,10 @@ class RecipeReductionTemplate {
   }
 
   /**
-   * Creates the first footer for the recipe.
-   * @return {HTMLElement} The footer.
+   * Creates the first footer for the recipe accordion.
+   * @param {Object} data - Data necessary for building the footer.
+   * @returns {HTMLElement} - A populated card footer element.
+   * @private
    */
   _createCardFooter1(data) {
     // Create footer.
@@ -209,8 +229,10 @@ class RecipeReductionTemplate {
   }
 
   /**
-   * Creates the second footer for the recipe, showing the log.
-   * @returns {HTMLElement} The footer.
+   * Creates the second footer for the recipe accordion, specifically for logging.
+   * @param {Object} data - Data necessary for building the footer.
+   * @returns {HTMLElement} - A populated card footer element.
+   * @private
    */
   _createCardFooter2(data) {
     const cardFooter = Utils.createElement("div", ["card-footer"]);
@@ -221,6 +243,13 @@ class RecipeReductionTemplate {
     return cardFooter;
   }
 
+  /**
+   * Creates an accordion component for recipe modification or logging.
+   * @param {string} name - The name identifier for the accordion.
+   * @param {Object} data - Data to associate with the accordion.
+   * @returns {HTMLElement} - A new accordion element.
+   * @private
+   */
   _createAccordion(name, data) {
     // Set the ID to reference the recipe ID all the recipe belong to.
     const accordionId = this._createId(data, name);
@@ -234,6 +263,13 @@ class RecipeReductionTemplate {
     return accordion;
   }
 
+  /**
+   * Creates an accordion item element.
+   * @param {string} name - Name identifier for the accordion item.
+   * @param {Object} data - Data to associate with the accordion item.
+   * @returns {HTMLElement} - A new accordion item element.
+   * @private
+   */
   _createAccordionItem(name, data) {
     // Create IDs to use to link.
     const collapseId = this._createId(data, `${name}Collapse`);
@@ -281,10 +317,23 @@ class RecipeReductionTemplate {
     return accordionItem;
   }
 
+  /**
+   * Generates a unique ID for an element based on the data and a suffix.
+   * @param {Object} data - Data used to generate the ID base.
+   * @param {string} suffix - Suffix to append to the ID.
+   * @returns {string} - A unique element ID.
+   * @private
+   */
   _createId(data, suffix) {
     return `recipe${data.id}${suffix}`;
   }
 
+  /**
+   * Initializes and returns an editor element.
+   * @param {Object} data - Data associated with the editor.
+   * @returns {HTMLElement} - An editor element.
+   * @private
+   */
   _createEditor(data) {
     // Create code viewer.
     const div = Utils.createElement("div", "mb-1");
@@ -294,8 +343,9 @@ class RecipeReductionTemplate {
   }
 
   /**
-   * Creates a set of buttons for actions related to the editor within the card.
-   * @returns {HTMLElement} A div containing the configured buttons.
+   * Generates a set of editor buttons for actions such as edit, save, and reset.
+   * @returns {HTMLElement} - A div containing configured buttons.
+   * @private
    */
   _createEditorButtons() {
     const row = Utils.createElement("div", "row");
@@ -340,6 +390,14 @@ class RecipeReductionTemplate {
     accordionBody.append(uparmsInput, editorDiv, editorButtons);
   }
 
+  /**
+   * Creates the user parameters input section as part of an accordion item.
+   * This section allows users to input or modify parameters related to the recipe.
+   * @param {Object} data - Data associated with the specific recipe, used for setting initial
+   * values.
+   * @returns {HTMLElement} The user parameters section element.
+   * @private
+   */
   _createUparms(data) {
     // Create a container.
     const div = Utils.createElement("div", "mb-3");
@@ -372,6 +430,14 @@ class RecipeReductionTemplate {
     return div;
   }
 
+  /**
+   * Creates a log section within an accordion item, used for displaying real-time logs or messages
+   * related to the recipe reduction process.
+   * @param {HTMLElement} accordionBody - The body of the accordion where the log will be displayed.
+   * @param {Object} data - Data associated with the specific recipe, potentially including log
+   * entries.
+   * @private
+   */
   _createLogAccordionItem(accordionBody, data) {
     const div = Utils.createElement("div", ["ps-2"]);
     div.id = this._createId(data, "Logger");
@@ -381,6 +447,12 @@ class RecipeReductionTemplate {
   }
 }
 
+/**
+ * Represents the view layer for managing the recipe reduction interface.
+ * Handles the user interface elements and interactions.
+ * @param {Object} template - The template used to render the view.
+ * @param {Object} options - Configuration options for the view.
+ */
 class RecipeReductionView {
   constructor(template, options) {
     this.template = template;
@@ -399,6 +471,11 @@ class RecipeReductionView {
     this.isEditMode = false;
   }
 
+  /**
+   * Renders changes to the view based on a specified command.
+   * @param {string} viewCmd - The command that specifies the action to perform.
+   * @param {Object} parameter - Parameters needed for the rendering action.
+   */
   render(viewCmd, parameter) {
     switch (viewCmd) {
       case "create":
@@ -428,11 +505,20 @@ class RecipeReductionView {
     }
   }
 
+  /**
+   * Updates the recipe editor with new data.
+   * @param {Object} data - Data containing the recipe details.
+   * @private
+   */
   _updateRecipe(data) {
     this.editor.setValue(data.active_function_definition, -1);
     this.uparmsInput.value = data.uparms;
   }
 
+  /**
+   * Enables editing mode in the recipe editor.
+   * @private
+   */
   _enableEditRecipe() {
     this.editor.setReadOnly(false);
     this.editOrSaveButton.textContent = "Save";
@@ -440,6 +526,10 @@ class RecipeReductionView {
     this.uparmsInput.disabled = false;
   }
 
+  /**
+   * Disables editing mode in the recipe editor, locking changes.
+   * @private
+   */
   _disableSaveRecipe() {
     this.editor.setReadOnly(true);
     this.editOrSaveButton.textContent = "Edit";
@@ -447,18 +537,37 @@ class RecipeReductionView {
     this.uparmsInput.disabled = true;
   }
 
+  /**
+   * Logs a message to the recipe log interface.
+   * @param {string} message - The message to log.
+   * @private
+   */
   _logMessage(message) {
     this.logger.log(message);
   }
 
+  /**
+   * Shows the recipe reduction interface.
+   * @private
+   */
   _show() {
     this.container.classList.remove("d-none");
   }
 
+  /**
+   * Hides the recipe reduction interface.
+   * @private
+   */
   _hide() {
     this.container.classList.add("d-none");
   }
 
+  /**
+   * Creates the initial setup for the recipe reduction interface.
+   * @param {HTMLElement} parentElement - The parent element to which the view will be attached.
+   * @param {Object} data - The data needed to construct the view.
+   * @private
+   */
   _create(parentElement, data) {
     this.container = this.template.create(data);
 
@@ -479,6 +588,12 @@ class RecipeReductionView {
     this.parentElement.appendChild(this.container);
   }
 
+  /**
+   * Initializes and configures the Ace editor within the view.
+   * @param {Object} data - The data used to configure the editor.
+   * @returns {Object} - The initialized Ace editor instance.
+   * @private
+   */
   _createEditor(data) {
     const editorDiv = this.container.querySelector(`#recipe${data.id}Editor`);
     const editor = ace.edit(null);
@@ -499,7 +614,8 @@ class RecipeReductionView {
   }
 
   /**
-   * Updates the theme of the Ace editor based on the stored theme preference.
+   * Updates the theme of the editor based on user settings.
+   * @private
    */
   _updateEditorTheme() {
     const storedTheme = localStorage.getItem("theme");
@@ -510,6 +626,11 @@ class RecipeReductionView {
     this.editor.setTheme(theme);
   }
 
+  /**
+   * Binds UI event callbacks to the view elements based on specified events.
+   * @param {string} event - The name of the event to bind.
+   * @param {Function} handler - The handler function to execute on the event.
+   */
   bindCallback(event, handler) {
     switch (event) {
       case "stopReduce":
@@ -544,6 +665,12 @@ class RecipeReductionView {
   }
 }
 
+/**
+ * Manages interactions between the model and view in the recipe reduction context.
+ * @param {Object} model - The data model for the recipe reduction.
+ * @param {Object} view - The view layer for user interaction.
+ * @param {Object} options - Configuration options for the controller.
+ */
 class RecipeReductionController {
   constructor(model, view, options) {
     this.model = model;
@@ -551,12 +678,21 @@ class RecipeReductionController {
     this.options = options;
   }
 
+  /**
+   * Initializes the view and model for a new recipe reduction.
+   * @param {HTMLElement} parentElement - The container where the component should be rendered.
+   * @param {Object} data - Data needed to render the component.
+   */
   create(parentElement, data) {
     this.model.recipeId = data.id;
     this.view.render("create", { parentElement, data });
     this._bindCallbacks();
   }
 
+  /**
+   * Binds event handlers to view events.
+   * @private
+   */
   _bindCallbacks() {
     this.view.bindCallback("stopReduce", () => this._stopReduce());
     this.view.bindCallback("startReduce", () => this._startReduce());
@@ -567,11 +703,21 @@ class RecipeReductionController {
     this.view.bindCallback("helpRecipe", () => this._helpRecipe());
   }
 
+  /**
+   * Starts the reduction process via the model.
+   * @private
+   */
   _startReduce() {
     this.model.startReduce();
     // TODO:
   }
 
+  /**
+   * Handles the logic for editing or saving recipe details.
+   * @param {string} uparms - Updated parameters for the recipe.
+   * @param {string} functionDefinition - Updated function definition for the recipe.
+   * @private
+   */
   async _editOrSaveRecipe(uparms, functionDefinition) {
     this.model.isEditMode = !this.model.isEditMode;
     if (this.model.isEditMode) {
@@ -586,16 +732,29 @@ class RecipeReductionController {
     }
   }
 
+  /**
+   * Resets the recipe details to their default state.
+   * @private
+   */
   async _resetRecipe() {
     const data = await this.model.updateFunctionDefinitionAndUparms();
     this.view.render("updateRecipe", { data });
     // TODO:
   }
 
+  /**
+   * Logs a message related to the recipe reduction process.
+   * @param {string} message - The message to log.
+   * @private
+   */
   _logMessage(message) {
     this.view.render("logMessage", { message });
   }
 
+  /**
+   * Fetches and displays help documentation for the current recipe.
+   * @private
+   */
   async _helpRecipe() {
     // Clear and show loading bar since it is not hidden.
     window.helpOffcanvas.clearTitleAndContent();
@@ -606,20 +765,37 @@ class RecipeReductionController {
     window.helpOffcanvas.updateAndShowPrimitivesDocumentation(data);
   }
 
+  /**
+   * Stops the reduction process.
+   * @private
+   */
   _stopReduce() {
     this.model.stopReduce();
     // TODO:
   }
 
+  /**
+   * Makes the recipe reduction interface visible.
+   */
   show() {
     this.view.render("show");
   }
 
+  /**
+   * Hides the recipe reduction interface.
+   */
   hide() {
     this.view.render("hide");
   }
 }
 
+/**
+ * Main class for managing the recipe reduction component, integrating model, view, and controller layers.
+ * @param {HTMLElement} parentElement - The parent element to append the component to.
+ * @param {string} runId - A unique identifier for the run associated with the recipe reduction.
+ * @param {Object} data - Data necessary for initializing the component.
+ * @param {Object} [options={}] - Optional configuration options for the recipe reduction.
+ */
 class RecipeReduction {
   static #defaultOptions = {
     id: "RecipeReduction",
@@ -656,18 +832,38 @@ class RecipeReduction {
     this._init(parentElement, runId, data);
   }
 
+  /**
+   * Initializes the component by creating its MVC structure and rendering it.
+   * @param {HTMLElement} parentElement - The container where the component will be mounted.
+   * @param {string} runId - The run identifier for which the component is created.
+   * @param {Object} data - Initialization data for the component.
+   * @private
+   */
   _init(parentElement, runId, data) {
     this._create(parentElement, runId, data);
   }
 
+  /**
+   * Creates the MVC components and attaches them to the parent element.
+   * @param {HTMLElement} parentElement - The parent element to attach the component to.
+   * @param {string} runId - The run identifier.
+   * @param {Object} data - Data needed for the creation.
+   * @private
+   */
   _create(parentElement, runId, data) {
     this.controller.create(parentElement, runId, data);
   }
 
+  /**
+   * Makes the component visible.
+   */
   show() {
     this.controller.show();
   }
 
+  /**
+   * Hides the component.
+   */
   hide() {
     this.controller.hide();
   }

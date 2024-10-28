@@ -321,6 +321,7 @@ class CaldbView {
   /**
    * Creates the card component using the template.
    * @return {HTMLElement} The created card element.
+   * @private
    */
   _create() {
     const card = this.template.createCard();
@@ -331,8 +332,9 @@ class CaldbView {
   /**
    * Updates the table with new data.
    * @param {Array} data - The new data to render in the table.
+   * @private
    */
-  update(data) {
+  _update(data) {
     const newTbody = this.template.createTBodyData(data);
     this.table.replaceChild(newTbody, this.tbody);
     this.tbody = newTbody;
@@ -351,7 +353,7 @@ class CaldbView {
   render(viewCmd, parameter) {
     switch (viewCmd) {
       case "update":
-        this.update(parameter.data);
+        this._update(parameter.data);
         break;
     }
   }
@@ -391,19 +393,17 @@ class CaldbView {
 class CaldbModel {
   constructor(options) {
     this.options = options;
-    this.runId = null;
-    this.rawData = null;
-    this.data = null;
+    this._runId = null;
     this.api = this.options.api;
     this.caldbUrl = "dragonscaldb/";
   }
 
-  /**
-   * Sets the run ID for the calibration database operations.
-   * @param {number} runId - The run ID to set for future API requests.
-   */
-  setRunId(runId) {
-    this.runId = runId;
+  get runId() {
+    return this._runId;
+  }
+
+  set runId(value) {
+    this._runId = value;
   }
 
   /**
@@ -414,7 +414,7 @@ class CaldbModel {
   async fetchFiles() {
     try {
       const response = await this.api.get(`${this.caldbUrl}${this.runId}/`);
-      this.setData(response);
+      return response.files;
     } catch (error) {
       console.error("Error fetching list of calibration database files:", error);
       throw error;
@@ -434,7 +434,7 @@ class CaldbModel {
         action: "remove",
       };
       const response = await this.api.patch(`${this.caldbUrl}${this.runId}/`, body);
-      this.setData(response);
+      return response.files;
     } catch (error) {
       console.error(`Error removing file:`, error);
       throw error;
@@ -460,44 +460,11 @@ class CaldbModel {
         {},
         false
       );
-      this.setData(response);
+      return response.files;
     } catch (error) {
       console.error(`Error adding file:`, error);
       throw error;
     }
-  }
-
-  /**
-   * Sets the data for the model.
-   * @param {Object} data - The complete data object.
-   */
-  setData(data) {
-    this.rawData = data;
-    this.data = data.files;
-  }
-
-  /**
-   * Returns the raw data stored in the model.
-   * @return {Object} The raw data.
-   */
-  getRawData() {
-    return this.rawData;
-  }
-
-  /**
-   * Returns the processed data stored in the model.
-   * @return {Array} The processed results data.
-   */
-  getData() {
-    return this.data;
-  }
-
-  /**
-   * Clears all data stored in the model.
-   */
-  clearData() {
-    this.rawData = null;
-    this.data = null;
   }
 }
 
@@ -523,7 +490,7 @@ class CaldbController {
    * @param {number} runId - The run ID for the calibration database.
    */
   async update(runId) {
-    this.model.setRunId(runId);
+    this.model.runId = runId;
     await this.refresh();
   }
 
@@ -534,8 +501,8 @@ class CaldbController {
    */
   async remove(filename) {
     if (!this.model.runId) return;
-    await this.model.removeFile(filename);
-    this.view.render("update", { data: this.model.getData() });
+    const data = await this.model.removeFile(filename);
+    this.view.render("update", { data });
   }
 
   /**
@@ -545,8 +512,8 @@ class CaldbController {
    */
   async add(file) {
     if (!this.model.runId) return;
-    await this.model.addFile(file);
-    this.view.render("update", { data: this.model.getData() });
+    const data = await this.model.addFile(file);
+    this.view.render("update", { data });
   }
 
   /**
@@ -555,8 +522,8 @@ class CaldbController {
    */
   async refresh() {
     if (!this.model.runId) return;
-    await this.model.fetchFiles();
-    this.view.render("update", { data: this.model.getData() });
+    const data = await this.model.fetchFiles();
+    this.view.render("update", { data });
   }
 }
 

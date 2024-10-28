@@ -605,6 +605,10 @@ class RunSetupController {
     this.view.render("update", { data: this.model.data });
   }
 
+  /**
+   * Updates the run data in the model and refreshes the view with the new run data.
+   * @param {string} runId - The new run identifier to update the model with.
+   */
   _updateRun(runId) {
     this.model.runId = runId;
     const data = this.model.getRunData();

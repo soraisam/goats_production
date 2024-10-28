@@ -250,7 +250,6 @@ class FilesTableModel {
   constructor(options) {
     this.options = options;
     this.api = this.options.api;
-    this._rawData = null;
     this._data = null;
     this.filesUrl = "dragonsfiles/";
   }
@@ -260,17 +259,7 @@ class FilesTableModel {
   }
 
   set data(value) {
-    this._rawData = value;
     this._data = value;
-  }
-
-  get rawData() {
-    return this._rawData;
-  }
-
-  clearData() {
-    this._rawData = null;
-    this._data = null;
   }
 
   /**
@@ -505,8 +494,7 @@ class FilesTableController {
    * @param {Array} data - The new data to update the table with.
    */
   update(data) {
-    this.model.data = data;
-    this.view.render("update", { data: this.model.data });
+    this.view.render("update", { data });
   }
 
   /**
@@ -515,9 +503,7 @@ class FilesTableController {
    * @param {HTMLElement} parentElement - The parent element to append the table to.
    */
   create(data, parentElement) {
-    this.model.data = data;
-
-    this.view.render("create", { data: this.model.data, parentElement });
+    this.view.render("create", { data, parentElement });
     this._bindCallbacks();
   }
 

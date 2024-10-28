@@ -23,7 +23,7 @@
     <div id="runSetupContainer"></div>
   </div>
   <div class="col-xl-6">
-    <div id="observationTypeManagerContainer"></div>
+    <div id="recipesAndFilesManagerContainer"></div>
   </div>
   <div class="col-xl-6">
     <div id="recipeReductionsContainer"></div>
@@ -53,7 +53,7 @@
 <script src="{% static 'js/dragons_app/output_files.js' %}"></script>
 <script src="{% static 'js/dragons_app/run_table.js' %}"></script>
 <script src="{% static 'js/dragons_app/help_offcanvas.js' %}"></script>
-<script src="{% static 'js/dragons_app/observation_type_manager.js' %}"></script>
+<script src="{% static 'js/dragons_app/recipes_and_files_manager.js' %}"></script>
 <script src="{% static 'js/dragons_app/available_recipes.js' %}"></script>
 <script src="{% static 'js/dragons_app/available_files.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/ace.js' %}"></script>
@@ -84,8 +84,8 @@
       const runId = event.detail.runId;
       if (!this.initialized) {
         // Initialize the App with the new run ID.
-        this.observationTypeManager = new ObservationTypeManager(
-          document.getElementById("observationTypeManagerContainer"),
+        this.recipesAndFilesManager = new RecipesAndFilesManager(
+          document.getElementById("recipesAndFilesManagerContainer"),
           runId
         );
         this.caldb = new Caldb(document.getElementById("caldbContainer"));
@@ -302,7 +302,7 @@
           testData
         );
       } else {
-        this.observationTypeManager.update(runId);
+        this.recipesAndFilesManager.update(runId);
         this.caldb.update(runId);
         this.outputFiles.update(runId);
       }
