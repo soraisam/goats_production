@@ -43,7 +43,7 @@ class RecipeReductionModel {
     const data = { status: "canceled" };
     try {
       const response = await this.api.patch(
-        `${this.reducesUrl}${this.reduceId}/`,
+        `${this.reducesUrl}${this.currentReduceData.id}/`,
         data
       );
       this.reduce = response;
@@ -487,8 +487,8 @@ class RecipeReductionView {
       case "hide":
         this._hide();
         break;
-      case "logMessage":
-        this._logMessage(parameter.message);
+      case "log":
+        this._log(parameter.message);
         break;
       case "enableEditRecipe":
         this._enableEditRecipe();
@@ -502,6 +502,45 @@ class RecipeReductionView {
       case "disableSaveRecipe":
         this._disableSaveRecipe();
         break;
+      case "update":
+        this._update(parameter.data);
+        break;
+      case "clearLog":
+        this._clearLog();
+        break;
+      case "startReduce":
+        this._startReduce(parameter.data);
+        break;
+      case "stopReduce":
+        this._stopReduce(parameter.data);
+        break;
+    }
+  }
+  _startReduce(data) {
+    this.startButton.disabled = true;
+    this.stopButton.disabled = false;
+    this._update(data);
+  }
+
+  _stopReduce(data) {
+    this.startButton.disabled = false;
+    this.stopButton.disabled = true;
+    this._update(data);
+  }
+
+  _clearLog() {
+    this.logger.clear();
+  }
+
+  _update(data) {
+    // TODO: Update button state depending on status.
+    this.progress.update(data.status);
+    if (["canceled", "done", "error"].includes(data.status)) {
+      this.startButton.disabled = false;
+      this.stopButton.disabled = true;
+    } else {
+      this.startButton.disabled = true;
+      this.stopButton.disabled = false;
     }
   }
 
@@ -542,7 +581,7 @@ class RecipeReductionView {
    * @param {string} message - The message to log.
    * @private
    */
-  _logMessage(message) {
+  _log(message) {
     this.logger.log(message);
   }
 
@@ -634,7 +673,7 @@ class RecipeReductionView {
   bindCallback(event, handler) {
     switch (event) {
       case "stopReduce":
-        Utils.on(this.stopButton, "click", () => {
+        Utils.on(this.stopButton, "click", (e) => {
           handler();
         });
         break;
@@ -685,6 +724,12 @@ class RecipeReductionController {
    */
   create(parentElement, data) {
     this.model.recipeId = data.id;
+    this.model.identifier = new Identifier(
+      null, // No run ID.
+      data.observation_type,
+      data.observation_class,
+      data.object_name
+    );
     this.view.render("create", { parentElement, data });
     this._bindCallbacks();
   }
@@ -707,9 +752,19 @@ class RecipeReductionController {
    * Starts the reduction process via the model.
    * @private
    */
-  _startReduce() {
-    this.model.startReduce();
-    // TODO:
+  async _startReduce() {
+    this.view.render("clearLog");
+    // TODO: Get all files to send from the associated table.
+    const tbody = document.querySelector(
+      `#${this.model.identifier.idPrefix}FilesTable tbody`
+    );
+    // Directly retrieve file IDs from checked checkboxes.
+    const fileIds = Array.from(
+      tbody.querySelectorAll("input[type='checkbox']:checked")
+    ).map((input) => input.closest("tr").dataset.fileId);
+
+    const data = await this.model.startReduce(fileIds);
+    this.view.render("startReduce", { data });
   }
 
   /**
@@ -747,8 +802,12 @@ class RecipeReductionController {
    * @param {string} message - The message to log.
    * @private
    */
-  _logMessage(message) {
-    this.view.render("logMessage", { message });
+  log(message) {
+    this.view.render("log", { message });
+  }
+
+  update(data) {
+    this.view.render("update", { data });
   }
 
   /**
@@ -769,9 +828,9 @@ class RecipeReductionController {
    * Stops the reduction process.
    * @private
    */
-  _stopReduce() {
-    this.model.stopReduce();
-    // TODO:
+  async _stopReduce() {
+    const data = await this.model.stopReduce();
+    this.view.render("stopReduce", { data });
   }
 
   /**
@@ -818,7 +877,7 @@ class RecipeReduction {
     },
   };
 
-  constructor(parentElement, runId, data, options = {}) {
+  constructor(parentElement, data, options = {}) {
     this.options = {
       ...RecipeReduction.#defaultOptions,
       ...options,
@@ -829,7 +888,7 @@ class RecipeReduction {
     const view = new RecipeReductionView(template, this.options);
     this.controller = new RecipeReductionController(model, view, this.options);
 
-    this._init(parentElement, runId, data);
+    this._init(parentElement, data);
   }
 
   /**
@@ -839,19 +898,18 @@ class RecipeReduction {
    * @param {Object} data - Initialization data for the component.
    * @private
    */
-  _init(parentElement, runId, data) {
-    this._create(parentElement, runId, data);
+  _init(parentElement, data) {
+    this._create(parentElement, data);
   }
 
   /**
    * Creates the MVC components and attaches them to the parent element.
    * @param {HTMLElement} parentElement - The parent element to attach the component to.
-   * @param {string} runId - The run identifier.
    * @param {Object} data - Data needed for the creation.
    * @private
    */
-  _create(parentElement, runId, data) {
-    this.controller.create(parentElement, runId, data);
+  _create(parentElement, data) {
+    this.controller.create(parentElement, data);
   }
 
   /**
@@ -866,5 +924,13 @@ class RecipeReduction {
    */
   hide() {
     this.controller.hide();
+  }
+
+  update(data) {
+    this.controller.update(data);
+  }
+
+  log(message) {
+    this.controller.log(message);
   }
 }
