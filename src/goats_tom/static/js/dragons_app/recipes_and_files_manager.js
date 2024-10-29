@@ -33,6 +33,10 @@ class RecipesAndFilesManagerTemplate {
     return card;
   }
 
+  /**
+   * Creates the header section of the card.
+   * @returns {HTMLElement} The card header element
+   */
   _createCardHeader() {
     const div = Utils.createElement("div", ["card-header", "h5", "mb-0"]);
     div.textContent = "Available Recipes and Files";

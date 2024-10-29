@@ -1,8 +1,10 @@
 class RecipeReductionsManagerModel {
   constructor(options) {
     this.options = options;
+    this.api = options.api;
     this._currentRecipeId = null;
     this._runId = null;
+    this.url = "dragonsrecipes/";
   }
 
   get runId() {
@@ -14,11 +16,21 @@ class RecipeReductionsManagerModel {
   }
 
   get currentRecipeId() {
-    return this._currentRecipeId
+    return this._currentRecipeId;
   }
 
   set currentRecipeId(value) {
     this._currentRecipeId = value;
+  }
+
+  async fetchRecipes() {
+    try {
+      const response = await this.api.get(`${this.url}?dragons_run=${this.runId}`);
+      return response.results;
+    } catch (error) {
+      console.error("Error fetching list of recipes:", error);
+      throw error;
+    }
   }
 }
 
@@ -46,6 +58,33 @@ class RecipeReductionsManagerView {
       case "updateRecipe":
         this._updateRecipe(parameter.recipeId);
         break;
+      case "update":
+        this._update(parameter.data);
+        break;
+      case "updateRecipeReductionLog":
+        this._updateRecipeReductionLog(parameter.recipeId, parameter.message);
+        break;
+      case "updateRecipeReduction":
+        this._updateRecipeReduction(parameter.recipeId, parameter.data);
+        break;
+    }
+  }
+
+  _updateRecipeReductionLog(recipeId, message) {
+    const recipeReduction = this._getRecipeReduction(recipeId);
+    if (recipeReduction) {
+      recipeReduction.log(message);
+    }
+  }
+
+  _getRecipeReduction(recipeId) {
+    return this.recipeReductions.get(String(recipeId));
+  }
+
+  _updateRecipeReduction(recipeId, data) {
+    const recipeReduction = this._getRecipeReduction(recipeId);
+    if (recipeReduction) {
+      recipeReduction.update(data);
     }
   }
 
@@ -62,14 +101,27 @@ class RecipeReductionsManagerView {
   }
 
   _create(parentElement, data) {
+    this.parentElement = parentElement;
     // Loop through and create recipe reductions.
-    data.results.forEach((recipe) => {
+    data.forEach((recipe) => {
       // Use map for accessing.
       this.recipeReductions.set(
         String(recipe.id),
         new RecipeReduction(parentElement, recipe)
       );
     });
+  }
+
+  _update(data) {
+    // First, remove all HTML elements associated with the entries in the map.
+    while (this.parentElement.firstChild) {
+      this.parentElement.removeChild(this.parentElement.firstChild);
+    }
+
+    // Second, clear the map itself.
+    this.recipeReductions.clear();
+    // Optionally, you might want to recreate the elements if `data` is supposed to provide new contents.
+    this._create(this.parentElement, data);
   }
 
   bindGlobalCallback(event, handler) {
@@ -97,38 +149,47 @@ class RecipeReductionsManagerController {
     });
   }
 
-  create(parentElement, runId, data) {
+  async create(parentElement, runId) {
     this.model.runId = runId;
+    const data = await this.model.fetchRecipes();
     this.view.render("create", { parentElement, data });
     this._setupWebSocket();
     this._bindGlobalCallbacks();
   }
 
+  async update(runId) {
+    this.model.runId = runId;
+    const data = await this.model.fetchRecipes();
+    this.view.render("update", { data });
+  }
+
   _updateRecipe(recipeId) {
     if (this.model.currentRecipeId !== recipeId) {
-      console.log("updating because doesn't match");
       this.view.render("updateRecipe", { recipeId });
       this.model.currentRecipeId = recipeId;
     }
   }
 
+  _wsUpdateRecipeReductionLog(recipeId, message) {
+    // TODO: This updates off screen as well, do we want that?
+    this.view.render("updateRecipeReductionLog", { recipeId, message });
+  }
+
+  _wsUpdateRecipeReduction(recipeId, data) {
+    // TODO: This updates off screen as well, do we want that?
+    this.view.render("updateRecipeReduction", { recipeId, data });
+  }
+
   _setupWebSocket() {
-    // TODO: Finish this.
     this.ws = new WebSocket("ws://localhost:8000/ws/dragons/");
 
     this.ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.update === "log") {
-        const recipeController = this.getRecipeControllerById(data.recipe_id);
-        if (recipeController) {
-          recipeController.handleLogMessage(data.message);
-        }
+        this._wsUpdateRecipeReductionLog(data.recipe_id, data.message);
       }
       if (data.update === "recipe") {
-        const recipeController = this.getRecipeControllerById(data.recipe_id);
-        if (recipeController) {
-          recipeController.handleUpdateReduce(data);
-        }
+        this._wsUpdateRecipeReduction(data.recipe_id, data);
       }
     };
 
@@ -151,7 +212,7 @@ class RecipeReductionsManager {
     id: "RecipeReductionsManager",
   };
 
-  constructor(parentElement, runId, data, options = {}) {
+  constructor(parentElement, runId, options = {}) {
     this.options = {
       ...RecipeReductionsManager.#defaultOptions,
       ...options,
@@ -165,11 +226,15 @@ class RecipeReductionsManager {
     this._init(parentElement, runId, data);
   }
 
-  _init(parentElement, runId, data) {
-    this._create(parentElement, runId, data);
+  _init(parentElement, runId) {
+    this._create(parentElement, runId);
   }
 
   _create(parentElement, runId, data) {
-    this.controller.create(parentElement, runId, data);
+    this.controller.create(parentElement, runId);
+  }
+
+  update(runId) {
+    this.controller.update(runId);
   }
 }

@@ -71,6 +71,7 @@ class FilesTableTemplate {
       "table-borderless",
       "table-striped",
     ]);
+    table.id = `${this.identifier.idPrefix}${this.options.id}`;
 
     table.append(this._createThead(data), this.createTbody(data.All.files));
 

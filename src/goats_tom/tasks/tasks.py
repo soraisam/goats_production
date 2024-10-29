@@ -95,10 +95,7 @@ def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
         os.chdir(run.get_output_dir())
 
         # Filter the files based on the associated DRAGONS run and file type.
-        if file_ids:
-            files = recipes_module.files.filter(dragons_run=run, id__in=file_ids)
-        else:
-            files = recipes_module.files.filter(dragons_run=run)
+        files = recipes_module.files.filter(dragons_run=run, id__in=file_ids)
         file_paths = [file.file_path for file in files]
 
         # Setup the logger.
