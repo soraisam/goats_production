@@ -60,6 +60,8 @@ class AvailableFilesTemplate {
     const fileFilterRow = this._createFilter();
     const fileGroupingsRow = this._createGroupings(groups);
     const strictFileFilterRow = this._createStrictFilterCheckbox();
+    const useAllFilesRow = this._createUseAllFilesCheckbox();
+
     // Build the button.
     const div = Utils.createElement("div", ["d-flex", "justify-content-end"]);
     const button = Utils.createElement("button", ["btn", "btn-primary"]);
@@ -67,7 +69,13 @@ class AvailableFilesTemplate {
     button.setAttribute("type", "submit");
     div.appendChild(button);
 
-    form.append(fileGroupingsRow, fileFilterRow, strictFileFilterRow, div);
+    form.append(
+      fileGroupingsRow,
+      fileFilterRow,
+      strictFileFilterRow,
+      useAllFilesRow,
+      div
+    );
 
     return form;
   }
@@ -214,6 +222,36 @@ class AvailableFilesTemplate {
   }
 
   /**
+   * Constructs a checkbox that allows users to access all files for the observation ID without any
+   * default filtering.
+   * @returns {HTMLElement} A DOM element representing the row containing the checkbox.
+   * @private
+   */
+  _createUseAllFilesCheckbox() {
+    const row = Utils.createElement("div", ["row", "mb-1", "ms-1"]);
+    const col = Utils.createElement("div", ["col-sm-9", "ms-auto"]);
+    const div = Utils.createElement("div", ["form-check"]);
+
+    const id = `${this.identifier.idPrefix}useAllFiles`;
+
+    const checkbox = Utils.createElement("input", ["form-check-input"]);
+    checkbox.id = id;
+    checkbox.setAttribute("type", "checkbox");
+    checkbox.name = "use_all_files";
+    checkbox.checked = false;
+
+    const label = Utils.createElement("label", ["form-check-label"]);
+    label.setAttribute("for", id);
+    label.textContent = "Use all files for observation ID";
+
+    div.append(checkbox, label);
+    col.appendChild(div);
+    row.appendChild(col);
+
+    return row;
+  }
+
+  /**
    * Constructs a checkbox for the user to specify if strict filtering should be applied.
    * @returns {HTMLElement} A DOM element representing the row containing the strict filter
    * checkbox.
@@ -299,38 +337,32 @@ class AvailableFilesModel {
    * @returns {Promise<Object>} A promise that resolves to an object containing grouped and filtered files.
    */
   async fetchGroupAndFilterFiles(formData) {
-    // Fetch individual items from formData
-    const groupBy = formData.getAll("group_by");
-    if (groupBy.length === 0) {
-      groupBy.push("all");
-    }
+    // Fetch individual items from formData.
+    const groupBy = formData.getAll("group_by").length
+      ? formData.getAll("group_by")
+      : ["all"];
     const filterExpression = formData.get("filter_expression") || "";
     const filterStrict = formData.get("filter_strict") === "on";
-    let groupByParams = "";
+    const useAllFiles = formData.get("use_all_files") === "on";
 
-    if (Array.isArray(groupBy)) {
-      // Build URL with multiple group_by parameters.
-      groupByParams = groupBy.map((gb) => `&group_by=${gb}`).join("");
-    } else {
-      // Single group_by parameter.
-      groupByParams = `&group_by=${groupBy}`;
+    // Construct query parameters.
+    const params = [
+      `dragons_run=${encodeURIComponent(this.identifier.runId)}`,
+      `group_by=${groupBy.map((gb) => encodeURIComponent(gb)).join("&group_by=")}`,
+      `filter_strict=${filterStrict}`,
+    ];
+
+    // Determine the appropriate filter expression based on user input.
+    let combinedFilterExpression = this.identifier.defaultFilterExpression;
+    if (!useAllFiles) {
+      if (filterExpression) {
+        combinedFilterExpression = `${this.identifier.defaultFilterExpression} AND (${filterExpression})`;
+      }
+      params.push(`filter_expression=${encodeURIComponent(combinedFilterExpression)}`);
     }
 
-    // Base URL setup with mandatory parameters.
-    const baseUrl = `${this.url}?dragons_run=${this.identifier.runId}${groupByParams}&filter_strict=${filterStrict}`;
-
-    // Combine default filter with user-provided filter if available.
-    const combinedFilterExpression = filterExpression
-      ? `${this.identifier.defaultFilterExpression} AND (${filterExpression})`
-      : this.identifier.defaultFilterExpression;
-
-    // Encode the combined filter expression for URL.
-    const filterExpressionParam = `&filter_expression=${encodeURIComponent(
-      combinedFilterExpression
-    )}`;
-
-    // Complete URL construction.
-    const url = baseUrl + filterExpressionParam;
+    // Construct the complete URL.
+    const url = `${this.url}?${params.join("&")}`;
     try {
       const response = await this.api.get(url);
       return response;
@@ -351,11 +383,12 @@ class AvailableFilesView {
     this.identifier = identifier;
     this.options = options;
 
+    // Pointers to important elements and components.
     this.container = null;
     this.form = null;
     this.filesTable = null;
-
     this.parentElement = null;
+
     this.render = this.render.bind(this);
     this.bindCallback = this.bindCallback.bind(this);
   }
@@ -383,9 +416,6 @@ class AvailableFilesView {
    * Updates the files table with filtered files.
    * @param {Array<Object>} filteredFiles - An array of file objects that have been filtered.
    */
-  _updateFiles(filteredFiles) {
-    this.filesTable.update(filteredFiles);
-  }
   _updateFiles(filteredFiles) {
     this.filesTable.update(filteredFiles);
   }
