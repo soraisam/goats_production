@@ -1,1 +1,0 @@
-Refactored progress bar for recipes: Improved maintainability and readability of the code handling the recipe progress bar.

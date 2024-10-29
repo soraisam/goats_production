@@ -1,3 +1,38 @@
+## GOATS 24.10.0 (2024-10-29)
+
+
+### New Features
+
+- Added API backend for output file listing: Implemented functionality to list output files and their last modified timestamps from a `DRAGONSRun`. [[#GOATS-426](https://noirlab.atlassian.net/browse/GOATS-426)]
+- Linked API with UI for output directory display: Integrated the API and UI to enhance visibility of the output file directory. Added user feedback mechanisms for updates and refresh actions. [[#GOATS-430](https://noirlab.atlassian.net/browse/GOATS-430)]
+- Added API file management for DRAGONS runs: Extended the system to allow adding files from the output directory of a DRAGONS run to the saved dataproducts. Users can now also remove these files; doing so deletes both the dataproduct entry and the file itself. [[#GOATS-431](https://noirlab.atlassian.net/browse/GOATS-431)]
+- Linked backend and frontend for DRAGONS output file operations: The integration now allows adding output files to data products and removing them directly through the frontend interface. [[#GOATS-433](https://noirlab.atlassian.net/browse/GOATS-433)]
+- Designed uparms UI for DRAGONS recipe modification: Implemented a user interface to edit 'uparms' for recipes, requiring 'edit' mode activation similar to existing recipe and primitive modifications. [[#GOATS-434](https://noirlab.atlassian.net/browse/GOATS-434)]
+- Extended DRAGONS recipe "uparms" handling in API: Updated the backend to support modifications to "uparms" for DRAGONS recipe reductions. The update includes parsing "uparms" from string format into Python objects, enabling dynamic parameter adjustments. [[#GOATS-435](https://noirlab.atlassian.net/browse/GOATS-435)]
+- Connected frontend to backend for using uparms in DRAGONS reduction. [[#GOATS-436](https://noirlab.atlassian.net/browse/GOATS-436)]
+- Refactored DRAGONS logger: Improved efficiency and cleaned up code. [[#GOATS-437](https://noirlab.atlassian.net/browse/GOATS-437)]
+- Refactored progress bar for recipes: Improved maintainability and readability of the code handling the recipe progress bar. [[#GOATS-438](https://noirlab.atlassian.net/browse/GOATS-438)]
+- Fix versioning issues: Resolved bugs in tomtoolkit, GOA, and astroquery. Fixed tomtoolkit version to prevent future compatibility issues. [[#GOATS-439](https://noirlab.atlassian.net/browse/GOATS-439)]
+
+
+### Changes
+
+- Major refactor of DRAGONS app: Accommodated changes to recipe and file nesting. [[#GOATS-412](https://noirlab.atlassian.net/browse/GOATS-412)]
+- Refactor run panel UI: Improved loading animation and user feedback during actions. [[#GOATS-441](https://noirlab.atlassian.net/browse/GOATS-441)]
+- Refactored files table: Improved display of groups and file toggling for runs. [[#GOATS-442](https://noirlab.atlassian.net/browse/GOATS-442)]
+- Moved API to singleton design: Simplified DRAGONS API by converting it to a singleton pattern and made it globally accessible to all classes. Adjusted how default options are constructed. [[#GOATS-446](https://noirlab.atlassian.net/browse/GOATS-446)]
+- Refactored modal: Improved modal code for maintainability. [[#GOATS-447](https://noirlab.atlassian.net/browse/GOATS-447)]
+- Refactored dragons app folder: Consolidated and organized code in the dragons app folder for better modularity and maintainability. [[#GOATS-448](https://noirlab.atlassian.net/browse/GOATS-448)]
+- Refactored available recipes logic: Refactored the available recipes structure to simplify code and improve maintainability. Added a global event dispatcher to notify when a recipe is changed, allowing other components to react accordingly. [[#GOATS-449](https://noirlab.atlassian.net/browse/GOATS-449)]
+- Refactored available files for observation type: Simplified the structure of available files by refactoring the code. Introduced helper functions to create unique IDs using observation type, observation class, and object name. [[#GOATS-450](https://noirlab.atlassian.net/browse/GOATS-450)]
+- Refactored observation data organization: Enhanced how observation type, observation class, and object name organize recipes and files. Added a new endpoint to set up initial data for recipes and files for a specific run. [[#GOATS-451](https://noirlab.atlassian.net/browse/GOATS-451)]
+- Refactored API grouping control: The API now allows users to specify fields to group for better DRAGONS use. [[#GOATS-452](https://noirlab.atlassian.net/browse/GOATS-452)]
+- Refactored file identifiers in accordions: Refactored how files are displayed in accordions based on observation type, class, and object name. Introduced a helper class to manage these identifiers efficiently. [[#GOATS-457](https://noirlab.atlassian.net/browse/GOATS-457)]
+- Refactored available files handling: Enhanced file filtering mechanisms and prepared for future expansion to include all files. Callbacks for filtering processes were integrated to ensure smooth operations. [[#GOATS-458](https://noirlab.atlassian.net/browse/GOATS-458)]
+- Refactored recipe reduction. [[#GOATS-459](https://noirlab.atlassian.net/browse/GOATS-459)]
+- General cleanup: Removed unnecessary data storage and added documentation. [[#GOATS-461](https://noirlab.atlassian.net/browse/GOATS-461)]
+- Refactored WebSocket updates and app initialization. [[#GOATS-462](https://noirlab.atlassian.net/browse/GOATS-462)]
+
 ## GOATS 24.9.0 (2024-09-20)
 
 

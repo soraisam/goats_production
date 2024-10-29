@@ -1,1 +1,0 @@
-Refactored modal: Improved modal code for maintainability.

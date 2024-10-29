@@ -1,1 +1,0 @@
-Moved API to singleton design: Simplified DRAGONS API by converting it to a singleton pattern and made it globally accessible to all classes. Adjusted how default options are constructed.

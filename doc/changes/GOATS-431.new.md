@@ -1,1 +1,0 @@
-Added API file management for DRAGONS runs: Extended the system to allow adding files from the output directory of a DRAGONS run to the saved dataproducts. Users can now also remove these files; doing so deletes both the dataproduct entry and the file itself.

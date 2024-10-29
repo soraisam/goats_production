@@ -1,1 +1,0 @@
-Refactored recipe reduction.

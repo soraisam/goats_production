@@ -1,1 +1,0 @@
-Designed uparms UI for DRAGONS recipe modification: Implemented a user interface to edit 'uparms' for recipes, requiring 'edit' mode activation similar to existing recipe and primitive modifications.

@@ -1,1 +1,0 @@
-Refactor run panel UI: Improved loading animation and user feedback during actions.

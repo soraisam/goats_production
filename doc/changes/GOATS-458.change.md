@@ -1,1 +1,0 @@
-Refactored available files handling: Enhanced file filtering mechanisms and prepared for future expansion to include all files. Callbacks for filtering processes were integrated to ensure smooth operations.
