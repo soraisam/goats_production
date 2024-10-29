@@ -1,0 +1,1 @@
+Refactored API grouping control: The API now allows users to specify fields to group for better DRAGONS use.

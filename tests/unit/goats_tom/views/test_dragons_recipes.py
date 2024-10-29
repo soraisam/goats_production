@@ -32,7 +32,7 @@ class TestDRAGONSRecipesViewSet(APITestCase):
         """Test listing all DRAGONS recipes."""
         DRAGONSRecipeFactory.create_batch(3)
 
-        request = self.factory.get(reverse("dragonsrecipe-list"))
+        request = self.factory.get(reverse("dragonsrecipes-list"))
         self.authenticate(request)
 
         response = self.list_view(request)
@@ -45,21 +45,21 @@ class TestDRAGONSRecipesViewSet(APITestCase):
         dragons_recipe = DRAGONSRecipeFactory()
 
         request = self.factory.get(
-            reverse("dragonsrecipe-detail", args=[dragons_recipe.id]),
+            reverse("dragonsrecipes-detail", args=[dragons_recipe.id]),
         )
         self.authenticate(request)
 
         response = self.detail_view(request, pk=dragons_recipe.id)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["file_type"] == dragons_recipe.file_type
+        assert response.data["observation_type"] == dragons_recipe.observation_type
 
     def test_update_recipe(self):
         """Test updating a DRAGONS recipe."""
         dragons_recipe = DRAGONSRecipeFactory()
         new_function_definition = "Updated function definition"
         request = self.factory.patch(
-            reverse("dragonsrecipe-detail", args=[dragons_recipe.id]),
+            reverse("dragonsrecipes-detail", args=[dragons_recipe.id]),
             {"function_definition": new_function_definition},
         )
         self.authenticate(request)
@@ -74,7 +74,7 @@ class TestDRAGONSRecipesViewSet(APITestCase):
 
         # Test resetting the function definition.
         request = self.factory.patch(
-            reverse("dragonsrecipe-detail", args=[dragons_recipe.id]),
+            reverse("dragonsrecipes-detail", args=[dragons_recipe.id]),
             {"function_definition": None},
         )
         self.authenticate(request)
@@ -95,7 +95,7 @@ class TestDRAGONSRecipesViewSet(APITestCase):
         DRAGONSRecipeFactory.create_batch(3)
 
         request = self.factory.get(
-            reverse("dragonsrecipe-list"), {"dragons_run": dragons_run.pk},
+            reverse("dragonsrecipes-list"), {"dragons_run": dragons_run.pk},
         )
         self.authenticate(request)
 
@@ -107,7 +107,7 @@ class TestDRAGONSRecipesViewSet(APITestCase):
 
     def test_authentication_required(self):
         """Test that authentication is required to access the view."""
-        request = self.factory.get(reverse("dragonsrecipe-list"))
+        request = self.factory.get(reverse("dragonsrecipes-list"))
 
         response = self.list_view(request)
 

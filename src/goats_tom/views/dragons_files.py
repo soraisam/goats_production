@@ -1,7 +1,5 @@
 """Module that handles the DRAGONS files API."""
 
-from collections import defaultdict
-
 from django.db.models import CharField, F, QuerySet, Value
 from django.db.models.fields.json import KeyTransform
 from django.db.models.functions import Concat
@@ -17,7 +15,6 @@ from goats_tom.serializers import (
     DRAGONSFileFilterSerializer,
     DRAGONSFileSerializer,
 )
-from goats_tom.utils import get_astrodata_header
 
 
 class DRAGONSFilesViewSet(
@@ -53,16 +50,9 @@ class DRAGONSFilesViewSet(
         filter_serializer.is_valid(raise_exception=True)
 
         dragons_run_pk = filter_serializer.validated_data.get("dragons_run")
-        file_type = filter_serializer.validated_data.get("file_type")
-        object_name = filter_serializer.validated_data.get("object_name")
 
         if dragons_run_pk is not None:
             queryset = queryset.filter(dragons_run__pk=dragons_run_pk)
-
-        if file_type is not None:
-            queryset = queryset.filter(file_type=file_type)
-            if file_type == "object":
-                queryset = queryset.filter(object_name=object_name)
 
         # Apply select_related to optimize related object retrieval.
         queryset = queryset.select_related(
@@ -90,7 +80,6 @@ class DRAGONSFilesViewSet(
         filter_serializer.is_valid(raise_exception=True)
 
         # Extract validated data.
-        group_by_file_type = filter_serializer.validated_data.get("group_by_file_type")
         group_by = filter_serializer.validated_data.get("group_by", [])
         filter_expression = filter_serializer.validated_data.get(
             "filter_expression", ""
@@ -104,7 +93,23 @@ class DRAGONSFilesViewSet(
         queryset = self.filter_queryset(self.get_queryset())
         queryset = queryset.filter(query_filter)
 
+        # Group by dynamic fields if specified.
         if group_by:
+            if "all" in group_by:
+                # Return all files under the "All" key with a count
+                files_data = list(
+                    queryset.values(
+                        "id",
+                        "product_id",
+                        "url",
+                        "observation_type",
+                        "object_name",
+                        "observation_class",
+                    )
+                )
+                grouped_data = {"All": {"count": len(files_data), "files": files_data}}
+                return Response(grouped_data)
+
             annotations = {
                 f"group_value_{i}": KeyTransform(key, "astrodata_descriptors")
                 for i, key in enumerate(group_by)
@@ -129,7 +134,8 @@ class DRAGONSFilesViewSet(
             queryset = queryset.values(
                 "id",
                 "object_name",
-                "file_type",
+                "observation_type",
+                "observation_class",
                 "product_id",
                 "url",
                 group_field,
@@ -147,48 +153,25 @@ class DRAGONSFilesViewSet(
                 grouped_data[group_key]["files"].append(
                     {
                         "id": item["id"],
-                        "object_name": item["object_name"],
-                        "file_type": item["file_type"],
                         "product_id": item["product_id"],
                         "url": item["url"],
+                        "object_name": item["object_name"],
+                        "observation_type": item["observation_type"],
+                        "observation_class": item["observation_class"],
                     }
                 )
                 grouped_data[group_key]["count"] += 1
 
             return Response(grouped_data)
 
-        if group_by_file_type:
-            # Don't worry about pagination and group by file type.
-            serializer = self.get_serializer(queryset, many=True)
-            grouped_data = defaultdict(list)
-            for item in serializer.data:
-                grouped_data[(item["file_type"]).lower()].append(item)
-
-            if "object" in grouped_data:
-                object_group = defaultdict(list)
-                for obj_item in grouped_data["object"]:
-                    sub_type = obj_item.get("object_name", "")
-                    object_group[sub_type].append(obj_item)
-                grouped_data["object"] = dict(
-                    object_group
-                )  # Replace the list with a dictionary of sub_types
-
-            data = dict(grouped_data)
-            return Response({"results": data})
-
-        # Paginate and return data.
         page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(
-            page if page is not None else queryset,
-            many=True,
-        )
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        data = serializer.data
-        return (
-            self.get_paginated_response(serializer.data)
-            if page is not None
-            else Response(serializer.data)
-        )
+        # No grouping specified; serialize and return all records.
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def retrieve(self, request: HttpRequest, *args, **kwargs) -> Response:
         """Retrieve a DRAGONS file instance along with optional included data based on
@@ -215,9 +198,8 @@ class DRAGONSFilesViewSet(
         if filter_serializer.is_valid(raise_exception=False):
             include = filter_serializer.validated_data.get("include", [])
 
-            if "header" in include:
-                header = get_astrodata_header(instance.data_product)
-                data["header"] = header
+            if "astrodata_descriptors" in include:
+                data["astrodata_descriptors"] = instance.astrodata_descriptors
 
             if "groups" in include:
                 data["groups"] = instance.list_groups()

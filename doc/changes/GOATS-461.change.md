@@ -1,0 +1,1 @@
+General cleanup: Removed unnecessary data storage and added documentation.

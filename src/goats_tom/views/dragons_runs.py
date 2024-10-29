@@ -74,7 +74,6 @@ class DRAGONSRunsViewSet(
         """
         dragons_run = serializer.save()
 
-
         self._initialize(dragons_run)
 
     def _initialize(self, dragons_run: DRAGONSRun) -> None:
@@ -121,8 +120,8 @@ class DRAGONSRunsViewSet(
             # Get the tags and instrument.
             ad = astrodata.open(data_product.data.path)
             tags = ad.tags
-            instrument = ad.instrument(generic=True).lower()
-            object_name = None
+            # TODO: Should we store lowercase for instrument and observation_type?
+            instrument = ad.instrument(generic=True)
             # TODO: Is there a better place for this?
             descriptors = ad.descriptors
 
@@ -136,12 +135,14 @@ class DRAGONSRunsViewSet(
                 continue
 
             # Get the file type and the object name if applicable.
-            file_type = ad.observation_type().lower()
-            if file_type == "object":
-                object_name = ad.object()
+            observation_type = ad.observation_type()
+            object_name = ad.object()
+            observation_class = ad.observation_class()
 
-            # if file_type not in processed_base_recipe_file_types:
-            recipes_and_primitives = get_recipes_and_primitives(tags, instrument)
+            # if observation_type not in processed_base_recipe_observation_types:
+            recipes_and_primitives = get_recipes_and_primitives(
+                tags, instrument.lower()
+            )
 
             # Create or update recipes in the database.
             for recipe_name, details in recipes_and_primitives["recipes"].items():
@@ -162,7 +163,8 @@ class DRAGONSRunsViewSet(
                     dragons_run=dragons_run,
                     recipe=base_recipe,
                     object_name=object_name,
-                    file_type=file_type,
+                    observation_type=observation_type,
+                    observation_class=observation_class,
                     defaults={
                         "is_default": details["is_default"],
                     },
@@ -190,8 +192,9 @@ class DRAGONSRunsViewSet(
                 dragons_run=dragons_run,
                 data_product=data_product,
                 recipes_module=recipes_module,
-                file_type=file_type,
+                observation_type=observation_type,
                 object_name=object_name,
+                observation_class=observation_class,
                 astrodata_descriptors=astrodata_descriptors,
                 product_id=data_product.get_file_name(),
                 url=data_product.data.url,

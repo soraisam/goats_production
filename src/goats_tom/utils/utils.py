@@ -284,7 +284,7 @@ def extract_metadata(file_path: Path) -> dict | None:
             return
         # Construct the metadata dictionary.
         metadata_dict = {
-            "file_type": ad.observation_type(),
+            "observation_type": ad.observation_type(),
             # "observation_class", ad.observation_class(),
             "group_id": (
                 ad.group_id() if "GNIRS" not in ad.instrument() else None

@@ -1,0 +1,561 @@
+/**
+ * Class to manage calibration database UI components.
+ */
+class CaldbTemplate {
+  constructor(options) {
+    this.options = options;
+  }
+  /**
+   * Creates a card container.
+   * @return {HTMLElement} The card element.
+   */
+  createCard() {
+    const card = Utils.createElement("div", ["card"]);
+    card.appendChild(this.createCardBody());
+
+    return card;
+  }
+
+  /**
+   * Creates the body section of the card.
+   * @return {HTMLElement} The card body element.
+   */
+  createCardBody() {
+    const cardBody = Utils.createElement("div", ["card-body"]);
+    cardBody.appendChild(this.createAccordion());
+
+    return cardBody;
+  }
+
+  /**
+   * Creates an accordion for collapsible content.
+   * @return {HTMLElement} The accordion element.
+   */
+  createAccordion() {
+    const accordion = Utils.createElement("div", ["accordion"]);
+    const accordionId = `accordion${this.options.id}`;
+    accordion.id = accordionId;
+
+    const header = Utils.createElement("h6", ["accordion-header"]);
+    const headerId = `header${this.options.id}`;
+    header.id = headerId;
+
+    const button = Utils.createElement("button");
+    const collapseId = `collapse${this.options.id}`;
+    button.className = "accordion-button collapsed";
+    button.setAttribute("type", "button");
+    button.setAttribute("data-bs-toggle", "collapse");
+    button.setAttribute("data-bs-target", `#${collapseId}`);
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-controls", collapseId);
+    button.textContent = "Calibration Database";
+
+    header.appendChild(button);
+
+    const collapseDiv = Utils.createElement("div");
+    collapseDiv.id = collapseId;
+    collapseDiv.className = "accordion-collapse collapse";
+    collapseDiv.setAttribute("aria-labelledby", headerId);
+    collapseDiv.setAttribute("data-bs-parent", `#${accordionId}`);
+
+    const accordionBody = Utils.createElement("div", ["accordion-body"]);
+    accordionBody.append(this.createToolbar(), this.createTable());
+
+    collapseDiv.appendChild(accordionBody);
+    accordion.append(header, collapseDiv);
+
+    return accordion;
+  }
+
+  /**
+   * Creates a table for displaying data.
+   * @return {HTMLElement} The table element.
+   */
+  createTable() {
+    const table = Utils.createElement("table", [
+      "table",
+      "table-borderless",
+      "table-sm",
+      "table-striped",
+    ]);
+    table.append(this.createTHeadDefault(), this.createTBodyDefault());
+
+    return table;
+  }
+
+  /**
+   * Builds a toolbar with important actions.
+   * @returns {HTMLElement} The toolbar.
+   */
+  createToolbar() {
+    const div = Utils.createElement("div");
+    div.id = `toolbar${this.options.id}`;
+    const row = Utils.createElement("div", ["row", "g-3"]);
+    const colAdd = Utils.createElement("div", ["col"]);
+
+    // Create form to handle file input.
+    const form = Utils.createElement("form");
+    form.id = `form${this.options.id}`;
+
+    const fileLabel = Utils.createElement("label", ["btn", "btn-secondary", "btn-sm"]);
+    fileLabel.textContent = " Add File";
+    fileLabel.setAttribute("for", "fileInputCaldb");
+
+    // Create and prepend the icon.
+    const fileIcon = Utils.createElement("i", ["fa-solid", "fa-plus"]);
+    fileLabel.prepend(fileIcon);
+
+    // Hide file input to use custom text for button.
+    const fileInput = Utils.createElement("input");
+    fileInput.type = "file";
+    fileInput.name = "file";
+    fileInput.style.display = "none";
+    fileInput.dataset.action = "add";
+    fileInput.id = `fileInput${this.options.id}`;
+
+    form.append(fileLabel, fileInput);
+    colAdd.appendChild(form);
+
+    const colRefresh = Utils.createElement("div", ["col", "text-end"]);
+    const refreshButton = Utils.createElement("button", [
+      "btn",
+      "btn-secondary",
+      "btn-sm",
+    ]);
+    refreshButton.textContent = " Refresh";
+    refreshButton.dataset.action = "refresh";
+
+    // Create and prepend the icon.
+    const refreshIcon = Utils.createElement("i", ["fa-solid", "fa-arrow-rotate-right"]);
+    refreshButton.prepend(refreshIcon);
+
+    colRefresh.appendChild(refreshButton);
+
+    row.append(colAdd, colRefresh);
+    div.appendChild(row);
+
+    return div;
+  }
+
+  /**
+   * Creates a default tbody element.
+   * @return {HTMLElement} The newly created tbody element.
+   */
+  createTBodyDefault() {
+    const tbody = Utils.createElement("tbody");
+
+    return tbody;
+  }
+
+  /**
+   * Creates a default thead element.
+   * @return {HTMLElement} The newly created thead element.
+   */
+  createTHeadDefault() {
+    const thead = Utils.createElement("thead");
+    const tr = Utils.createElement("tr");
+
+    // Creating a cell.
+    const thName = Utils.createElement("th", ["fw-normal"]);
+    thName.setAttribute("scope", "col");
+    thName.textContent = "Filename";
+    thName.id = `thName${this.options.id}`;
+
+    // Create cell for user uploaded.
+    const thUserUploaded = Utils.createElement("th", ["fw-normal"]);
+    thUserUploaded.setAttribute("scope", "col");
+
+    // Create another cell.
+    const thRemove = Utils.createElement("th", ["text-end", "fw-normal"]);
+    thRemove.setAttribute("scope", "col");
+
+    tr.append(thName, thUserUploaded, thRemove);
+    thead.appendChild(tr);
+
+    return thead;
+  }
+
+  /**
+   * Creates a thead element with controls for adding files.
+   * @return {HTMLElement} The thead element containing file upload controls.
+   */
+  createTHeadData() {
+    const thead = Utils.createElement("thead");
+    const tr = Utils.createElement("tr");
+
+    // Creating a cell for the form.
+    const thForm = Utils.createElement("th");
+    thForm.setAttribute("scope", "col");
+
+    // Create form to handle file input.
+    const form = Utils.createElement("form");
+    form.id = `form${this.options.id}`;
+
+    const fileLabel = Utils.createElement("label", ["btn", "btn-secondary", "btn-sm"]);
+    fileLabel.textContent = " Add File";
+    fileLabel.setAttribute("for", "fileInputCaldb");
+
+    // Create and prepend the icon.
+    const fileIcon = Utils.createElement("i", ["fa-solid", "fa-plus"]);
+    fileLabel.prepend(fileIcon);
+
+    // Hide file input to use custom text for button.
+    const fileInput = Utils.createElement("input");
+    fileInput.type = "file";
+    fileInput.name = "file";
+    fileInput.style.display = "none";
+    fileInput.dataset.action = "add";
+    fileInput.id = `fileInput${this.options.id}`;
+
+    form.append(fileLabel, fileInput);
+    thForm.appendChild(form);
+
+    // Create cell for user uplaoded.
+    const thUserUploaded = Utils.createElement("th");
+    thUserUploaded.setAttribute("scope", "col");
+
+    // Create another cell for the refresh button.
+    const thRefresh = Utils.createElement("th", ["text-end"]);
+    thRefresh.setAttribute("scope", "col");
+
+    const refreshButton = Utils.createElement("button", [
+      "btn",
+      "btn-secondary",
+      "btn-sm",
+    ]);
+    refreshButton.textContent = " Refresh";
+    refreshButton.dataset.action = "refresh";
+
+    // Create and prepend the icon.
+    const refreshIcon = Utils.createElement("i", ["fa-solid", "fa-arrow-rotate-right"]);
+    refreshButton.prepend(refreshIcon);
+
+    thRefresh.appendChild(refreshButton);
+
+    tr.append(thForm, thUserUploaded, thRefresh);
+    thead.appendChild(tr);
+
+    return thead;
+  }
+
+  /**
+   * Creates a tbody element populated with data rows.
+   * @param {Array} data - The data to populate the tbody with.
+   * @return {HTMLElement} The tbody element filled with data rows.
+   */
+  createTBodyData(data) {
+    const tbody = Utils.createElement("tbody");
+
+    if (data.length === 0) {
+      // If no data, show a message row
+      const tr = Utils.createElement("tr");
+      const td = Utils.createElement("td");
+      td.setAttribute("colspan", "3");
+      td.textContent = "No calibration files found...";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return tbody;
+    }
+
+    // Loop through each item in the data array to create table rows.
+    data.forEach((item) => {
+      const tr = Utils.createElement("tr");
+
+      // Create the filename cell with a data attribute.
+      const tdFilename = Utils.createElement("td");
+      // TODO: Change back when formatter is figured out.
+      // tdFilename.textContent = `${item.path}/${item.name}`;
+      tdFilename.textContent = item.name;
+
+      // Create user uploaded flag cell.
+      const tdUserUploaded = Utils.createElement("td");
+      tdUserUploaded.textContent = item.is_user_uploaded ? "User uploaded" : "";
+
+      // Create the delete button cell.
+      const tdRemove = Utils.createElement("td", ["text-end"]);
+
+      const removeButton = Utils.createElement("a", ["link-danger"]);
+      removeButton.setAttribute("type", "button");
+      removeButton.setAttribute("data-filename", item.name);
+      removeButton.setAttribute("data-action", "remove");
+      // Create icon element for button.
+      const icon = Utils.createElement("i", ["fa-solid", "fa-circle-minus"]);
+      removeButton.appendChild(icon);
+
+      tdRemove.appendChild(removeButton);
+
+      // Append the cells to the row.
+      tr.append(tdFilename, tdUserUploaded, tdRemove);
+
+      // Append the row to the tbody.
+      tbody.appendChild(tr);
+    });
+
+    return tbody;
+  }
+}
+
+/**
+ * Constructs the view with a specified template and parent element.
+ * @param {Object} template - The template object used for rendering components.
+ * @param {HTMLElement} parentElement - The container where the view will be mounted.
+ */
+class CaldbView {
+  constructor(template, parentElement, options) {
+    this.template = template;
+    this.parentElement = parentElement;
+    this.options = options;
+
+    this.card = this._create();
+    this.body = this.card.querySelector(".accordion-body");
+    this.table = this.card.querySelector("table");
+    this.tbody = this.card.querySelector("tbody");
+    this.thead = this.card.querySelector("thead");
+
+    this.parentElement.appendChild(this.card);
+
+    this.render = this.render.bind(this);
+    this.bindCallback = this.bindCallback.bind(this);
+  }
+
+  /**
+   * Creates the card component using the template.
+   * @return {HTMLElement} The created card element.
+   * @private
+   */
+  _create() {
+    const card = this.template.createCard();
+
+    return card;
+  }
+
+  /**
+   * Updates the table with new data.
+   * @param {Array} data - The new data to render in the table.
+   * @private
+   */
+  _update(data) {
+    const newTbody = this.template.createTBodyData(data);
+    this.table.replaceChild(newTbody, this.tbody);
+    this.tbody = newTbody;
+
+    // Update the file count.
+    this.thead.querySelector(
+      `#thName${this.options.id}`
+    ).textContent = `Filename ${Utils.getFileCountLabel(data.length)}`;
+  }
+
+  /**
+   * Renders changes to the view based on a command.
+   * @param {string} viewCmd - The command that dictates the rendering action.
+   * @param {Object} parameter - Parameters used for rendering.
+   */
+  render(viewCmd, parameter) {
+    switch (viewCmd) {
+      case "update":
+        this._update(parameter.data);
+        break;
+    }
+  }
+
+  /**
+   * Binds a callback to an event on the table.
+   * @param {string} event - The event to bind.
+   * @param {Function} handler - The callback function to execute on event trigger.
+   */
+  bindCallback(event, handler) {
+    const selector = `[data-action="${event}"]`;
+    switch (event) {
+      case "add":
+        Utils.delegate(this.body, selector, "change", (e) => {
+          if (e.target.files.length > 0) {
+            handler({ file: e.target.files[0] });
+          }
+          // Clear the file input after handling to allow the same file to be selected again.
+          e.target.value = "";
+        });
+        break;
+      case "remove":
+        Utils.delegate(this.table, selector, "click", (e) =>
+          handler({ filename: e.target.dataset.filename })
+        );
+        break;
+      case "refresh":
+        Utils.delegate(this.body, selector, "click", () => handler());
+    }
+  }
+}
+
+/**
+ * Manages the data for the calibration database.
+ * @param {FetchWrapper} api - Instance of the API wrapper to use.
+ */
+class CaldbModel {
+  constructor(options) {
+    this.options = options;
+    this._runId = null;
+    this.api = this.options.api;
+    this.caldbUrl = "dragonscaldb/";
+  }
+
+  get runId() {
+    return this._runId;
+  }
+
+  set runId(value) {
+    this._runId = value;
+  }
+
+  /**
+   * Fetches files from the calibration database for the set run ID.
+   * @async
+   * @throws {Error} Throws an error if the network request fails.
+   */
+  async fetchFiles() {
+    try {
+      const response = await this.api.get(`${this.caldbUrl}${this.runId}/`);
+      return response.files;
+    } catch (error) {
+      console.error("Error fetching list of calibration database files:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Removes a file from the calibration database.
+   * @async
+   * @param {string} filename - The name of the file to be removed.
+   * @throws {Error} Throws an error if the removal operation fails.
+   */
+  async removeFile(filename) {
+    try {
+      const body = {
+        filename: filename,
+        action: "remove",
+      };
+      const response = await this.api.patch(`${this.caldbUrl}${this.runId}/`, body);
+      return response.files;
+    } catch (error) {
+      console.error(`Error removing file:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Adds a file to the calibration database.
+   * @async
+   * @param {File} file - The file object to upload.
+   * @returns {Promise<void>} - A promise that resolves when the file has been added successfully.
+   */
+  async addFile(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("action", "add");
+
+    try {
+      const body = formData;
+      const response = await this.api.patch(
+        `${this.caldbUrl}${this.runId}/`,
+        body,
+        {},
+        false
+      );
+      return response.files;
+    } catch (error) {
+      console.error(`Error adding file:`, error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Initializes a new controller instance.
+ * @param {CaldbModel} model - The data model for the application.
+ * @param {CaldbView} view - The UI view for the application.
+ */
+class CaldbController {
+  constructor(model, view, options) {
+    this.model = model;
+    this.view = view;
+    this.options = options;
+
+    this.view.bindCallback("refresh", () => this.refresh());
+    this.view.bindCallback("remove", (item) => this.remove(item.filename));
+    this.view.bindCallback("add", (item) => this.add(item.file));
+  }
+
+  /**
+   * Updates the model run ID and view with data.
+   * @async
+   * @param {number} runId - The run ID for the calibration database.
+   */
+  async update(runId) {
+    this.model.runId = runId;
+    await this.refresh();
+  }
+
+  /**
+   * Removes an item by its filename.
+   * @async
+   * @param {string} filename - The filename of the item to remove.
+   */
+  async remove(filename) {
+    if (!this.model.runId) return;
+    const data = await this.model.removeFile(filename);
+    this.view.render("update", { data });
+  }
+
+  /**
+   * Adds a new file to the calibration database.
+   * @async
+   * @param {File} file - A file object to add to the database.
+   */
+  async add(file) {
+    if (!this.model.runId) return;
+    const data = await this.model.addFile(file);
+    this.view.render("update", { data });
+  }
+
+  /**
+   * Fetches the files and refreshes the view. This does not set the model run ID.
+   * @async
+   */
+  async refresh() {
+    if (!this.model.runId) return;
+    const data = await this.model.fetchFiles();
+    this.view.render("update", { data });
+  }
+}
+
+/**
+ * Constructs the calibration database application and initializes all components.
+ * @param {HTMLElement} parentElement - The parent element where the application is mounted.
+ * @param {FetchWrapper} api - An API instance to use for fetching.
+ */
+class Caldb {
+  static #defaultOptions = {
+    id: "Caldb",
+  };
+
+  constructor(parentElement, options = {}) {
+    this.options = { ...Caldb.#defaultOptions, ...options, api: window.api };
+    this.model = new CaldbModel(this.options);
+    this.template = new CaldbTemplate(this.options);
+    this.view = new CaldbView(this.template, parentElement, this.options);
+    this.controller = new CaldbController(this.model, this.view, this.options);
+  }
+
+  /**
+   * Sets the run ID and triggers an update of the calibration database.
+   */
+  update(runId) {
+    this.controller.update(runId);
+  }
+
+  /**
+   * Refreshes the view of the files in the calibration database.
+   */
+  refresh() {
+    this.controller.refresh();
+  }
+}

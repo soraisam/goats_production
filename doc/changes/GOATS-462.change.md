@@ -1,0 +1,1 @@
+Refactored WebSocket updates and app initialization.

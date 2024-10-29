@@ -1,0 +1,1 @@
+Refactored available recipes logic: Refactored the available recipes structure to simplify code and improve maintainability. Added a global event dispatcher to notify when a recipe is changed, allowing other components to react accordingly.

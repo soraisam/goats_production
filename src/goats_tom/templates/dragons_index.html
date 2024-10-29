@@ -1,75 +1,32 @@
-{% extends "tom_common/base.html" %}
-{% load static %}
-{% block content %}
-{% csrf_token %}
+{% extends "tom_common/base.html" %} {% load static %} {% block content %} {% csrf_token%}
 
 <!-- Modal -->
 <div id="modalContainer"></div>
 
 <div class="row g-3">
   <div class="col-12">
-    <p class="h3">{{ observation_record.observation_id }}</p>
-  </div>
-</div>
-<div class="row g-3">
-  <div class="col-lg-6 col-12">
-    <div class="card" id="setupCard" data-observation-record-pk="{{ observation_record.id }}">
-      <div class="card-header h5 mb-0">DRAGONS Reduction Setup and Configure</div>
-      <div class="card-body">
-        <div class="row g-3 mb-3">
-          <div class="col-12">
-            <label class="form-label">Choose Run Type</label>
-            <div class="btn-group d-flex" role="group" aria-label="Run Type Options">
-              <input type="radio" name="runType" class="btn-check" id="useExistingRun" autocomplete="off" checked>
-              <label class="btn btn-outline-primary" for="useExistingRun">Existing Run</label>
-              <input type="radio" name="runType" class="btn-check" id="startNewRun" autocomplete="off">
-              <label class="btn btn-outline-primary" for="startNewRun">New Run</label>
-            </div>
-          </div>
-        </div>
-        <form id="setupForm" method="post" class="d-none mb-3">
-          <div class="row g-3">
-            <input type="hidden" name="observation_record" value="{{ observation_record.pk }}">
-            <div class="col-12">
-              <label for="runId" class="form-label">Run ID</label>
-              <input type="text" class="form-control" id="runId" name="run_id" placeholder="Default: run-YYYYMMDDhhmmss">
-            </div>
-            <div class="col-12">
-              <label for="configFilename" class="form-label">Configuration File</label>
-              <input type="text" class="form-control" id="configFilename" name="config_filename" value="dragonsrc">
-            </div>
-            <div class="col-12">
-              <label for="calManagerFilename" class="form-label">Calibration Manager File</label>
-              <input type="text" class="form-control" id="calManagerFilename" name="cal_manager_filename" value="cal_manager.db">
-            </div>
-            <div class="col-12">
-              <button type="submit" class="btn d-block w-100 btn-primary">Create Run</button>
-            </div>
-          </div>
-        </form>
-        <div class="row g-3">
-          <div class="col-12">
-            <div class="input-group">
-              <select class="form-select" id="runSelect">
-                <option value="" selected hidden>Select a Run</option>
-                {% for dragons_run in dragons_runs %}
-                  <option value="{{ dragons_run.id }}">{{ dragons_run.run_id }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="col-12">
-            <div id="runContainer"></div>
-          </div>
-          <div class="col-12">
-            <div id="filesAndRecipesContainer" class="accordion accordion-flush"></div>
-          </div>
-        </div>
+    <div class="card bg-primary">
+      <div
+        class="card-body my-3 py-0 text-center d-flex align-items-center justify-content-center">
+        <!-- Logo Image -->
+        <img
+          src="{% static 'img/dragons-logo.png' %}"
+          alt="DRAGONS Logo"
+          class="img-fluid"
+          style="height: 30px" />
+        <!-- Observation ID -->
+        <div class="h3 mb-0 ms-3">{{ observation_record.observation_id }}</div>
       </div>
     </div>
   </div>
-  <div class="col-lg-6 col-12">
-    <div id="recipesContainer"></div>
+  <div class="col-12">
+    <div id="runSetupContainer"></div>
+  </div>
+  <div class="col-xl-6">
+    <div id="recipesAndFilesManagerContainer"></div>
+  </div>
+  <div class="col-xl-6">
+    <div id="recipeReductionsContainer"></div>
   </div>
   <div class="col-12">
     <div id="caldbContainer"></div>
@@ -79,24 +36,26 @@
   </div>
 </div>
 <div id="helpOffcanvasContainer"></div>
-<link rel="stylesheet" href="{% static 'tom-select/tom-select.bootstrap5.css' %}">
-{% endblock %}
-
-{% block javascript %}
-{{ block.super }}
+<link rel="stylesheet" href="{% static 'tom-select/tom-select.bootstrap5.css' %}" />
+{% endblock %} {% block javascript %} {{ block.super }}
 <script src="{% static 'tom-select/tom-select.base.js' %}"></script>
 <script src="{% static 'js/utils.js' %}"></script>
-<script src="{% static 'js/fetch_wrapper.js' %}"></script>
-<script src="{% static 'js/progress.js' %}"></script>
-<script src="{% static 'js/dragons_caldb_mvc.js' %}"></script>
-<script src="{% static 'js/output_files_mvc.js' %}"></script>
-<script src="{% static 'js/run_table_mvc.js' %}"></script>
-<script src="{% static 'js/help_offcanvas.js' %}"></script>
-<script src="{% static 'js/logger.js' %}"></script>
-<script src="{% static 'js/get_csrf_token.js' %}"></script>
-<script src="{% static 'js/dragons_setup_mvc.js' %}"></script>
-<script src="{% static 'js/recipe_mvc.js' %}"></script>
-<script src="{% static 'js/recipes_manager_mvc.js' %}"></script>
+<script src="{% static 'js/dragons_app/logger.js' %}"></script>
+<script src="{% static 'js/dragons_app/modal.js' %}"></script>
+<script src="{% static 'js/dragons_app/api.js' %}"></script>
+<script src="{% static 'js/dragons_app/identifier.js' %}"></script>
+<script src="{% static 'js/dragons_app/recipe_reductions_manager.js' %}"></script>
+<script src="{% static 'js/dragons_app/recipe_reduction.js' %}"></script>
+<script src="{% static 'js/dragons_app/run_setup.js' %}"></script>
+<script src="{% static 'js/dragons_app/progress.js' %}"></script>
+<script src="{% static 'js/dragons_app/files_table.js' %}"></script>
+<script src="{% static 'js/dragons_app/caldb.js' %}"></script>
+<script src="{% static 'js/dragons_app/output_files.js' %}"></script>
+<script src="{% static 'js/dragons_app/run_table.js' %}"></script>
+<script src="{% static 'js/dragons_app/help_offcanvas.js' %}"></script>
+<script src="{% static 'js/dragons_app/recipes_and_files_manager.js' %}"></script>
+<script src="{% static 'js/dragons_app/available_recipes.js' %}"></script>
+<script src="{% static 'js/dragons_app/available_files.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/ace.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/mode-python.js' %}"></script>
 <script src="{% static 'ace-builds/src-noconflict/theme-cloud9_night.js' %}"></script>
@@ -104,48 +63,54 @@
 {% include 'tom_dataproducts/partials/js9_scripts.html' %}
 
 <script type="text/javascript">
-  document.addEventListener("DOMContentLoaded", async () => {
-    // Create help offcanvas used throughout SPA.
-    // TODO: When switching to single recipe can be done there.
-    window.helpOffcanvas = new HelpOffcanvas(document.getElementById("helpOffcanvasContainer"))
+  // TODO: Make this better.
+  class App {
+    constructor() {
+      // Create help offcanvas used throughout SPA.
+      // TODO: When switching to single recipe can be done there.
+      window.helpOffcanvas = new HelpOffcanvas(
+        document.getElementById("helpOffcanvasContainer")
+      );
+      window.api = new API("/api/", "{{ csrf_token }}");
+      window.modal = new Modal(document.getElementById("modalContainer"));
+      this.runSetup = new RunSetup(1, document.getElementById("runSetupContainer"));
+      this.runSetup.init();
 
-    const api = new FetchWrapper("/api/");
-    api.setCsrfToken("{{ csrf_token }}");
-
-    const caldb = new Caldb(document.getElementById("caldbContainer"), api);
-    const outputFiles = new OutputFiles(document.getElementById("outputFilesContainer"), api)
-
-    // Initialize models, views, and controllers.
-    const setupModel = new SetupModel(api);
-    const setupView = new SetupView();
-    const setupController = new SetupController(setupModel, setupView);
-    const recipeManagerModel = new RecipeManagerModel(api);
-    const recipeManagerView = new RecipeManagerView();
-    const recipeManagerController = new RecipeManagerController(recipeManagerModel, recipeManagerView);
-
-    /**
-     * Handles the change in run selection by fetching related files and updating recipes card
-     * accordingly.
-     * @param {string} observationRecordPk The primary key of the observation record.
-     * @param {string} runId The ID of the selected run to fetch files for and to display recipes.
-     */
-    const handleRunSelectionChange = async (runId) => {
-      await setupController.handleUpdateFiles(runId);
-      await recipeManagerController.updateRecipesCard(runId);
-      await recipeManagerController.updateReducesProgress(runId);
-      await caldb.update(runId);
-      await outputFiles.update(runId);
-    };
-
-    const handleSwitchTab = async (recipeId) => {
-      recipeManagerController.handleSwitchTab(recipeId);
+      this.initialized = false;
+      document.addEventListener("updateRun", this._updateRun.bind(this));
     }
 
+    _updateRun(event) {
+      const runId = event.detail.runId;
+      if (!this.initialized) {
+        // Initialize the App with the new run ID.
+        this.recipesAndFilesManager = new RecipesAndFilesManager(
+          document.getElementById("recipesAndFilesManagerContainer"),
+          runId
+        );
+        this.caldb = new Caldb(document.getElementById("caldbContainer"));
+        this.caldb.update(runId);
+        this.outputFiles = new OutputFiles(
+          document.getElementById("outputFilesContainer")
+        );
+        this.outputFiles.update(runId);
+        this.initialized = true;
 
-    // Bind the combined functionality to the run selection change.
-    setupView.bindFetchFiles(handleRunSelectionChange);
-
-    setupView.bindSwitchTab(handleSwitchTab)
+        // Testing
+        this.recipeReductionsManager = new RecipeReductionsManager(
+          document.getElementById("recipeReductionsContainer"),
+          runId
+        );
+      } else {
+        this.recipesAndFilesManager.update(runId);
+        this.recipeReductionsManager.update(runId);
+        this.caldb.update(runId);
+        this.outputFiles.update(runId);
+      }
+    }
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    new App();
   });
 </script>
 {% endblock %}
