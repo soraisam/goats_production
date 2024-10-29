@@ -25,11 +25,7 @@ from tom_observations.models import ObservationRecord
 
 from goats_tom.astroquery import Observations as GOA
 from goats_tom.logging.handlers import DRAGONSHandler
-from goats_tom.models import (
-    Download,
-    DRAGONSReduce,
-    GOALogin,
-)
+from goats_tom.models import Download, DRAGONSFile, DRAGONSReduce, GOALogin
 from goats_tom.realtime import DownloadState, DRAGONSProgress, NotificationInstance
 from goats_tom.utils import create_name_reduction_map
 
@@ -72,7 +68,6 @@ def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
 
         run = reduce.recipe.dragons_run
         recipe = reduce.recipe
-        recipes_module = recipe.recipe.recipes_module
         # Send start notification.
         NotificationInstance.create_and_send(
             message="Reduction started.",
@@ -94,8 +89,8 @@ def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
         # Change the working directory to save outputs.
         os.chdir(run.get_output_dir())
 
-        # Filter the files based on the associated DRAGONS run and file type.
-        files = recipes_module.files.filter(dragons_run=run, id__in=file_ids)
+        # Filter the files based on the associated DRAGONS run and file ids.
+        files = DRAGONSFile.objects.filter(dragons_run=run, id__in=file_ids)
         file_paths = [file.file_path for file in files]
 
         # Setup the logger.
