@@ -353,10 +353,16 @@ class AvailableFilesModel {
     ];
 
     // Determine the appropriate filter expression based on user input.
-    let combinedFilterExpression = this.identifier.defaultFilterExpression;
-    if (!useAllFiles) {
+    if (useAllFiles) {
       if (filterExpression) {
-        combinedFilterExpression = `${this.identifier.defaultFilterExpression} AND (${filterExpression})`;
+        // Use only the user provided filter expression when 'useAllFiles' is true.
+        params.push(`filter_expression=${encodeURIComponent(filterExpression)}`);
+      }
+    } else {
+      // Use combined default and user provided filter expressions when 'useAllFiles' is false.
+      let combinedFilterExpression = this.identifier.defaultFilterExpression;
+      if (filterExpression) {
+        combinedFilterExpression += ` AND (${filterExpression})`;
       }
       params.push(`filter_expression=${encodeURIComponent(combinedFilterExpression)}`);
     }
