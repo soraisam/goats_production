@@ -1,0 +1,1 @@
+Fixed filter expression and ID uniqueness bugs: Resolved an issue where user-provided filter expressions were not correctly used in filtering and grouping available files. Additionally, improved the uniqueness of file checkbox IDs by incorporating more identifying information, addressing an issue uncovered when allowing user access to all files.

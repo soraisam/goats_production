@@ -73,7 +73,7 @@
       );
       window.api = new API("/api/", "{{ csrf_token }}");
       window.modal = new Modal(document.getElementById("modalContainer"));
-      this.runSetup = new RunSetup(1, document.getElementById("runSetupContainer"));
+      this.runSetup = new RunSetup("{{observation_record.id}}", document.getElementById("runSetupContainer"));
       this.runSetup.init();
 
       this.initialized = false;
