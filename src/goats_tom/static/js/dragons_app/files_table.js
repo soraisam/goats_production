@@ -184,7 +184,7 @@ class FilesTableTemplate {
 
     // Configure the checkbox
     checkbox.type = "checkbox";
-    checkbox.id = `file${file.id}${this.options.id}`;
+    checkbox.id = `${this.identifier.idPrefix}file${file.id}${this.options.id}`;
     checkbox.checked = true;
     checkbox.dataset.action = "selectFile";
 

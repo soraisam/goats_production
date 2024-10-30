@@ -14,7 +14,7 @@ class RunSetupTemplate {
   create() {
     const container = this._createContainer();
     const card = this._createCard();
-    card.append(this._createCardBody());
+    card.append(this._createCardHeader(), this._createCardBody());
     container.appendChild(card);
 
     return container;
@@ -28,6 +28,17 @@ class RunSetupTemplate {
   _createContainer() {
     const container = Utils.createElement("div");
     return container;
+  }
+
+  /**
+   * Creates the header section of the card.
+   * @returns {HTMLElement} The card header element
+   */
+  _createCardHeader() {
+    const div = Utils.createElement("div", ["card-header", "h5", "mb-0"]);
+    div.textContent = "Setup and Manage Reduction Runs";
+
+    return div;
   }
 
   /**
@@ -79,9 +90,6 @@ class RunSetupTemplate {
     const row = Utils.createElement("div", ["row", "g-3", "mb-3"]);
     const col = Utils.createElement("div", ["col-12"]);
 
-    const label = Utils.createElement("label", ["form-label"]);
-    label.textContent = "Choose Run Type";
-
     const btnGroup = Utils.createElement("div", ["btn-group", "d-flex"]);
     btnGroup.setAttribute("role", "group");
     btnGroup.setAttribute("aria-label", "Run Type Options");
@@ -113,7 +121,7 @@ class RunSetupTemplate {
     newRunLabel.textContent = "New Run";
 
     btnGroup.append(existingRunInput, existingRunLabel, newRunInput, newRunLabel);
-    col.append(label, btnGroup);
+    col.append(btnGroup);
     row.append(col);
 
     return row;
