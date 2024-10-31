@@ -1,0 +1,1 @@
+Hide UI elements without run selection: The visibility of the output files and calibration database manager is now controlled by the selection of a run ID.

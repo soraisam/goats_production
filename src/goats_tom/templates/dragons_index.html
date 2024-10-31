@@ -73,7 +73,10 @@
       );
       window.api = new API("/api/", "{{ csrf_token }}");
       window.modal = new Modal(document.getElementById("modalContainer"));
-      this.runSetup = new RunSetup("{{observation_record.id}}", document.getElementById("runSetupContainer"));
+      this.runSetup = new RunSetup(
+        "{{observation_record.id}}",
+        document.getElementById("runSetupContainer")
+      );
       this.runSetup.init();
 
       this.initialized = false;
@@ -88,19 +91,16 @@
           document.getElementById("recipesAndFilesManagerContainer"),
           runId
         );
-        this.caldb = new Caldb(document.getElementById("caldbContainer"));
-        this.caldb.update(runId);
+        this.caldb = new Caldb(document.getElementById("caldbContainer"), runId);
         this.outputFiles = new OutputFiles(
-          document.getElementById("outputFilesContainer")
+          document.getElementById("outputFilesContainer"),
+          runId
         );
-        this.outputFiles.update(runId);
-        this.initialized = true;
-
-        // Testing
         this.recipeReductionsManager = new RecipeReductionsManager(
           document.getElementById("recipeReductionsContainer"),
           runId
         );
+        this.initialized = true;
       } else {
         this.recipesAndFilesManager.update(runId);
         this.recipeReductionsManager.update(runId);

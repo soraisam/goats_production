@@ -1,38 +1,83 @@
 /**
  * Class to manage calibration database UI components.
+ * @param {Object} options - Configuration options for the model.
  */
 class CaldbTemplate {
   constructor(options) {
     this.options = options;
   }
+
   /**
-   * Creates a card container.
-   * @return {HTMLElement} The card element.
+   * Creates the container including the card.
+   * @param {Object} data - The data to populate the UI components.
+   * @returns {HTMLElement} The container element with all UI components.
    */
-  createCard() {
+  create(data) {
+    const container = this._createContainer();
+    const card = this._createCard(data);
+
+    container.appendChild(card);
+
+    return container;
+  }
+
+  /**
+   * Creates a container element.
+   * @returns {HTMLElement} The container element.
+   * @private
+   */
+  _createContainer() {
+    const container = Utils.createElement("div");
+    return container;
+  }
+
+  /**
+   * Creates a card component that encapsulates the UI elements.
+   * @param {Object} data - The data used to populate the card components.
+   * @returns {HTMLElement} The card element.
+   * @private
+   */
+  _createCard(data) {
     const card = Utils.createElement("div", ["card"]);
-    card.appendChild(this.createCardBody());
+    card.append(this._createCardHeader(), this._createCardBody(data));
 
     return card;
   }
 
   /**
-   * Creates the body section of the card.
-   * @return {HTMLElement} The card body element.
+   * Creates the header section of the card.
+   * @returns {HTMLElement} The card header element
    */
-  createCardBody() {
+  _createCardHeader() {
+    const div = Utils.createElement("div", ["card-header", "h5", "mb-0"]);
+    div.textContent = "Calibration Database";
+
+    return div;
+  }
+
+  /**
+   * Creates the body section of the card.
+   * @param {Object} data - The data used to populate the card body.
+   * @returns {HTMLElement} The card body element.
+   */
+  _createCardBody(data) {
     const cardBody = Utils.createElement("div", ["card-body"]);
-    cardBody.appendChild(this.createAccordion());
+    const accordion = Utils.createElement("div", ["accordion", "accordion-flush"]);
+    accordion.id = "caldbAccordion";
+    accordion.appendChild(this._createAccordion(data));
+    cardBody.appendChild(accordion);
 
     return cardBody;
   }
 
   /**
-   * Creates an accordion for collapsible content.
-   * @return {HTMLElement} The accordion element.
+   * Creates an accordion component for displaying collapsible content.
+   * @param {Object} data - The data used to populate the accordion.
+   * @returns {HTMLElement} The accordion element.
+   * @private
    */
-  createAccordion() {
-    const accordion = Utils.createElement("div", ["accordion"]);
+  _createAccordion(data) {
+    const accordion = Utils.createElement("div", ["accordion-item"]);
     const accordionId = `accordion${this.options.id}`;
     accordion.id = accordionId;
 
@@ -48,7 +93,7 @@ class CaldbTemplate {
     button.setAttribute("data-bs-target", `#${collapseId}`);
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", collapseId);
-    button.textContent = "Calibration Database";
+    button.textContent = "Manage Files";
 
     header.appendChild(button);
 
@@ -56,10 +101,13 @@ class CaldbTemplate {
     collapseDiv.id = collapseId;
     collapseDiv.className = "accordion-collapse collapse";
     collapseDiv.setAttribute("aria-labelledby", headerId);
-    collapseDiv.setAttribute("data-bs-parent", `#${accordionId}`);
+    collapseDiv.setAttribute("data-bs-parent", `#caldbAccordion`);
 
-    const accordionBody = Utils.createElement("div", ["accordion-body"]);
-    accordionBody.append(this.createToolbar(), this.createTable());
+    const accordionBody = Utils.createElement("div", [
+      "accordion-body",
+      "accordion-body-overflow",
+    ]);
+    accordionBody.append(this._createToolbar(), this._createTable(data));
 
     collapseDiv.appendChild(accordionBody);
     accordion.append(header, collapseDiv);
@@ -69,16 +117,17 @@ class CaldbTemplate {
 
   /**
    * Creates a table for displaying data.
-   * @return {HTMLElement} The table element.
+   * @param {Array} data - The data used to populate the table.
+   * @returns {HTMLElement} The table element.
    */
-  createTable() {
+  _createTable(data) {
     const table = Utils.createElement("table", [
       "table",
       "table-borderless",
       "table-sm",
       "table-striped",
     ]);
-    table.append(this.createTHeadDefault(), this.createTBodyDefault());
+    table.append(this._createTHead(data), this.createTBody(data));
 
     return table;
   }
@@ -87,7 +136,7 @@ class CaldbTemplate {
    * Builds a toolbar with important actions.
    * @returns {HTMLElement} The toolbar.
    */
-  createToolbar() {
+  _createToolbar() {
     const div = Utils.createElement("div");
     div.id = `toolbar${this.options.id}`;
     const row = Utils.createElement("div", ["row", "g-3"]);
@@ -138,27 +187,17 @@ class CaldbTemplate {
   }
 
   /**
-   * Creates a default tbody element.
-   * @return {HTMLElement} The newly created tbody element.
-   */
-  createTBodyDefault() {
-    const tbody = Utils.createElement("tbody");
-
-    return tbody;
-  }
-
-  /**
-   * Creates a default thead element.
+   * Creates a thead element.
    * @return {HTMLElement} The newly created thead element.
    */
-  createTHeadDefault() {
+  _createTHead(data) {
     const thead = Utils.createElement("thead");
     const tr = Utils.createElement("tr");
 
     // Creating a cell.
     const thName = Utils.createElement("th", ["fw-normal"]);
     thName.setAttribute("scope", "col");
-    thName.textContent = "Filename";
+    thName.textContent = `Filename ${Utils.getFileCountLabel(data.length)}`;
     thName.id = `thName${this.options.id}`;
 
     // Create cell for user uploaded.
@@ -176,74 +215,11 @@ class CaldbTemplate {
   }
 
   /**
-   * Creates a thead element with controls for adding files.
-   * @return {HTMLElement} The thead element containing file upload controls.
-   */
-  createTHeadData() {
-    const thead = Utils.createElement("thead");
-    const tr = Utils.createElement("tr");
-
-    // Creating a cell for the form.
-    const thForm = Utils.createElement("th");
-    thForm.setAttribute("scope", "col");
-
-    // Create form to handle file input.
-    const form = Utils.createElement("form");
-    form.id = `form${this.options.id}`;
-
-    const fileLabel = Utils.createElement("label", ["btn", "btn-secondary", "btn-sm"]);
-    fileLabel.textContent = " Add File";
-    fileLabel.setAttribute("for", "fileInputCaldb");
-
-    // Create and prepend the icon.
-    const fileIcon = Utils.createElement("i", ["fa-solid", "fa-plus"]);
-    fileLabel.prepend(fileIcon);
-
-    // Hide file input to use custom text for button.
-    const fileInput = Utils.createElement("input");
-    fileInput.type = "file";
-    fileInput.name = "file";
-    fileInput.style.display = "none";
-    fileInput.dataset.action = "add";
-    fileInput.id = `fileInput${this.options.id}`;
-
-    form.append(fileLabel, fileInput);
-    thForm.appendChild(form);
-
-    // Create cell for user uplaoded.
-    const thUserUploaded = Utils.createElement("th");
-    thUserUploaded.setAttribute("scope", "col");
-
-    // Create another cell for the refresh button.
-    const thRefresh = Utils.createElement("th", ["text-end"]);
-    thRefresh.setAttribute("scope", "col");
-
-    const refreshButton = Utils.createElement("button", [
-      "btn",
-      "btn-secondary",
-      "btn-sm",
-    ]);
-    refreshButton.textContent = " Refresh";
-    refreshButton.dataset.action = "refresh";
-
-    // Create and prepend the icon.
-    const refreshIcon = Utils.createElement("i", ["fa-solid", "fa-arrow-rotate-right"]);
-    refreshButton.prepend(refreshIcon);
-
-    thRefresh.appendChild(refreshButton);
-
-    tr.append(thForm, thUserUploaded, thRefresh);
-    thead.appendChild(tr);
-
-    return thead;
-  }
-
-  /**
    * Creates a tbody element populated with data rows.
    * @param {Array} data - The data to populate the tbody with.
    * @return {HTMLElement} The tbody element filled with data rows.
    */
-  createTBodyData(data) {
+  createTBody(data) {
     const tbody = Utils.createElement("tbody");
 
     if (data.length === 0) {
@@ -298,35 +274,42 @@ class CaldbTemplate {
 /**
  * Constructs the view with a specified template and parent element.
  * @param {Object} template - The template object used for rendering components.
- * @param {HTMLElement} parentElement - The container where the view will be mounted.
+ * @param {Object} options - Configuration options for the model.
  */
 class CaldbView {
-  constructor(template, parentElement, options) {
+  constructor(template, options) {
     this.template = template;
-    this.parentElement = parentElement;
     this.options = options;
 
-    this.card = this._create();
-    this.body = this.card.querySelector(".accordion-body");
-    this.table = this.card.querySelector("table");
-    this.tbody = this.card.querySelector("tbody");
-    this.thead = this.card.querySelector("thead");
-
-    this.parentElement.appendChild(this.card);
+    this.container = null;
+    this.card = null;
+    this.body = null;
+    this.table = null;
+    this.tbody = null;
+    this.thead = null;
+    this.parentElement = null;
 
     this.render = this.render.bind(this);
     this.bindCallback = this.bindCallback.bind(this);
   }
 
   /**
-   * Creates the card component using the template.
-   * @return {HTMLElement} The created card element.
+   * Creates and appends the calibration database card to the parent element.
+   * @param {HTMLElement} parentElement - The parent element where the card will be mounted.
+   * @param {Object} data - The initial data used to populate the view.
    * @private
    */
-  _create() {
-    const card = this.template.createCard();
+  _create(parentElement, data) {
+    this.parentElement = parentElement;
 
-    return card;
+    this.container = this.template.create(data);
+    this.card = this.container.querySelector(".card");
+    this.body = this.card.querySelector(".accordion");
+    this.table = this.card.querySelector("table");
+    this.tbody = this.card.querySelector("tbody");
+    this.thead = this.card.querySelector("thead");
+
+    this.parentElement.appendChild(this.container);
   }
 
   /**
@@ -335,14 +318,12 @@ class CaldbView {
    * @private
    */
   _update(data) {
-    const newTbody = this.template.createTBodyData(data);
+    const newTbody = this.template.createTBody(data);
     this.table.replaceChild(newTbody, this.tbody);
     this.tbody = newTbody;
 
     // Update the file count.
-    this.thead.querySelector(
-      `#thName${this.options.id}`
-    ).textContent = `Filename ${Utils.getFileCountLabel(data.length)}`;
+    this.thead.textContent = `Filename ${Utils.getFileCountLabel(data.length)}`;
   }
 
   /**
@@ -354,6 +335,9 @@ class CaldbView {
     switch (viewCmd) {
       case "update":
         this._update(parameter.data);
+        break;
+      case "create":
+        this._create(parameter.parentElement, parameter.data);
         break;
     }
   }
@@ -382,13 +366,14 @@ class CaldbView {
         break;
       case "refresh":
         Utils.delegate(this.body, selector, "click", () => handler());
+        break;
     }
   }
 }
 
 /**
- * Manages the data for the calibration database.
- * @param {FetchWrapper} api - Instance of the API wrapper to use.
+ * Manages the data operations for the calibration database.
+ * @param {Object} options - Configuration options for the model.
  */
 class CaldbModel {
   constructor(options) {
@@ -472,13 +457,20 @@ class CaldbModel {
  * Initializes a new controller instance.
  * @param {CaldbModel} model - The data model for the application.
  * @param {CaldbView} view - The UI view for the application.
+ * @param {Object} options - Additional configuration options.
  */
 class CaldbController {
   constructor(model, view, options) {
     this.model = model;
     this.view = view;
     this.options = options;
+  }
 
+  /**
+   * Binds callback functions to UI events.
+   * @private
+   */
+  _bindCallbacks() {
     this.view.bindCallback("refresh", () => this.refresh());
     this.view.bindCallback("remove", (item) => this.remove(item.filename));
     this.view.bindCallback("add", (item) => this.add(item.file));
@@ -500,7 +492,6 @@ class CaldbController {
    * @param {string} filename - The filename of the item to remove.
    */
   async remove(filename) {
-    if (!this.model.runId) return;
     const data = await this.model.removeFile(filename);
     this.view.render("update", { data });
   }
@@ -511,7 +502,6 @@ class CaldbController {
    * @param {File} file - A file object to add to the database.
    */
   async add(file) {
-    if (!this.model.runId) return;
     const data = await this.model.addFile(file);
     this.view.render("update", { data });
   }
@@ -521,39 +511,69 @@ class CaldbController {
    * @async
    */
   async refresh() {
-    if (!this.model.runId) return;
     const data = await this.model.fetchFiles();
     this.view.render("update", { data });
+  }
+
+  async create(parentElement, runId) {
+    this.model.runId = runId;
+    const data = await this.model.fetchFiles();
+    this.view.render("create", { parentElement, data });
+
+    this._bindCallbacks();
   }
 }
 
 /**
  * Constructs the calibration database application and initializes all components.
- * @param {HTMLElement} parentElement - The parent element where the application is mounted.
- * @param {FetchWrapper} api - An API instance to use for fetching.
+ * @param {number} runId - The initial run ID to load data for.
+ * @param {Object} options - Optional configuration options for the application.
+ * @param {FetchWrapper} options.api - An instance of an API handling class to facilitate server
+ * requests.
+ * @param {string} options.id - An optional ID to uniquely identify elements within the application.
  */
 class Caldb {
   static #defaultOptions = {
     id: "Caldb",
   };
 
-  constructor(parentElement, options = {}) {
+  constructor(parentElement, runId, options = {}) {
     this.options = { ...Caldb.#defaultOptions, ...options, api: window.api };
     this.model = new CaldbModel(this.options);
-    this.template = new CaldbTemplate(this.options);
-    this.view = new CaldbView(this.template, parentElement, this.options);
+    const template = new CaldbTemplate(this.options);
+    this.view = new CaldbView(template, this.options);
     this.controller = new CaldbController(this.model, this.view, this.options);
+
+    this._create(parentElement, runId);
   }
 
   /**
-   * Sets the run ID and triggers an update of the calibration database.
+   * Initializes the calibration database application by creating the UI components and loading the
+   * initial data set.
+   * @param {HTMLElement} parentElement - The DOM element where the application is mounted.
+   * @param {number} runId - The initial run ID to load data for.
+   * @private
+   */
+  _create(parentElement, runId) {
+    this.controller.create(parentElement, runId);
+  }
+
+  /**
+   * Sets the run ID for the model and triggers an update of the application to reflect the new
+   * data.
+   * This method is typically used when there is a need to switch the current run context
+   * dynamically.
+   * @param {number} runId - The new run ID to set and load data for.
    */
   update(runId) {
     this.controller.update(runId);
   }
 
   /**
-   * Refreshes the view of the files in the calibration database.
+   * Initiates a refresh of the current view, typically used to reload data from the server and
+   * update the UI.
+   * This method can be useful after a data modification operation to ensure the UI is in sync with
+   * the backend state.
    */
   refresh() {
     this.controller.refresh();

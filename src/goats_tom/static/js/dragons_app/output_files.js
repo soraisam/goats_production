@@ -1,35 +1,85 @@
+/**
+ * Template class for managing the output files section in the UI.
+ * @param {Object} options - Configuration options for the template.
+ */
 class OutputFilesTemplate {
   constructor(options) {
     this.options = options;
   }
+
   /**
-   * Creates a card container.
-   * @return {HTMLElement} The card element.
+   * Creates the container including the card.
+   * @param {Object} data - The data to populate the UI components.
+   * @returns {HTMLElement} The container element with all UI components.
    */
-  createCard() {
+  create(data) {
+    const container = this._createContainer();
+    const card = this._createCard(data);
+
+    container.appendChild(card);
+
+    return container;
+  }
+
+  /**
+   * Creates a container element.
+   * @returns {HTMLElement} The container element.
+   * @private
+   */
+  _createContainer() {
+    const container = Utils.createElement("div");
+    return container;
+  }
+
+  /**
+   * Creates a card component that encapsulates the UI elements.
+   * @param {Object} data - The data used to populate the card components.
+   * @returns {HTMLElement} The card element.
+   * @private
+   */
+  _createCard(data) {
     const card = Utils.createElement("div", ["card"]);
-    card.appendChild(this.createCardBody());
+    card.append(this._createCardHeader(), this._createCardBody(data));
 
     return card;
   }
 
   /**
-   * Creates the body section of the card.
-   * @return {HTMLElement} The card body element.
+   * Creates the header section of the card.
+   * @returns {HTMLElement} The card header element
+   * @private
    */
-  createCardBody() {
+  _createCardHeader() {
+    const div = Utils.createElement("div", ["card-header", "h5", "mb-0"]);
+    div.textContent = "Output Files";
+
+    return div;
+  }
+
+  /**
+   * Creates the body section of the card.
+   * @param {Object} data - Data used to populate the body of the card.
+   * @return {HTMLElement} The card body element.
+   * @private
+   */
+  _createCardBody(data) {
     const cardBody = Utils.createElement("div", ["card-body"]);
-    cardBody.appendChild(this.createAccordion());
+    const accordion = Utils.createElement("div", ["accordion", "accordion-flush"]);
+    accordion.id = "outputFilesAccordion";
+    accordion.appendChild(this._createAccordion(data));
+    cardBody.appendChild(accordion);
 
     return cardBody;
   }
 
   /**
-   * Creates an accordion for collapsible content.
-   * @return {HTMLElement} The accordion element.
+   * Creates an accordion component within the card for collapsible content.
+   * @param {Object} data - Data used to populate the accordion.
+   * @returns {HTMLElement} The accordion element.
+   * @private
    */
-  createAccordion() {
-    const accordion = Utils.createElement("div", ["accordion"]);
+  _createAccordion(data) {
+    const accordion = Utils.createElement("div", ["accordion-item"]);
     const accordionId = `accordion${this.options.id}`;
     accordion.id = accordionId;
 
@@ -45,7 +95,7 @@ class OutputFilesTemplate {
     button.setAttribute("data-bs-target", `#${collapseId}`);
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", collapseId);
-    button.textContent = "Output Files";
+    button.textContent = "Manage Files";
 
     header.appendChild(button);
 
@@ -53,16 +103,16 @@ class OutputFilesTemplate {
     collapseDiv.id = collapseId;
     collapseDiv.className = "accordion-collapse collapse";
     collapseDiv.setAttribute("aria-labelledby", headerId);
-    collapseDiv.setAttribute("data-bs-parent", `#${accordionId}`);
+    collapseDiv.setAttribute("data-bs-parent", `#outputFilesAccordion`);
 
     const accordionBody = Utils.createElement("div", [
       "accordion-body",
       "accordion-body-overflow",
     ]);
     accordionBody.append(
-      this.createToolbar(),
-      this.createTable(),
-      this.createLoadingDiv()
+      this._createToolbar(),
+      this._createTable(data),
+      this._createLoadingDiv()
     );
 
     collapseDiv.appendChild(accordionBody);
@@ -72,17 +122,19 @@ class OutputFilesTemplate {
   }
 
   /**
-   * Creates a table for displaying data.
-   * @return {HTMLElement} The table element.
+   * Creates a table for displaying file data.
+   * @param {Object} data - Data used to populate the table.
+   * @returns {HTMLElement} The table element.
+   * @private
    */
-  createTable() {
+  _createTable(data) {
     const table = Utils.createElement("table", [
       "table",
       "table-borderless",
       "table-sm",
       "table-striped",
     ]);
-    table.append(this.createTHeadDefault(), this.createTBodyDefault());
+    table.append(this._createTHead(data), this.createTBody(data));
 
     return table;
   }
@@ -90,8 +142,9 @@ class OutputFilesTemplate {
   /**
    * Creates a loading indicator element.
    * @return {HTMLElement} The loading div element with a spinner.
+   * @private
    */
-  createLoadingDiv() {
+  _createLoadingDiv() {
     const div = Utils.createElement("div", ["d-none", "text-center"]);
     div.id = `loading${this.options.id}`;
     const spinner = Utils.createElement("div", ["spinner-border", "text-secondary"]);
@@ -105,20 +158,11 @@ class OutputFilesTemplate {
   }
 
   /**
-   * Creates a default tbody element.
-   * @return {HTMLElement} The newly created tbody element.
-   */
-  createTBodyDefault() {
-    const tbody = Utils.createElement("tbody");
-
-    return tbody;
-  }
-
-  /**
    * Creates a toolbar containing action buttons.
    * @return {HTMLElement} The toolbar element containing buttons.
+   * @private
    */
-  createToolbar() {
+  _createToolbar() {
     const div = Utils.createElement("div");
     div.id = `toolbar${this.options.id}`;
     const row = Utils.createElement("div", ["row", "g-3"]);
@@ -144,17 +188,19 @@ class OutputFilesTemplate {
   }
 
   /**
-   * Creates a default thead element.
-   * @return {HTMLElement} The newly created thead element.
+   * Creates a table header with specified columns.
+   * @param {Object} data - Data used to determine the file count for the header.
+   * @returns {HTMLElement} The table header element (thead).
+   * @private
    */
-  createTHeadDefault() {
+  _createTHead(data) {
     const thead = Utils.createElement("thead");
     const tr = Utils.createElement("tr");
 
     // Creating a cell.
     const thName = Utils.createElement("th", ["fw-normal"]);
     thName.setAttribute("scope", "col");
-    thName.textContent = "Filename";
+    thName.textContent = `Filename ${Utils.getFileCountLabel(data.length)}`;
     thName.id = `thName${this.options.id}`;
 
     // Create cell for last modified.
@@ -183,7 +229,7 @@ class OutputFilesTemplate {
    * @param {Array} data - The data to populate the tbody with.
    * @return {HTMLElement} The tbody element filled with data rows.
    */
-  createTBodyData(data) {
+  createTBody(data) {
     const tbody = Utils.createElement("tbody");
     if (data.length === 0) {
       // If no data, show a message row
@@ -257,42 +303,57 @@ class OutputFilesTemplate {
   }
 }
 
+/**
+ * View class for managing the display of output files in the UI.
+ * @param {OutputFilesTemplate} template - Template instance used for rendering the UI.
+ * @param {Object} options - Configuration options for the view.
+ */
 class OutputFilesView {
-  constructor(template, parentElement, options) {
+  constructor(template, options) {
     this.template = template;
-    this.parentElement = parentElement;
     this.options = options;
 
-    this.card = this._create();
-    this.body = this.card.querySelector(".accordion-body");
-    this.table = this.card.querySelector("table");
-    this.tbody = this.card.querySelector("tbody");
-    this.thead = this.card.querySelector("thead");
-    this.loadingDiv = this.card.querySelector(`#loading${this.options.id}`);
-    this.toolbar = this.card.querySelector(`#toolbar${this.options.id}`);
-
-    this.parentElement.appendChild(this.card);
+    this.container = null;
+    this.card = null;
+    this.body = null;
+    this.table = null;
+    this.tbody = null;
+    this.thead = null;
+    this.loadingDiv = null;
+    this.toolbar = null;
+    this.parentElement = null;
 
     this.render = this.render.bind(this);
     this.bindCallback = this.bindCallback.bind(this);
   }
 
   /**
-   * Creates the card component using the template.
-   * @return {HTMLElement} The created card element.
+   * Initializes and creates the UI components in the specified parent element.
+   * @param {HTMLElement} parentElement - The container in which the UI should be rendered.
+   * @param {Object} data - The data to be used for rendering the UI components.
+   * @private
    */
-  _create() {
-    const card = this.template.createCard();
+  _create(parentElement, data) {
+    this.parentElement = parentElement;
+    this.container = this.template.create(data);
+    this.card = this.container.querySelector(".card");
+    this.body = this.card.querySelector(".accordion");
+    this.table = this.card.querySelector("table");
+    this.tbody = this.card.querySelector("tbody");
+    this.thead = this.card.querySelector("thead");
+    this.loadingDiv = this.card.querySelector(`#loading${this.options.id}`);
+    this.toolbar = this.card.querySelector(`#toolbar${this.options.id}`);
 
-    return card;
+    this.parentElement.appendChild(this.container);
   }
 
   /**
    * Updates the table with new data.
    * @param {Array} data - The new data to render in the table.
+   * @private
    */
-  update(data) {
-    const newTbody = this.template.createTBodyData(data);
+  _update(data) {
+    const newTbody = this.template.createTBody(data);
     this.table.replaceChild(newTbody, this.tbody);
     this.tbody = newTbody;
 
@@ -304,8 +365,9 @@ class OutputFilesView {
 
   /**
    * Shows the loading animation and hides the data table.
+   * @private
    */
-  loading() {
+  _loading() {
     this.table.classList.add("d-none");
     this.loadingDiv.classList.remove("d-none");
     this._toggleToolbarButtonsDisabled(true);
@@ -313,8 +375,9 @@ class OutputFilesView {
 
   /**
    * Hides the loading animation and shows the data table.
+   * @private
    */
-  loaded() {
+  _loaded() {
     this.table.classList.remove("d-none");
     this.loadingDiv.classList.add("d-none");
     this._toggleToolbarButtonsDisabled(false);
@@ -323,6 +386,7 @@ class OutputFilesView {
   /**
    * Toggles the disabled state of all buttons in the toolbar.
    * @param {boolean} disable - True to disable the buttons, false to enable them.
+   * @private
    */
   _toggleToolbarButtonsDisabled(disable) {
     const buttons = this.toolbar.querySelectorAll("button");
@@ -337,16 +401,19 @@ class OutputFilesView {
   render(viewCmd, parameter) {
     switch (viewCmd) {
       case "update":
-        this.update(parameter.data);
+        this._update(parameter.data);
         break;
       case "loading":
-        this.loading();
+        this._loading();
         break;
       case "loaded":
-        this.loaded();
+        this._loaded();
         break;
       case "error":
         console.log("View found error.");
+        break;
+      case "create":
+        this._create(parameter.parentElement, parameter.data);
         break;
     }
   }
@@ -388,11 +455,14 @@ class OutputFilesView {
   }
 }
 
+/**
+ * Model class for managing output file data.
+ * @param {Object} options - Configuration options for the model.
+ */
 class OutputFilesModel {
   constructor(options) {
-    this.options = options
+    this.options = options;
     this._runId = null;
-    this._rawData = null;
     this._data = null;
     this._previousData = null;
     this.api = this.options.api;
@@ -485,19 +555,10 @@ class OutputFilesModel {
   }
 
   /**
-   * Returns the raw data stored in the model.
-   * @return {Object} The raw data object.
-   */
-  get rawData() {
-    return this._rawData;
-  }
-
-  /**
    * Sets the current data for the model and updates the previous data state.
    * @param {Array} value - The new data to set.
    */
   set data(value) {
-    this._rawData = value;
     this._previousData = this._data;
     this._data = value.files;
   }
@@ -509,26 +570,26 @@ class OutputFilesModel {
   dataChanged() {
     return JSON.stringify(this._data) !== JSON.stringify(this._previousData);
   }
-
-  /**
-   * Clears all data stored in the model.
-   */
-  clearData() {
-    this._rawData = null;
-    this._data = null;
-  }
 }
 
 /**
- * Constructs the controller for managing model and view interactions in the OutputFiles component.
- * @param {OutputFilesModel} model - The model managing the data state.
- * @param {OutputFilesView} view - The view displaying the data.
+ * Controller class for managing interactions between the model and view.
+ * @param {OutputFilesModel} model - The model component of the feature.
+ * @param {OutputFilesView} view - The view component of the feature.
+ * @param {Object} options - Configuration options for the controller.
  */
 class OutputFilesController {
-  constructor(model, view) {
+  constructor(model, view, options) {
     this.model = model;
     this.view = view;
+    this.options = options;
+  }
 
+  /**
+   * Binds callback functions to handle user interactions.
+   * @private
+   */
+  _bindCallbacks() {
     this.view.bindCallback("refresh", () => this.refresh());
     this.view.bindCallback("add", (item) => this.add(item.filename, item.filepath));
     this.view.bindCallback("remove", (item) =>
@@ -575,7 +636,6 @@ class OutputFilesController {
    * @async
    */
   async refresh() {
-    if (!this.model.runId) return;
     this.view.render("loading");
     await Utils.ensureMinimumDuration(this.model.fetchFiles(), 500);
     if (this.model.dataChanged()) {
@@ -583,28 +643,58 @@ class OutputFilesController {
     }
     this.view.render("loaded");
   }
+
+  /**
+   * Initializes the view with a specified run ID and binds callbacks.
+   * @param {HTMLElement} parentElement - The parent element where the view will be rendered.
+   * @param {number} runId - The run ID to initialize the view with.
+   * @async
+   */
+  async create(parentElement, runId) {
+    this.model.runId = runId;
+    await Utils.ensureMinimumDuration(this.model.fetchFiles(), 500);
+    this.view.render("create", { parentElement, data: this.model.data });
+    this.view.render("loaded");
+
+    this._bindCallbacks();
+  }
 }
 
 /**
- * Constructs the OutputFiles component and initializes its subcomponents.
- * @param {HTMLElement} parentElement - The DOM element to which the component will be attached.
- * @param {Object} api - The API interface used for data interactions.
+ * The main class that orchestrates the initialization and management of the OutputFiles
+ * application.
+ * @param {HTMLElement} parentElement - The parent element where the application will be mounted.
+ * @param {number} runId - The run ID used to fetch output files.
+ * @param {Object} options - Configuration options for the application.
  */
 class OutputFiles {
   static #defaultOptions = {
     id: "OutputFiles",
   };
 
-  constructor(parentElement, options) {
+  constructor(parentElement, runId, options = {}) {
     this.options = { ...OutputFiles.#defaultOptions, ...options, api: window.api };
     this.model = new OutputFilesModel(this.options);
-    this.template = new OutputFilesTemplate(this.options);
-    this.view = new OutputFilesView(this.template, parentElement, this.options);
+    const template = new OutputFilesTemplate(this.options);
+    this.view = new OutputFilesView(template, this.options);
     this.controller = new OutputFilesController(this.model, this.view, this.options);
+
+    this._create(parentElement, runId);
   }
 
   /**
-   * Sets the run ID and triggers an update of the output directory.
+   * Initializes the application components.
+   * @param {HTMLElement} parentElement - The parent element to append the application.
+   * @param {number} runId - The run ID to use for initialization.
+   * @private
+   */
+  _create(parentElement, runId) {
+    this.controller.create(parentElement, runId);
+  }
+
+  /**
+   * Updates the view and model with a new run ID and refreshes the file list.
+   * @param {number} runId - The new run ID to set.
    */
   update(runId) {
     this.controller.update(runId);
