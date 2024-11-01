@@ -408,22 +408,49 @@ class RecipeReductionTemplate {
     // Create a label element.
     const uparmsId = this._createId(data, "Uparms");
     const label = Utils.createElement("label", ["col-form-label"]);
-    label.textContent = "Set Uparms";
+    label.textContent = "Optional Parameters";
     label.htmlFor = uparmsId;
+
+    // Create information popover button with an icon for uparms.
+    const infoButton = Utils.createElement("a", ["link-primary", "ms-1"]);
+    infoButton.setAttribute("type", "button");
+    infoButton.setAttribute("tabindex", "0");
+    infoButton.setAttribute("data-bs-trigger", "focus");
+    infoButton.setAttribute("data-bs-toggle", "popover");
+    infoButton.setAttribute("data-bs-placement", "top");
+    infoButton.setAttribute("data-bs-html", "true");
+    infoButton.setAttribute("data-bs-title", "Set Parameter Values");
+    infoButton.setAttribute(
+      "data-bs-content",
+      `
+    <p>Use this input field to set parameter values for primitives in the recipe.</p>
+    <p>Input should be formatted as follows:</p>
+    <ul>
+    <li><code>[('primitive1_name:parameter1_name', parameter1_value), ('primitive2_name:parameter2_name', parameter2_value)]</code></li>
+    <li>If the primitive name is omitted, e.g., <code>('parameter_name', parameter_value)</code>, the parameter value will be applied to all primitives in the recipe that use this parameter.</li>
+    </ul>
+    <p>While direct modifications to the recipe can be made using the code block below, it is generally recommended to set parameters using this input field for ease and accuracy.<p/>
+  `
+    );
+
+    // Create icon element.
+    const icon = Utils.createElement("i", ["fa-solid", "fa-circle-info"]);
+    infoButton.appendChild(icon);
+
+    new bootstrap.Popover(infoButton);
 
     // Create an input element.
     const input = Utils.createElement("input", ["form-control"]);
     input.type = "text";
     input.id = uparmsId;
-    input.placeholder =
-      "[('stackFrames:memory', None), ('darkCorrect:dark', 'blah_dark.fits')]";
+    input.placeholder = "[('primitive:parameter', value)]";
     input.value = data.uparms;
     input.disabled = true;
     this.uparms = input;
 
     // Append the label and input to the container.
     inputCol.appendChild(input);
-    labelCol.appendChild(label);
+    labelCol.append(label, infoButton);
     row.append(labelCol, inputCol);
     div.appendChild(row);
 
