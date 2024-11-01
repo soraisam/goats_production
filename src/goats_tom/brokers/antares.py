@@ -1,4 +1,4 @@
-__all__ = ["GOATSANTARESBrokerForm", "GOATSANTARESBroker"]
+__all__ = ["ANTARESBrokerForm", "ANTARESBroker"]
 
 from typing import Any
 
@@ -9,11 +9,12 @@ from django import forms
 from django.forms.widgets import Textarea
 from django.templatetags.static import static
 from tom_alerts.alerts import GenericQueryForm
-from tom_antares.antares import ANTARESBroker
+from tom_antares.antares import ANTARESBroker as BaseANTARESBroker
 
 
-class GOATSANTARESBrokerForm(GenericQueryForm):
-    """A Django form class that extends ``ANTARESBrokerForm``.
+
+class ANTARESBrokerForm(GenericQueryForm):
+    """A Django form class.
 
     Attributes
     ----------
@@ -125,7 +126,7 @@ class GOATSANTARESBrokerForm(GenericQueryForm):
         return cleaned_data
 
 
-class GOATSANTARESBroker(ANTARESBroker):
+class ANTARESBroker(BaseANTARESBroker):
     """Extends the ANTARESBroker.
 
     Attributes
@@ -135,7 +136,7 @@ class GOATSANTARESBroker(ANTARESBroker):
 
     """
 
-    form = GOATSANTARESBrokerForm
+    form = ANTARESBrokerForm
 
     def fetch_alerts(self, parameters: dict[str, Any]) -> iter:
         """Fetches alerts from user input.

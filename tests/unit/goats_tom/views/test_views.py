@@ -19,10 +19,10 @@ from goats_tom.tests.factories import (
     UserKeyFactory,
 )
 from goats_tom.views import (
-    GOATSDataProductDeleteView,
+    DataProductDeleteView,
     ObservationRecordDeleteView,
     ongoing_tasks,
-    update_brokerquery_name,
+    update_brokerquery_name
 )
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -41,7 +41,7 @@ def mock_request():
 
 @pytest.mark.django_db()
 class TestUpdateBrokerQueryName:
-    @patch("goats_tom.views.views.BrokerQuery")
+    @patch("goats_tom.views.brokerquery_name.BrokerQuery")
     def test_update_brokerquery_name_success(self, mock_brokerquery, mock_request):
         # Mock the BrokerQuery object and its methods.
         mock_query = MagicMock()
@@ -65,7 +65,7 @@ class TestUpdateBrokerQueryName:
 
         assert isinstance(response, JsonResponse)
 
-    @patch("goats_tom.views.views.BrokerQuery")
+    @patch("goats_tom.views.brokerquery_name.BrokerQuery")
     def test_update_brokerquery_name_not_found(self, mock_brokerquery, mock_request):
         mock_brokerquery.DoesNotExist = BrokerQuery.DoesNotExist
         mock_brokerquery.objects.get.side_effect = mock_brokerquery.DoesNotExist
@@ -132,7 +132,7 @@ class TestOngoingTasks:
         mock.values.return_value = list(args) if args else []
         return mock
 
-    @patch("goats_tom.views.views.Download")
+    @patch("goats_tom.views.tasks.Download")
     def test_ongoing_tasks_no_tasks(self, mock_task_progress, mock_request):
         """Test the ongoing_tasks view with no ongoing tasks."""
         mock_task_progress.objects.filter.return_value = self.mock_queryset()
@@ -142,7 +142,7 @@ class TestOngoingTasks:
         assert json.loads(response.content) == []
 
     @pytest.mark.django_db()
-    @patch("goats_tom.views.views.Download")
+    @patch("goats_tom.views.tasks.Download")
     def test_ongoing_tasks_with_tasks(self, mock_task_progress, mock_request):
         """Test the ongoing_tasks view with some ongoing tasks."""
         test_tasks = [
@@ -156,7 +156,7 @@ class TestOngoingTasks:
         assert json.loads(response.content) == test_tasks
 
 
-class TestGOATSDataProductDeleteView(APITestCase):
+class TestDataProductDeleteView(APITestCase):
     def setUp(self):
         self.user = User.objects.create(username="testuser")
         self.client.force_login(self.user)
@@ -177,7 +177,7 @@ class TestGOATSDataProductDeleteView(APITestCase):
     def test_form_valid(self):
         # Setup the request and view.
         request = HttpRequest()
-        view = GOATSDataProductDeleteView()
+        view = DataProductDeleteView()
         view.request = request
         view.kwargs = {"pk": self.data_product.pk}
         view.object = self.data_product
@@ -331,7 +331,7 @@ class GOALoginViewTest(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
 
-    @patch("goats_tom.views.views.GOA")
+    @patch("goats_tom.views.goa_login.GOA")
     def test_form_valid(self, mock_goa):
         self.client.login(username="superuser", password="password")
         mock_goa.authenticated.return_value = True
@@ -352,7 +352,7 @@ class GOALoginViewTest(TestCase):
             messages[0].message,
         )
 
-    @patch("goats_tom.views.views.GOA")
+    @patch("goats_tom.views.goa_login.GOA")
     def test_form_invalid(self, mock_goa):
         self.client.login(username="superuser", password="password")
         mock_goa.authenticated.return_value = False
@@ -410,8 +410,8 @@ class GOAQueryFormViewTest(TestCase):
         self.url = reverse("goa_query", kwargs={"pk": self.observation_record.pk})
         self.form_data = {"download_calibrations": "yes", "facility": "test_facility"}
 
-    @patch("goats_tom.views.views.GOA")
-    @patch("goats_tom.views.views.download_goa_files.send")
+    @patch("goats_tom.views.goa_query_form.GOA")
+    @patch("goats_tom.views.goa_query_form.download_goa_files.send")
     def test_successful_submission(self, mock_download, mock_goa):
         """Test successful form submission with valid GOA credentials."""
         GOALoginFactory.create(
@@ -426,8 +426,8 @@ class GOAQueryFormViewTest(TestCase):
         messages = [msg.message for msg in get_messages(response.wsgi_request)]
         self.assertIn("Downloading data in background. Check back soon!", messages)
 
-    @patch("goats_tom.views.views.GOA")
-    @patch("goats_tom.views.views.download_goa_files.send")
+    @patch("goats_tom.views.goa_query_form.GOA")
+    @patch("goats_tom.views.goa_query_form.download_goa_files.send")
     def test_missing_goa_credentials(self, mock_download, mock_goa):
         """Test form submission with missing GOA credentials."""
         self.client.login(username="testuser", password="password")
@@ -442,8 +442,8 @@ class GOAQueryFormViewTest(TestCase):
             messages,
         )
 
-    @patch("goats_tom.views.views.GOA")
-    @patch("goats_tom.views.views.download_goa_files.send")
+    @patch("goats_tom.views.goa_query_form.GOA")
+    @patch("goats_tom.views.goa_query_form.download_goa_files.send")
     def test_failed_goa_authentication(self, mock_download, mock_goa):
         """Test form submission with failed GOA authentication."""
         GOALoginFactory.create(
@@ -475,7 +475,7 @@ class GOAQueryFormViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
-class GOATSDataProductDeleteViewTest(TestCase):
+class DataProductDeleteViewTest(TestCase):
     def setUp(self):
         self.user = UserFactory.create()
         self.client.force_login(self.user)
