@@ -33,7 +33,7 @@ urlpatterns = [
     path("api/", include(router.urls)),
     path(
         "targets/<int:pk>/delete/",
-        views.GOATSTargetDeleteView.as_view(),
+        views.TargetDeleteView.as_view(),
         name="target-delete",
     ),
     path(
@@ -48,12 +48,12 @@ urlpatterns = [
     ),
     path(
         "observations/<int:pk>/",
-        views.GOATSObservationRecordDetailView.as_view(),
+        views.ObservationRecordDetailView.as_view(),
         name="observation-detail",
     ),
     path(
         "dataproducts/data/<int:pk>/delete/",
-        views.GOATSDataProductDeleteView.as_view(),
+        views.DataProductDeleteView.as_view(),
         name="delete-dataproduct",
     ),
     path(

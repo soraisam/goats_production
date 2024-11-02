@@ -1,3 +1,3 @@
-from .antares import GOATSANTARESBroker, GOATSANTARESBrokerForm
+from .antares import ANTARESBroker, ANTARESBrokerForm
 
-__all__ = ["GOATSANTARESBrokerForm", "GOATSANTARESBroker"]
+__all__ = ["ANTARESBrokerForm", "ANTARESBroker"]

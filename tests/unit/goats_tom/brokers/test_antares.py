@@ -2,11 +2,11 @@ from collections.abc import Iterator
 
 import pytest
 from django.core.exceptions import ValidationError
-from goats_tom.brokers import GOATSANTARESBroker, GOATSANTARESBrokerForm
+from goats_tom.brokers import ANTARESBroker, ANTARESBrokerForm
 
 
 @pytest.mark.django_db()
-def test_goatsantaresbroker_form_valid():
+def test_antaresbroker_form_valid():
     """Test the form with valid data.
     """
     form_data = {
@@ -14,16 +14,16 @@ def test_goatsantaresbroker_form_valid():
         "query_name": "test",
         "broker": "ANTARES",
     }
-    form = GOATSANTARESBrokerForm(data=form_data)
+    form = ANTARESBrokerForm(data=form_data)
     assert form.is_valid(), "Form should be valid with correct esquery data."
 
 
 @pytest.mark.django_db()
-def test_goatsantaresbroker_form_invalid():
+def test_antaresbroker_form_invalid():
     """Test the form with invalid data.
     """
     form_data = {}
-    form = GOATSANTARESBrokerForm(data=form_data)
+    form = ANTARESBrokerForm(data=form_data)
     assert not form.is_valid(), "Form should not be valid with empty esquery."
 
     with pytest.raises(ValidationError):
@@ -31,16 +31,16 @@ def test_goatsantaresbroker_form_invalid():
 
 
 @pytest.mark.django_db()
-def test_goatsantaresbroker_form_no_data():
+def test_antaresbroker_form_no_data():
     """Test the form with no data.
     """
-    form = GOATSANTARESBrokerForm()
+    form = ANTARESBrokerForm()
     assert not form.is_valid(), "Form should not be valid without data."
 
 
 @pytest.mark.remote_data()
 def test_fetch_alerts_locusid_remote():
-    broker = GOATSANTARESBroker()
+    broker = ANTARESBroker()
     parameters = {"locusid": "ANT2020j7wo4"}  # Example parameter
     alerts = broker.fetch_alerts(parameters)
     assert isinstance(alerts, Iterator)
@@ -48,7 +48,7 @@ def test_fetch_alerts_locusid_remote():
 
 @pytest.mark.remote_data()
 def test_fetch_alerts_esquery_remote():
-    broker = GOATSANTARESBroker()
+    broker = ANTARESBroker()
     esquery = {
         "query": {
             "bool": {
