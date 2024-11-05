@@ -495,6 +495,7 @@ class FilesTableController {
    * @param {Array} data - The new data to update the table with.
    */
   update(data) {
+    this.model.data = data;
     this.view.render("update", { data });
   }
 
@@ -504,6 +505,7 @@ class FilesTableController {
    * @param {HTMLElement} parentElement - The parent element to append the table to.
    */
   create(data, parentElement) {
+    this.model.data = data;
     this.view.render("create", { data, parentElement });
     this._bindCallbacks();
   }

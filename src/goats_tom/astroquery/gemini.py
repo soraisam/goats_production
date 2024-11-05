@@ -19,6 +19,7 @@ from multiprocessing import Pool
 from pathlib import Path
 from typing import Any
 
+import astrodata
 import astropy
 import astropy.units as u
 import numpy as np
@@ -26,7 +27,10 @@ from astropy.table import MaskedColumn, Table
 from astroquery import log
 from astroquery.query import QueryWithLogin
 from astroquery.utils.class_or_instance import class_or_instance
+from gempy.utils import logutils
 from gevent.threadpool import ThreadPool
+from recipe_system import cal_service
+from recipe_system.reduction.coreReduce import Reduce
 
 from .conf import conf
 from .urlhelper import URLHelper
@@ -127,11 +131,9 @@ class ObservationsClass(QueryWithLogin):
         url = self.url_helper.get_login_url()
         data = {"username": username, "password": password}
         r = self._session.post(url, data=data)
-
-        if b"<P>Welcome, you are successfully logged in" not in r.content:
-            log.error("Unable to login, please check your credentials")
+        if r == 200:
+            # Login successful.
             return False
-
         return True
 
     @class_or_instance
@@ -804,10 +806,69 @@ class ObservationsClass(QueryWithLogin):
                     for filename in download_info["downloaded_files"]
                 ]
 
+            # If GHOST data, unpack.
+            bundled_ghost_files = []
+            for filename in download_info["downloaded_files"]:
+                file_path = temp_dir_path / filename
+
+                # Check if its bundled ghost data.
+                ad = astrodata.open(file_path)
+                if {"GHOST", "BUNDLE"}.issubset(ad.tags):
+                    # Got bundled ghost data, let us add to the list to unbundle.
+                    bundled_ghost_files.append(file_path)
+
+            # Now run the dragons process.
+            if bundled_ghost_files:
+                # Update download bar.
+                if download_state is not None:
+                    download_state.update_and_send(
+                        status="Unbundling GHOST data...",
+                        downloaded_bytes=downloaded_bytes,
+                    )
+
+                # Update the log output for DRAGONS to quiet and level 40 (ERROR).
+                logutils.config(mode="quiet", file_lvl=40)
+
+                # Create directory to unbundle in.
+                unbundle_ghost_dir = temp_dir_path / "unbundle_ghost"
+                unbundle_ghost_dir.mkdir()
+
+                # Create calibration database needed for DRAGONS.
+                db_path = unbundle_ghost_dir / "unbundle_ghost.db"
+                cal_service.LocalDB(db_path, force_init=True)
+
+                # Create the dragonsrc file.
+                dragons_rc = unbundle_ghost_dir / "dragonsrc"
+                with open(dragons_rc, "w") as f:
+                    f.write(f"[calibs]\ndatabases = {db_path} get store")
+
+                # Change directory to where DRAGONS needs to write unbundled data.
+                os.chdir(unbundle_ghost_dir)
+                r = Reduce()
+                # DRAGONS requires strings to be passed.
+                r.files.extend([str(file) for file in bundled_ghost_files])
+                r.config_file = str(dragons_rc)
+                r.runr()
+
+                # Get the list of new files created by DRAGONS.
+                new_files = [file.name for file in unbundle_ghost_dir.glob("*.fits")]
+
+                # Remove the original bundled files from download_info.
+                for bundled_file in bundled_ghost_files:
+                    download_info["downloaded_files"].remove(bundled_file.name)
+                    bundled_file.unlink()
+
+                # Add new files to the download_info.
+                download_info["downloaded_files"].extend(new_files)
+                download_info["num_files_downloaded"] += len(new_files) - len(
+                    bundled_ghost_files
+                )
+
             # Prepare file paths for moving.
             move_file_paths = [
                 (file_path, dest_folder / file_path.name)
-                for file_path in temp_dir_path.iterdir()
+                for file_path in temp_dir_path.glob("**/*.fits")
+                if file_path.is_file()
             ]
 
             if parallize:

@@ -6,6 +6,7 @@ import logging
 import tarfile
 import time
 
+# Now import the DRAGONS libraries
 import dramatiq
 from django.conf import settings
 from django.core import serializers

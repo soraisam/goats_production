@@ -1,0 +1,1 @@
+Added GHOST in DRAGONS application: Implemented features in DRAGONS application to debundle and reduce GHOST data. Bugfix for file group selection and improved astroquery login verification.
