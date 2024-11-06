@@ -1,0 +1,1 @@
+Fixed recipe and primitive extraction for DRAGONS application: Extracted primitives now include all lines, ensuring comments and docstrings are no longer ignored.

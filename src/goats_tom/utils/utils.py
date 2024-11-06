@@ -396,17 +396,10 @@ def get_recipes_and_primitives(tags: set, instrument: str) -> dict[str, Any]:
                     continue
 
                 source_code = inspect.getsource(func)
-                primitives = re.findall(r"p\..*", source_code)
-
-                # Construct the function definition for the recipe.
-                function_definition = _create_recipe_function_definition(
-                    func.__name__,
-                    primitives,
-                )
                 is_default = func.__name__ == applicable_recipe.__name__
 
                 recipes[recipe_name] = {
-                    "function_definition": function_definition,
+                    "function_definition": source_code,
                     "is_default": is_default,
                     "recipes_module": recipe_module,
                 }
@@ -416,25 +409,3 @@ def get_recipes_and_primitives(tags: set, instrument: str) -> dict[str, Any]:
             continue
 
     return {"recipes": recipes}
-
-
-def _create_recipe_function_definition(recipe_name: str, primitives: list[str]) -> str:
-    """Constructs a Python function definition string from a list of primitive
-    operations.
-
-    Parameters
-    ----------
-    recipe_name : `str`
-        The name of the recipe function to be defined.
-    primitives : `list[str]`
-        A list of string representations of primitive operations that form the body of
-        the function.
-
-    Returns
-    -------
-    `str`
-        A formatted string representing the complete Python function definition.
-
-    """
-    function_body = "\n".join(f"    {primitive.strip()}" for primitive in primitives)
-    return f"def {recipe_name}(p):\n{function_body}\n"
