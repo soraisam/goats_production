@@ -56,7 +56,6 @@ class DRAGONSFile(models.Model):
     product_id = models.CharField(max_length=100, null=False, blank=False)
     observation_class = models.CharField(max_length=50, null=False, blank=False)
 
-
     class Meta:
         unique_together = ("dragons_run", "data_product")
 
@@ -102,27 +101,32 @@ class DRAGONSFile(models.Model):
                 getattr(primitive_obj, item),
             ):
                 method = getattr(primitive_obj, item)
-                params = primitive_obj.params[item]
-                data[item] = {
-                    "params": {
-                        # Filter and store parameters that do not start with "debug".
-                        k: {"value": f"{v}", "doc": f"{params.doc(k)}"}
-                        for k, v in params.items()
-                        if not k.startswith("debug")
-                    },
-                    "docstring": {},
-                }
-                try:
-                    docstring = NumpyDocString(method.__doc__)
-                    # Parse and store the docstring content, transforming section titles
-                    # to lowercase and replacing spaces with underscores.
-                    data[item]["docstring"] = {
-                        section.lower().replace(" ", "_"): content
-                        for section, content in docstring._parsed_data.items()
+                params = primitive_obj.params.get(item)
+                if params is not None:
+                    data[item] = {
+                        "params": {
+                            # Filter and store parameters that do not start with
+                            # "debug".
+                            k: {"value": f"{v}", "doc": f"{params.doc(k)}"}
+                            for k, v in params.items()
+                            if not k.startswith("debug")
+                        },
+                        "docstring": {},
                     }
-                except (ValueError, TypeError) as e:
-                    print(f"Error processing docstring for {item}: {str(e)}")
-                    pass
+                    try:
+                        docstring = NumpyDocString(method.__doc__)
+                        # Parse and store the docstring content, transforming section
+                        # titles to lowercase and replacing spaces with underscores.
+                        data[item]["docstring"] = {
+                            section.lower().replace(" ", "_"): content
+                            for section, content in docstring._parsed_data.items()
+                        }
+                    except (ValueError, TypeError) as e:
+                        print(f"Error processing docstring for {item}: {str(e)}")
+                        continue
+                else:
+                    print(f"Error getting {item} from params, does not exist.")
+                    continue
 
         return data
 

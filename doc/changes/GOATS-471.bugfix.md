@@ -1,0 +1,1 @@
+Added safeguard for missing primitive params in `showpars`: Ensured DRAGONS/GOATS `showpars` handles cases where parameters for specific primitives are absent.
