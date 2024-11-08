@@ -116,7 +116,7 @@ class FilesTableTemplate {
       const option = Utils.createElement("option");
       option.value = groupKey;
       option.textContent = `${groupKey} (${data[groupKey].count} files)`;
-      if (groupKey === "All") option.selected = true;
+      if (groupKey === "All" || groupKey === "N/A") option.selected = true;
       select.appendChild(option);
     });
 
@@ -323,7 +323,6 @@ class FilesTableView {
    */
   _update(data) {
     // Update the select.
-    // FIXME: With new structure later
     while (this.groupsSelect.options.length > 0) {
       this.groupsSelect.remove(0);
     }
