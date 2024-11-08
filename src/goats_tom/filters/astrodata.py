@@ -193,19 +193,26 @@ class AstrodataFilter:
         `Any`
             The normalized value to boolean, float, string, or `None`.
         """
-        value = value.strip("\"'")
+        # Regex to check if the value is enclosed in single or double quotes.
+        if re.match(r'^["\'].+["\']$', value.strip()):
+            # Remove the quotes and check for special string values.
+            stripped_value = value.strip().strip("\"'")
 
-        # Handle times and dates.
-        if field in self.datetime_descriptors_formats:
-            return self._parse_datetime(value, field)
-        if isinstance(value, str) and value.strip().lower() in ["null", "none"]:
-            return None
+            if field in self.datetime_descriptors_formats:
+                return self._parse_datetime(stripped_value, field)
+
+            if stripped_value.lower() in ["null", "none"]:
+                return None
+            elif stripped_value.lower() in ["true", "false"]:
+                return stripped_value.lower() == "true"
+            return stripped_value
+
+        # Attempt to convert non-quoted values to float.
         try:
             return float(value)
         except ValueError:
-            return (
-                value.lower() == "true" if value.lower() in ["true", "false"] else value
-            )
+            # Return original value if it can't be converted to float.
+            return value
 
     def _handle_numeric_tolerance(self, field: str, value: Any) -> Q:
         """Handles the creation of a `Q` object for numeric fields where a tolerance is

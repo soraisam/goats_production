@@ -85,7 +85,6 @@ class DRAGONSFilesViewSet(
             "filter_expression", ""
         )
         filter_strict = filter_serializer.validated_data.get("filter_strict", False)
-
         astrodata_filter = AstrodataFilter(strict=filter_strict)
         query_filter = astrodata_filter.parse_expression_to_query(filter_expression)
 
@@ -161,6 +160,10 @@ class DRAGONSFilesViewSet(
                     }
                 )
                 grouped_data[group_key]["count"] += 1
+
+            # Ensure response consistency by checking if grouped_data is empty.
+            if not grouped_data:
+                grouped_data = {"N/A": {"count": 0, "files": []}}
 
             return Response(grouped_data)
 

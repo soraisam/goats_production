@@ -73,12 +73,12 @@ class TestAstrodataFilter(TestCase):
     def test__normalize_value(self):
         # Test cases should have a proper field specified to check normalization.
         test_cases = [
-            ("test", "1.0", 1.0),  # General field with float in string form.
-            ("ut_date", "2023-01-01", datetime.strptime("2023-01-01", "%Y-%m-%d").date().isoformat()),  # Date field with ISO date string.
+            ("test", "1", 1.0),
             ("test", "\"true\"", True),  # String explicitly quoted boolean true.
-            ("test", "false", False),  # Boolean false in plain string.
+            ("test", "\"false\"", False),  # Boolean false in plain string.
             ("test", "\"null\"", None),  # String explicitly quoted null.
-            ("test", "None", None)  # String None treated as null.
+            ("test", "\"None\"", None),  # String None treated as null.
+            ("ut_date", "\"2023-01-01\"", datetime.strptime("2023-01-01", "%Y-%m-%d").date().isoformat()),  # Date field with ISO date string.
         ]
 
         for field, input_value, expected_output in test_cases:
@@ -145,23 +145,23 @@ class TestAstrodataFilter(TestCase):
     def test__construct_query_partial_match(self):
         field = 'filter_name'
         operator_match = '__icontains'
-        value = 'G-400'
+        value = '\"G-400\"'
         query = self.astrodata_filter._construct_query(field, operator_match, value)
         self.assertIsInstance(query, Q)
-        self.assertIn((self.astrodata_filter._build_descriptor_key(field, operator_match), value), query.children)
+        self.assertIn((self.astrodata_filter._build_descriptor_key(field, operator_match), value.strip("\"'")), query.children)
 
     def test__construct_query_exact_match(self):
         field = 'object_name'
         operator_match = '__exact'
-        value = 'NGC 1234'
+        value = '\"NGC 1234\"'
         query = self.astrodata_filter._construct_query(field, operator_match, value)
         self.assertIsInstance(query, Q)
-        self.assertIn((self.astrodata_filter._build_descriptor_key(field, operator_match), value), query.children)
+        self.assertIn((self.astrodata_filter._build_descriptor_key(field, operator_match), value.strip("\"'")), query.children)
 
     def test__construct_query_none_value_handling(self):
         field = 'detector_name'
         operator_match = '__exact'
-        value = "None"
+        value = "\"None\""
         query = self.astrodata_filter._construct_query(field, operator_match, value)
         self.assertIsInstance(query, Q)
         self.assertIn((self.astrodata_filter._build_descriptor_key(field, operator_match), None), query.children)
@@ -169,7 +169,7 @@ class TestAstrodataFilter(TestCase):
     def test__construct_query_datetime_handling_invalid_input(self):
         field = 'ut_datetime'
         operator_match = '__gte'
-        value = 'invalid-datetime-format'
+        value = '\"invalid-datetime-format\"'
         query = self.astrodata_filter._construct_query(field, operator_match, value)
         self.assertIsInstance(query, Q)
         # Expecting no effective conditions if normalization fails
