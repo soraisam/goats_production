@@ -50,6 +50,6 @@ class Identifier {
    * @returns {string} A default filter expression for database queries.
    */
   createDefaultFilterExpression() {
-    return `observation_type=="${this.observationType}" AND observation_class=="${this.observationClass}" AND object=="${this.objectName}"`;
+    return `(observation_type=="${this.observationType}" and observation_class=="${this.observationClass}" and object=="${this.objectName}")`;
   }
 }

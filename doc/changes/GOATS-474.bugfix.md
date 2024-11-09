@@ -1,0 +1,1 @@
+Fixed query order operations: Corrected handling of logical operations in expressions. Implemented using the `ast` module to parse expressions more reliably. Updated logical operators to be case-sensitive as required by `ast`. Removed "not" but added "!=" as a valid operation. Updated UI help documentation to reflect these changes.

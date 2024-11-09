@@ -85,12 +85,15 @@ class DRAGONSFilesViewSet(
             "filter_expression", ""
         )
         filter_strict = filter_serializer.validated_data.get("filter_strict", False)
-        astrodata_filter = AstrodataFilter(strict=filter_strict)
-        query_filter = astrodata_filter.parse_expression_to_query(filter_expression)
-
+        query_filter = AstrodataFilter.parse(filter_expression, strict=filter_strict)
+        if query_filter is None:
+            return Response({"Invalid Filter": {"count": 0, "files": []}})
         # Gets the query.
-        queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(query_filter)
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            queryset = queryset.filter(query_filter)
+        except Exception:
+            return Response({"Invalid Filter": {"count": 0, "files": []}})
 
         # Group by dynamic fields if specified.
         if group_by:
