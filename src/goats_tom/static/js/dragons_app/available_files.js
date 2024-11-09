@@ -116,11 +116,16 @@ class AvailableFilesTemplate {
       "data-bs-content",
       `
     <p>Filtering helps with the bookkeeping and creating lists of input files to feed to the reduction. Whatever files are displayed after filtering and checked will be used in the reduction process.</p>
-    <p>Supported Logical Operators:</p>
+    <p>Supported Logical Operators (case sensitive):</p>
     <ul>
-      <li><code>AND</code>/<code>and</code></li>
-      <li><code>OR</code>/<code>or</code></li>
-      <li><code>NOT</code>/<code>not</code></li>
+      <li><code>and</code></li>
+      <li><code>or</code></li>
+    </ul>
+    <p>Supported Operations:</p>
+    <ul>
+      <li>Equality and inequality: <code>==</code>, <code>!=</code></li>
+      <li>Greater than and less than: <code>&gt;</code>, <code>&lt;</code></li>
+      <li>Greater than or equal to and less than or equal to: <code>&gt;=</code>, <code>&lt;=</code></li>
     </ul>
     <p>Supported Time/Date Formats:</p>
     <ul>
@@ -362,7 +367,7 @@ class AvailableFilesModel {
       // Use combined default and user provided filter expressions when 'useAllFiles' is false.
       let combinedFilterExpression = this.identifier.defaultFilterExpression;
       if (filterExpression) {
-        combinedFilterExpression += ` AND (${filterExpression})`;
+        combinedFilterExpression += ` and (${filterExpression})`;
       }
       params.push(`filter_expression=${encodeURIComponent(combinedFilterExpression)}`);
     }

@@ -472,7 +472,7 @@ select.form-control[multiple] {
 }
 
 .accordion-body-overflow {
-  max-height: 350px;
+  max-height: 500px;
   overflow-y: auto;
 }
 
