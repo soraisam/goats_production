@@ -1,0 +1,1 @@
+Sort files by observation type for DRAGONS compatibility: Ensured the first file in the list matches the recipe's observation type to prevent mismatches with tags and primitives.

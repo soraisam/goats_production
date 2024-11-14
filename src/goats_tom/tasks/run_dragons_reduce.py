@@ -24,6 +24,8 @@ from goats_tom.realtime import DRAGONSProgress, NotificationInstance
 matplotlib.use("Agg", force=True)
 
 logger = logging.getLogger(__name__)
+
+
 @dramatiq.actor(
     max_retries=0, time_limit=getattr(settings, "DRAMATIQ_ACTOR_TIME_LIMIT", 86400000)
 )
@@ -81,6 +83,15 @@ def run_dragons_reduce(reduce_id: int, file_ids: list[int]) -> None:
 
         # Filter the files based on the associated DRAGONS run and file ids.
         files = DRAGONSFile.objects.filter(dragons_run=run, id__in=file_ids)
+        # Sort files to ensure the first file matches the recipe's observation type.
+        # DRAGONS is highly dependent on the order of input files, especially the first
+        # file, when performing operations like creating a BPM (Bad Pixel Mask) with
+        # `makeLampFlat` in the F2 instrument. If the first file does not match the
+        # required observation type, the recipe may attempt to access tags and
+        # primitives not relevant to that file type, leading to crashes.
+        files = sorted(
+            files, key=lambda file: file.observation_type != recipe.observation_type
+        )
         file_paths = [file.file_path for file in files]
 
         # Setup the logger.
