@@ -1,0 +1,1 @@
+Added API endpoint for DRAGONS reduced images: Implemented a new processor to extract data from DRAGONS reduced images and extended TOMToolkit functions to support new requirements.

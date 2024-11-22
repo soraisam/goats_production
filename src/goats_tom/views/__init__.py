@@ -19,6 +19,7 @@ from .observation_record_delete import ObservationRecordDeleteView
 from .observation_record_detail import ObservationRecordDetailView
 from .receive_query import receive_query
 from .recipes_module import RecipesModuleViewSet
+from .run_processor import RunProcessorViewSet
 from .target_delete import TargetDeleteView
 from .tasks import ongoing_tasks
 from .user_generate_token import UserGenerateTokenView
@@ -53,4 +54,5 @@ __all__ = [
     "DRAGONSOutputFilesViewSet",
     "DataProductsViewSet",
     "DRAGONSDataViewSet",
+    "RunProcessorViewSet"
 ]

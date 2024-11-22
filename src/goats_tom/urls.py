@@ -10,7 +10,7 @@ router.register(r"dragonsfiles", views.DRAGONSFilesViewSet, basename="dragonsfil
 router.register(
     r"dragonsrecipes", views.DRAGONSRecipesViewSet, basename="dragonsrecipes"
 )
-router.register(r"dragonsreduce", views.DRAGONSReduceViewSet, basename="dragonsreduce")
+router.register(r"dragonsreduce", views.DRAGONSReduceViewSet)
 router.register(r"baserecipes", views.BaseRecipeViewSet, basename="baserecipes")
 router.register(r"recipesmodule", views.RecipesModuleViewSet, basename="recipesmodule")
 router.register(r"dragonscaldb", views.DRAGONSCaldbViewSet, basename="dragonscaldb")
@@ -23,11 +23,10 @@ router.register(
     r"dragonsdataproducts", views.DataProductsViewSet, basename="dragonsdataproducts"
 )
 router.register(r"dragonsdata", views.DRAGONSDataViewSet, basename="dragonsdata")
-
+router.register(r"runprocessor", views.RunProcessorViewSet, basename="runprocessor")
 
 # TODO: Add app_name and update paths and URL lookups.
 # TODO: Make unified path formats.
-
 
 urlpatterns = [
     path("api/", include(router.urls)),
