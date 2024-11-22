@@ -11,6 +11,7 @@ from .dragons_reduce import (
 )
 from .dragons_run import DRAGONSRunFilterSerializer, DRAGONSRunSerializer
 from .recipes_module import RecipesModuleSerializer
+from .run_processor import RunProcessorSerializer
 
 __all__ = [
     "DRAGONSRecipeFilterSerializer",
@@ -27,4 +28,5 @@ __all__ = [
     "BaseRecipeSerializer",
     "DRAGONSOutputFilesSerializer",
     "DataProductSerializer",
+    "RunProcessorSerializer"
 ]
