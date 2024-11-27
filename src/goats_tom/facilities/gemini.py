@@ -768,7 +768,7 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
                 "release": None,
                 "lastmod": product.modified,
                 "filename": f"{name}.bz2",
-                "reduction": "RAW",
+                "reduction": "fits_file",
             }
             for product, name in zip(
                 all_products,

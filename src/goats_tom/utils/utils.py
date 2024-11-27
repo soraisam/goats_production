@@ -84,7 +84,8 @@ def create_name_reduction_map(file_list: Table) -> dict[str, str]:
         A dictionary mapping file 'name' to their 'reduction' values.
 
     """
-    return {row["name"]: row["reduction"] for row in file_list}
+    # Hardcode 'fits_file' for the reduction type.
+    return {row["name"]: "fits_file" for row in file_list}
 
 
 def custom_data_product_path(data_product: DataProduct, filename: str) -> str:

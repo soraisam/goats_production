@@ -198,7 +198,7 @@ def download_goa_files(
 
             # Use the mapping to get the data product type.
             # If not found, return default for calibration.
-            data_product_type = name_reduction_map.get(file_path.name, "RAW")
+            data_product_type = name_reduction_map.get(file_path.name, "fits_file")
             # Query DataProduct by product_id.
             candidates = DataProduct.objects.filter(
                 product_id=product_id,

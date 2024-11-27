@@ -153,7 +153,7 @@ class TestCreateNameReductionMap:
 
     def test_non_empty_file_list(self, non_empty_file_list):
         """Test with a non-empty file list."""
-        expected_map = {"file1": "red1", "file2": "red2"}
+        expected_map = {"file1": "fits_file", "file2": "fits_file"}
         result = create_name_reduction_map(non_empty_file_list)
         assert result == expected_map
 
