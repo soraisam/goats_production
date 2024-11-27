@@ -1,0 +1,1 @@
+Removed unnecessary data types for data products: Only 'fits_file' is needed for DRAGONS reduction.
