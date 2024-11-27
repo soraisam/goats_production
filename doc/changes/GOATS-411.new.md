@@ -1,1 +1,0 @@
-Enhanced file fetch control: Added a checkbox to the UI that allows users to fetch all files for an observation ID, disabling the default filters of observation class, type, and object name. This change grants users full control over the selection of files for use in DRAGONS recipe reductions.

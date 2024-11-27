@@ -1,3 +1,32 @@
+## GOATS 24.11.0 (2024-11-27)
+
+
+### New Features
+
+- Added navbar to observation page: Implemented a new template tag to include the navigation bar on the observation page for  targets. [[#GOATS-173](https://noirlab.atlassian.net/browse/GOATS-173)]
+- Added GHOST in DRAGONS application: Implemented features in DRAGONS application to debundle and reduce GHOST data. Bugfix for file group selection and improved astroquery login verification. [[#GOATS-328](https://noirlab.atlassian.net/browse/GOATS-328)]
+- Enhanced file fetch control: Added a checkbox to the UI that allows users to fetch all files for an observation ID, disabling the default filters of observation class, type, and object name. This change grants users full control over the selection of files for use in DRAGONS recipe reductions. [[#GOATS-411](https://noirlab.atlassian.net/browse/GOATS-411)]
+- Renamed 'uparms' for clarity and added a tooltip to assist users in using it correctly. [[#GOATS-444](https://noirlab.atlassian.net/browse/GOATS-444)]
+- Added API endpoint for DRAGONS reduced images: Implemented a new processor to extract data from DRAGONS reduced images and extended TOMToolkit functions to support new requirements. [[#GOATS-484](https://noirlab.atlassian.net/browse/GOATS-484)]
+
+
+### Changes
+
+- Refactored codebase for better organization. [[#GOATS-329](https://noirlab.atlassian.net/browse/GOATS-329)]
+- Removed unnecessary data types for data products: Only 'fits_file' is needed for DRAGONS reduction. [[#GOATS-445](https://noirlab.atlassian.net/browse/GOATS-445)]
+- Hide UI elements without run selection: The visibility of the output files and calibration database manager is now controlled by the selection of a run ID. [[#GOATS-467](https://noirlab.atlassian.net/browse/GOATS-467)]
+- Sort files by observation type for DRAGONS compatibility: Ensured the first file in the list matches the recipe's observation type to prevent mismatches with tags and primitives. [[#GOATS-479](https://noirlab.atlassian.net/browse/GOATS-479)]
+
+
+### Bug Fixes
+
+- Fixed observation record ID handling: Corrected an issue where a hardcoded observation ID from testing persisted into production, ensuring that only runs associated with an actual observation record are displayed. [[#GOATS-464](https://noirlab.atlassian.net/browse/GOATS-464)]
+- Fixed filter expression and ID uniqueness bugs: Resolved an issue where user-provided filter expressions were not correctly used in filtering and grouping available files. Additionally, improved the uniqueness of file checkbox IDs by incorporating more identifying information, addressing an issue uncovered when allowing user access to all files. [[#GOATS-465](https://noirlab.atlassian.net/browse/GOATS-465)]
+- Fixed recipe and primitive extraction for DRAGONS application: Extracted primitives now include all lines, ensuring comments and docstrings are no longer ignored. [[#GOATS-470](https://noirlab.atlassian.net/browse/GOATS-470)]
+- Added safeguard for missing primitive params in `showpars`: Ensured DRAGONS/GOATS `showpars` handles cases where parameters for specific primitives are absent. [[#GOATS-471](https://noirlab.atlassian.net/browse/GOATS-471)]
+- Fixed query order operations: Corrected handling of logical operations in expressions. Implemented using the `ast` module to parse expressions more reliably. Updated logical operators to be case-sensitive as required by `ast`. Removed "not" but added "!=" as a valid operation. Updated UI help documentation to reflect these changes. [[#GOATS-474](https://noirlab.atlassian.net/browse/GOATS-474)]
+- Bugfix for numerical astrodata descriptors: Allowed numerical values for astrodata_descriptors like 'object'. Users now need to enclose strings in quotes for correct parsing, while numerical values should be entered without quotes. Added a default return to ensure consistent API responses when no files are found during grouping. [[#GOATS-475](https://noirlab.atlassian.net/browse/GOATS-475)]
+
 ## GOATS 24.10.0 (2024-10-29)
 
 

@@ -1,1 +1,0 @@
-Bugfix for numerical astrodata descriptors: Allowed numerical values for astrodata_descriptors like 'object'. Users now need to enclose strings in quotes for correct parsing, while numerical values should be entered without quotes. Added a default return to ensure consistent API responses when no files are found during grouping.
