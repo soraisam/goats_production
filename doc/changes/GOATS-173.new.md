@@ -1,0 +1,1 @@
+Added navbar to observation page: Implemented a new template tag to include the navigation bar on the observation page for  targets.
