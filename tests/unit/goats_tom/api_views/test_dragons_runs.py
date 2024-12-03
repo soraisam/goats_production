@@ -3,7 +3,7 @@
 from django.urls import reverse
 from goats_tom.models import DRAGONSRun
 from goats_tom.tests.factories import DRAGONSRunFactory, UserFactory
-from goats_tom.views import DRAGONSRunsViewSet
+from goats_tom.api_views import DRAGONSRunsViewSet
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
 from tom_observations.tests.factories import ObservingRecordFactory

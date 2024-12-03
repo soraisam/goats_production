@@ -374,30 +374,6 @@ class GOALoginViewTest(TestCase):
         self.client.logout()
 
 
-class TestReceiveQueryView(TestCase):
-    def setUp(self):
-        self.client = APIClient()
-        self.user = User.objects.create_user(
-            username="testuser", email="user@test.com", password="testpass",
-        )
-        self.client.force_authenticate(user=self.user)
-        self.url = reverse("receive_query")
-
-    def test_invalid_json(self):
-        data = "invalid json"
-        response = self.client.post(self.url, data, content_type="application/json")
-        self.assertEqual(response.status_code, 400)
-
-    def test_unrecognized_format(self):
-        data = json.dumps({"unrecognized": "format"})
-        response = self.client.post(self.url, data, content_type="application/json")
-        self.assertEqual(response.status_code, 400)
-
-    def test_empty_data(self):
-        response = self.client.post(self.url, "", content_type="application/json")
-        self.assertEqual(response.status_code, 404)
-
-
 class GOAQueryFormViewTest(TestCase):
     def setUp(self):
         """Set up the necessary objects for testing."""
