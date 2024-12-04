@@ -2,7 +2,7 @@
 
 from django.urls import reverse
 from goats_tom.tests.factories import DRAGONSFileFactory, DRAGONSRunFactory, UserFactory
-from goats_tom.views import DRAGONSFilesViewSet
+from goats_tom.api_views import DRAGONSFilesViewSet
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
 

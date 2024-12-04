@@ -10,7 +10,7 @@ from goats_tom.tests.factories import (
     DRAGONSRunFactory,
     UserFactory,
 )
-from goats_tom.views import DRAGONSReduceViewSet
+from goats_tom.api_views import DRAGONSReduceViewSet
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
 
@@ -32,7 +32,7 @@ class TestDRAGONSReduceViewSet(APITestCase):
         """Helper method to authenticate requests."""
         force_authenticate(request, user=self.user)
 
-    @patch("goats_tom.views.dragons_reduce.run_dragons_reduce.send")
+    @patch("goats_tom.api_views.dragons_reduce.run_dragons_reduce.send")
     def test_create_reduction(self, mock_run_dragons_reduce):
         """Test creating a new DRAGONS reduction."""
         mock_run_dragons_reduce.return_value.message_id = "12345"
@@ -89,9 +89,9 @@ class TestDRAGONSReduceViewSet(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch("goats_tom.views.dragons_reduce.abort")
-    @patch("goats_tom.views.dragons_reduce.DRAGONSProgress.create_and_send")
-    @patch("goats_tom.views.dragons_reduce.NotificationInstance.create_and_send")
+    @patch("goats_tom.api_views.dragons_reduce.abort")
+    @patch("goats_tom.api_views.dragons_reduce.DRAGONSProgress.create_and_send")
+    @patch("goats_tom.api_views.dragons_reduce.NotificationInstance.create_and_send")
     def test_valid_update_reduction(
         self, mock_notification_send, mock_progress_send, mock_abort,
     ):
@@ -117,9 +117,9 @@ class TestDRAGONSReduceViewSet(APITestCase):
         )
         self.assertEqual(reduction.status, "canceled")
 
-    @patch("goats_tom.views.dragons_reduce.abort")
-    @patch("goats_tom.views.dragons_reduce.DRAGONSProgress.create_and_send")
-    @patch("goats_tom.views.dragons_reduce.NotificationInstance.create_and_send")
+    @patch("goats_tom.api_views.dragons_reduce.abort")
+    @patch("goats_tom.api_views.dragons_reduce.DRAGONSProgress.create_and_send")
+    @patch("goats_tom.api_views.dragons_reduce.NotificationInstance.create_and_send")
     def test_invalid_update_reduction(
         self, mock_notification_send, mock_progress_send, mock_abort,
     ):

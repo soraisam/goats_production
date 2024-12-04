@@ -25,6 +25,7 @@ from tom_targets.tests.factories import SiderealTargetFactory
 from datetime import datetime, timedelta
 import random
 import uuid
+from rest_framework.authtoken.models import Token
 
 
 class UserFactory(factory.django.DjangoModelFactory):

@@ -18,6 +18,8 @@ from goats_tom.serializers import RunProcessorSerializer
 class RunProcessorViewSet(GenericViewSet, mixins.CreateModelMixin):
     serializer_class = RunProcessorSerializer
     out_serializer_class = ReducedDatumSerializer
+
+    # FIXME: Hack until tomtoolkit merges in PR
     queryset = ReducedDatum.objects.none()
 
     def create(self, request: HttpRequest, *args, **kwargs) -> Response:

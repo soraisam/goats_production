@@ -7,7 +7,7 @@ from goats_tom.tests.factories import (
     DRAGONSRunFactory,
     UserFactory,
 )
-from goats_tom.views import DRAGONSRecipesViewSet
+from goats_tom.api_views import DRAGONSRecipesViewSet
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
 

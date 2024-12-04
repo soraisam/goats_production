@@ -1,3 +1,4 @@
+from .antares2goats import Antares2GoatsSerializer
 from .base_recipe import BaseRecipeSerializer
 from .dataproduct import DataProductSerializer
 from .dragons_caldb import DRAGONSCaldbSerializer
@@ -28,5 +29,6 @@ __all__ = [
     "BaseRecipeSerializer",
     "DRAGONSOutputFilesSerializer",
     "DataProductSerializer",
-    "RunProcessorSerializer"
+    "RunProcessorSerializer",
+    "Antares2GoatsSerializer",
 ]

@@ -2,29 +2,35 @@ from django.urls import include, path
 from tom_alerts.views import BrokerQueryListView
 from tom_common.api_router import SharedAPIRootRouter
 
-from . import views
+from . import api_views, views
 
 router = SharedAPIRootRouter()
-router.register(r"dragonsruns", views.DRAGONSRunsViewSet, basename="dragonsruns")
-router.register(r"dragonsfiles", views.DRAGONSFilesViewSet, basename="dragonsfiles")
+router.register(r"dragonsruns", api_views.DRAGONSRunsViewSet, basename="dragonsruns")
+router.register(r"dragonsfiles", api_views.DRAGONSFilesViewSet, basename="dragonsfiles")
 router.register(
-    r"dragonsrecipes", views.DRAGONSRecipesViewSet, basename="dragonsrecipes"
+    r"dragonsrecipes", api_views.DRAGONSRecipesViewSet, basename="dragonsrecipes"
 )
-router.register(r"dragonsreduce", views.DRAGONSReduceViewSet)
-router.register(r"baserecipes", views.BaseRecipeViewSet, basename="baserecipes")
-router.register(r"recipesmodule", views.RecipesModuleViewSet, basename="recipesmodule")
-router.register(r"dragonscaldb", views.DRAGONSCaldbViewSet, basename="dragonscaldb")
+router.register(r"dragonsreduce", api_views.DRAGONSReduceViewSet)
+router.register(r"baserecipes", api_views.BaseRecipeViewSet, basename="baserecipes")
+router.register(
+    r"recipesmodule", api_views.RecipesModuleViewSet, basename="recipesmodule"
+)
+router.register(r"dragonscaldb", api_views.DRAGONSCaldbViewSet, basename="dragonscaldb")
 router.register(
     r"dragonsoutputfiles",
-    views.DRAGONSOutputFilesViewSet,
+    api_views.DRAGONSOutputFilesViewSet,
     basename="dragonsoutputfiles",
 )
 router.register(
-    r"dragonsdataproducts", views.DataProductsViewSet, basename="dragonsdataproducts"
+    r"dragonsdataproducts",
+    api_views.DataProductsViewSet,
+    basename="dragonsdataproducts",
 )
-router.register(r"dragonsdata", views.DRAGONSDataViewSet, basename="dragonsdata")
-router.register(r"runprocessor", views.RunProcessorViewSet, basename="runprocessor")
-
+router.register(r"dragonsdata", api_views.DRAGONSDataViewSet, basename="dragonsdata")
+router.register(r"runprocessor", api_views.RunProcessorViewSet, basename="runprocessor")
+router.register(
+    r"antares2goats", api_views.Antares2GoatsViewSet, basename="antares2goats"
+)
 # TODO: Add app_name and update paths and URL lookups.
 # TODO: Make unified path formats.
 
@@ -61,7 +67,6 @@ urlpatterns = [
         name="delete",
     ),
     path("brokers/list/", BrokerQueryListView.as_view(), name="list"),
-    path("receive_query/", views.receive_query, name="receive_query"),
     path(
         "users/<int:pk>/generate_token/",
         views.UserGenerateTokenView.as_view(),
