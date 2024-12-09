@@ -9,6 +9,7 @@ from .dragons_recipes import DRAGONSRecipesViewSet
 from .dragons_reduce import DRAGONSReduceViewSet
 from .dragons_runs import DRAGONSRunsViewSet
 from .recipes_module import RecipesModuleViewSet
+from .reduceddatum import ReducedDatumViewSet
 from .run_processor import RunProcessorViewSet
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "Antares2GoatsViewSet",
     "RunProcessorViewSet",
     "DRAGONSDataViewSet",
+    "ReducedDatumViewSet"
 ]

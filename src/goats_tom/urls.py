@@ -5,6 +5,9 @@ from tom_common.api_router import SharedAPIRootRouter
 from . import api_views, views
 
 router = SharedAPIRootRouter()
+router.register(
+    r"reduceddatums", api_views.ReducedDatumViewSet, basename="reduceddatums"
+)
 router.register(r"dragonsruns", api_views.DRAGONSRunsViewSet, basename="dragonsruns")
 router.register(r"dragonsfiles", api_views.DRAGONSFilesViewSet, basename="dragonsfiles")
 router.register(
