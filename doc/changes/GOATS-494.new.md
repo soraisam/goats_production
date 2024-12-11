@@ -1,0 +1,1 @@
+Added Plotly.js for dynamic plotting: Integrated Plotly.js for interactive plotting in the dataproduct visualizer and implemented styling to toggle between dark and light themes.
