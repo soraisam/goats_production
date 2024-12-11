@@ -476,6 +476,12 @@ select.form-control[multiple] {
   overflow-y: auto;
 }
 
+/* Allows dark/light mode hack for plotly.js */
+:root[data-bs-theme="dark"] .plotly-container {
+  filter: invert(100%) hue-rotate(180deg);
+}
+
+
 /* Fix for jquery and fontawesome */
 
 /* https://docs.fontawesome.com/web/use-with/jquery */

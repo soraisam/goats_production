@@ -35,3 +35,30 @@
     </div>
   </div>
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const plotId = "{{ data_type }}Plot";
+
+    // Define the layout of the plot.
+    const layout = {
+      title: "",
+      xaxis: {
+        title: "Wavelength ",
+        tickformat: "d",
+      },
+      yaxis: {
+        title: "Flux",
+        tickformat: ".1g",
+      },
+      showlegend: true,
+    };
+
+    // Create the plot with configuration.
+    Plotly.newPlot(plotId, [], layout, {
+      scrollZoom: true,
+      displayModeBar: true,
+      displayLogo: false,
+      responsive: true,
+    });
+  });
+</script>

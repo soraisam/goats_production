@@ -1,0 +1,1 @@
+Converted endpoint to API: Browser extension endpoint now functions as a fully integrated API endpoint with proper token authentication to validate posts.
