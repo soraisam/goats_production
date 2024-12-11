@@ -5,7 +5,7 @@ __all__ = ["RunProcessorViewSet"]
 from django.conf import settings
 from django.http import HttpRequest
 from guardian.shortcuts import assign_perm
-from rest_framework import status
+from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 from tom_dataproducts.models import ReducedDatum
@@ -18,9 +18,12 @@ from goats_tom.serializers import RunProcessorSerializer
 class RunProcessorViewSet(GenericViewSet, mixins.CreateModelMixin):
     serializer_class = RunProcessorSerializer
     out_serializer_class = ReducedDatumSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     # FIXME: Hack until tomtoolkit merges in PR
     queryset = ReducedDatum.objects.none()
+    # FIXME: Is this required because of the hack above?
+    filter_backends = []
 
     def create(self, request: HttpRequest, *args, **kwargs) -> Response:
         """Handle POST request to process a data product and generate reduced data.
@@ -55,4 +58,4 @@ class RunProcessorViewSet(GenericViewSet, mixins.CreateModelMixin):
                 headers=headers,
             )
         except Exception as e:
-            return Response({"processor": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
