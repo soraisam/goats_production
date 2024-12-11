@@ -36,6 +36,41 @@
   </div>
 </div>
 <script>
+  /**
+   * Function to add new traces to the existing Plotly plot.
+   * @param {string} plotId - The ID of the plot.
+   * @param {Array} results - Array of reduced data results.
+   */
+  const plotSpectroscopy = (plotId, results) => {
+    results.forEach((result) => {
+      const wavelength = result.value.wavelength;
+      const flux = result.value.flux;
+      const timestamp = result.timestamp;
+
+      if (!wavelength || !flux) {
+        return;
+      }
+
+      const trace = {
+        x: wavelength,
+        y: flux,
+        mode: "lines",
+        name: new Date(timestamp).toLocaleString(),
+      };
+
+      Plotly.addTraces(plotId, trace);
+    });
+  };
+
+  // TODO: Add plotting photometry
+  const plotPhotometry = (plotId, results) => {
+    console.log("Placeholder for plotting photometry.");
+  };
+  const plottingFunctions = new Map([
+    ["spectroscopy", plotSpectroscopy],
+    ["photometry", plotPhotometry],
+  ]);
+
   document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.getElementById("{{ data_type }}PlotTBody");
     const csrfToken = "{{ csrf_token }}";
@@ -79,7 +114,7 @@
         // Disable the button and show loading text
         button.disabled = true;
 
-        // Helper function to fetch reduced data
+        // Helper function to fetch reduced data.
         const fetchReducedData = async () => {
           const url = `http://localhost:8000/api/reduceddatums/?data_product=${dataproductId}&data_type=${dataType}`;
           const response = await fetch(url);
@@ -90,7 +125,7 @@
           return data;
         };
 
-        // Helper function to run the processor
+        // Helper function to run the processor.
         const runProcessor = async () => {
           const url = `http://localhost:8000/api/runprocessor/`;
           const response = await fetch(url, {
@@ -128,7 +163,11 @@
               throw new Error(`No reduced data available.`);
             }
           }
-          // TODO: Plot here with the results.
+          // Update the plot with the data.
+          if (!plottingFunctions.has(dataType)) {
+            throw new Error(`Data type '${dataType}' not recognized.`);
+          }
+          plottingFunctions.get(dataType)(plotId, data.results);
         } catch (error) {
           showAlert(file, `${error.message}`);
           button.disabled = false;

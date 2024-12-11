@@ -35,7 +35,6 @@ class SpectroscopyProcessor(BaseSpectroscopyProcessor):
             A tuple containing the spectrum object, observation date and time, and the
             name of the facility that processed the FITS file.
         """
-        print("USING NEW PROCESSOR")
         # Get flux and header from file.
         flux, header = fits.getdata(dataproduct.data.path, header=True)
         wcs = WCS(header=header, naxis=1)
