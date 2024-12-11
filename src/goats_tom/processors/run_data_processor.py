@@ -33,10 +33,7 @@ def run_data_processor(dp, dp_type_override=None):
     call
     :rtype: `QuerySet` of `ReducedDatum`
     """
-    print("USING CUSTOM ")
-    print(dp_type_override, dp.data_product_type)
     data_type = dp_type_override or dp.data_product_type
-    print(f"Set DP type: {data_type}")
     try:
         processor_class = settings.DATA_PROCESSORS[data_type]
     except Exception:

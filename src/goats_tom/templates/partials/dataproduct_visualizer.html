@@ -37,6 +37,8 @@
 </div>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    const tbody = document.getElementById("{{ data_type }}PlotTBody");
+    const csrfToken = "{{ csrf_token }}";
     const plotId = "{{ data_type }}Plot";
 
     // Define the layout of the plot.
@@ -60,5 +62,103 @@
       displayLogo: false,
       responsive: true,
     });
+
+    // Event listener for fetching data or extracting data from a file.
+    tbody.addEventListener("click", async (event) => {
+      const action = event.target.dataset.action;
+      if (action === "plot") {
+        const button = event.target;
+        const row = button.closest("tr");
+        if (!row) return;
+
+        // Get needed information.
+        const dataproductId = row.dataset.dataproductId;
+        const dataType = row.dataset.dataType;
+        const file = row.dataset.file;
+
+        // Disable the button and show loading text
+        button.disabled = true;
+
+        // Helper function to fetch reduced data
+        const fetchReducedData = async () => {
+          const url = `http://localhost:8000/api/reduceddatums/?data_product=${dataproductId}&data_type=${dataType}`;
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Fetch failed with status: ${response.status}`);
+          }
+          const data = await response.json();
+          return data;
+        };
+
+        // Helper function to run the processor
+        const runProcessor = async () => {
+          const url = `http://localhost:8000/api/runprocessor/`;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({
+              data_product: dataproductId,
+              data_product_type: dataType,
+            }),
+          });
+          if (!response.ok) {
+            // Unpack return to know why the processor failed.
+            const data = await response.json();
+            throw new Error(`Run processor failed: ${data.detail}`);
+          }
+          const data = await response.json();
+          return data;
+        };
+
+        try {
+          // Attempt to fetch reduced data.
+          let data = await fetchReducedData();
+
+          // If no results, run the processor.
+          if (!data.results || data.results.length === 0) {
+            await runProcessor();
+
+            // Retry fetching reduced data.
+            data = await fetchReducedData();
+
+            if (!data.results || data.results.length === 0) {
+              throw new Error(`No reduced data available.`);
+            }
+          }
+          // TODO: Plot here with the results.
+        } catch (error) {
+          showAlert(file, `${error.message}`);
+          button.disabled = false;
+        }
+      }
+    });
+
+    /**
+     * Displays a Bootstrap alert by prepending it to the main container.
+     * @param {string} message - The alert message to display.
+     * @param {string} type - The Bootstrap alert type (e.g., 'danger', 'warning', 'success').
+     */
+    const showAlert = (file, message, type = "danger") => {
+      // Select the main container.
+      const main = document.querySelector("main");
+
+      // Create the alert div.
+      const alertDiv = document.createElement("div");
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+      alertDiv.role = "alert";
+
+      // Set the inner HTML of the alert.
+      alertDiv.innerHTML = `
+        <h6>${file}</h6>
+        ${message}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      `;
+      main.prepend(alertDiv);
+    };
   });
 </script>
