@@ -1,5 +1,5 @@
-{% extends 'tom_common/target-dash.html' %} {% load comments bootstrap4 tom_common_extras targets_extras observation_extras dataproduct_extras static cache gemini tom_overrides dataproduct_visualizer %} {% block title %}Target {{ object.name }}
-{% endblock %} 
+{% extends 'tom_common/target-dash.html' %} {% load comments bootstrap4 tom_common_extras targets_extras observation_extras dataproduct_extras static cache gemini tom_overrides dataproduct_visualizer %}
+{% block title %} Target {{ object.name }}{% endblock %}
 {% block target_obs_content %}
 <script>
   // Function to update the URL.
@@ -98,8 +98,7 @@
     {% observationtemplate_run object %}
     <hr />
     <h4>Plan</h4>
-    {% if object.type == 'SIDEREAL' %} {% target_plan %} {% moon_distance object %} {%
-    elif target.type == 'NON_SIDEREAL' %}
+    {% if object.type == 'SIDEREAL' %} {% target_plan %} {% moon_distance object %} {% elif target.type == 'NON_SIDEREAL' %}
     <p>
       Airmass plotting for non-sidereal targets is not currently supported. If you would
       like to add this functionality, please check out the
@@ -121,8 +120,7 @@
     {% observation_list object %}
   </div>
   <div class="tab-pane" id="manage-data">
-    {% if user.is_authenticated %} {% upload_dataproduct object %} {% endif %} {%
-    dataproduct_list_for_target object %}
+    {% if user.is_authenticated %} {% upload_dataproduct object %} {% endif %} {% dataproduct_list_for_target object %}
   </div>
   <div class="tab-pane" id="manage-groups">{% target_groups target %}</div>
   <div class="tab-pane" id="photometry">
