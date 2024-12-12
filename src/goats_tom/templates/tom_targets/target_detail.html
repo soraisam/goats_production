@@ -1,31 +1,26 @@
-{% extends 'tom_common/target-dash.html' %}
-{% load comments bootstrap4 tom_common_extras targets_extras observation_extras dataproduct_extras static cache gemini tom_overrides dataproduct_visualizer %}
-{% block title %}Target {{ object.name }}{% endblock %}
-<!-- {% block additional_css %}
-<link rel="stylesheet" href="{% static 'tom_common/css/main.css' %}">
-<link rel="stylesheet" href="{% static 'tom_targets/css/main.css' %}">
-{% endblock %} -->
+{% extends 'tom_common/target-dash.html' %} {% load comments bootstrap4 tom_common_extras targets_extras observation_extras dataproduct_extras static cache gemini tom_overrides dataproduct_visualizer %} {% block title %}Target {{ object.name }}
+{% endblock %} 
 {% block target_obs_content %}
 <script>
   // Function to update the URL.
   const updateUrlWithTab = (tabId) => {
     const url = new URL(window.location.href);
-    url.searchParams.set('tab', tabId);
+    url.searchParams.set("tab", tabId);
     history.replaceState({}, document.title, url.toString());
   };
 
-  document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("DOMContentLoaded", function () {
     // Listen for tab changes.
-    document.querySelectorAll('#tabs .nav-link').forEach(tab => {
-      tab.addEventListener('click', function() {
-        updateUrlWithTab(this.id.replace('-tab', ''));
+    document.querySelectorAll("#tabs .nav-link").forEach((tab) => {
+      tab.addEventListener("click", function () {
+        updateUrlWithTab(this.id.replace("-tab", ""));
       });
     });
 
     // Initial tab selection from URL.
-    const tabQuery = new URL(window.location.href).searchParams.get('tab');
+    const tabQuery = new URL(window.location.href).searchParams.get("tab");
     if (tabQuery) {
-      const activeTab = '#' + tabQuery;
+      const activeTab = "#" + tabQuery;
       const tabElement = document.querySelector(`a[href="${activeTab}"]`);
       if (tabElement) {
         tabElement.click();
@@ -35,60 +30,484 @@
 </script>
 <ul class="nav nav-tabs" role="tablist" id="tabs">
   <li class="nav-item">
-    <a class="nav-link active" id="observe-tab" href="#observe" role="tab" data-toggle="tab">Observe</a>
+    <a
+      class="nav-link active"
+      id="observe-tab"
+      href="#observe"
+      role="tab"
+      data-toggle="tab"
+      >Observe</a
+    >
   </li>
   <li class="nav-item">
-    <a class="nav-link" id="observations-tab" href="#observations" role="tab" data-toggle="tab">Observations</a>
+    <a
+      class="nav-link"
+      id="observations-tab"
+      href="#observations"
+      role="tab"
+      data-toggle="tab"
+      >Observations</a
+    >
   </li>
   <li class="nav-item">
-    <a class="nav-link" id="manage-data-tab" href="#manage-data" role="tab" data-toggle="tab">Manage Data</a>
+    <a
+      class="nav-link"
+      id="manage-data-tab"
+      href="#manage-data"
+      role="tab"
+      data-toggle="tab"
+      >Manage Data</a
+    >
   </li>
   <li class="nav-item">
-    <a class="nav-link" id="manage-groups-tab" href="#manage-groups" role="tab" data-toggle="tab">Manage Groups</a>
+    <a
+      class="nav-link"
+      id="manage-groups-tab"
+      href="#manage-groups"
+      role="tab"
+      data-toggle="tab"
+      >Manage Groups</a
+    >
   </li>
   <li class="nav-item">
-    <a class="nav-link" id="photometry-tab" href="#photometry" role="tab" data-toggle="tab">Photometry</a>
+    <a
+      class="nav-link"
+      id="photometry-tab"
+      href="#photometry"
+      role="tab"
+      data-toggle="tab"
+      >Photometry</a
+    >
   </li>
   <li class="nav-item">
-    <a class="nav-link" id="spectroscopy-tab" href="#spectroscopy" role="tab" data-toggle="tab">Spectroscopy</a>
+    <a
+      class="nav-link"
+      id="spectroscopy-tab"
+      href="#spectroscopy"
+      role="tab"
+      data-toggle="tab"
+      >Spectroscopy</a
+    >
   </li>
 </ul>
 <div class="tab-content">
   <div class="tab-pane active" id="observe">
     <h4>Observe</h4>
     {% observing_buttons object %}
-    <hr/>
+    <hr />
     {% observationtemplate_run object %}
-    <hr/>
+    <hr />
     <h4>Plan</h4>
-    {% if object.type == 'SIDEREAL' %}
-      {% target_plan %}
-      {% moon_distance object %}
-    {% elif target.type == 'NON_SIDEREAL' %}
-      <p>Airmass plotting for non-sidereal targets is not currently supported. If you would like to add this functionality, please check out the <a href="https://github.com/TOMToolkit/tom_nonsidereal_airmass" target="_blank">non-sidereal airmass plugin.</a></p>
+    {% if object.type == 'SIDEREAL' %} {% target_plan %} {% moon_distance object %} {%
+    elif target.type == 'NON_SIDEREAL' %}
+    <p>
+      Airmass plotting for non-sidereal targets is not currently supported. If you would
+      like to add this functionality, please check out the
+      <a href="https://github.com/TOMToolkit/tom_nonsidereal_airmass" target="_blank"
+        >non-sidereal airmass plugin.</a
+      >
+    </p>
     {% endif %}
   </div>
   <div class="tab-pane" id="observations">
     {% existing_observation_form object %}
     <h4>Observations</h4>
-    <a href="{% url 'targets:detail' pk=target.id %}?update_status=True" title="Update status of observations for target" class="btn btn-primary">Update Observations Status</a>
+    <a
+      href="{% url 'targets:detail' pk=target.id %}?update_status=True"
+      title="Update status of observations for target"
+      class="btn btn-primary"
+      >Update Observations Status</a
+    >
     {% observation_list object %}
   </div>
   <div class="tab-pane" id="manage-data">
-    {% if user.is_authenticated %}
-      {% upload_dataproduct object %}
-    {% endif %}
-    {% dataproduct_list_for_target object %}
+    {% if user.is_authenticated %} {% upload_dataproduct object %} {% endif %} {%
+    dataproduct_list_for_target object %}
   </div>
-  <div class="tab-pane" id="manage-groups">
-    {% target_groups target %}
-  </div>
+  <div class="tab-pane" id="manage-groups">{% target_groups target %}</div>
   <div class="tab-pane" id="photometry">
-    {% photometry_for_target target %}
-    {% get_photometry_data object %}
-    </div>
+    {% dataproduct_visualizer target "photometry" %} {% get_photometry_data object %}
+  </div>
   <div class="tab-pane" id="spectroscopy">
     {% dataproduct_visualizer target "spectroscopy" %}
   </div>
 </div>
+<script>
+  /**
+   * Displays a Bootstrap alert by prepending it to the main container.
+   * @param {string} message - The alert message to display.
+   * @param {string} type - The Bootstrap alert type (e.g., 'danger', 'warning', 'success').
+   */
+  const showAlert = (file, message, type = "danger") => {
+    // Select the main container.
+    const main = document.querySelector("main");
+
+    // Create the alert div.
+    const alertDiv = document.createElement("div");
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.role = "alert";
+
+    // Set the inner HTML of the alert.
+    alertDiv.innerHTML = `
+      <h6>${file}</h6>
+      ${message}
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    `;
+    main.prepend(alertDiv);
+  };
+
+  // Helper function to fetch reduced data.
+  const fetchReducedData = async (dataproductId, dataType) => {
+    const url = `http://localhost:8000/api/reduceddatums/?data_product=${dataproductId}&data_type=${dataType}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Fetch failed with status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  };
+
+  // Helper function to run the processor.
+  const runProcessor = async (dataproductId, dataType) => {
+    const url = `http://localhost:8000/api/runprocessor/`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify({
+        data_product: dataproductId,
+        data_product_type: dataType,
+      }),
+    });
+    if (!response.ok) {
+      // Unpack return to know why the processor failed.
+      const data = await response.json();
+      throw new Error(`Run processor failed: ${data.detail}`);
+    }
+    const data = await response.json();
+    return data;
+  };
+
+  /**
+   * Function to add new traces to the existing Plotly plot.
+   * @param {string} plotId - The ID of the plot.
+   * @param {Array} results - Array of reduced data results.
+   */
+  const plotSpectroscopy = (plotId, results) => {
+    results.forEach((result) => {
+      const wavelength = result.value.wavelength;
+      const flux = result.value.flux;
+      const timestamp = result.timestamp;
+
+      if (!wavelength || !flux) {
+        return;
+      }
+
+      const trace = {
+        x: wavelength,
+        y: flux,
+        mode: "lines",
+        name: new Date(timestamp).toLocaleString(),
+      };
+
+      Plotly.addTraces(plotId, trace);
+      if (!plottingConfigurations.get("spectroscopy").initialized) {
+        plottingConfigurations.get("spectroscopy").initialized = true;
+      }
+    });
+  };
+
+  /**
+   * Function to add new traces to the existing Plotly plot.
+   * @param {string} plotId - The ID of the plot.
+   * @param {Array} results - Array of reduced data results.
+   */
+  const plotPhotometry = (plotId, results) => {
+    // Color map for filters.
+    const colorMap = {
+      r: "red",
+      g: "green",
+      i: "black",
+      B: "blue",
+      V: "purple",
+    };
+
+    // Extract photometry data.
+    const photometryData = {};
+    results.forEach((datum) => {
+      const { filter, magnitude, error, limit } = datum.value;
+      const time = datum.value.time;
+      if (!photometryData[filter]) {
+        photometryData[filter] = { time: [], magnitude: [], error: [], limit: [] };
+      }
+      photometryData[filter].time.push(time);
+      photometryData[filter].magnitude.push(magnitude ?? null);
+      photometryData[filter].error.push(error ?? null);
+      photometryData[filter].limit.push(limit ?? null);
+    });
+
+    // Map trace names to their indices.
+    const plotElement = document.getElementById(plotId);
+    const existingTraces = plotElement.data || [];
+    const traceIndexMap = {};
+    existingTraces.forEach((trace, index) => {
+      traceIndexMap[trace.name] = index;
+    });
+
+    // Prepare updates and new traces.
+    const traceUpdates = [];
+    const updateIndices = [];
+    const newTraces = [];
+
+    Object.keys(photometryData).forEach((filter) => {
+      const { time, magnitude, error, limit } = photometryData[filter];
+
+      // Detection trace.
+      const detectionName = `${filter} detection`;
+      const validMagnitudes = magnitude.map((m, i) => (m !== null ? m : null));
+      const validErrors = error.map((e, i) => (magnitude[i] !== null ? e : null));
+      if (traceIndexMap[detectionName] !== undefined) {
+        // Extend existing trace.
+        traceUpdates.push({ x: time, y: validMagnitudes });
+        updateIndices.push(traceIndexMap[detectionName]);
+      } else {
+        // Add new trace.
+        newTraces.push({
+          x: time,
+          y: validMagnitudes,
+          mode: "markers",
+          marker: { color: colorMap[filter] || null },
+          name: detectionName,
+          error_y: {
+            type: "data",
+            array: validErrors,
+            visible: true,
+          },
+        });
+      }
+
+      // Non-detection trace.
+      const nonDetectionName = `${filter} non-detection`;
+      const nonDetectionIndices = limit
+        .map((l, i) => (l !== null ? i : null))
+        .filter((i) => i !== null);
+      if (nonDetectionIndices.length > 0) {
+        if (traceIndexMap[nonDetectionName] !== undefined) {
+          // Extend existing non-detection trace.
+          traceUpdates.push({
+            x: nonDetectionIndices.map((i) => time[i]),
+            y: nonDetectionIndices.map((i) => limit[i]),
+          });
+          updateIndices.push(traceIndexMap[nonDetectionName]);
+        } else {
+          // Add new non-detection trace.
+          newTraces.push({
+            x: nonDetectionIndices.map((i) => time[i]),
+            y: nonDetectionIndices.map((i) => limit[i]),
+            mode: "markers",
+            opacity: 0.5,
+            marker: { color: colorMap[filter] | null, symbol: "triangle-down" },
+            name: nonDetectionName,
+          });
+        }
+      }
+    });
+
+    // Extend existing traces.
+    if (traceUpdates.length > 0) {
+      Plotly.extendTraces(
+        plotId,
+        {
+          x: traceUpdates.map((update) => update.x),
+          y: traceUpdates.map((update) => update.y),
+        },
+        updateIndices
+      );
+    }
+
+    // Add new traces.
+    if (newTraces.length > 0) {
+      Plotly.addTraces(plotId, newTraces);
+    }
+
+    // Add absolute magnitude yaxis2 if needed.
+    const photometryConfig = plottingConfigurations.get("photometry");
+    if (!photometryConfig.initialized) {
+      // Initialize the photometry configuration.
+      const targetDistance = parseFloat("{{ target.distance|default_if_none:'' }}");
+      photometryConfig.plotAbsoluteMagnitude = !isNaN(targetDistance);
+      photometryConfig.initialized = true;
+
+      if (photometryConfig.plotAbsoluteMagnitude) {
+        // Calculate the distance modulus (dm).
+        const dm = 5 * (Math.log10(targetDistance) - 1);
+        // Define yaxis2 for absolute magnitude.
+        const yaxis2 = photometryConfig.layout.yaxis2;
+
+        yaxis2.range = [
+          plotElement.layout.yaxis.range[0] - dm,
+          plotElement.layout.yaxis.range[1] - dm,
+        ];
+
+        // Add dummy trace to activate yaxis2.
+        const dummyTrace = {
+          x: [],
+          y: [],
+          yaxis: "y2",
+          name: "Absolute Magnitude Axis",
+        };
+
+        // Update the layout and add the dummy trace to the plot.
+        Plotly.relayout(plotId, { yaxis2 });
+        Plotly.addTraces(plotId, [dummyTrace]);
+      }
+    } else if (photometryConfig.plotAbsoluteMagnitude) {
+      const targetDistance = parseFloat("{{ target.distance }}");
+      // Update the range of yaxis2 if already initialized.
+      const dm = 5 * (Math.log10(targetDistance) - 1);
+      const updatedRange = {
+        "yaxis2.range": [
+          plotElement.layout.yaxis.range[0] - dm,
+          plotElement.layout.yaxis.range[1] - dm,
+        ],
+      };
+
+      // Update the layout with the new range.
+      Plotly.relayout(plotId, updatedRange);
+    }
+  };
+
+  const plottingConfigurations = new Map([
+    [
+      "spectroscopy",
+      {
+        initialized: false,
+        plotFunction: plotSpectroscopy,
+        dummyTraces: [],
+        layout: {
+          title: "",
+          xaxis: {
+            title: "Wavelength",
+            tickformat: "d",
+          },
+          yaxis: {
+            title: "Flux",
+            tickformat: ".1g",
+          },
+          showlegend: true,
+        },
+      },
+    ],
+    [
+      "photometry",
+      {
+        plotAbsoluteMagnitude: false,
+        initialized: false,
+        plotFunction: plotPhotometry,
+        dummyTraces: [
+          // Dummy trace for the primary y-axis.
+          {
+            x: [],
+            y: [],
+            mode: "markers",
+            name: "Apparent Magnitude",
+            yaxis: "y",
+          },
+        ],
+        layout: {
+          title: "",
+          xaxis: {
+            title: "Time (MJD)",
+            tickformat: ".2f",
+          },
+          yaxis: {
+            title: {
+              text: "Apparent Magnitude",
+            },
+            tickformat: ".2f",
+            autorange: "reversed",
+          },
+          yaxis2: {
+            title: "Absolute Magnitude",
+            showgrid: false,
+            overlaying: "y",
+            side: "right",
+            zeroline: false,
+            tickformat: ".2f",
+          },
+          showlegend: true,
+          legend: {
+            x: 1,
+            xanchor: "right",
+            y: 1,
+          },
+        },
+      },
+    ],
+  ]);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const dataTypes = ["photometry", "spectroscopy"];
+    dataTypes.forEach((dataType) => {
+      const plotId = `${dataType}Plot`;
+      const tbody = document.getElementById(`${dataType}PlotTBody`);
+
+      // Create the plot with configuration.
+      Plotly.react(
+        plotId,
+        plottingConfigurations.get(dataType).dummyTraces,
+        plottingConfigurations.get(dataType).layout,
+        {
+          scrollZoom: true,
+          displayModeBar: true,
+          displayLogo: false,
+          responsive: true,
+        }
+      );
+
+      // Event listener for fetching data or extracting data from a file.
+      tbody.addEventListener("click", async (event) => {
+        const action = event.target.dataset.action;
+        if (action === "plot") {
+          const button = event.target;
+          const row = button.closest("tr");
+          if (!row) return;
+
+          // Get needed information.
+          const dataproductId = row.dataset.dataproductId;
+          const dataType = row.dataset.dataType;
+          const file = row.dataset.file;
+
+          // Disable the button and show loading text.
+          button.disabled = true;
+
+          try {
+            // Attempt to fetch reduced data.
+            let data = await fetchReducedData(dataproductId, dataType);
+
+            // If no results, run the processor.
+            if (!data.results || data.results.length === 0) {
+              await runProcessor(dataproductId, dataType);
+
+              // Retry fetching reduced data.
+              data = await fetchReducedData(dataproductId, dataType);
+
+              if (!data.results || data.results.length === 0) {
+                throw new Error(`No reduced data available.`);
+              }
+            }
+            plottingConfigurations.get(dataType).plotFunction(plotId, data.results);
+          } catch (error) {
+            showAlert(file, `${error.message}`);
+            button.disabled = false;
+          }
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}
