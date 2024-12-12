@@ -1,0 +1,1 @@
+Add photometric data plotting: Refactored plotting logic and enhanced interface usability.

@@ -1,4 +1,8 @@
-<div class="container mt-3">
+<div class="container my-3">
+  <h5>Select and Plot Data Products</h5>
+  <p>
+    Use the table below to select data products. Click the <strong>Plot</strong> button to add the selected data product to the plot.
+  </p>
   <div class="row g-3">
     <div class="col-12">
       <div id="{{ data_type }}Plot" class="plotly-container"></div>
@@ -8,196 +12,37 @@
         <table class="table">
           <thead>
             <tr>
-              <th></th>
-              <th></th>
+              <th>File Name</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="{{ data_type }}PlotTBody">
-            {% for dataproduct in dataproducts %}
-            <tr
-              data-file="{{ dataproduct.data.name}}"
-              data-dataproduct-id="{{ dataproduct.id }}"
-              data-data-type="{{ data_type }}">
-              <td>{{ dataproduct.data.name }}</td>
-              <td>
-                <button
-                  type="button"
-                  class="btn btn-primary btn-sm plot-button"
-                  data-action="plot">
-                  Plot
-                </button>
-              </td>
-            </tr>
-            {% endfor %}
+            {% if dataproducts %}
+              {% for dataproduct in dataproducts %}
+              <tr
+                data-file="{{ dataproduct.data.name }}"
+                data-dataproduct-id="{{ dataproduct.id }}"
+                data-data-type="{{ data_type }}">
+                <td>{{ dataproduct.data.name }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm plot-button"
+                    data-action="plot"
+                    title="Click to add this data product to the plot">
+                    Plot
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="2" class="text-center">No data products available to plot.</td>
+              </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
-<script>
-  /**
-   * Function to add new traces to the existing Plotly plot.
-   * @param {string} plotId - The ID of the plot.
-   * @param {Array} results - Array of reduced data results.
-   */
-  const plotSpectroscopy = (plotId, results) => {
-    results.forEach((result) => {
-      const wavelength = result.value.wavelength;
-      const flux = result.value.flux;
-      const timestamp = result.timestamp;
-
-      if (!wavelength || !flux) {
-        return;
-      }
-
-      const trace = {
-        x: wavelength,
-        y: flux,
-        mode: "lines",
-        name: new Date(timestamp).toLocaleString(),
-      };
-
-      Plotly.addTraces(plotId, trace);
-    });
-  };
-
-  // TODO: Add plotting photometry
-  const plotPhotometry = (plotId, results) => {
-    console.log("Placeholder for plotting photometry.");
-  };
-  const plottingFunctions = new Map([
-    ["spectroscopy", plotSpectroscopy],
-    ["photometry", plotPhotometry],
-  ]);
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const tbody = document.getElementById("{{ data_type }}PlotTBody");
-    const csrfToken = "{{ csrf_token }}";
-    const plotId = "{{ data_type }}Plot";
-
-    // Define the layout of the plot.
-    const layout = {
-      title: "",
-      xaxis: {
-        title: "Wavelength ",
-        tickformat: "d",
-      },
-      yaxis: {
-        title: "Flux",
-        tickformat: ".1g",
-      },
-      showlegend: true,
-    };
-
-    // Create the plot with configuration.
-    Plotly.newPlot(plotId, [], layout, {
-      scrollZoom: true,
-      displayModeBar: true,
-      displayLogo: false,
-      responsive: true,
-    });
-
-    // Event listener for fetching data or extracting data from a file.
-    tbody.addEventListener("click", async (event) => {
-      const action = event.target.dataset.action;
-      if (action === "plot") {
-        const button = event.target;
-        const row = button.closest("tr");
-        if (!row) return;
-
-        // Get needed information.
-        const dataproductId = row.dataset.dataproductId;
-        const dataType = row.dataset.dataType;
-        const file = row.dataset.file;
-
-        // Disable the button and show loading text
-        button.disabled = true;
-
-        // Helper function to fetch reduced data.
-        const fetchReducedData = async () => {
-          const url = `http://localhost:8000/api/reduceddatums/?data_product=${dataproductId}&data_type=${dataType}`;
-          const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error(`Fetch failed with status: ${response.status}`);
-          }
-          const data = await response.json();
-          return data;
-        };
-
-        // Helper function to run the processor.
-        const runProcessor = async () => {
-          const url = `http://localhost:8000/api/runprocessor/`;
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": csrfToken,
-            },
-            body: JSON.stringify({
-              data_product: dataproductId,
-              data_product_type: dataType,
-            }),
-          });
-          if (!response.ok) {
-            // Unpack return to know why the processor failed.
-            const data = await response.json();
-            throw new Error(`Run processor failed: ${data.detail}`);
-          }
-          const data = await response.json();
-          return data;
-        };
-
-        try {
-          // Attempt to fetch reduced data.
-          let data = await fetchReducedData();
-
-          // If no results, run the processor.
-          if (!data.results || data.results.length === 0) {
-            await runProcessor();
-
-            // Retry fetching reduced data.
-            data = await fetchReducedData();
-
-            if (!data.results || data.results.length === 0) {
-              throw new Error(`No reduced data available.`);
-            }
-          }
-          // Update the plot with the data.
-          if (!plottingFunctions.has(dataType)) {
-            throw new Error(`Data type '${dataType}' not recognized.`);
-          }
-          plottingFunctions.get(dataType)(plotId, data.results);
-        } catch (error) {
-          showAlert(file, `${error.message}`);
-          button.disabled = false;
-        }
-      }
-    });
-
-    /**
-     * Displays a Bootstrap alert by prepending it to the main container.
-     * @param {string} message - The alert message to display.
-     * @param {string} type - The Bootstrap alert type (e.g., 'danger', 'warning', 'success').
-     */
-    const showAlert = (file, message, type = "danger") => {
-      // Select the main container.
-      const main = document.querySelector("main");
-
-      // Create the alert div.
-      const alertDiv = document.createElement("div");
-      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-      alertDiv.role = "alert";
-
-      // Set the inner HTML of the alert.
-      alertDiv.innerHTML = `
-        <h6>${file}</h6>
-        ${message}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      `;
-      main.prepend(alertDiv);
-    };
-  });
-</script>
