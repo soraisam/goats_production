@@ -22,8 +22,6 @@ class RunProcessorViewSet(GenericViewSet, mixins.CreateModelMixin):
 
     # FIXME: Hack until tomtoolkit merges in PR
     queryset = ReducedDatum.objects.none()
-    # FIXME: Is this required because of the hack above?
-    filter_backends = []
 
     def create(self, request: HttpRequest, *args, **kwargs) -> Response:
         """Handle POST request to process a data product and generate reduced data.
