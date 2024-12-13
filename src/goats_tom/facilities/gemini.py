@@ -619,7 +619,8 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         keywords and associated
         values, False otherwise.
         """
-        return False
+        telescope = header.get("TELESCOP", "")
+        return "gemini" in telescope.lower()
 
     def get_facility_weather_urls(self):
         """Returns a dictionary containing a URL for weather information
@@ -665,7 +666,12 @@ class GOATSGEMFacility(BaseRoboticObservationFacility):
         )
 
     def get_date_obs_from_fits_header(self, header):
-        return None
+        date_obs = header.get("DATE-OBS")  # Observation date
+        time_obs = header.get("TIME-OBS")  # Observation time
+
+        if date_obs and time_obs:
+            # Combine date and time
+            return f"{date_obs} {time_obs}"
 
     def all_data_products(
         self,

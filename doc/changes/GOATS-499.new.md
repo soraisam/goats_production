@@ -1,1 +1,1 @@
-Add plotting function to update plot with requested spectroscopy data.
+Added plotting function to update plot with requested spectroscopy data.
