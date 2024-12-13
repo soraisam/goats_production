@@ -35,29 +35,37 @@ class SpectroscopyProcessor(BaseSpectroscopyProcessor):
             A tuple containing the spectrum object, observation date and time, and the
             name of the facility that processed the FITS file.
         """
-        # Get flux and header from file.
-        flux, header = fits.getdata(dataproduct.data.path, header=True)
-        wcs = WCS(header=header, naxis=1)
+        # Get flux and primary header using fits.getdata.
+        flux, primary_header = fits.getdata(dataproduct.data.path, header=True)
+        wcs = WCS(header=primary_header, naxis=1)
 
         # Get the flux unit and convert to astropy unit.
-        flux_unit = header.get("BUNIT")
+        flux_unit = primary_header.get("BUNIT")
         if flux_unit is not None:
             flux_unit = u.Unit(flux_unit)
 
-        # Check each facility class for compatibility with the FITS file.
+        # Initialize facility information.
         facility_name = "UNKNOWN"
-        for facility_class in get_service_classes():
-            facility = get_service_class(facility_class)()
-            if facility.is_fits_facility(header):
-                facility_name = facility_class
-                if flux_unit is None:
-                    flux_unit = facility.get_flux_constant()
-                date_obs = facility.get_date_obs_from_fits_header(header)
-                break
-        else:
-            if flux_unit is None:
-                flux_unit = self.DEFAULT_FLUX_CONSTANT
-            date_obs = datetime.now()
+        date_obs = datetime.now()
+
+        # Open the FITS file to check all headers for the facility.
+        with fits.open(dataproduct.data.path) as hdul:
+            for hdu in hdul:
+                header = hdu.header
+                for facility_class in get_service_classes():
+                    facility = get_service_class(facility_class)()
+                    if facility.is_fits_facility(header):
+                        facility_name = facility_class
+                        if flux_unit is None:
+                            flux_unit = facility.get_flux_constant()
+                        date_obs = facility.get_date_obs_from_fits_header(header)
+                        break
+                if facility_name != "UNKNOWN":
+                    break  # Stop checking if a valid facility is found.
+
+        # Use a default flux unit if none was determined.
+        if flux_unit is None:
+            flux_unit = self.DEFAULT_FLUX_CONSTANT
 
         # Create a Spectrum1D object with the flux and WCS.
         spectrum = Spectrum1D(flux=flux * flux_unit, wcs=wcs)
