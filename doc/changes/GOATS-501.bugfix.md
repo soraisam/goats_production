@@ -1,0 +1,1 @@
+Fixed typo with filter backend in the settings template.
