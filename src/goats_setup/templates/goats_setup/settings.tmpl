@@ -366,13 +366,10 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100,
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ORIGIN_REGEX_WHITELIST = [
     r"^chrome-extension://[a-zA-Z0-9-]+$",
     r"^moz-extension://[a-zA-Z0-9-]+$",
 ]
-
-
 
 # Default Plotly theme setting, can set to any valid theme:
 # 'plotly', 'plotly_white', 'plotly_dark', 'ggplot2', 'seaborn', 'simple_white', 'none'
