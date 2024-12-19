@@ -1,0 +1,1 @@
+Update spectroscopy tab message: Revised message to include supported FITS and CSV formats with a link to Manage Data.
