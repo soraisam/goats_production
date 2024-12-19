@@ -1,0 +1,1 @@
+Update photometry tab message: Revised message to include supported CSV format with a link to Manage Data.
