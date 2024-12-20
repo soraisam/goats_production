@@ -1,0 +1,1 @@
+Update plot with axis unit handling and editable labels: Added support to display correct units for Wavelength and Flux if available in FITS files. Defaulted to "Wavelength" and "Flux" when units are missing. Made axis labels editable for manual input with CSV files for both photometry and spectroscopy.
