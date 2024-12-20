@@ -1,0 +1,1 @@
+Added editable axis ranges: Enabled users to click directly on x and y axis end values to edit their ranges.
