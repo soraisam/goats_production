@@ -19,6 +19,14 @@
       <figcaption class="figure-caption text-center mt-2">Click on labels to edit text.</figcaption>
     </div>
     <div class="col-12">
+      <input
+        type="text"
+        class="form-control"
+        id="{{ data_type }}FileSearch"
+        placeholder="Type to filter file names..."
+      >
+    </div>
+    <div class="col-12">
       <div style="overflow-y: auto; height: 400px">
         <table class="table">
           <thead>
@@ -28,28 +36,30 @@
             </tr>
           </thead>
           <tbody id="{{ data_type }}PlotTBody">
-            {% if dataproducts %} {% for dataproduct in dataproducts %}
-            <tr
-              data-file="{{ dataproduct.data.name }}"
-              data-dataproduct-id="{{ dataproduct.id }}"
-              data-data-type="{{ data_type }}">
-              <td>{{ dataproduct.data.name }}</td>
-              <td>
-                <button
-                  type="button"
-                  class="btn btn-primary btn-sm plot-button"
-                  data-action="plot"
-                  title="Click to add this data product to the plot">
-                  Plot
-                </button>
-              </td>
-            </tr>
-            {% endfor %} {% else %}
-            <tr>
-              <td colspan="2" class="text-center">
-                No data products available to plot.
-              </td>
-            </tr>
+            {% if dataproducts %}
+              {% for dataproduct in dataproducts %}
+                <tr
+                  data-file="{{ dataproduct.data.name }}"
+                  data-dataproduct-id="{{ dataproduct.id }}"
+                  data-data-type="{{ data_type }}">
+                  <td>{{ dataproduct.data.name }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-sm plot-button"
+                      data-action="plot"
+                      title="Click to add this data product to the plot">
+                      Plot
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="2" class="text-center">
+                  No data products available to plot.
+                </td>
+              </tr>
             {% endif %}
           </tbody>
         </table>
@@ -57,3 +67,24 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Get references to the search input and the table body.
+  var searchInput = document.getElementById("{{ data_type }}FileSearch");
+  var tableBody = document.getElementById("{{ data_type }}PlotTBody");
+
+  // Add an input event listener to the search field so the table updates as the user types.
+  searchInput.addEventListener("input", function() {
+    var query = searchInput.value.toLowerCase().trim();
+    // Select all table rows that have a "data-file" attribute.
+    var rows = tableBody.querySelectorAll("tr[data-file]");
+
+    // Loop through each row and determine if it should be shown or hidden based on the query.
+    rows.forEach(function(row) {
+      var fileName = row.getAttribute("data-file").toLowerCase();
+      row.style.display = fileName.includes(query) ? "" : "none";
+    });
+  });
+});
+</script>
