@@ -18,7 +18,7 @@
       <div id="{{ data_type }}Plot" class="plotly-container"></div>
       <figcaption class="figure-caption text-center mt-2">Click on labels to edit text.</figcaption>
     </div>
-    <div class="col-12">
+    <div class="col-lg-6 col-12 offset-lg-6">
       <input
         type="text"
         class="form-control"
@@ -61,6 +61,9 @@
                 </td>
               </tr>
             {% endif %}
+            <tr id="{{ data_type }}NoMatchesRow" style="display: none;">
+              <td colspan="2" class="text-center">No matches found...</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -69,22 +72,31 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", () => {
   // Get references to the search input and the table body.
-  var searchInput = document.getElementById("{{ data_type }}FileSearch");
-  var tableBody = document.getElementById("{{ data_type }}PlotTBody");
+  const searchInput = document.getElementById("{{ data_type }}FileSearch");
+  const tableBody = document.getElementById("{{ data_type }}PlotTBody");
+  const noMatchesRow = document.getElementById("{{ data_type }}NoMatchesRow")
 
   // Add an input event listener to the search field so the table updates as the user types.
-  searchInput.addEventListener("input", function() {
-    var query = searchInput.value.toLowerCase().trim();
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.toLowerCase().trim();
     // Select all table rows that have a "data-file" attribute.
-    var rows = tableBody.querySelectorAll("tr[data-file]");
+    const rows = tableBody.querySelectorAll("tr[data-file]");
 
     // Loop through each row and determine if it should be shown or hidden based on the query.
-    rows.forEach(function(row) {
-      var fileName = row.getAttribute("data-file").toLowerCase();
-      row.style.display = fileName.includes(query) ? "" : "none";
+    let visibleCount = 0;
+    rows.forEach((row) => {
+      let fileName = row.getAttribute("data-file").toLowerCase();
+      if (fileName.includes(query)) {
+        row.style.display = "";
+        visibleCount++;
+      } else {
+        row.style.display = "none";
+      }
     });
+    // If no rows are visible, show the "No matches found" row. Otherwise hide it.
+    noMatchesRow.style.display = visibleCount === 0 ? "" : "none";
   });
 });
 </script>
