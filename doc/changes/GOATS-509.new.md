@@ -1,1 +1,0 @@
-Added search field for file names: Implemented client-side filtering for the File Name column on the data visualizer to allow users to quickly find files.
