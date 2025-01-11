@@ -5,6 +5,7 @@ class RecipeReductionsManagerModel {
     this._currentRecipeId = null;
     this._runId = null;
     this.url = "dragonsrecipes/";
+    this.reducesUrl = "dragonsreduce/";
   }
 
   get runId() {
@@ -30,6 +31,24 @@ class RecipeReductionsManagerModel {
     } catch (error) {
       console.error("Error fetching list of recipes:", error);
       throw error;
+    }
+  }
+  async fetchRunningReduces() {
+    try {
+      const response = await this.api.get(
+        `${this.reducesUrl}?not_finished=true&run=${this.runId}`
+      );
+      // Transform the API data into WebSocket-like payloads.
+      return response.results.map((item) => ({
+        update: "recipe",
+        status: item.status,
+        recipe_id: item.recipe,
+        reduce_id: item.id,
+        run_id: this.runId,
+      }));
+    } catch (error) {
+      console.error("Error fetching initial statuses:", error);
+      return [];
     }
   }
 }
@@ -155,12 +174,24 @@ class RecipeReductionsManagerController {
     this.view.render("create", { parentElement, data });
     this._setupWebSocket();
     this._bindGlobalCallbacks();
+
+    // Fetch the initial values.
+    const runningData = await this.model.fetchRunningReduces();
+    runningData.forEach((item) => {
+      this._wsUpdateRecipeReduction(item.recipe_id, item);
+    });
   }
 
   async update(runId) {
     this.model.runId = runId;
     const data = await this.model.fetchRecipes();
     this.view.render("update", { data });
+
+    // Fetch the initial values.
+    const runningData = await this.model.fetchRunningReduces();
+    runningData.forEach((item) => {
+      this._wsUpdateRecipeReduction(item.recipe_id, item);
+    });
   }
 
   _updateRecipe(recipeId) {

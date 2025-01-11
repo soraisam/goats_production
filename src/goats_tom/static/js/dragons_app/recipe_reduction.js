@@ -838,6 +838,8 @@ class RecipeReductionController {
   }
 
   update(data) {
+    // Update the model with new information.
+    this.model.currentReduceData = { id: data.reduce_id };
     this.view.render("update", { data });
   }
 
