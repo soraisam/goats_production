@@ -67,6 +67,7 @@ class RecipeReductionsManagerView {
     this.container = null;
     // Store all the recipe reductions.
     this.recipeReductions = new Map();
+    this.defaultRecipeReduction = null;
   }
 
   render(viewCmd, parameter) {
@@ -110,6 +111,7 @@ class RecipeReductionsManagerView {
   _updateRecipe(recipeId) {
     // TODO: Improve this to cache what is already shown to prevent looping.
     // Iterate through all entries in the map
+    this.defaultRecipeReduction.hide();
     this.recipeReductions.forEach((recipeReduction, id) => {
       if (id === recipeId) {
         recipeReduction.show();
@@ -121,6 +123,9 @@ class RecipeReductionsManagerView {
 
   _create(parentElement, data) {
     this.parentElement = parentElement;
+    // Create default recipe card.
+    this.defaultRecipeReduction = new DefaultRecipeReduction(this.parentElement);
+
     // Loop through and create recipe reductions.
     data.forEach((recipe) => {
       // Use map for accessing.
@@ -132,14 +137,16 @@ class RecipeReductionsManagerView {
   }
 
   _update(data) {
+    console.log("CALLED UPDATE")
     // First, remove all HTML elements associated with the entries in the map.
     while (this.parentElement.firstChild) {
       this.parentElement.removeChild(this.parentElement.firstChild);
     }
+    this.defaultRecipeReduction = null;
 
     // Second, clear the map itself.
     this.recipeReductions.clear();
-    // Optionally, you might want to recreate the elements if `data` is supposed to provide new contents.
+    // Recreate the elements.
     this._create(this.parentElement, data);
   }
 
