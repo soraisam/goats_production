@@ -596,7 +596,7 @@ class ProcessedFilesModel {
       throw error;
     }
   }
-/**
+  /**
    * Fetches the file header.
    * @async
    * @param {string} filepath - The full filepath.
