@@ -28,7 +28,6 @@ jobs:
         with:
           mamba-version: "*"
           python-version: ${{ matrix.python-version }}
-          miniforge-variant: Mambaforge
           miniforge-version: latest
           activate-environment: goats-env
           use-mamba: true
