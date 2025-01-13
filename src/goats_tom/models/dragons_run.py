@@ -294,15 +294,18 @@ class DRAGONSRun(models.Model):
             The list of dicts of all files in the calibration database.
         """
         caldb = self.get_caldb()
+        files = []
         try:
-            files = []
             for f in caldb.list_files():
-                path = Path(f.path)
+                relative_path = (
+                    Path(f.path).joinpath(f.name).relative_to(settings.MEDIA_ROOT)
+                )
                 files.append(
                     {
                         "name": f.name,
-                        "path": str(path.relative_to(settings.MEDIA_ROOT)),
-                        "is_user_uploaded": path.name == "uploaded",
+                        "path": str(relative_path.parent),
+                        "is_user_uploaded": Path(f.path).name == "uploaded",
+                        "url": f"{settings.MEDIA_URL}{relative_path}",
                     }
                 )
         finally:
@@ -319,6 +322,7 @@ class DRAGONSRun(models.Model):
             # Iterate over each file in the uploaded directory.
             for filepath in uploaded_dir.iterdir():
                 if filepath not in files:
+                    print("removing file: ", filepath)
                     # Remove files not in database in uploaded.
                     filepath.unlink()
         finally:
