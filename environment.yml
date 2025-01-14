@@ -1,4 +1,4 @@
-# Environment configuration for GOATS (goats-env)
+# Environment configuration for GOATS
 
 # For ARM (M1/M2) Mac users:
 #  - Ensure you have Rosetta 2 installed to run Intel-based binaries.
