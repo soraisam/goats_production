@@ -6,19 +6,22 @@
 #  - You need to switch to an x86 terminal for installing and running
 #    Intel-only packages like DRAGONS.
 
+# See documentation for more help:
+# https://goats.readthedocs.io/en/latest/
+
 # Creating the environment:
 # conda env create -f environment.yml
 
-name: goats-env
+name: goats-alpha
 
 channels:
   - conda-forge
   - http://astroconda.gemini.edu/public
-  - defaults
+  - nodefaults
 
 dependencies:
   - astropy>=5.3.3,<6  # Required for tomtoolkit.
-  - dragons>=3.2,<4
+  - dragons=3.2.3
   - ds9
   - python-confluent-kafka=1.7.0  # Required for linking librdkafka in conda.
   - librdkafka>=1.7.0  # Required while antares-client upgrades kafka.
@@ -30,5 +33,5 @@ dependencies:
   # for tests, install with "pip install -e '.[test]'".
 
   # Uncomment the below lines to install from GitHub (requires repo access).
-  # - pip:
-  #   - git+https://github.com/gemini-hlsw/goats.git#branch=main
+  - pip:
+    - git+https://github.com/gemini-hlsw/goats.git@25.1.0-alpha.0
