@@ -1,3 +1,8 @@
+## GOATS 25.1.0-alpha.0 (2025-01-14)
+
+No significant changes.
+
+
 ## GOATS 25.1.0-alpha-0 (2025-01-14)
 
 

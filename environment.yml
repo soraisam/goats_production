@@ -34,4 +34,4 @@ dependencies:
 
   # Uncomment the below lines to install from GitHub (requires repo access).
   - pip:
-    - git+https://github.com/gemini-hlsw/goats.git@25.1.0-alpha-0
+    - git+https://github.com/gemini-hlsw/goats.git@25.1.0-alpha.0
