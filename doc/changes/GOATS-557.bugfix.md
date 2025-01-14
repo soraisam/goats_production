@@ -1,0 +1,1 @@
+Workaround for DRAGONS version mismatch: Addressed an issue where the DRAGONS version reported by pip differed from the conda-installed version by implementing logic to pull the version directly from conda.
