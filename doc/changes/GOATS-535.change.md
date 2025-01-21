@@ -1,0 +1,1 @@
+Used local fontawesomefree: Incorporated FontAwesome into GOATS static assets and removed external Python dependency.
