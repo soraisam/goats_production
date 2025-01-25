@@ -1,1 +1,0 @@
-Added TNS query support: Developed class to query TNS objects and return payload.

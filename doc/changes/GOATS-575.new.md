@@ -1,1 +1,0 @@
-Updated TNS harvester: Modified harvester to use the TNSClient for object querying.

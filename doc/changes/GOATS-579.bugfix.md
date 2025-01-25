@@ -1,1 +1,0 @@
-Set astroquery version: Fixed SIMBAD query compatibility by pinning astroquery to a working version.

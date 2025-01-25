@@ -1,1 +1,0 @@
-Handle duplicate file entries in checksum files: Fixed an issue where duplicate file entries in GOA checksum files caused errors during downloading and decompression. The process now skips duplicates and continues without interruption.
