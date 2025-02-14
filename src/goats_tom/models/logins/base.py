@@ -1,11 +1,11 @@
-__all__ = ["_BaseLogin"]
+__all__ = ["BaseLogin"]
 
 from django.contrib.auth.models import User
 from django.db import models
 from django_cryptography.fields import encrypt
 
 
-class _BaseLogin(models.Model):
+class BaseLogin(models.Model):
     """A base login model used for storing user credentials.
 
     Attributes

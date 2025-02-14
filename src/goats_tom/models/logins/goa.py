@@ -1,8 +1,8 @@
 __all__ = ["GOALogin"]
 
-from .base import _BaseLogin
+from .base import BaseLogin
 
 
-class GOALogin(_BaseLogin):
+class GOALogin(BaseLogin):
     """Extends `_BaseLogin` to store GOA user credentials."""
     pass
