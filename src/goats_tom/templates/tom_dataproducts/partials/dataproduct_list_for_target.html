@@ -1,11 +1,13 @@
-{% load bootstrap4 %}
-{% include 'tom_dataproducts/partials/js9_scripts.html' %}
+{% load bootstrap4 %} {% include 'tom_dataproducts/partials/js9_scripts.html' %}
 <h4>Data</h4>
 <div class="row g-3">
   <div class="col-12">
     <div class="alert alert-info" role="alert">
-      You can <strong>view files in JS9</strong> or <strong>send them to Astro DataLab</strong> using the "Actions" dropdown.
-      To send files, make sure your <a href="{% url 'user-list' %}" class="alert-link">Astro DataLab credentials</a> are set up.
+      You can <strong>view files in JS9</strong> or
+      <strong>send them to Astro DataLab</strong> using the "Actions" dropdown. To send
+      files, make sure your
+      <a href="{% url 'user-list' %}" class="alert-link">Astro DataLab credentials</a>
+      are set up.
     </div>
   </div>
   <div class="col-lg-6 col-12 offset-lg-6">
@@ -13,23 +15,24 @@
       type="text"
       class="form-control"
       id="manageDataFileSearch"
-      placeholder="Type to filter file names..."
-    >
+      placeholder="Type to filter file names..." />
   </div>
 
   <div class="col-12">
     <div style="overflow-y: auto; height: 600px">
       <table class="table table-striped">
-        <thead><tr>
-          <!-- <th></th> -->
-          <th></th>
-          <th>Filename</th>
-          <th>Type</th>
-          <!-- <th>Share</th> -->
-          <th></th>
-        </tr></thead>
+        <thead>
+          <tr>
+            <!-- <th></th> -->
+            <th></th>
+            <th>Filename</th>
+            <th>Type</th>
+            <!-- <th>Share</th> -->
+            <th></th>
+          </tr>
+        </thead>
         <tbody id="manageDataTBody">
-        {% for product in products %}
+          {% for product in products %}
           <tr data-file="{{ product.product_id }}">
             <!-- {% if not product.featured %}
             <td><a href="{% url 'tom_dataproducts:feature' pk=product.id %}?target_id={{ target.id }}" title="Make Featured Image" class="btn btn-primary">Feature</a></td>
@@ -37,23 +40,47 @@
             <td><span class="btn btn-secondary active featured">Featured</span></td>
             {% endif %} -->
             <td>
-              {%  if 'fits' in product.get_file_name or product.data_product_type == 'fits_file' %}
+              {% if 'fits' in product.get_file_name or product.data_product_type == 'fits_file' %}
               <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Actions
+                <button
+                  class="btn btn-secondary dropdown-toggle"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  <span class="button-text">Actions</span>
+                  <span
+                    class="spinner-border spinner-border-sm d-none"
+                    role="status"
+                    aria-hidden="true"></span>
                 </button>
-                <ul class="dropdown-menu" data-url="{{ product.data.url }}" data-id="{{ product.id }}">
-                  <li><button type="button" class="dropdown-item" data-action="js9">View with JS9</button></li>
-                  <li><button type="button" class="dropdown-item" data-action="astroDatalab">Send to Astro Datalab</button></li>
+                <ul
+                  class="dropdown-menu"
+                  data-url="{{ product.data.url }}"
+                  data-id="{{ product.id }}">
+                  <li>
+                    <button type="button" class="dropdown-item" data-action="js9">
+                      View with JS9
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      class="dropdown-item"
+                      data-action="astroDatalab">
+                      Send to Astro Datalab
+                    </button>
+                  </li>
                 </ul>
               </div>
               {% endif %}
             </td>
-            <td><a href="{{ product.data.url }}" target="_blank">{{ product.product_id }}</a></td>
             <td>
-              {% if product.data_product_type %}
-                {{ product.get_type_display }}
-              {% endif %}
+              <a href="{{ product.data.url }}" target="_blank"
+                >{{ product.product_id }}</a
+              >
+            </td>
+            <td>
+              {% if product.data_product_type %} {{ product.get_type_display }} {% endif %}
             </td>
             <!-- <td>
               {% if sharing_destinations %}
@@ -65,7 +92,13 @@
                 </p>
               {% endif %}
             </td> -->
-            <td><a href="{% url 'tom_dataproducts:delete' product.id %}" class="btn btn-danger">Delete</a></td>
+            <td>
+              <a
+                href="{% url 'tom_dataproducts:delete' product.id %}"
+                class="btn btn-danger"
+                >Delete</a
+              >
+            </td>
           </tr>
           <!-- <tr id="share-{{ forloop.counter }}" class="collapse">
             <td colspan=100%>
@@ -97,10 +130,11 @@
               </form>
             </td>
           </tr> -->
-        {% endfor %}
-        <tr id="manageDataNoMatchesRow" style="display: none;">
-          <td colspan="6" class="text-center">No matches found...</td>
-        </tr>
+          {% endfor %}
+          <tr id="manageDataNoMatchesRow" style="display: none">
+            <td colspan="6" class="text-center">No matches found...</td>
+          </tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -110,7 +144,7 @@
     // Get references to the search input and the table body.
     const searchInput = document.getElementById("manageDataFileSearch");
     const tableBody = document.getElementById("manageDataTBody");
-    const noMatchesRow = document.getElementById("manageDataNoMatchesRow")
+    const noMatchesRow = document.getElementById("manageDataNoMatchesRow");
 
     // Add an input event listener to the search field so the table updates as the user types.
     searchInput.addEventListener("input", () => {
@@ -146,10 +180,39 @@
 
       const { url, id } = listItem.dataset;
 
+      // Find the main dropdown button.
+      const dropdown = button.closest(".dropdown");
+      const mainButton = dropdown.querySelector(".btn-secondary");
+      const buttonText = mainButton.querySelector(".button-text");
+      const spinner = mainButton.querySelector(".spinner-border");
+
       // Define available actions with corresponding function calls.
       const actions = {
         js9: () => openJS9Window(url),
-        astroDatalab: async () => await sendToAstroDataLab(id),
+        astroDatalab: async () => {
+          // Hide dropdown menu.
+          const bsDropdown = bootstrap.Dropdown.getOrCreateInstance(mainButton);
+          bsDropdown.hide();
+          buttonText.classList.add("d-none");
+          spinner.classList.remove("d-none");
+          mainButton.disabled = true;
+          try {
+            await sendToAstroDataLab(id);
+            buttonText.classList.remove("d-none");
+            buttonText.textContent = "Sent";
+            spinner.classList.add("d-none");
+          } catch (error) {
+            buttonText.classList.remove("d-none");
+            buttonText.textContent = "Failed";
+            spinner.classList.add("d-none");
+          } finally {
+            // Reset the button text when finished.
+            setTimeout(() => {
+              mainButton.disabled = false;
+              buttonText.textContent = "Actions";
+            }, 3000);
+          }
+        },
       };
 
       // Call the function if it exists.
@@ -157,16 +220,29 @@
     });
 
     /**
-    * Sends a file to Astro DataLab.
-    * @param {string} id - The unique identifier of the file.
-    * @returns {Promise<void>} - Resolves when the request is completed.
-    */
+     * Sends a file to Astro DataLab.
+     * @param {string} id - The unique identifier of the file.
+     * @returns {Promise<void>} - Resolves when the request is completed.
+     */
     const sendToAstroDataLab = async (id) => {
-      try {
-        console.log(`Sending ${id} to Astro DataLab...`);
-      } catch (error) {
-        console.error("Error sending file:", error);
+      const url = `/api/astrodatalab/`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ data_product: id }),
+      });
+      if (!response.ok || response.status !== 201) {
+        const data = await response.json();
+        throw new Error(`Sending to Astro Datalab failed: ${data.detail}`);
       }
+      // Successfully sent to Astro DataLab.
+      const data = await response.json();
+      console.log("Success:", data);
     };
   });
-  </script>
+</script>
