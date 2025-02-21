@@ -39,6 +39,7 @@ router.register(r"astrodatalab", api_views.AstroDatalabViewSet, basename="astrod
 # TODO: Make unified path formats.
 
 urlpatterns = [
+    path("astro-datalab/", views.AstroDatalabView.as_view(), name="astro-datalab"),
     path("api/", include(router.urls)),
     path(
         "targets/<int:pk>/delete/",
