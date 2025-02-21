@@ -34,6 +34,7 @@ router.register(r"runprocessor", api_views.RunProcessorViewSet, basename="runpro
 router.register(
     r"antares2goats", api_views.Antares2GoatsViewSet, basename="antares2goats"
 )
+router.register(r"astrodatalab", api_views.AstroDatalabViewSet, basename="astrodatalab")
 # TODO: Add app_name and update paths and URL lookups.
 # TODO: Make unified path formats.
 
