@@ -15,4 +15,3 @@ class TestBaseRecipeFactory:
         )
         assert recipe.name == "Test Recipe", "Factory should use the specified name."
         assert recipe.version == "32.2.0", "Factory should use the specified version."
-
