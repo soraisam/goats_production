@@ -15,7 +15,7 @@ class TestAstroDatalabLoginView(TestCase):
     def setUp(self) -> None:
         self.user = UserFactory(username="testuser", password="secret")
         self.client.login(username="testuser", password="secret")
-        self.url = reverse("user-astro-datalab-login", kwargs={"pk": self.user.pk})
+        self.url = reverse("user-astro-data-lab-login", kwargs={"pk": self.user.pk})
 
     def test_get_request_renders_form(self):
         """
@@ -24,7 +24,7 @@ class TestAstroDatalabLoginView(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "auth/login_form.html")
-        self.assertContains(response, "Astro Datalab")
+        self.assertContains(response, "Astro Data Lab")
 
     @patch.object(AstroDatalabLoginView, "perform_login_and_logout", return_value=True)
     def test_post_valid_credentials(self, mock_method):
@@ -36,7 +36,7 @@ class TestAstroDatalabLoginView(TestCase):
 
         self.assertRedirects(response, reverse("user-list"))
         messages_list = list(response.context["messages"])
-        self.assertTrue(any("Astro Datalab login information verified" in str(msg) for msg in messages_list))
+        self.assertTrue(any("Astro Data Lab login information verified" in str(msg) for msg in messages_list))
 
         login_obj = AstroDatalabLogin.objects.get(user=self.user)
         self.assertEqual(login_obj.username, "astro_user")
@@ -52,7 +52,7 @@ class TestAstroDatalabLoginView(TestCase):
 
         self.assertRedirects(response, reverse("user-list"))
         messages_list = list(response.context["messages"])
-        self.assertTrue(any("Failed to verify Astro Datalab credentials" in str(msg) for msg in messages_list))
+        self.assertTrue(any("Failed to verify Astro Data Lab credentials" in str(msg) for msg in messages_list))
 
         login_obj = AstroDatalabLogin.objects.get(user=self.user)
         self.assertEqual(login_obj.username, "bad_user")
@@ -66,6 +66,6 @@ class TestAstroDatalabLoginView(TestCase):
         response = self.client.post(self.url, form_data)
 
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(any("Failed to save Astro Datalab login information" in str(msg)
+        self.assertTrue(any("Failed to save Astro Data Lab login information" in str(msg)
                             for msg in response.context["messages"]))
         self.assertFalse(AstroDatalabLogin.objects.filter(user=self.user).exists())
