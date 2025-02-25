@@ -26,14 +26,18 @@
     </p>
   </div>
   <hr>
-  <div class="col-8 text-center">
-    <p>Click the image to open the Astro Data Lab portal.</p>
-    <a href="https://datalab.noirlab.edu/" target="_blank">
-      <img
-        src="{% static 'img/astro-datalab.png' %}"
-        class="img-fluid"
-        alt="Astro Data Lab" />
-    </a>
+  <div class="col-12 text-center">
+    <p>
+      Click 
+      <a href="https://datalab.noirlab.edu" target="_blank">
+        Astro Data Lab portal
+      </a>
+      or the image below to open it in a new tab.
+    </p>
+    <div class="ratio ratio-1x1 position-relative">
+      <iframe src="https://datalab.noirlab.edu" scrolling="no" style="pointer-events: none;"></iframe>
+      <a href="https://datalab.noirlab.edu" target="_blank" class="stretched-link"></a>
+    </div>
   </div>
 </div>
 {% endblock %}
