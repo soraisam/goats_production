@@ -1,0 +1,1 @@
+Migrated ReadTheDocs to main repo: Transferred documentation from the `goats-docs` repository to the GOATS main repository for centralized management.
