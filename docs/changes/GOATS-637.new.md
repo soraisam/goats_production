@@ -1,0 +1,1 @@
+Changed theme and configured options: Switched to Alabaster theme and adjusted sidebar layout. Added a documentation badge for visibility in PRs.
