@@ -1,19 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'GOATS'
 copyright = '2025, Association of Universities for Research in Astronomy'
-author = 'Monika Soraisam'
-#release = '23.10.0'
-version = '25.1.0-alpha.0'
-
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     'sphinx.ext.duration',
@@ -41,29 +29,31 @@ master_doc = 'index'
 # _static subdirectory to put videos 
 html_static_path = ["_static"]
 
-
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
-#html_theme = 'alabaster'
-
-html_theme = "sphinx_rtd_theme"
-#html_static_path = ['_static']
-
+html_theme = "alabaster"
+html_sidebars = {
+    '**': [
+        'about.html',
+        'searchfield.html',
+        'navigation.html',
+        'relations.html',
+    ]
+}
+html_theme_options = {
+    "logo": "GOATS_logo.png",
+    "github_user"
+    "logo_name": "false",
+    "fixed_sidebar": "true",
+    "description": "Time-domain astronomy made time efficient.",
+    "github_button": "true",
+    "github_repo": "goats",
+    "github_user": "gemini-hlsw",
+    "codecov_button": "true",
+    "badge_branch": "main",
+}
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
-
-# The name of an image file (relative to this directory) to place at the top
-# of the sidebar.
-#html_logo = None
-html_logo = "images/GOATS_logo.png"
-
-
-# Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
 
 # Figure numbering 
 numfig = True
