@@ -1,10 +1,5 @@
 ## GOATS 25.2.1 (2025-02-27)
 
-No significant changes.
-
-
-## GOATS 2025.2.0 (2025-02-27)
-
 
 ### New Features
 
