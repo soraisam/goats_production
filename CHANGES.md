@@ -1,3 +1,12 @@
+## GOATS 25.2.2 (2025-02-28)
+
+
+### New Features
+
+- Created GitHub Pages for project: Set up a GitHub Pages site for GOATS to host documentation and Conda packages. [[#GOATS-648](https://noirlab.atlassian.net/browse/GOATS-648)]
+- Added barebones content for GitHub Pages: Added initial HTML structure, Bootstrap styling, and essential links. [[#GOATS-649](https://noirlab.atlassian.net/browse/GOATS-649)]
+- Created an empty Conda channel: Prepared `gh-pages/conda/` for hosting Conda packages with `conda index`. [[#GOATS-650](https://noirlab.atlassian.net/browse/GOATS-650)]
+
 ## GOATS 25.2.1 (2025-02-27)
 
 
