@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -45,7 +45,7 @@
         </div>
       </div>
     </nav>
-    <section class="container hero py-5">
+    <section style="padding-top: 150px;" class="container hero">
       <img src="./goats-outline.png" alt="GOATS System Overview" class="img-fluid" />
       <p class="display-6 mt-5">Gemini Observation and Analysis of Targets System</h1>
       <p class="lead mt-4">Time-domain astronomy made time efficient.</p>
@@ -61,19 +61,17 @@
           <i class="fa-solid fa-download"></i> Conda Channel
         </button>
         <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="/conda/osx-64/">MacOS (osx-64)</a></li>
-          <li><a class="dropdown-item" href="/conda/linux-64/">Linux (linux-64)</a></li>
+          <li><a class="dropdown-item" href="./conda/osx-64/">MacOS (osx-64)</a></li>
+          <li><a class="dropdown-item" href="./conda/linux-64/">Linux (linux-64)</a></li>
         </ul>
       </div>
     </section>
 
-    <section class="container mt-5 py-5" id="quickStart">
+    <section class="container mt-5 py-5 text-center" id="quickStart">
       <h2 class="text-center">Quick Start</h2>
       <p class="text-center lead">Install GOATS with a single command:</p>
-
-      <pre><code>conda install -c UPDATE_CHANNEL goats</code></pre>
-
-      <p class="text-center mt-3">See the <a href="https://goats.readthedocs.io/en/latest/" target="_blank">ReadTheDocs</a> for full installation instructions and documentation.
+      <p class="pt-3"><code>conda install -c https://gemini-hlsw.github.io/goats/conda goats</code></p>
+      <p class="text-center">See the <a href="https://goats.readthedocs.io/en/latest/" target="_blank">ReadTheDocs</a> for full installation instructions and documentation.
       </p>
     </section>
 
