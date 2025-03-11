@@ -1,4 +1,5 @@
 """Class to manage processes."""
+
 __all__ = ["ProcessManager"]
 
 import subprocess
@@ -58,17 +59,19 @@ class ProcessManager:
 
         """
         process = self.processes.pop(name, None)
-        display_message(f"Stopping {name}.")
 
-        if process:
-            process.terminate()
-            try:
-                process.wait(timeout=self.timeout)
-            except Exception:
-                display_warning(f"Could not stop {name} in time, killing {name}.")
-                process.kill()
-
-        else:
+        if process is None:
             display_warning(f"No process found for {name}, skipping.")
             return False
+
+        display_message(f"Stopping {name}.")
+        process.terminate()
+
+        try:
+            process.wait(timeout=self.timeout)
+        except subprocess.TimeoutExpired:
+            display_warning(f"Could not stop {name} in time, killing {name}.")
+            process.kill()
+            process.wait()
+
         return True

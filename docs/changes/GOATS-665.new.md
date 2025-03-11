@@ -1,0 +1,1 @@
+Check ETISubprocess before shutdown: Prevented redundant creation and destruction of singleton.

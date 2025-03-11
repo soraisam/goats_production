@@ -41,7 +41,7 @@ def test_stop_process_existing(manager, mock_process):
 def test_stop_process_timeout(manager, mock_process):
     """Test stopping a process that times out."""
     manager.add_process("test", mock_process)
-    mock_process.wait.side_effect = subprocess.TimeoutExpired(cmd="test", timeout=2)
+    mock_process.wait.side_effect = [subprocess.TimeoutExpired(cmd="test", timeout=2), None]
     assert manager.stop_process("test") is True
     mock_process.terminate.assert_called_once()
     mock_process.kill.assert_called_once()
