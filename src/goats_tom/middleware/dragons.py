@@ -21,28 +21,31 @@ class DRAGONSMiddleware(Middleware):
         """
         print("DRAGONSMiddleware: Terminating DRAGONS subprocesses on worker shutdown.")
 
-        try:
-            eti_subprocess = ETISubprocess()
-            # Send quit message to loop.
-            # Leaving in hoping DRAGONS merges in requested changes.
-            # eti_subprocess.inQueue.put(None)
-            eti_subprocess.process.join(timeout=2)
-
-            # If still alive, force-terminate.
-            if eti_subprocess.process.is_alive():
-                eti_subprocess.process.terminate()
-                eti_subprocess.process.join()
-
-            # Free up resources.
-            eti_subprocess.process.close()
-
-            # Ensure queues are properly closed after the process is dead.
+        # Only run shutdown if the ETISubprocess was started.
+        if ETISubprocess.instance is not None:
+            print("Found running, shutting down...")
             try:
-                eti_subprocess.inQueue.close()
-                eti_subprocess.inQueue.join_thread()
-                eti_subprocess.outQueue.close()
-                eti_subprocess.outQueue.join_thread()
-            except Exception:
-                pass
-        except Exception as e:
-            print(f"Error during DRAGONS shutdown: {e}")
+                eti_subprocess = ETISubprocess()
+                # Send quit message to loop.
+                # Leaving in hoping DRAGONS merges in requested changes.
+                # eti_subprocess.inQueue.put(None)
+                eti_subprocess.process.join(timeout=2)
+
+                # If still alive, force-terminate.
+                if eti_subprocess.process.is_alive():
+                    eti_subprocess.process.terminate()
+                    eti_subprocess.process.join()
+
+                # Free up resources.
+                eti_subprocess.process.close()
+
+                # Ensure queues are properly closed after the process is dead.
+                try:
+                    eti_subprocess.inQueue.close()
+                    eti_subprocess.inQueue.join_thread()
+                    eti_subprocess.outQueue.close()
+                    eti_subprocess.outQueue.join_thread()
+                except Exception:
+                    pass
+            except Exception as e:
+                print(f"Error during DRAGONS shutdown: {e}")

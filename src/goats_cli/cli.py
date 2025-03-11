@@ -355,7 +355,6 @@ def run(
         Raised if the 'manage.py' file for the project does not exist.
     GOATSClickException
         Raised if the 'subprocess' calls fail.
-
     """
     display_message("Serving GOATS.\n")
     display_message("Finding GOATS and Redis installation:", show_goats_emoji=False)
