@@ -2,6 +2,8 @@
 
 __all__ = ["ProcessManager"]
 
+import os
+import signal
 import subprocess
 
 from goats_cli.utils import display_message, display_warning
@@ -71,7 +73,16 @@ class ProcessManager:
             process.wait(timeout=self.timeout)
         except subprocess.TimeoutExpired:
             display_warning(f"Could not stop {name} in time, killing {name}.")
-            process.kill()
+            # Kill the entire group.
+            # Handles the children.
+            pgid = os.getpgid(process.pid)
+            os.killpg(pgid, signal.SIGKILL)
             process.wait()
+
+        return_code = process.poll()
+        if return_code is not None:
+            display_message(f"{name} exited with code {return_code}.")
+        else:
+            display_warning(f"{name} may still be running...")
 
         return True
