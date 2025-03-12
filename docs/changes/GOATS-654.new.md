@@ -1,0 +1,1 @@
+Ensured worker shutdown in Dramatiq: Added fallbacks to manage worker threads, ensuring they were terminated if graceful shutdown failed. This prevented orphaned or zombie workers.

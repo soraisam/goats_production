@@ -421,6 +421,9 @@ def run(
         while True:
             time.sleep(0.1)
 
+    except KeyboardInterrupt:
+        display_warning("Caught Ctrl+C. Running shutdown procedure.")
+
     finally:
         process_manager.stop_all()
 
