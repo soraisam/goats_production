@@ -1,0 +1,1 @@
+Shutdown return code and port checks for Redis: Added shutdown return code for Redis and enforced killing child workers if timeout occurs. Checked if ports are in use on startup, issuing an error and preventing startup if occupied.
