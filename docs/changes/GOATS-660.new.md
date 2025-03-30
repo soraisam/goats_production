@@ -1,1 +1,0 @@
-Cleanly shut down DRAGONS in worker threads: Removed leftover orphaned processes on GOATS shutdown using custom middleware.

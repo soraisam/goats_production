@@ -1,3 +1,20 @@
+## GOATS 25.3.0 (2025-03-30)
+
+
+### New Features
+
+- Ensured worker shutdown in Dramatiq: Added fallbacks to manage worker threads, ensuring they were terminated if graceful shutdown failed. This prevented orphaned or zombie workers. [[#GOATS-654](https://noirlab.atlassian.net/browse/GOATS-654)]
+- Shutdown return code and port checks for Redis: Added shutdown return code for Redis and enforced killing child workers if timeout occurs. Checked if ports are in use on startup, issuing an error and preventing startup if occupied. [[#GOATS-655](https://noirlab.atlassian.net/browse/GOATS-655)]
+- Shutdown return code and port checks for Django: Added shutdown return code for Django and enforced killing child workers if timeout occurs. Checked if ports are in use on startup, issuing an error and preventing startup if occupied. [[#GOATS-656](https://noirlab.atlassian.net/browse/GOATS-656)]
+- Shutdown return code Dramatiq: Added shutdown return code for Dramatiq and enforced killing child workers if timeout occurs. [[#GOATS-657](https://noirlab.atlassian.net/browse/GOATS-657)]
+- Cleanly shut down DRAGONS in worker threads: Removed leftover orphaned processes on GOATS shutdown using custom middleware. [[#GOATS-660](https://noirlab.atlassian.net/browse/GOATS-660)]
+- Check ETISubprocess before shutdown: Prevented redundant creation and destruction of singleton. [[#GOATS-665](https://noirlab.atlassian.net/browse/GOATS-665)]
+
+
+### Changes
+
+- Credential storage redesign: Improved how users store credentials and generate tokens for the browser extension. Added a popover explaining the credential manager in the user management page. [[#GOATS-632](https://noirlab.atlassian.net/browse/GOATS-632)]
+
 ## GOATS 25.2.2 (2025-02-28)
 
 
