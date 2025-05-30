@@ -55,6 +55,7 @@ test = [
     "factory_boy",
     "pytest-remotedata",
     "ruff",
+    "nox",
 ]
 docs = ["sphinx", "sphinx-rtd-theme", "sphinxcontrib-video", "sphinx-autobuild"]
 
