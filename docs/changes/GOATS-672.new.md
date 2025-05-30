@@ -1,0 +1,1 @@
+Imported `antares-client` code: Added `antares-client` code directly into the repo to avoid dependency issues with `marshmallow` and `confluent-kafka`.
