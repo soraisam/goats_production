@@ -21,7 +21,7 @@ Its objective is to simplify the TDAMM workflow for users by serving as a one-st
 For detailed information on installation, configuration, and usage, visit the **[GOATS documentation](https://goats.readthedocs.io/en/latest/)**.
 
 ## System Requirements
-- Python 3.10 or higher
+- Python 3.12 or higher
 - Intel Anaconda or Miniconda (works on M1 architecture) >= 4.12
 
 ### Workaround for ARM (M1/M2) Mac users:
