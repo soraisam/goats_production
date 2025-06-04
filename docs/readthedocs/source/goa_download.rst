@@ -12,10 +12,6 @@ GOATS supports asynchronous download of the data using modern software technolog
 
    The downloaded data are stored in the **data** subfolder of the **GOATS** folder (see :ref:`install`) unless a separate data directory option was provided during installation with the ``-m`` flag (:ref:`goats_cli`).  
 
-Users can add a past/existing Gemini observation of a target on GOATS to create a dedicated page for the given observation ID. For Gemini observations directly triggered from GOATS (see :ref:`trigger_gem`), the observation ID will be automatically created along with the corresponding observation page for that ID. 
-
-The first mode of adding existing observation IDs is currently supported on GOATS and the second mode for triggered observations will be available once work on interfacing GOATS with the new Observatory Control System of Gemini (GPP) completes.  
-
 .. _goa-video:
 .. video:: _static/goa_download.mp4
    :alt: Automated download of Gemini data on GOATS 
