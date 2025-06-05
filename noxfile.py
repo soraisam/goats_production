@@ -7,7 +7,7 @@ os.environ["CONDA_SUBDIR"] = "osx-64"
 
 nox.options.sessions = ["tests"]
 
-PYTHON_VERSIONS = ["3.10", "3.12"]
+PYTHON_VERSIONS = ["3.12"]
 DRAGONS_VERSION_PY310 = "3.2.3"
 DRAGONS_VERSION_PY312 = "4.0.0"
 CONDA_CHANNELS = ["http://astroconda.gemini.edu/public", "conda-forge"]
@@ -37,7 +37,7 @@ def run_pytest(session, *, remote: bool = False, coverage: bool = False) -> None
     args = ["-r", "A", "-v", "-n", "auto"]
     if remote:
         args.append("--remote-data")
-    if coverage and session.python == "3.10":
+    if coverage and session.python == "3.12":
         args += ["--cov=gpp_client", "--cov=tests", "--cov-report=xml", "--cov-branch"]
 
     session.run("pytest", *args)
@@ -57,11 +57,11 @@ def remote(session):
 
 # @nox.session(python=PYTHON_VERSIONS)
 # def github_tests(session):
-#     """Run GitHub CI test suite with coverage (only in 3.10)."""
+#     """Run GitHub CI test suite with coverage (only in 3.12)."""
 #     run_pytest(session, coverage=True)
 
 
-@nox.session(python=["3.10"])
+@nox.session(python=["3.12"])
 def github_lint(session):
     """Run GitHub CI linting."""
     session.install("ruff")
