@@ -29,11 +29,13 @@ jobs:
       - name: Setup Miniforge
         uses: conda-incubator/setup-miniconda@v3
         with:
+          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
           activate-environment: goats-env
+          channels: conda-forge, http://astroconda.gemini.edu/public
+          channel-priority: strict
           auto-activate-base: false
-          miniforge-variant: Miniforge3
 
       - name: Get date
         id: get-date
@@ -49,7 +51,7 @@ jobs:
             hashFiles('goats/ci_environment.yaml', 'goats/pyproject.toml') }}-${{
             env.CACHE_NUMBER }}
         env:
-          # Increase this value to reset cache if goats/ci_environment.yaml has not changed
+          # Increase this value to reset cache if goats/ci_environment.yaml has not changed.
           CACHE_NUMBER: 0
         id: cache
 
@@ -57,7 +59,7 @@ jobs:
         run: |
           mamba env update -n goats-env -f goats/ci_environment.yaml
           cd goats
-          pip install -v -e ".[test]"
+          uv pip install -v -e . --group dev
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Run tests and calculate coverage

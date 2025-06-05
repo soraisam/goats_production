@@ -6,13 +6,15 @@ on:
 
 jobs:
   build_conda_env:
+    name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash -l {0}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         python-version: ["3.12"]
 
     steps:
@@ -24,11 +26,13 @@ jobs:
       - name: Setup Mambaforge
         uses: conda-incubator/setup-miniconda@v3
         with:
+          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
           activate-environment: goats-env
+          channels: conda-forge, http://astroconda.gemini.edu/public
+          channel-priority: strict
           auto-activate-base: false
-          miniforge-variant: Miniforge3
 
       - name: Get date
         id: get-date
@@ -44,15 +48,20 @@ jobs:
             hashFiles('goats/ci_environment.yaml', 'goats/pyproject.toml') }}-${{
             env.CACHE_NUMBER }}
         env:
-          # Increase this value to reset cache if goats/ci_environment.yaml has not changed
+          # Increase this value to reset cache if goats/ci_environment.yaml has not changed.
           CACHE_NUMBER: 0
         id: cache
 
       - name: Update environment
         run: |
-          mamba env update -n goats-env -f goats/ci_environment.yaml
+          PLATFORM_ARG=""
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            PLATFORM_ARG="--platform osx-64"
+          fi
+
+          mamba env update -n goats-env -f goats/ci_environment.yaml $PLATFORM_ARG
           cd goats
-          pip install -v -e ".[test]"
+          uv pip install -v -e . --group dev
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Test environment installation

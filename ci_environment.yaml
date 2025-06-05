@@ -1,16 +1,22 @@
-# Environment configuration for GOATS
-
-# For ARM (M1/M2) Mac users:
-#  - Ensure you have Rosetta 2 installed to run Intel-based binaries.
-#  - Install an x86 version of Anaconda or Miniconda.
-#  - You need to switch to an x86 terminal for installing and running
-#    Intel-only packages like DRAGONS.
-
-# See documentation for more help:
+# GOATS Development and Testing Environment
+#
+# For full setup instructions, see:
 # https://goats.readthedocs.io/en/latest/
-
-# Creating the environment:
-# conda env create -f environment.yml
+#
+# Create the environment with:
+#   conda env create -f ci_environment.yaml
+#
+# If on an ARM (M1/M2/etc) Mac, include the platform flag:
+#   conda env create -f ci_environment.yaml --platform osx-64
+#
+# Then activate the created environment:
+#   conda activate goats
+#
+# After activation, install the project with:
+#   uv pip install -e . --group dev notebook
+#
+# Or you can omit the additional groups if not needed:
+#   uv pip install -e .
 
 name: goats
 
@@ -21,9 +27,7 @@ channels:
 
 dependencies:
   - dragons=4.0.0
-  - pip=25.1.1
+  - pip>=25.1.1
   - python=3.12
-  - redis-server=7.2.8
-
-  # For development, use clone the GOATS repo and "pip install -e ." or
-  # for tests, install with "pip install -e '.[test]'".
+  - redis-server>=7.2.8
+  - uv>=0.7.11
