@@ -36,7 +36,7 @@ dependencies = [
     "marshmallow>=3.26.1,<4",
     "marshmallow-jsonapi>=0.24.0",
 ]
-version = "25.3.0"
+version = "25.6.0rc1"
 
 [project.urls]
 Homepage = "https://github.com/gemini-hlsw/goats"

@@ -1,3 +1,18 @@
+## GOATS 25.6.0rc1 (2025-06-05)
+
+
+### New Features
+
+- Replaced Astro Data Lab client: Implemented internal class to remove dependency conflicts. [[#GOATS-668](https://noirlab.atlassian.net/browse/GOATS-668)]
+- Added nox testing for different python and dependency versions. [[#GOATS-670](https://noirlab.atlassian.net/browse/GOATS-670)]
+- Imported `antares-client` code: Added `antares-client` code directly into the repo to avoid dependency issues with `marshmallow` and `confluent-kafka`. [[#GOATS-672](https://noirlab.atlassian.net/browse/GOATS-672)]
+
+
+### Changes
+
+- Updated GOATS user documentation (along with the videos) to clarify where one can add their GOA credentials. [[#GOATS-618](https://noirlab.atlassian.net/browse/GOATS-618)]
+- Updated DRAGONS and dependencies: Updated to DRAGONS 4.0.0 and raised the required Python version to 3.12. Also updated other dependencies for compatibility. [[#GOATS-678](https://noirlab.atlassian.net/browse/GOATS-678)]
+
 ## GOATS 25.3.0 (2025-03-30)
 
 
