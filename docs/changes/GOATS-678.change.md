@@ -1,0 +1,1 @@
+Updated DRAGONS and dependencies: Updated to DRAGONS 4.0.0 and raised the required Python version to 3.12. Also updated other dependencies for compatibility.
