@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.10"]
+        python-version: ["3.12"]
 
     steps:
       - name: Checkout
@@ -46,16 +46,16 @@ jobs:
           path: ${{ env.CONDA }}/envs
           key: conda-${{ runner.os }}--${{ runner.arch }}--${{
             steps.get-date.outputs.today }}-${{
-            hashFiles('goats/ci_environment.yml', 'goats/pyproject.toml') }}-${{
+            hashFiles('goats/ci_environment.yaml', 'goats/pyproject.toml') }}-${{
             env.CACHE_NUMBER }}
         env:
-          # Increase this value to reset cache if goats/ci_environment.yml has not changed
+          # Increase this value to reset cache if goats/ci_environment.yaml has not changed
           CACHE_NUMBER: 0
         id: cache
 
       - name: Update environment
         run: |
-          mamba env update -n goats-env -f goats/ci_environment.yml
+          mamba env update -n goats-env -f goats/ci_environment.yaml
           cd goats
           pip install -v -e ".[test]"
         if: steps.cache.outputs.cache-hit != 'true'
