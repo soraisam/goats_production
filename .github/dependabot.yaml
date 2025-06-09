@@ -8,13 +8,13 @@ updates:
       interval: "daily"
     ignore:
       # TOMToolkit limit.
-      - dependency_name: "django"
+      - dependency-name: "django"
         versions: [">=5.0.0"]
       # ANTARES client workaround.
-      - dependency_name: "marshmallow"
+      - dependency-name: "marshmallow"
         versions: [">=4.0.0"]
       # TOMToolkit limit.
-      - dependency_name: "astropy"
+      - dependency-name: "astropy"
         versions: [">=7.0.0"]
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"

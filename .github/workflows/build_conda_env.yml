@@ -1,8 +1,9 @@
 name: Build Conda Environment
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+    - cron: "0 0 * * *" # Runs daily at midnight UTC
 
 jobs:
   build_conda_env:
@@ -14,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Test building on Mac Intel as well. 
+        # Test building on Mac Intel as well.
         os: [ubuntu-latest, macos-13]
         python-version: ["3.12"]
 
