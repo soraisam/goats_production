@@ -1,3 +1,21 @@
+## GOATS 25.6.0rc2 (2025-06-09)
+
+
+### New Features
+
+- Added `uv` for dependency management: Used `uv` to manage dependencies and generate lockfile for reproducible environments. [[#GOATS-101](https://noirlab.atlassian.net/browse/GOATS-101)]
+- Enabled automated updates: Configured Dependabot to create pull requests for dependency updates. [[#GOATS-680](https://noirlab.atlassian.net/browse/GOATS-680)]
+
+
+### Changes
+
+- Skip building documentation if no changes to `/docs/readthedocs` [[#GOATS-684](https://noirlab.atlassian.net/browse/GOATS-684)]
+
+
+### Other
+
+- Updated the GOATS workflow flowchart showing an additional step for adding existing Gemini observation and added a miscellaneous page for tips and tricks that users might find helpful. [[#GOATS-658](https://noirlab.atlassian.net/browse/GOATS-658)]
+
 ## GOATS 25.6.0rc1 (2025-06-05)
 
 

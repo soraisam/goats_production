@@ -1,1 +1,0 @@
-Skip building documentation if no changes to `/docs/readthedocs`

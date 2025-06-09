@@ -36,7 +36,7 @@ dependencies = [
     "numpydoc>=1.8.0,<2",
     "tomtoolkit>=2.24.5",
 ]
-version = "25.6.0rc1"
+version = "25.6.0rc2"
 
 [project.urls]
 Homepage = "https://github.com/gemini-hlsw/goats"
