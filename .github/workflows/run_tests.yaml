@@ -36,6 +36,7 @@ jobs:
           channels: conda-forge, http://astroconda.gemini.edu/public
           channel-priority: strict
           auto-activate-base: false
+          conda-remove-defaults: "true"
 
       - name: Get date
         id: get-date
@@ -57,7 +58,7 @@ jobs:
 
       - name: Update environment
         run: |
-          mamba env update -n goats-env -f goats/ci_environment.yaml
+          conda env update -n goats-env -f goats/ci_environment.yaml
           cd goats
           uv pip install -v -e . --group dev
         if: steps.cache.outputs.cache-hit != 'true'

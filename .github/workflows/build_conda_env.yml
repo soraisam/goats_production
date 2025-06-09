@@ -14,7 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        # Test building on Mac Intel as well. 
+        os: [ubuntu-latest, macos-13]
         python-version: ["3.12"]
 
     steps:
@@ -33,6 +34,7 @@ jobs:
           channels: conda-forge, http://astroconda.gemini.edu/public
           channel-priority: strict
           auto-activate-base: false
+          conda-remove-defaults: "true"
 
       - name: Get date
         id: get-date
@@ -54,12 +56,7 @@ jobs:
 
       - name: Update environment
         run: |
-          PLATFORM_ARG=""
-          if [[ "${{ runner.os }}" == "macOS" ]]; then
-            PLATFORM_ARG="--platform osx-64"
-          fi
-
-          mamba env update -n goats-env -f goats/ci_environment.yaml $PLATFORM_ARG
+          conda env update -n goats-env -f goats/ci_environment.yaml
           cd goats
           uv pip install -v -e . --group dev
         if: steps.cache.outputs.cache-hit != 'true'
