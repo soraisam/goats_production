@@ -944,26 +944,6 @@ dependencies = [
     { name = "tomtoolkit" },
 ]
 
-[package.optional-dependencies]
-docs = [
-    { name = "sphinx" },
-    { name = "sphinx-autobuild" },
-    { name = "sphinx-rtd-theme" },
-    { name = "sphinxcontrib-video" },
-]
-test = [
-    { name = "factory-boy" },
-    { name = "nox" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "pytest-django" },
-    { name = "pytest-mock" },
-    { name = "pytest-remotedata" },
-    { name = "pytest-xdist" },
-    { name = "ruff" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "factory-boy" },
@@ -990,7 +970,7 @@ notebook = [
 [package.metadata]
 requires-dist = [
     { name = "astropy", specifier = ">=6.0,<7" },
-    { name = "astroquery", specifier = "==0.4.10" },
+    { name = "astroquery", specifier = ">=0.4.10" },
     { name = "channels", extras = ["daphne"], specifier = ">=4.0,<5" },
     { name = "channels-redis", specifier = ">=4.2.1,<5" },
     { name = "click", specifier = ">=8.2.1,<9" },
@@ -1001,26 +981,11 @@ requires-dist = [
     { name = "djangorestframework", specifier = ">=3.16.0,<4" },
     { name = "dramatiq", extras = ["redis", "watch"], specifier = ">=1.18.0,<2" },
     { name = "dramatiq-abort", specifier = ">=1.2.1" },
-    { name = "factory-boy", marker = "extra == 'test'" },
     { name = "marshmallow", specifier = ">=3.26.1,<4" },
     { name = "marshmallow-jsonapi", specifier = ">=0.24.0" },
-    { name = "nox", marker = "extra == 'test'" },
     { name = "numpydoc", specifier = ">=1.8.0,<2" },
-    { name = "pytest", marker = "extra == 'test'" },
-    { name = "pytest-asyncio", marker = "extra == 'test'" },
-    { name = "pytest-cov", marker = "extra == 'test'" },
-    { name = "pytest-django", marker = "extra == 'test'" },
-    { name = "pytest-mock", marker = "extra == 'test'" },
-    { name = "pytest-remotedata", marker = "extra == 'test'" },
-    { name = "pytest-xdist", marker = "extra == 'test'" },
-    { name = "ruff", marker = "extra == 'test'" },
-    { name = "sphinx", marker = "extra == 'docs'" },
-    { name = "sphinx-autobuild", marker = "extra == 'docs'" },
-    { name = "sphinx-rtd-theme", marker = "extra == 'docs'" },
-    { name = "sphinxcontrib-video", marker = "extra == 'docs'" },
-    { name = "tomtoolkit", specifier = "==2.24.5" },
+    { name = "tomtoolkit", specifier = ">=2.24.5" },
 ]
-provides-extras = ["test", "docs"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -1,0 +1,1 @@
+Enabled automated updates: Configured Dependabot to create pull requests for dependency updates.
