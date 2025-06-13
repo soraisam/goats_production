@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<rss version="2.0">
+  <channel>
+    <title>anaconda.org/.</title>
+    <link>https://conda.anaconda.org/.</link>
+    <description>The most recent 1 updates for ..</description>
+    <pubDate>Fri, 13 Jun 2025 22:41:29 GMT</pubDate>
+    <lastBuildDate>Fri, 13 Jun 2025 22:41:29 GMT</lastBuildDate>
+    <item>
+      <title>goats 25.6.0rc2 [linux-64, osx-64]</title>
+      <description>Gemini Observation and Analysis of Targets System.</description>
+      <link>https://goats.readthedocs.io/en/25.6.0rc2/</link>
+      <comments>https://github.com/gemini-hlsw/goats</comments>
+      <guid>https://github.com/gemini-hlsw/goats/archive/25.6.0rc2.tar.gz</guid>
+      <pubDate>Fri, 13 Jun 2025 22:28:12 GMT</pubDate>
+      <source>https://github.com/gemini-hlsw/goats</source>
+    </item>
+  </channel>
+</rss>
