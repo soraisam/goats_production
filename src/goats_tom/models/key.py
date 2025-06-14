@@ -2,7 +2,6 @@ __all__ = ["Key"]
 
 from django.contrib.auth.models import User
 from django.db import models
-from django_cryptography.fields import encrypt
 
 
 class Key(models.Model):
@@ -11,7 +10,7 @@ class Key(models.Model):
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    password = encrypt(models.CharField(max_length=100))
+    password = models.CharField(max_length=100)
     site = models.CharField(
         max_length=2, choices=[("GS", "Gemini South"), ("GN", "Gemini North")],
     )
