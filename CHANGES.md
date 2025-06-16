@@ -1,3 +1,8 @@
+## GOATS 25.6.0 (2025-06-16)
+
+No significant changes.
+
+
 ## GOATS 25.6.0rc4 (2025-06-16)
 
 No significant changes.
