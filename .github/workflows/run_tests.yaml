@@ -7,6 +7,9 @@ on:
       - "tests/unit/**/*.py"
       - "pyproject.toml"
       - "uv.lock"
+  push:
+    branches:
+      - main
 
 jobs:
   run_tests:
