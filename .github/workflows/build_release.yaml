@@ -10,6 +10,11 @@ on:
         description: "Branch to build from"
         required: false
         default: "main"
+      prerelease:
+        description: "Is this a pre-release (e.g. rc1, beta)?"
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   release:
@@ -38,7 +43,9 @@ jobs:
 
       - name: Generate final release notes with Towncrier
         run: |
-          towncrier build --version "${{ inputs.version }}" --yes
+          if [[ "${{ inputs.prerelease }}" == "false" ]]; then
+            towncrier build --version "${{ inputs.version }}" --yes
+          fi
 
       - name: Update pyproject.toml with new version
         run: |
@@ -70,5 +77,6 @@ jobs:
           tag_name: ${{ inputs.version }}
           name: ${{ inputs.version }}
           draft: true  # Set to true to create a draft release.
-          prerelease: false
+          prerelease: "${{ inputs.prerelease }} == 'true' }}"
           body_path: draft_release_notes.md
+          generate_release_notes: true
