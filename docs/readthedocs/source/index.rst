@@ -62,6 +62,13 @@ GOATS relies on the following components -
    antares2goats/index.rst
 
 .. toctree::
+   :maxdepth: 3
+   :hidden:
+   :caption: Developer Guide
+
+   developer_guide/index.rst
+
+.. toctree::
    :numbered:
    :maxdepth: 1
    :hidden:
