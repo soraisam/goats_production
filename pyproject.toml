@@ -58,6 +58,7 @@ dev = [
     "ruff>=0.11.13",
 ]
 docs = [
+    "furo>=2024.8.6",
     "sphinx>=8.2.3",
     "sphinx-autobuild>=2024.10.3",
     "sphinx-rtd-theme>=3.0.2",
