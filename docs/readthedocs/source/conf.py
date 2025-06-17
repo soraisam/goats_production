@@ -1,4 +1,8 @@
 # Configuration file for the Sphinx documentation builder.
+#
+# For the full list of built-in configuration values, see the documentation:
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
+# https://eikonomega.medium.com/getting-started-with-sphinx-autodoc-part-1-2cebbbca5365
 
 project = "GOATS"
 copyright = "2025, Association of Universities for Research in Astronomy"
@@ -24,12 +28,25 @@ source_suffix = ".rst"
 # The master toctree document.
 master_doc = "index"
 
-# _static subdirectory to put videos 
+# _static subdirectory to put videos
 html_static_path = ["_static"]
-html_theme = "sphinx_rtd_theme"
-html_theme_options = {"style_nav_header_background": "#343131"}
+html_theme = "furo"
 html_logo = "images/GOATS_logo.png"
 github_url = "https://github.com/gemini-hlsw/goats"
+html_theme_options = {
+    "light_css_variables": {
+        "color-brand-primary": "#8244ee",
+        "color-brand-content": "#8244ee",
+        "color-brand-visited": "#45237f",
+    },
+    "dark_css_variables": {
+        "color-brand-primary": "#f2aa0d",
+        "color-brand-content": "#f2aa0d",
+        "color-brand-visited": "#ffc23e",
+    },
+    # Fill out announcement to have banner appear.
+    "announcement": ""
+}
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
