@@ -15,7 +15,7 @@ GOATS runs on the web-browser locally, i.e., on your ``localhost`` (IP address `
 
    Navigation bar on GOATS landing page. Click the image to see an enlarged version.
 
-The various buttons at the top navigation bar are described below.
+The various buttons on the top navigation bar are described below.
 
 1. The second icon from left, i.e., the **GitHub icon** links to the GitHub repository of GOATS where our codebase resides, while the **third icon** links to this documentation website and the **fourth icon** can be used to toggle between light and dark mode. 
 
@@ -31,16 +31,16 @@ The various buttons at the top navigation bar are described below.
 
 7. The **Downloads** drop-down menu button can be used to monitor the progress of data downloads. 
 
-8. Finally, the **Login** button can be used to log into one's own GOATS interface using the username and password created during GOATS installation (see :ref:`install`).   
+8. Finally, the **Login** button can be used to log into the GOATS interface using the username and password created during installation (see :ref:`install`).   
 
 
 .. _managing_credential:
 
-Managing Credential
--------------------
-GOATS provides the option for users to securely store their login credentials for services such as the Gemini Observatory Archive, Astro Data Lab, etc. This needs to be done *only once* via the **Users** page accessible from the drop-down menu under the user name on GOATS. With this action, users will then be able to access their proprietary Gemini data, transfer data to their Astro Data Lab account, etc.  
+Managing Credentials
+--------------------
+GOATS provides the option for users to securely store their login credentials for services such as the Gemini Observatory Archive, Astro Data Lab, etc. This needs to be done *only once* via the **Users** page accessible from the drop-down menu under the user name. Once done, users will then be able to access their proprietary Gemini data, transfer data to their Astro Data Lab account, etc.  
 
-The video below shows a walk-through of the buttons on the navigation bar as well as managing user credentials. 
+The video below walks through the buttons on the navigation bar as well as how to manage user credentials. 
 
 .. _overview-video:
 .. video:: _static/overview.mp4
