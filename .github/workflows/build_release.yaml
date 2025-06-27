@@ -16,9 +16,6 @@ on:
         required: false
         default: false
 
-env:
-  UV_SYSTEM_PYTHON: 1
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -34,22 +31,17 @@ jobs:
           fetch-depth: 0
           ref: ${{ inputs.branch }}
 
-      - name: Install uv and set the python version
-        uses: astral-sh/setup-uv@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - name: Install dependencies
-        run: uv pip install towncrier
+        run: pip install towncrier uv
 
       - name: Generate draft release notes with Towncrier
         run: |
-          uv run towncrier build --draft --version "${{ inputs.version }}" > draft_release_notes.md
+          towncrier build --draft --version "${{ inputs.version }}" > draft_release_notes.md
 
       - name: Generate final release notes with Towncrier
         run: |
           if [[ "${{ inputs.prerelease }}" == "false" ]]; then
-            uv run towncrier build --version "${{ inputs.version }}" --yes
+            towncrier build --version "${{ inputs.version }}" --yes
           fi
 
       - name: Update pyproject.toml and uv.lock with new version
