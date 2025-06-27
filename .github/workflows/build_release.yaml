@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version"
+        description: "Release version (e.g., 25.6.0). Do not include a leading 'v' or unnecessary zero padding."
         required: true
       branch:
         description: "Branch to build from"
@@ -34,10 +34,6 @@ jobs:
       - name: Install dependencies
         run: pip install towncrier uv
 
-      - name: Generate draft release notes with Towncrier
-        run: |
-          towncrier build --draft --version "${{ inputs.version }}" > draft_release_notes.md
-
       - name: Generate final release notes with Towncrier
         run: |
           if [[ "${{ inputs.prerelease }}" == "false" ]]; then
@@ -60,15 +56,16 @@ jobs:
 
       - name: Create tag
         run: |
-          git tag -a "${{ inputs.version }}" -m "Release ${{ inputs.version }}."
+          git tag -a "v${{ inputs.version }}" -m "Release ${{ inputs.version }}."
           git push origin "${{ inputs.version }}"
 
       - name: Create GitHub release and upload artifacts
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.version }}
-          name: ${{ inputs.version }}
+          tag_name: "v${{ inputs.version }}"
+          name: "v${{ inputs.version }}"
           draft: true # Set to true to create a draft release.
           prerelease: ${{ inputs.prerelease == 'true' }}
-          body_path: draft_release_notes.md
+          body: |
+            See https://goats.readthedocs.io/en/${{ inputs.version }}/project_details/changelog.html
           generate_release_notes: true
