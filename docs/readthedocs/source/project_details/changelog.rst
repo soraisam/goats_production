@@ -9,6 +9,38 @@ Full Changelog
    For full project tracking (requires access), see the `GOATS Jira board <https://noirlab.atlassian.net/jira/software/projects/GOATS/summary>`_.
 
 .. towncrier release notes start
+Version 25.6.1 (2025-06-27)
+===========================
+
+New Features
+------------
+
+- Added `--ci` flag to allow installing GOATS bypassing the user prompts for a CI pipeline. (`PR #323 <https://github.com/gemini-hlsw/goats/pull/323>`_)
+- Add saving GPP credentials with ``gpp_client``: Communication with GPP is now established in GOATS. Users can save and verify their credential in GOATS for future use. (`PR #330 <https://github.com/gemini-hlsw/goats/pull/330>`_)
+- Extended the API to allow fetching program information from GPP. (`PR #331 <https://github.com/gemini-hlsw/goats/pull/331>`_)
+- Extended API to fetch observations from GPP. (`PR #332 <https://github.com/gemini-hlsw/goats/pull/332>`_)
+
+
+Changes
+-------
+
+- Switch to `furo` theme for Read the Docs. (`PR #320 <https://github.com/gemini-hlsw/goats/pull/320>`_)
+- Removed OCS key manager: Currently migrating to GPP, which simplifies how tokens need to be stored. (`PR #328 <https://github.com/gemini-hlsw/goats/pull/328>`_)
+
+
+Other
+-----
+
+- Added user documentation for Astro Data Lab integration into GOATS. (`PR #GOATS-651 <https://github.com/gemini-hlsw/goats/pull/GOATS-651>`_)
+- Improved build time for unit tests on GitHub by using `uv`: Removed the dependency for `conda` and install `dragons` and `fits_storage` from their respective repos. This removes the need for `conda` and the bloated install. (`PR #322 <https://github.com/gemini-hlsw/goats/pull/322>`_)
+
+
+Documentation
+-------------
+
+- Moved `changelog` to documentation: The `changelog` has been moved to be hosted on Read the Docs. Towncrier has been converted to format the `changelog` in `.rst` (`PR #321 <https://github.com/gemini-hlsw/goats/pull/321>`_)
+- Improve documentation and README. (`PR #325 <https://github.com/gemini-hlsw/goats/pull/325>`_)
+
 
 GOATS 25.6.0 (2025-06-16)
 =========================

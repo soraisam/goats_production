@@ -1,1 +1,0 @@
-Added user documentation for Astro Data Lab integration into GOATS.
