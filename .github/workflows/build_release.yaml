@@ -16,6 +16,9 @@ on:
         required: false
         default: false
 
+env:
+  UV_SYSTEM_PYTHON: 1
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -37,8 +40,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: |
-          uv pip install towncrier
+        run: uv pip install towncrier
 
       - name: Generate draft release notes with Towncrier
         run: |
