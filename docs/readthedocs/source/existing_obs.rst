@@ -18,7 +18,7 @@ Users can add a past/existing Gemini observation of a target on GOATS to create 
 
    Option to add an existing Gemini observation ID for a given target on GOATS (click on the image to see an enlarged version). 
 
-The image below shows the resulting dedicated observation page for the ID added (see also the video in :ref:`goa_download`). 
+The image below shows the observation detail page for the ID added (see also the video in :ref:`goa_download`). 
 
 .. _goats-obs-page:
 .. figure:: images/goats_observation_page.png
@@ -26,4 +26,4 @@ The image below shows the resulting dedicated observation page for the ID added 
    :align: center
    :scale: 30%
 
-   Dedicated page for the Gemini observation ID added for a given target on GOATS  (click on the image to see an enlarged version). 
+   Observation detail page for the Gemini observation ID added for a given target on GOATS  (click on the image to see an enlarged version). 

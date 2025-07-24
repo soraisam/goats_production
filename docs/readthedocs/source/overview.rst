@@ -11,7 +11,7 @@ GOATS runs on the web-browser locally, i.e., on your ``localhost`` (IP address `
 .. figure:: images/goats_top_navbar.png
    :alt: GOATS top navigation bar 
    :align: center
-   :scale: 50%
+   :scale: 40%
 
    Navigation bar on GOATS landing page. Click the image to see an enlarged version.
 
@@ -27,11 +27,13 @@ The various buttons on the top navigation bar are described below.
 
 5. The **Data** button links to a page displaying all the saved data products on GOATS.
 
-6. The **Astro Data Lab** button links to NOIRLab's Astro Data Lab science platform. 
+6. The **Astro Data Lab** button links to the NOIRLab's Astro Data Lab science platform. 
 
-7. The **Downloads** drop-down menu button can be used to monitor the progress of data downloads. 
+7. The **Gemini Explore** button links to the Explore webpage, used for preparing Gemini proposals (applicable when the Gemini Program Platform goes live). 
 
-8. Finally, the **Login** button can be used to log into the GOATS interface using the username and password created during installation (see :ref:`install`).   
+8. The **Downloads** drop-down menu button can be used to monitor the progress of data downloads. 
+
+9. Finally, the **Login** button can be used to log into the GOATS interface using the username and password created during installation (see :ref:`install`).   
 
 
 .. _managing_credential:
