@@ -3,6 +3,39 @@ Full Changelog
 ==============
 
 .. towncrier release notes start
+Version 25.7.0 (2025-07-29)
+===========================
+
+New Features
+------------
+
+- Added ``pre-commit`` and hooks to run formatters. (`PR #340 <https://github.com/gemini-hlsw/goats/pull/340>`_)
+- Extended frontend to display available programs from GPP: Users can now use GPP to fetch the available programs and display in a select widget on the Gemini submit observation page. (`PR #342 <https://github.com/gemini-hlsw/goats/pull/342>`_)
+- Added query parameter support for `api/gpp/observations`: Payloads from GPP can be filtered by the program ID to reduce the number of observations returned. (`PR #343 <https://github.com/gemini-hlsw/goats/pull/343>`_)
+- Extended GPP app to fetch and display available observations per selected program. (`PR #344 <https://github.com/gemini-hlsw/goats/pull/344>`_)
+- Updated ``gpp-client`` to use GOATS-specific queries to aggregate all necessary information for observations. (`PR #348 <https://github.com/gemini-hlsw/goats/pull/348>`_)
+- Extended GPP application to display selected observation data: Users can now browse the available programs and observations available. (`PR #351 <https://github.com/gemini-hlsw/goats/pull/351>`_)
+- Added prototype for saving, editing, and creating new observation in GPP app. (`PR #352 <https://github.com/gemini-hlsw/goats/pull/352>`_)
+- Added "Gemini Explore" to navbar on GOATS. (`PR #354 <https://github.com/gemini-hlsw/goats/pull/354>`_)
+- Addressed GPP integration feedback and improved GPP interaction part 1. (`PR #358 <https://github.com/gemini-hlsw/goats/pull/358>`_)
+- Users are now notified of missing credentials and GPP connection when starting GPP application. (`PR #359 <https://github.com/gemini-hlsw/goats/pull/359>`_)
+- Added ability to save observations pulled from the GOATS/GPP interface. (`PR #362 <https://github.com/gemini-hlsw/goats/pull/362>`_)
+
+
+Changes
+-------
+
+- Switched to production database for GPP: Users will now interact with the production database for GPP rather than the development. (`PR #336 <https://github.com/gemini-hlsw/goats/pull/336>`_)
+- Overhauled GitHub workflow for python CI: Format and linting will be checked before proceeding with running the tests. (`PR #341 <https://github.com/gemini-hlsw/goats/pull/341>`_)
+
+
+Documentation
+-------------
+
+- Removed Jira links from changelog: Jira ticket links are now included only in pull requests to keep public changelog entries clean and accessible. (`PR #334 <https://github.com/gemini-hlsw/goats/pull/334>`_)
+- Updated user documentation at various places following alpha feedback. (`PR #360 <https://github.com/gemini-hlsw/goats/pull/360>`_)
+
+
 Version 25.6.1 (2025-06-27)
 ===========================
 
