@@ -15,6 +15,7 @@ Core Team
 Collaborators (Alphabetical)
 ----------------------------
 
+- **César Briceño** — SOAR Director (MSO / NOIRLab)
 - **Nicolás Esquivel** — Software Engineer (NOIRLab)
 - **Paul Hirst** — Observatory Scientist (Gemini / NOIRLab)
 - **Kathleen Labrie** — Observatory Scientist (Gemini / NOIRLab)
