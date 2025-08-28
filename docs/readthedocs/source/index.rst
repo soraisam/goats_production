@@ -3,7 +3,7 @@
 GOATS: Gemini Observation and Analysis of Targets System
 ========================================================
 
-**GOATS** is a browser-based user interface providing end-to-end automation of the entire time-domain/multi-messenger astronomy follow-up process -- from target selection, over triggering of follow-up observation, over data retrieval, to data reduction and analysis (:numref:`goats-capabilities`). 
+**GOATS** is a browser-based user interface providing end-to-end automation of the entire time-domain/multi-messenger astronomy follow-up process -- from target selection, triggering of follow-up observation, to data retrieval, data reduction and analysis (:numref:`goats-capabilities`). 
 
 .. _goats-capabilities:
 .. figure:: images/goats_general.png
