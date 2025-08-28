@@ -3,6 +3,15 @@ Full Changelog
 ==============
 
 .. towncrier release notes start
+Version 25.8.3 (2025-08-28)
+===========================
+
+Documentation
+-------------
+
+- Fixed typos in user doc. (`PR #415 <https://github.com/gemini-hlsw/goats/pull/415>`_)
+
+
 Version 25.8.2 (2025-08-28)
 ===========================
 
