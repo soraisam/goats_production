@@ -1,1 +1,0 @@
-Added ``copybutton`` to documentation to improve UI for users for code blocks.

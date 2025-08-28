@@ -3,6 +3,23 @@ Full Changelog
 ==============
 
 .. towncrier release notes start
+Version 25.8.2 (2025-08-28)
+===========================
+
+Changes
+-------
+
+- Improved UI for tables when no data to display. Also hide empty select box when no observation groups. (`PR #414 <https://github.com/gemini-hlsw/goats/pull/414>`_)
+
+
+Documentation
+-------------
+
+- Updated deployment guide about PRs on ``goats-infra``. (`PR #411 <https://github.com/gemini-hlsw/goats/pull/411>`_)
+- Added ``copybutton`` to documentation to improve UI for users for code blocks. (`PR #412 <https://github.com/gemini-hlsw/goats/pull/412>`_)
+- Updated collab list and made minor fixes in user doc. (`PR #413 <https://github.com/gemini-hlsw/goats/pull/413>`_)
+
+
 Version 25.8.1 (2025-08-28)
 ===========================
 

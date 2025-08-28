@@ -1,1 +1,0 @@
-Improved UI for tables when no data to display. Also hide empty select box when no observation groups.
