@@ -3,6 +3,15 @@ Full Changelog
 ==============
 
 .. towncrier release notes start
+Version 25.8.4 (2025-08-29)
+===========================
+
+New Features
+------------
+
+- Updated the conda installation instructions to include adding the correct channels. (`PR #416 <https://github.com/gemini-hlsw/goats/pull/416>`_)
+
+
 Version 25.8.3 (2025-08-28)
 ===========================
 
