@@ -3,6 +3,15 @@ Full Changelog
 ==============
 
 .. towncrier release notes start
+Version 25.9.0 (2025-09-11)
+===========================
+
+Documentation
+-------------
+
+- Updated installation instructions to have channel priority be flexible to resolve issue with ``linux-64``. (`PR #422 <https://github.com/gemini-hlsw/goats/pull/422>`_)
+
+
 Version 25.8.4 (2025-08-29)
 ===========================
 

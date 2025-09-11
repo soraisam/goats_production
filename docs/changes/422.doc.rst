@@ -1,1 +1,0 @@
-Updated installation instructions to have channel priority be flexible to resolve issue with ``linux-64``.
