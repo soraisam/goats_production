@@ -1,6 +1,9 @@
 # Use an official Python base image
 FROM python:3.12-slim
 
+# Use bash for all RUN commands (needed for 'source')
+SHELL ["/bin/bash", "-c"]
+
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/opt/miniforge/bin:$PATH"
