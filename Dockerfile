@@ -39,4 +39,4 @@ RUN /bin/bash -c "source /opt/miniforge/etc/profile.d/conda.sh && conda activate
 EXPOSE $PORT
 
 # Start Redis and GOATS
-CMD /bin/bash -c "source /opt/miniforge/etc/profile.d/conda.sh && conda activate goats-dev && goats install --ci && goats run --addrport 0.0.0.0:$PORT"
+CMD /bin/bash -c "source /opt/miniforge/etc/profile.d/conda.sh && conda activate goats-dev && goats install --ci && goats run -w 1 --addrport 0.0.0.0:$PORT"
