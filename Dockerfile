@@ -4,7 +4,7 @@ FROM python:3.12-slim
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/opt/miniforge/bin:$PATH"
-ENV PORT=10000  # Default port for Render
+ENV PORT=10000
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
