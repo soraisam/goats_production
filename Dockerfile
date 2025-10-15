@@ -35,7 +35,7 @@ RUN echo "source /opt/miniforge/etc/profile.d/conda.sh && conda activate goats-d
 RUN /bin/bash -c "source /opt/miniforge/etc/profile.d/conda.sh && conda activate goats-dev && pip install . && goats install --ci"
 
 # Expose port for Render
-EXPOSE $PORT
+EXPOSE 10000
 
 # Start GOATS with internal Redis and single HTTP worker
 # Use $PORT injected by Render
