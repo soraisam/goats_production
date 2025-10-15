@@ -7,7 +7,6 @@ SHELL ["/bin/bash", "-c"]
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/opt/miniforge/bin:$PATH"
-ENV PORT=10000
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -33,10 +32,16 @@ RUN source /opt/miniforge/etc/profile.d/conda.sh \
 
 # Activate environment and install GOATS
 RUN echo "source /opt/miniforge/etc/profile.d/conda.sh && conda activate goats-dev" > ~/.bashrc
-RUN /bin/bash -c "source /opt/miniforge/etc/profile.d/conda.sh && conda activate goats-dev && pip install ."
+RUN /bin/bash -c "source /opt/miniforge/etc/profile.d/conda.sh && conda activate goats-dev && pip install . && goats install --ci"
 
 # Expose port for Render
 EXPOSE $PORT
 
-# Start Redis and GOATS
-CMD /bin/bash -c "source /opt/miniforge/etc/profile.d/conda.sh && conda activate goats-dev && goats install --ci && goats run -w 1 --addrport 0.0.0.0:$PORT"
+# Start GOATS with internal Redis and single HTTP worker
+# Use $PORT injected by Render
+CMD /bin/bash -c "\
+    source /opt/miniforge/etc/profile.d/conda.sh && \
+    conda activate goats-dev && \
+    echo 'GOATS starting on Render port: '$PORT && \
+    goats run -w 1 --addrport 0.0.0.0:$PORT \
+"
