@@ -43,5 +43,5 @@ CMD /bin/bash -c "\
     source /opt/miniforge/etc/profile.d/conda.sh && \
     conda activate goats-dev && \
     echo 'GOATS starting on Render port: '$PORT && \
-    goats run -w 1 --addrport 0.0.0.0:$PORT \
+    goats run -w 1 --addrport 0.0.0.0:$PORT --redis-addrport $REDIS_ADDRPORT \
 "
