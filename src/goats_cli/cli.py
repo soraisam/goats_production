@@ -364,11 +364,11 @@ def run(
             start_background_workers(manage_file, workers=workers),
         )
 
-        # Open the browser.
-        url = f"http://{django_host}:{django_port}"
-        if utils.wait_until_responsive(url):
-            # Build the url and open it.
-            utils.open_browser(url, browser)
+        # # Open the browser.
+        # url = f"http://{django_host}:{django_port}"
+        # if utils.wait_until_responsive(url):
+        #     # Build the url and open it.
+        #     utils.open_browser(url, browser)
 
         while True:
             time.sleep(0.1)
