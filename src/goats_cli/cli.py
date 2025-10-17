@@ -314,25 +314,25 @@ def run(
             f" '{manage_file.absolute()}'."
         )
     utils.display_ok()
-    utils.display_info("Verifying Redis installed...")
-    try:
-        subprocess.run(
-            ["redis-server", "--version"],
-            check=True,
-            text=True,
-            capture_output=True,
-        )
-        utils.display_ok()
-    except FileNotFoundError:
-        utils.display_failed()
-        raise GOATSClickException(
-            "An error occurred verifying Redis. Is Redis installed?",
-        )
+    # utils.display_info("Verifying Redis installed...")
+    # try:
+    #     subprocess.run(
+    #         ["redis-server", "--version"],
+    #         check=True,
+    #         text=True,
+    #         capture_output=True,
+    #     )
+    #     utils.display_ok()
+    # except FileNotFoundError:
+    #     utils.display_failed()
+    #     raise GOATSClickException(
+    #         "An error occurred verifying Redis. Is Redis installed?",
+    #     )
 
-    utils.display_message("Checking for running instances of Redis and GOATS:")
-    time.sleep(2)
-    redis_host, redis_port = utils.parse_addrport(redis_addrport)
-    utils.check_port_not_in_use("Redis", redis_host, redis_port)
+    # utils.display_message("Checking for running instances of Redis and GOATS:")
+    # time.sleep(2)
+    # redis_host, redis_port = utils.parse_addrport(redis_addrport)
+    # utils.check_port_not_in_use("Redis", redis_host, redis_port)
 
     django_host, django_port = utils.parse_addrport(addrport)
     utils.check_port_not_in_use("Django", django_host, django_port)
@@ -350,8 +350,8 @@ def run(
     try:
         process_manager = ProcessManager()
 
-        # Start the Redis server.
-        process_manager.add_process("redis", start_redis_server(redis_addrport))
+        # # Start the Redis server.
+        # process_manager.add_process("redis", start_redis_server(redis_addrport))
 
         # Start Django server.
         process_manager.add_process(
